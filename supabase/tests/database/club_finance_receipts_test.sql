@@ -45,8 +45,17 @@ select is(
    where p.schemaname = 'storage' and p.tablename = 'objects'
      and p.policyname like 'club_finance_receipts_deny_direct_%'
      and p.permissive = 'RESTRICTIVE'),
-  4::bigint,
-  'restrictive Storage policies deny direct client reads and writes for the receipt bucket'
+  5::bigint,
+  'restrictive Storage policies retain write denials and separate anonymous from backup reads'
+);
+select ok(
+  has_function_privilege('authenticated', 'private.can_read_finance_receipt_storage_object(text)', 'EXECUTE')
+  and not has_function_privilege('anon', 'private.can_read_finance_receipt_storage_object(text)', 'EXECUTE')
+  and not has_function_privilege('service_role', 'private.can_read_finance_receipt_storage_object(text)', 'EXECUTE')
+  and (select p.prosecdef and p.proconfig @> array['search_path=""']
+       from pg_catalog.pg_proc as p
+       where p.oid = 'private.can_read_finance_receipt_storage_object(text)'::regprocedure),
+  'the backup Storage read gate has a fixed search path and only authenticated callers may evaluate it'
 );
 select ok(
   not has_function_privilege('anon', 'private.get_club_finance_receipt_download(uuid)', 'EXECUTE')
@@ -104,6 +113,30 @@ insert into public.club_financial_receipts (
   'receipt.pdf', 'application/pdf', 8, repeat('a', 64),
   '00000000-0000-0000-0000-000000000403', 'available', now()
 );
+
+insert into public.club_financial_receipts (
+  id, transaction_id, object_path, original_filename, content_type,
+  size_bytes, sha256, uploaded_by, status
+) values (
+  '00000000-0000-0000-0000-000000000613',
+  current_setting('test.receipt_transaction_id')::uuid,
+  current_setting('test.receipt_transaction_id') || '/00000000-0000-0000-0000-000000000613.pdf',
+  'pending.pdf', 'application/pdf', 8, null,
+  '00000000-0000-0000-0000-000000000404', 'pending'
+);
+
+-- Test-only Storage metadata fixtures; this transaction rolls back. Real objects use the Storage API.
+insert into storage.objects (bucket_id, name, metadata) values
+  (
+    'club-finance-receipts',
+    current_setting('test.receipt_transaction_id') || '/00000000-0000-0000-0000-000000000601.pdf',
+    jsonb_build_object('size', '8', 'mimetype', 'application/pdf')
+  ),
+  (
+    'club-finance-receipts',
+    current_setting('test.receipt_transaction_id') || '/00000000-0000-0000-0000-000000000613.pdf',
+    jsonb_build_object('size', '8', 'mimetype', 'application/pdf')
+  );
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000404', true);
@@ -300,6 +333,115 @@ select throws_ok(
   )$$,
   'P0002', 'The financial record is unavailable for receipt upload.',
   'officers cannot attach receipts to another or nonexistent finance record'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000401', true);
+select is(
+  (select count(*) from storage.objects
+   where bucket_id = 'club-finance-receipts'
+     and name = current_setting('test.receipt_transaction_id') || '/00000000-0000-0000-0000-000000000601.pdf'),
+  1::bigint,
+  'the active primary Admin can read an available receipt object for backup'
+);
+select is(
+  (select count(*) from storage.objects
+   where bucket_id = 'club-finance-receipts'
+     and name = current_setting('test.receipt_transaction_id') || '/00000000-0000-0000-0000-000000000613.pdf'),
+  0::bigint,
+  'the primary Admin cannot read a pending receipt object'
+);
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name, metadata)
+    values ('club-finance-receipts', 'unauthorized/new.pdf', '{}'::jsonb)$$,
+  '42501', null,
+  'the primary Admin cannot upload directly to the private receipt bucket'
+);
+select lives_ok(
+  $sql$do $body$
+    declare
+      changed_rows bigint;
+    begin
+      update storage.objects set metadata = '{}'::jsonb
+       where bucket_id = 'club-finance-receipts'
+         and name = current_setting('test.receipt_transaction_id') || '/00000000-0000-0000-0000-000000000601.pdf';
+      get diagnostics changed_rows = row_count;
+      if changed_rows <> 0 then
+        raise exception using errcode = 'P0001', message = 'RLS unexpectedly changed Storage metadata.';
+      end if;
+    end
+  $body$$sql$,
+  'the primary Admin cannot change a stored receipt directly'
+);
+select throws_ok(
+  $$delete from storage.objects
+    where bucket_id = 'club-finance-receipts'
+      and name = current_setting('test.receipt_transaction_id') || '/00000000-0000-0000-0000-000000000601.pdf'$$,
+  '42501', null,
+  'the primary Admin cannot delete a stored receipt directly'
+);
+reset role;
+select is(
+  (select metadata ->> 'mimetype' from storage.objects
+   where bucket_id = 'club-finance-receipts'
+     and name = current_setting('test.receipt_transaction_id') || '/00000000-0000-0000-0000-000000000601.pdf'),
+  'application/pdf',
+  'the denied direct update leaves receipt metadata unchanged'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000402', true);
+select is(
+  (select count(*) from storage.objects
+   where bucket_id = 'club-finance-receipts'
+     and name = current_setting('test.receipt_transaction_id') || '/00000000-0000-0000-0000-000000000601.pdf'),
+  1::bigint,
+  'the active Backup Admin can read an available receipt object for backup'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000403', true);
+select is(
+  (select count(*) from storage.objects where bucket_id = 'club-finance-receipts'),
+  0::bigint,
+  'an Executive cannot use direct Storage access reserved for backup operators'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000404', true);
+select is(
+  (select count(*) from storage.objects where bucket_id = 'club-finance-receipts'),
+  0::bigint,
+  'an ordinary member cannot use direct Storage access reserved for backup operators'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000405', true);
+select is(
+  (select count(*) from storage.objects where bucket_id = 'club-finance-receipts'),
+  0::bigint,
+  'a deactivated Admin session cannot read receipt objects'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000406', true);
+select is(
+  (select count(*) from storage.objects where bucket_id = 'club-finance-receipts'),
+  0::bigint,
+  'a pending applicant cannot read receipt objects'
+);
+reset role;
+
+set local role anon;
+select is(
+  (select count(*) from storage.objects where bucket_id = 'club-finance-receipts'),
+  0::bigint,
+  'an unauthenticated visitor cannot read receipt objects'
 );
 reset role;
 

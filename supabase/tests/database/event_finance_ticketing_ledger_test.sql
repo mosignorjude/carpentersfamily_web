@@ -333,8 +333,22 @@ insert into public.event_financial_receipts (
   'shared.pdf', 'application/pdf', 128, pg_catalog.repeat('a', 64),
   '00000000-0000-0000-0000-000000000801', 'available', now()
 );
+-- Test-only metadata fixture; the transaction rolls back. Real objects must be
+-- created and removed through the Supabase Storage API.
+insert into storage.objects (bucket_id, name, metadata)
+select 'club-finance-receipts', object_path,
+       jsonb_build_object('size', '128', 'mimetype', 'application/pdf')
+from public.event_financial_receipts
+where id = '00000000-0000-0000-0000-000000000901';
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000801', true);
+select is(
+  (select count(*) from storage.objects
+   where bucket_id = 'club-finance-receipts'
+     and name = 'event/' || current_setting('test.event_finance_receipt_transaction') || '/00000000-0000-0000-0000-000000000901.pdf'),
+  1::bigint,
+  'the primary Admin can read available event receipt storage for backup'
+);
 select is(
   (select count(*) from public.event_financial_receipts where id = '00000000-0000-0000-0000-000000000901'),
   1::bigint,
@@ -352,6 +366,48 @@ select is(
   'shared.pdf',
   'all active members can read available receipt metadata for event transparency'
 );
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000802', true);
+select is(
+  (select count(*) from storage.objects
+   where bucket_id = 'club-finance-receipts'
+     and name = 'event/' || current_setting('test.event_finance_receipt_transaction') || '/00000000-0000-0000-0000-000000000901.pdf'),
+  1::bigint,
+  'the Backup Admin can read available event receipt storage for backup'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000803', true);
+select is(
+  (select count(*) from storage.objects where bucket_id = 'club-finance-receipts'),
+  0::bigint,
+  'the Executive cannot directly read event receipt storage'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000805', true);
+select is(
+  (select count(*) from storage.objects where bucket_id = 'club-finance-receipts'),
+  0::bigint,
+  'an event Lead cannot use the backup-only direct Storage read policy'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000804', true);
+select is(
+  (select count(*) from storage.objects where bucket_id = 'club-finance-receipts'),
+  0::bigint,
+  'an ordinary member cannot directly read event receipt storage'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000804', true);
 select throws_ok(
   $$select object_path from public.event_financial_receipts where id = '00000000-0000-0000-0000-000000000901'$$,
   '42501', null,
