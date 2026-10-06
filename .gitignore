@@ -1,0 +1,62 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+!/.env.example
+
+# vercel
+.vercel
+
+# Supabase CLI runtime metadata
+/supabase/.temp/
+/supabase/.branches/
+
+# Private working notes and local agent instructions
+/AGENTS.md
+/requirements-brief.md
+/DESIGN.md
+/docs/
+
+# Keep only the UI/UX skill explicitly configured for this project.
+/.agents/skills/*
+!/.agents/skills/ui-ux-pro-max/
+!/.agents/skills/ui-ux-pro-max/**
+/.agents/skills/ui-ux-pro-max/scripts/tests/
+
+# Design explorations and source-only brand references; the app-served logo
+# lives under public/brand and remains part of the project.
+/assets/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

@@ -1,0 +1,2 @@
+-- Intentionally empty. Do not seed real member data or credentials here.
+-- Role and account bootstrap is documented in Step 3 after Auth is implemented.

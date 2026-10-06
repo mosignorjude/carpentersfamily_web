@@ -1,0 +1,39 @@
+{
+  "name": "carpenters-family-social-club",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "biome check next.config.ts src",
+    "test:security-regression": "node --test",
+    "test:receipts": "node --test tests/finance-receipt-validation.test.mjs",
+    "test:reports": "node --test tests/report-export-security.test.mjs",
+    "test:navigation": "node --test tests/app-navigation.test.mjs",
+    "test:dashboard": "node --test tests/home-dashboard.test.mjs",
+    "test:events-ui": "node --test tests/event-card-access.test.mjs",
+    "test:attendance-ui": "node --test tests/attendance-page-access.test.mjs",
+    "test:communications-ui": "node --test tests/communications-page-access.test.mjs",
+    "test:notifications-ui": "node --test tests/notification-page-presentation.test.mjs",
+    "test:member-admin-ui": "node --test tests/member-administration-page.test.mjs",
+    "test:executive-role-request": "node --test tests/executive-role-request.test.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.117.2",
+    "next": "16.3.8",
+    "qrcode": "1.5.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.5",
+    "@types/node": "^20",
+    "@types/qrcode": "1.5.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "supabase": "2.119.0",
+    "typescript": "^5"
+  }
+}
