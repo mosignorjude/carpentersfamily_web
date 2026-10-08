@@ -582,7 +582,19 @@ export default async function EventFinancePage({
   return (
     <main className="shell">
       <section className="panel">
-        <header className="finance-heading">
+        <nav aria-label="Breadcrumb" className="member-breadcrumb">
+          <ol>
+            <li>
+              <Link href="/">Home</Link>
+            </li>
+            <li>
+              <Link href="/events">Events</Link>
+            </li>
+            <li>{event.title}</li>
+            <li aria-current="page">Finances</li>
+          </ol>
+        </nav>
+        <header className="finance-heading member-page-header">
           <div>
             <p className="eyebrow">Shared event record</p>
             <h1>{event.title} finances</h1>
@@ -592,16 +604,6 @@ export default async function EventFinancePage({
               private.
             </p>
           </div>
-          <nav aria-label="Member navigation" className="dues-nav">
-            <Link href="/events">Events</Link>
-            <Link href="/finances">Club finances</Link>
-            <Link href="/">Member portal</Link>
-            <form action={signOutAction}>
-              <button className="button-secondary" type="submit">
-                Sign out
-              </button>
-            </form>
-          </nav>
         </header>
 
         {noticesText ? (
@@ -1300,35 +1302,40 @@ export default async function EventFinancePage({
                 ) : auditRows.length === 0 ? (
                   <p>No event finance changes are recorded.</p>
                 ) : (
-                  <div className="audit-list">
-                    {auditRows.map((entry) => (
-                      <article className="audit-card" key={entry.id}>
-                        <h3>{entry.action.replaceAll("_", " ")}</h3>
-                        <p className="muted">
-                          {auditActorNames.get(entry.actor_id) ??
-                            "Club officer"}{" "}
-                          · {formatTimestamp(entry.occurred_at)}
-                        </p>
-                        <p>
-                          <strong>Reason:</strong> {entry.reason}
-                        </p>
-                        <details>
-                          <summary>Recorded changes</summary>
-                          <pre className="audit-data">
-                            {JSON.stringify(
-                              {
-                                target: entry.entity_id,
-                                before: entry.before_data,
-                                after: entry.after_data,
-                              },
-                              null,
-                              2,
-                            )}
-                          </pre>
-                        </details>
-                      </article>
-                    ))}
-                  </div>
+                  <details className="history-disclosure">
+                    <summary>Review {auditRows.length} recent changes</summary>
+                    <div className="history-disclosure-content">
+                      <div className="audit-list">
+                        {auditRows.map((entry) => (
+                          <article className="audit-card" key={entry.id}>
+                            <h3>{entry.action.replaceAll("_", " ")}</h3>
+                            <p className="muted">
+                              {auditActorNames.get(entry.actor_id) ??
+                                "Club officer"}{" "}
+                              · {formatTimestamp(entry.occurred_at)}
+                            </p>
+                            <p>
+                              <strong>Reason:</strong> {entry.reason}
+                            </p>
+                            <details>
+                              <summary>Recorded changes</summary>
+                              <pre className="audit-data">
+                                {JSON.stringify(
+                                  {
+                                    target: entry.entity_id,
+                                    before: entry.before_data,
+                                    after: entry.after_data,
+                                  },
+                                  null,
+                                  2,
+                                )}
+                              </pre>
+                            </details>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  </details>
                 )}
               </section>
             ) : null}

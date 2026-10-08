@@ -314,7 +314,7 @@ export default async function FinancesPage({
   return (
     <main className="shell">
       <section className="panel">
-        <header className="finance-heading">
+        <header className="finance-heading member-page-header">
           <div>
             <p className="eyebrow">Shared club records</p>
             <h1>Club finances</h1>
@@ -324,15 +324,6 @@ export default async function FinancesPage({
               the member and authorized officers.
             </p>
           </div>
-          <nav aria-label="Member navigation" className="dues-nav">
-            <Link href="/">Member portal</Link>
-            <Link href="/dues">Private dues</Link>
-            <form action={signOutAction}>
-              <button className="button-secondary" type="submit">
-                Sign out
-              </button>
-            </form>
-          </nav>
         </header>
 
         {params.notice && notices[params.notice] ? (
@@ -410,73 +401,86 @@ export default async function FinancesPage({
         </section>
 
         {isOfficer && !financeUnavailable ? (
-          <section
-            aria-label="Officer finance tools"
-            className="finance-officer-tools"
-          >
-            <header className="finance-tools-heading">
-              <div>
-                <p className="eyebrow">Officer actions</p>
-                <h2>Record and manage club finances</h2>
-              </div>
-              <p>
-                Executive, Admin, and Backup Admin can record income and
-                expenses. Only Admin and Backup Admin can correct or void a
-                posted entry. Corrections and voids require reasons and are
-                included in the officer-only audit history.
-              </p>
-            </header>
-            <div className="finance-entry-grid">
-              <section
-                className="dues-section"
-                aria-labelledby="income-entry-heading"
-              >
-                <p className="eyebrow">Officer entry</p>
-                <h2 id="income-entry-heading">Record non-dues income</h2>
-                <ClubIncomeForm
-                  today={today}
-                  canBackdate={canCorrect}
-                  idempotencyKey={randomUUID()}
-                />
-              </section>
-              <section
-                className="dues-section"
-                aria-labelledby="expense-entry-heading"
-              >
-                <p className="eyebrow">Officer entry</p>
-                <h2 id="expense-entry-heading">Record an expense</h2>
-                {categoryUnavailable ? (
-                  <p role="alert">
-                    Categories could not be verified. Expense entry is disabled.
-                  </p>
-                ) : categories.some((category) => !category.retired_at) ? (
-                  <ClubExpenseForm
-                    categories={categories}
+          <details className="finance-officer-tools">
+            <summary className="finance-tools-summary">
+              <span className="finance-tools-summary-copy">
+                <span className="eyebrow">Officer actions</span>
+                <strong>Record and manage club finances</strong>
+              </span>
+              <span aria-hidden="true" className="finance-tools-open-label">
+                Open tools
+              </span>
+              <span aria-hidden="true" className="finance-tools-close-label">
+                Close tools
+              </span>
+            </summary>
+            <div className="finance-officer-tools-content">
+              <header className="finance-tools-heading">
+                <div>
+                  <h2>Available officer tools</h2>
+                </div>
+                <p>
+                  Executive, Admin, and Backup Admin can record income and
+                  expenses. Only Admin and Backup Admin can correct or void a
+                  posted entry. Corrections and voids require reasons and are
+                  included in the officer-only audit history.
+                </p>
+              </header>
+              <div className="finance-entry-grid">
+                <section
+                  className="dues-section"
+                  aria-labelledby="income-entry-heading"
+                >
+                  <p className="eyebrow">Officer entry</p>
+                  <h2 id="income-entry-heading">Record non-dues income</h2>
+                  <ClubIncomeForm
                     today={today}
                     canBackdate={canCorrect}
                     idempotencyKey={randomUUID()}
                   />
-                ) : (
-                  <p>Create an active category before recording an expense.</p>
-                )}
-              </section>
-              <section
-                className="dues-section"
-                aria-labelledby="category-heading"
-              >
-                <p className="eyebrow">Officer category management</p>
-                <h2 id="category-heading">Expense categories</h2>
-                {categoryUnavailable ? (
-                  <p role="alert">
-                    Categories could not be verified. Category changes are
-                    disabled.
-                  </p>
-                ) : (
-                  <FinanceCategoryForms categories={categories} />
-                )}
-              </section>
+                </section>
+                <section
+                  className="dues-section"
+                  aria-labelledby="expense-entry-heading"
+                >
+                  <p className="eyebrow">Officer entry</p>
+                  <h2 id="expense-entry-heading">Record an expense</h2>
+                  {categoryUnavailable ? (
+                    <p role="alert">
+                      Categories could not be verified. Expense entry is
+                      disabled.
+                    </p>
+                  ) : categories.some((category) => !category.retired_at) ? (
+                    <ClubExpenseForm
+                      categories={categories}
+                      today={today}
+                      canBackdate={canCorrect}
+                      idempotencyKey={randomUUID()}
+                    />
+                  ) : (
+                    <p>
+                      Create an active category before recording an expense.
+                    </p>
+                  )}
+                </section>
+                <section
+                  className="dues-section"
+                  aria-labelledby="category-heading"
+                >
+                  <p className="eyebrow">Officer category management</p>
+                  <h2 id="category-heading">Expense categories</h2>
+                  {categoryUnavailable ? (
+                    <p role="alert">
+                      Categories could not be verified. Category changes are
+                      disabled.
+                    </p>
+                  ) : (
+                    <FinanceCategoryForms categories={categories} />
+                  )}
+                </section>
+              </div>
             </div>
-          </section>
+          </details>
         ) : null}
 
         <section className="dues-section" aria-labelledby="ledger-heading">
@@ -708,63 +712,72 @@ export default async function FinancesPage({
             ) : auditRows.length === 0 ? (
               <p>No finance changes are recorded.</p>
             ) : (
-              <div className="audit-list">
-                {auditRows.map((entry) => (
-                  <article className="audit-card" key={entry.id}>
-                    <div className="section-heading">
-                      <div>
-                        <h3>{entry.action.replaceAll("_", " ")}</h3>
-                        <p className="muted">
-                          {actorNames.get(entry.actor_id) ?? "Club officer"} ·{" "}
-                          {formatTimestamp(entry.occurred_at)}
+              <details className="history-disclosure">
+                <summary>Review {auditCount} recorded changes</summary>
+                <div className="history-disclosure-content">
+                  <div className="audit-list">
+                    {auditRows.map((entry) => (
+                      <article className="audit-card" key={entry.id}>
+                        <div className="section-heading">
+                          <div>
+                            <h3>{entry.action.replaceAll("_", " ")}</h3>
+                            <p className="muted">
+                              {actorNames.get(entry.actor_id) ?? "Club officer"}{" "}
+                              · {formatTimestamp(entry.occurred_at)}
+                            </p>
+                          </div>
+                        </div>
+                        <p>
+                          <strong>Reason:</strong> {entry.reason}
                         </p>
-                      </div>
-                    </div>
-                    <p>
-                      <strong>Reason:</strong> {entry.reason}
-                    </p>
-                    <details>
-                      <summary>Recorded changes</summary>
-                      <pre className="audit-data">
-                        {JSON.stringify(
-                          {
-                            target: entry.entity_id,
-                            before: entry.before_data,
-                            after: entry.after_data,
-                          },
-                          null,
-                          2,
-                        )}
-                      </pre>
-                    </details>
-                  </article>
-                ))}
-              </div>
+                        <details>
+                          <summary>Recorded changes</summary>
+                          <pre className="audit-data">
+                            {JSON.stringify(
+                              {
+                                target: entry.entity_id,
+                                before: entry.before_data,
+                                after: entry.after_data,
+                              },
+                              null,
+                              2,
+                            )}
+                          </pre>
+                        </details>
+                      </article>
+                    ))}
+                  </div>
+                  {!auditError && auditCount > PAGE_SIZE ? (
+                    <nav
+                      aria-label="Finance audit pages"
+                      className="history-pagination"
+                    >
+                      {auditPage > 0 ? (
+                        <Link
+                          href={financePageHref("audit_page", auditPage - 1)}
+                        >
+                          Newer changes
+                        </Link>
+                      ) : (
+                        <span />
+                      )}
+                      <span>
+                        Page {auditPage + 1} of {auditPageCount}
+                      </span>
+                      {(auditPage + 1) * PAGE_SIZE < auditCount ? (
+                        <Link
+                          href={financePageHref("audit_page", auditPage + 1)}
+                        >
+                          Older changes
+                        </Link>
+                      ) : (
+                        <span />
+                      )}
+                    </nav>
+                  ) : null}
+                </div>
+              </details>
             )}
-            {!auditError && auditCount > PAGE_SIZE ? (
-              <nav
-                aria-label="Finance audit pages"
-                className="history-pagination"
-              >
-                {auditPage > 0 ? (
-                  <Link href={financePageHref("audit_page", auditPage - 1)}>
-                    Newer changes
-                  </Link>
-                ) : (
-                  <span />
-                )}
-                <span>
-                  Page {auditPage + 1} of {auditPageCount}
-                </span>
-                {(auditPage + 1) * PAGE_SIZE < auditCount ? (
-                  <Link href={financePageHref("audit_page", auditPage + 1)}>
-                    Older changes
-                  </Link>
-                ) : (
-                  <span />
-                )}
-              </nav>
-            ) : null}
           </section>
         ) : null}
       </section>

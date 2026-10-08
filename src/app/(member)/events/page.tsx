@@ -8,7 +8,6 @@ import {
   revokeEventRoleAction,
   setEventBudgetAction,
   setEventStatusAction,
-  signOutAction,
   updateEventDetailsAction,
 } from "@/app/actions";
 import { getEventCardAccess } from "@/lib/event-card-access.mjs";
@@ -715,7 +714,7 @@ export default async function EventsPage({
   return (
     <main className="shell">
       <section className="panel event-panel">
-        <header className="events-header">
+        <header className="events-header member-page-header">
           <div>
             <p className="eyebrow">Members · events</p>
             <h1>Events and planning</h1>
@@ -724,16 +723,6 @@ export default async function EventsPage({
               shown in Lagos time (WAT).
             </p>
           </div>
-          <nav aria-label="Member pages" className="events-nav">
-            <Link href="/">Home</Link>
-            <Link href="/dues">Dues</Link>
-            <Link href="/finances">Club finances</Link>
-            <form action={signOutAction}>
-              <button className="button-secondary" type="submit">
-                Sign out
-              </button>
-            </form>
-          </nav>
         </header>
 
         {noticeTextValue ? (

@@ -160,21 +160,37 @@ export default async function MemberAdministrationPage({
   return (
     <main className="shell">
       <section className="panel member-admin-panel">
-        <p className="eyebrow">Membership controls</p>
-        <h1>Member administration</h1>
-        <p>
-          Review membership requests and account status. Only the member name,
-          username, account state, and profile-completion state are shown here.
-        </p>
-        <p className="member-admin-scope">
-          Executive, Admin, and Backup Admin can approve completed profiles.
-          Only Admin and Backup Admin can deactivate or reactivate accounts.
-          Admin and Backup Admin can grant or remove Executive status from
-          active members; primary Admin and Backup Admin assignments are not
-          managed here. PostgreSQL rechecks permissions and account state, and
-          records a reasoned audit entry for each change. Database rules also
-          keep at least one primary Admin active.
-        </p>
+        <header className="member-page-header member-admin-header">
+          <div>
+            <p className="eyebrow">Membership controls</p>
+            <h1>Member administration</h1>
+            <p>
+              Review membership requests and account status. Only the member
+              name, username, account state, and profile-completion state are
+              shown here.
+            </p>
+          </div>
+        </header>
+        <details className="member-admin-guidance-disclosure">
+          <summary>
+            <span>Permissions and safeguards</span>
+            <span aria-hidden="true" className="member-guidance-open-label">
+              View details
+            </span>
+            <span aria-hidden="true" className="member-guidance-close-label">
+              Hide details
+            </span>
+          </summary>
+          <p className="member-admin-scope">
+            Executive, Admin, and Backup Admin can approve completed profiles.
+            Only Admin and Backup Admin can deactivate or reactivate accounts.
+            Admin and Backup Admin can grant or remove Executive status from
+            active members; primary Admin and Backup Admin assignments are not
+            managed here. PostgreSQL rechecks permissions and account state, and
+            records a reasoned audit entry for each change. Database rules also
+            keep at least one primary Admin active.
+          </p>
+        </details>
 
         {notice ? (
           <p

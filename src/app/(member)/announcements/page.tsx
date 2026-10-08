@@ -284,7 +284,7 @@ export default async function AnnouncementsPage({
   return (
     <main className="shell communications-shell">
       <section className="panel communications-panel">
-        <header className="communications-header">
+        <header className="communications-header member-page-header">
           <div>
             <p className="eyebrow">Member communications</p>
             <h1>Announcements &amp; polls</h1>

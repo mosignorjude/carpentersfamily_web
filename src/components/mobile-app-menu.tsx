@@ -27,9 +27,19 @@ export default function MobileAppMenu({ items }: { items: NavigationItem[] }) {
         onKeyDown={closeOnEscape}
         type="button"
       >
-        <span aria-hidden="true" className="app-menu-icon">
-          {isOpen ? "×" : "☰"}
-        </span>
+        <svg
+          aria-hidden="true"
+          className="app-menu-icon"
+          fill="none"
+          focusable="false"
+          viewBox="0 0 24 24"
+        >
+          {isOpen ? (
+            <path d="m6 6 12 12M18 6 6 18" />
+          ) : (
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          )}
+        </svg>
       </button>
       <nav
         aria-label="Mobile primary navigation"

@@ -137,7 +137,7 @@ export default async function NotificationsPage({
   return (
     <main className="shell">
       <section className="panel notifications-panel">
-        <header className="member-card-heading">
+        <header className="member-card-heading member-page-header">
           <div>
             <p className="eyebrow">Your personal inbox</p>
             <h1>Notifications</h1>

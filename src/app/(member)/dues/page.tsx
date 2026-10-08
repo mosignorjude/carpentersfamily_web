@@ -364,7 +364,7 @@ export default async function DuesPage({
   return (
     <main className="shell dues-page">
       <section className="panel dues-panel">
-        <div className="dues-heading">
+        <header className="dues-heading member-page-header">
           <div>
             <p className="eyebrow">Private financial record</p>
             <h1>Dues</h1>
@@ -374,19 +374,7 @@ export default async function DuesPage({
                 : "You can see your own dues history. Other members’ individual dues details are private."}
             </p>
           </div>
-          <nav aria-label="Member navigation" className="dues-nav">
-            <Link href="/">Member portal</Link>
-            <Link href="/finances">Club finances</Link>
-            {isOfficer ? (
-              <Link href="/admin/members">Member administration</Link>
-            ) : null}
-            <form action={signOutAction}>
-              <button className="button-secondary" type="submit">
-                Sign out
-              </button>
-            </form>
-          </nav>
-        </div>
+        </header>
 
         <section
           aria-label="Dues report exports"
@@ -723,73 +711,81 @@ export default async function DuesPage({
                   : "No changes exist on this page."}
               </p>
             ) : (
-              <div className="member-list">
-                {combinedAudit.map((entry) => (
-                  <article className="audit-card" key={entry.id}>
-                    <div className="section-heading">
-                      <div>
-                        <h3>{entry.action.replaceAll("_", " ")}</h3>
-                        <p className="muted">
-                          {formatDate(entry.occurred_at)} ·{" "}
-                          {actorNames.get(entry.actor_id) ?? "Club officer"}
+              <details className="history-disclosure">
+                <summary>Review {auditCount} recorded changes</summary>
+                <div className="history-disclosure-content">
+                  <div className="member-list">
+                    {combinedAudit.map((entry) => (
+                      <article className="audit-card" key={entry.id}>
+                        <div className="section-heading">
+                          <div>
+                            <h3>{entry.action.replaceAll("_", " ")}</h3>
+                            <p className="muted">
+                              {formatDate(entry.occurred_at)} ·{" "}
+                              {actorNames.get(entry.actor_id) ?? "Club officer"}
+                            </p>
+                          </div>
+                          <span className="muted">{entry.entity_type}</span>
+                        </div>
+                        <p>
+                          <strong>Reason:</strong> {entry.reason}
                         </p>
-                      </div>
-                      <span className="muted">{entry.entity_type}</span>
-                    </div>
-                    <p>
-                      <strong>Reason:</strong> {entry.reason}
-                    </p>
-                    <details>
-                      <summary>View recorded change</summary>
-                      <pre className="audit-data">
-                        {JSON.stringify(
-                          {
-                            before: entry.before_data,
-                            after: entry.after_data,
-                          },
-                          null,
-                          2,
-                        )}
-                      </pre>
-                    </details>
-                  </article>
-                ))}
-              </div>
+                        <details>
+                          <summary>View recorded change</summary>
+                          <pre className="audit-data">
+                            {JSON.stringify(
+                              {
+                                before: entry.before_data,
+                                after: entry.after_data,
+                              },
+                              null,
+                              2,
+                            )}
+                          </pre>
+                        </details>
+                      </article>
+                    ))}
+                  </div>
+                  {!auditError && auditCount > HISTORY_PAGE_SIZE ? (
+                    <nav
+                      aria-label="Dues audit pages"
+                      className="history-pagination"
+                    >
+                      {auditPage > 0 ? (
+                        <Link
+                          href={historyPageHref(
+                            targetMemberId,
+                            "audit_page",
+                            auditPage - 1,
+                          )}
+                        >
+                          Newer changes
+                        </Link>
+                      ) : (
+                        <span />
+                      )}
+                      <span>
+                        Page {auditPage + 1} of{" "}
+                        {Math.ceil(auditCount / HISTORY_PAGE_SIZE)}
+                      </span>
+                      {(auditPage + 1) * HISTORY_PAGE_SIZE < auditCount ? (
+                        <Link
+                          href={historyPageHref(
+                            targetMemberId,
+                            "audit_page",
+                            auditPage + 1,
+                          )}
+                        >
+                          Older changes
+                        </Link>
+                      ) : (
+                        <span />
+                      )}
+                    </nav>
+                  ) : null}
+                </div>
+              </details>
             )}
-            {!auditError && auditCount > HISTORY_PAGE_SIZE ? (
-              <nav aria-label="Dues audit pages" className="history-pagination">
-                {auditPage > 0 ? (
-                  <Link
-                    href={historyPageHref(
-                      targetMemberId,
-                      "audit_page",
-                      auditPage - 1,
-                    )}
-                  >
-                    Newer changes
-                  </Link>
-                ) : (
-                  <span />
-                )}
-                <span>
-                  Page {auditPage + 1} of{" "}
-                  {Math.ceil(auditCount / HISTORY_PAGE_SIZE)}
-                </span>
-                {(auditPage + 1) * HISTORY_PAGE_SIZE < auditCount ? (
-                  <Link
-                    href={historyPageHref(
-                      targetMemberId,
-                      "audit_page",
-                      auditPage + 1,
-                    )}
-                  >
-                    Older changes
-                  </Link>
-                ) : (
-                  <span />
-                )}
-              </nav>
-            ) : null}
           </section>
         ) : null}
       </section>

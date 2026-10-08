@@ -277,7 +277,19 @@ export default async function EventAttendancePage({
 
   return (
     <main className="attendance-page">
-      <header className="attendance-page-header">
+      <nav aria-label="Breadcrumb" className="member-breadcrumb">
+        <ol>
+          <li>
+            <Link href="/">Home</Link>
+          </li>
+          <li>
+            <Link href="/events">Events</Link>
+          </li>
+          <li>{event.title}</li>
+          <li aria-current="page">Attendance</li>
+        </ol>
+      </nav>
+      <header className="attendance-page-header member-page-header">
         <div className="attendance-page-title">
           <p className="eyebrow">Event record · meetings and attendance</p>
           <h1>{event.title}</h1>
@@ -291,8 +303,10 @@ export default async function EventAttendancePage({
           >
             {eventStatusLabel}
           </span>
-          <nav aria-label="Event pages" className="attendance-event-nav">
-            <Link href="/events">All events</Link>
+          <nav
+            aria-label="Related event pages"
+            className="attendance-event-nav"
+          >
             <Link href={`/events/${eventId}/finance`}>Event finances</Link>
           </nav>
         </div>

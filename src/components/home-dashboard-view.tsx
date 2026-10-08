@@ -89,7 +89,7 @@ export default function HomeDashboardView({
   return (
     <main className="shell home-shell">
       <div className="home-dashboard">
-        <header className="home-dashboard-header">
+        <header className="home-dashboard-header member-page-header">
           <div>
             <p className="eyebrow">Carpenters Family Social Club</p>
             <h1>Welcome, {memberName}</h1>
