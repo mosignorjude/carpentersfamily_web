@@ -815,10 +815,12 @@ export async function googleSignInAction() {
 
 export async function requestPasswordResetAction(formData: FormData) {
   const email = formString(formData, "email", 254)?.toLowerCase();
-  if (!email || !emailPattern.test(email)) redirect("/?notice=reset-requested");
+  if (!email || !emailPattern.test(email)) {
+    redirect("/forgot-password?notice=reset-requested");
+  }
 
   const redirectTo = safeSiteUrl("/auth/callback?next=%2Freset-password");
-  if (!redirectTo) redirect("/?notice=configuration");
+  if (!redirectTo) redirect("/forgot-password?notice=configuration");
 
   try {
     const supabase = await createSupabaseServerClient();
@@ -826,7 +828,7 @@ export async function requestPasswordResetAction(formData: FormData) {
   } catch {
     // Use the same response for unknown addresses and provider errors.
   }
-  redirect("/?notice=reset-requested");
+  redirect("/forgot-password?notice=reset-requested");
 }
 
 export async function updatePasswordAction(formData: FormData) {

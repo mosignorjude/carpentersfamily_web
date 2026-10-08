@@ -2,11 +2,17 @@ import Link from "next/link";
 import {
   completeProfileAction,
   googleSignInAction,
-  requestPasswordResetAction,
   signInAction,
   signOutAction,
 } from "@/app/actions";
 import AppShell from "@/components/app-shell";
+import { AuthBrand, AuthPageLayout } from "@/components/auth-page-layout";
+import AuthPasswordInput from "@/components/auth-password-input";
+import AuthSubmitButton from "@/components/auth-submit-button";
+import AuthValidatedForm, {
+  AuthFieldError,
+} from "@/components/auth-validated-form";
+import GoogleMark from "@/components/google-mark";
 import HomeDashboardView from "@/components/home-dashboard-view";
 import { getNavigationItems } from "@/lib/app-navigation.mjs";
 import { clubBrand } from "@/lib/brand";
@@ -17,9 +23,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 const notices: Record<string, string> = {
   credentials: "The email or password could not be verified.",
   configuration: "Authentication is not configured for this environment.",
-  "google-unavailable": "Google sign-in is unavailable in this environment.",
-  "reset-requested":
-    "If an account exists for that address, password reset instructions will arrive by email.",
+  "google-unavailable": "Google isn’t available in this environment.",
   "password-updated": "Your password was updated.",
   "sign-in": "Sign in again to continue.",
   "invalid-profile":
@@ -30,6 +34,14 @@ const notices: Record<string, string> = {
   "profile-complete": "Your profile is complete and is waiting for approval.",
 };
 
+const signInErrorNotices = new Set([
+  "credentials",
+  "configuration",
+  "google-unavailable",
+  "sign-in",
+  "auth-failed",
+]);
+
 export default async function HomePage({
   searchParams,
 }: {
@@ -37,6 +49,7 @@ export default async function HomePage({
 }) {
   const params = await searchParams;
   const notice = params.notice ? notices[params.notice] : undefined;
+  const noticeIsError = signInErrorNotices.has(params.notice ?? "");
   const googleEnabled = isGoogleAuthConfigured();
 
   let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
@@ -44,120 +57,115 @@ export default async function HomePage({
     supabase = await createSupabaseServerClient();
   } catch {
     return (
-      <main className="shell">
-        <section className="panel">
-          <div className="auth-brand">
-            {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
-            <img alt="" height={48} src={clubBrand.logoSrc} width={48} />
-            <span>{clubBrand.shortName}</span>
-          </div>
+      <AuthPageLayout>
+        <div className="signin-content signin-config-state">
+          <AuthBrand />
+          <p className="signin-eyebrow">Private member portal</p>
           <h1>{clubBrand.name}</h1>
-          <p>
+          <p className="signin-intro" role="alert">
             Authentication is not configured. Add the public Supabase URL and
             publishable key to the local environment, then restart the app.
           </p>
-        </section>
-      </main>
+        </div>
+      </AuthPageLayout>
     );
   }
 
   const { data: authData } = await supabase.auth.getUser();
   if (!authData.user) {
     return (
-      <main className="shell">
-        <section className="panel auth-entry-panel">
-          <header className="auth-entry-heading">
-            <div className="auth-brand">
-              {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
-              <img alt="" height={48} src={clubBrand.logoSrc} width={48} />
-              <span>{clubBrand.shortName}</span>
-            </div>
-            <p className="eyebrow">Private member portal</p>
-            <h1>{clubBrand.name}</h1>
-            <p>Sign in to your member account to continue.</p>
+      <AuthPageLayout>
+        <div className="signin-content">
+          <AuthBrand />
+          <header className="signin-heading">
+            <p className="signin-eyebrow">Private member portal</p>
+            <h1 id="sign-in-heading">Sign in</h1>
+            <p className="signin-intro">
+              Sign in to your member account to continue.
+            </p>
           </header>
+
           {notice ? (
-            <p className="notice" role="status">
+            <p
+              className={`signin-notice${noticeIsError ? " signin-notice-error" : " signin-notice-success"}`}
+              role={noticeIsError ? "alert" : "status"}
+            >
               {notice}
             </p>
           ) : null}
 
-          <section
-            aria-labelledby="sign-in-heading"
-            className="auth-entry-form"
+          <AuthValidatedForm
+            action={signInAction}
+            className="signin-credentials-form"
           >
-            <h2 id="sign-in-heading">Sign in</h2>
-            <form action={signInAction} className="form-stack">
-              <label>
-                Email
-                <input
-                  autoComplete="email"
-                  maxLength={254}
-                  name="email"
-                  required
-                  type="email"
-                />
-              </label>
-              <label>
-                Password
-                <input
-                  autoComplete="current-password"
-                  maxLength={128}
-                  name="password"
-                  required
-                  type="password"
-                />
-              </label>
-              <button type="submit">Sign in</button>
-            </form>
+            <label className="signin-field">
+              <span>Email</span>
+              <input
+                autoComplete="email"
+                aria-describedby="sign-in-email-error"
+                id="sign-in-email"
+                maxLength={254}
+                name="email"
+                required
+                placeholder="you@example.com"
+                type="email"
+              />
+              <AuthFieldError id="sign-in-email-error" />
+            </label>
+            <label className="signin-field" htmlFor="sign-in-password">
+              <span>Password</span>
+              <AuthPasswordInput
+                autoComplete="current-password"
+                aria-describedby="sign-in-password-error"
+                id="sign-in-password"
+                maxLength={128}
+                name="password"
+                placeholder="Enter your password"
+                required
+              />
+              <AuthFieldError id="sign-in-password-error" />
+            </label>
+            <AuthSubmitButton
+              className="signin-primary-button"
+              pendingLabel="Signing in…"
+            >
+              Sign in
+            </AuthSubmitButton>
+          </AuthValidatedForm>
 
-            <details className="secondary-form">
-              <summary>Forgot your password?</summary>
-              <form action={requestPasswordResetAction} className="form-stack">
-                <label>
-                  Account email
-                  <input
-                    autoComplete="email"
-                    maxLength={254}
-                    name="email"
-                    required
-                    type="email"
-                  />
-                </label>
-                <button className="button-secondary" type="submit">
-                  Send reset instructions
-                </button>
-              </form>
-            </details>
-          </section>
+          <Link className="signin-forgot-link" href="/forgot-password">
+            Forgot your password?
+          </Link>
 
-          <section className="google-section" aria-labelledby="google-heading">
-            <h2 id="google-heading">Google sign-in</h2>
+          <div className="signin-divider" aria-hidden="true">
+            <span>or</span>
+          </div>
+
+          <section className="signin-google-section">
             <form action={googleSignInAction}>
-              <button
-                className="button-secondary"
+              <AuthSubmitButton
+                className="signin-secondary-button signin-google-button"
+                describedBy={!googleEnabled ? "signin-google-note" : undefined}
                 disabled={!googleEnabled}
-                type="submit"
+                pendingLabel="Connecting to Google…"
               >
+                <GoogleMark />
                 Continue with Google
-              </button>
+              </AuthSubmitButton>
             </form>
             {!googleEnabled ? (
-              <p className="muted">
+              <p className="signin-google-note" id="signin-google-note">
                 Available after Google OAuth credentials are configured in
                 Supabase Auth.
               </p>
             ) : null}
           </section>
 
-          <div className="auth-switcher">
-            <p>New to the club?</p>
-            <Link className="button-link" href="/signup">
-              Request account access
-            </Link>
-          </div>
-        </section>
-      </main>
+          <p className="signin-account-prompt">
+            New to the club? <Link href="/signup">Request account access</Link>
+          </p>
+        </div>
+      </AuthPageLayout>
     );
   }
 
@@ -215,11 +223,15 @@ export default async function HomePage({
                 Complete your profile. An authorized officer must approve the
                 request before member access is enabled.
               </p>
-              <form action={completeProfileAction} className="form-stack">
+              <AuthValidatedForm
+                action={completeProfileAction}
+                className="form-stack"
+              >
                 <label>
                   Full name
                   <input
                     autoComplete="name"
+                    aria-describedby="complete-profile-full-name-error"
                     defaultValue={
                       profile.full_name === "Pending member"
                         ? ""
@@ -229,11 +241,13 @@ export default async function HomePage({
                     name="full_name"
                     required
                   />
+                  <AuthFieldError id="complete-profile-full-name-error" />
                 </label>
                 <label>
                   Username
                   <input
                     autoComplete="username"
+                    aria-describedby="complete-profile-username-error"
                     defaultValue={profile.username}
                     maxLength={30}
                     minLength={3}
@@ -241,9 +255,10 @@ export default async function HomePage({
                     pattern="[A-Za-z0-9_]{3,30}"
                     required
                   />
+                  <AuthFieldError id="complete-profile-username-error" />
                 </label>
                 <button type="submit">Save profile</button>
-              </form>
+              </AuthValidatedForm>
             </>
           )}
           <form action={signOutAction}>

@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
 import { signOutAction, updatePasswordAction } from "@/app/actions";
+import AuthPasswordInput from "@/components/auth-password-input";
+import AuthValidatedForm, {
+  AuthFieldError,
+} from "@/components/auth-validated-form";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const notices: Record<string, string> = {
@@ -43,31 +47,37 @@ export default async function ResetPasswordPage({
             {notice}
           </p>
         ) : null}
-        <form action={updatePasswordAction} className="form-stack">
-          <label>
+        <AuthValidatedForm action={updatePasswordAction} className="form-stack">
+          <label htmlFor="reset-new-password">
             New password
-            <input
+            <AuthPasswordInput
               autoComplete="new-password"
+              id="reset-new-password"
+              aria-describedby="reset-new-password-error"
               maxLength={128}
               minLength={12}
               name="password"
+              placeholder="At least 12 characters"
               required
-              type="password"
             />
+            <AuthFieldError id="reset-new-password-error" />
           </label>
-          <label>
+          <label htmlFor="reset-confirm-password">
             Confirm new password
-            <input
+            <AuthPasswordInput
               autoComplete="new-password"
+              id="reset-confirm-password"
+              aria-describedby="reset-confirm-password-error"
               maxLength={128}
               minLength={12}
               name="confirm_password"
+              placeholder="Re-enter your new password"
               required
-              type="password"
             />
+            <AuthFieldError id="reset-confirm-password-error" />
           </label>
           <button type="submit">Update password</button>
-        </form>
+        </AuthValidatedForm>
         <form action={signOutAction}>
           <button className="button-secondary" type="submit">
             Cancel and sign out

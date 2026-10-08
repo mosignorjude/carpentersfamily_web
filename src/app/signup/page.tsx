@@ -2,7 +2,13 @@ import { isAuthSessionMissingError } from "@supabase/supabase-js";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { googleSignInAction, signUpAction } from "@/app/actions";
-import { clubBrand } from "@/lib/brand";
+import { AuthBrand, AuthPageLayout } from "@/components/auth-page-layout";
+import AuthPasswordInput from "@/components/auth-password-input";
+import AuthSubmitButton from "@/components/auth-submit-button";
+import AuthValidatedForm, {
+  AuthFieldError,
+} from "@/components/auth-validated-form";
+import GoogleMark from "@/components/google-mark";
 import { isGoogleAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -12,8 +18,33 @@ const notices: Record<string, string> = {
   "invalid-signup": "Check the name, username, email, and password fields.",
   "signup-unavailable": "Sign-up is temporarily unavailable. Try again later.",
   configuration: "Account requests are unavailable in this environment.",
-  "google-unavailable": "Google sign-in is unavailable in this environment.",
+  "google-unavailable": "Google isn’t available in this environment.",
 };
+
+const errorNotices = new Set([
+  "invalid-signup",
+  "signup-unavailable",
+  "configuration",
+  "google-unavailable",
+]);
+
+function SignupUnavailable({ children }: { children: string }) {
+  return (
+    <AuthPageLayout variant="signup">
+      <div className="signin-content signin-config-state">
+        <AuthBrand />
+        <p className="signin-eyebrow">Membership request</p>
+        <h1>Request account access</h1>
+        <p className="signin-intro" role="alert">
+          {children}
+        </p>
+        <p className="signup-return-link">
+          <Link href="/">Return to sign in</Link>
+        </p>
+      </div>
+    </AuthPageLayout>
+  );
+}
 
 export default async function SignupPage({
   searchParams,
@@ -22,27 +53,16 @@ export default async function SignupPage({
 }) {
   const params = await searchParams;
   const notice = params.notice ? notices[params.notice] : undefined;
+  const noticeIsError = errorNotices.has(params.notice ?? "");
   let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
 
   try {
     supabase = await createSupabaseServerClient();
   } catch {
     return (
-      <main className="shell">
-        <section className="panel narrow-panel auth-entry-panel">
-          <div className="auth-brand">
-            {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
-            <img alt="" height={48} src={clubBrand.logoSrc} width={48} />
-            <span>{clubBrand.shortName}</span>
-          </div>
-          <p className="eyebrow">Membership request</p>
-          <h1>Request account access</h1>
-          <p role="alert">
-            Account requests are unavailable right now. Please try again later.
-          </p>
-          <Link href="/">Return to sign in</Link>
-        </section>
-      </main>
+      <SignupUnavailable>
+        Account requests are unavailable right now. Please try again later.
+      </SignupUnavailable>
     );
   }
 
@@ -50,143 +70,159 @@ export default async function SignupPage({
   if (authData.user) redirect("/");
   if (authError && !isAuthSessionMissingError(authError)) {
     return (
-      <main className="shell">
-        <section className="panel narrow-panel auth-entry-panel">
-          <div className="auth-brand">
-            {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
-            <img alt="" height={48} src={clubBrand.logoSrc} width={48} />
-            <span>{clubBrand.shortName}</span>
-          </div>
-          <p className="eyebrow">Membership request</p>
-          <h1>Request account access</h1>
-          <p role="alert">
-            We could not verify the current session. Account requests are
-            unavailable right now.
-          </p>
-          <Link href="/">Return to sign in</Link>
-        </section>
-      </main>
+      <SignupUnavailable>
+        We could not verify the current session. Account requests are
+        unavailable right now.
+      </SignupUnavailable>
     );
   }
 
   const googleEnabled = isGoogleAuthConfigured();
   return (
-    <main className="shell">
-      <section className="panel narrow-panel auth-entry-panel signup-panel">
-        <header className="auth-entry-heading">
-          <div className="auth-brand">
-            {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
-            <img alt="" height={48} src={clubBrand.logoSrc} width={48} />
-            <span>{clubBrand.shortName}</span>
-          </div>
-          <p className="eyebrow">Membership request</p>
-          <h1>Request account access</h1>
-          <p>
-            Create your account and profile, then confirm your email. New
-            accounts remain pending until an authorized club officer approves
-            them.
+    <AuthPageLayout variant="signup">
+      <div className="signin-content signup-auth-content">
+        <AuthBrand />
+        <header className="signin-heading">
+          <p className="signin-eyebrow">Membership request</p>
+          <h1 id="signup-heading">Request account access</h1>
+          <p className="signin-intro">
+            Create your profile to join the Carpenters Family community. After
+            confirming your email, an authorized club officer reviews your
+            request.
           </p>
         </header>
 
         {notice ? (
-          <p className="notice" role="status">
+          <p
+            className={`signin-notice${noticeIsError ? " signin-notice-error" : " signin-notice-success"}`}
+            role={noticeIsError ? "alert" : "status"}
+          >
             {notice}
           </p>
         ) : null}
 
-        <section aria-labelledby="signup-form-heading">
-          <h2 id="signup-form-heading">Your details</h2>
-          <form action={signUpAction} className="form-stack signup-form">
-            <label>
-              Full name
-              <input
-                autoComplete="name"
-                maxLength={120}
-                name="full_name"
-                required
-              />
-            </label>
-            <label>
-              Username
-              <input
-                autoComplete="username"
-                maxLength={30}
-                minLength={3}
-                name="username"
-                pattern="[A-Za-z0-9_]{3,30}"
-                required
-              />
-              <span className="muted">
-                3–30 letters, numbers, or underscores.
-              </span>
-            </label>
-            <label>
-              Email
-              <input
-                autoComplete="email"
-                maxLength={254}
-                name="email"
-                required
-                type="email"
-              />
-            </label>
-            <label>
-              Password
-              <input
-                autoComplete="new-password"
-                maxLength={128}
-                minLength={12}
-                name="password"
-                required
-                type="password"
-              />
-              <span className="muted">Use at least 12 characters.</span>
-            </label>
-            <label>
-              Confirm password
-              <input
-                autoComplete="new-password"
-                maxLength={128}
-                minLength={12}
-                name="confirm_password"
-                required
-                type="password"
-              />
-            </label>
-            <button type="submit">Request access</button>
-          </form>
-        </section>
+        <AuthValidatedForm
+          action={signUpAction}
+          aria-labelledby="signup-heading"
+          className="signin-credentials-form signup-request-form"
+        >
+          <label className="signin-field">
+            <span>Full name</span>
+            <input
+              autoComplete="name"
+              aria-describedby="signup-full-name-error"
+              id="signup-full-name"
+              maxLength={120}
+              name="full_name"
+              placeholder="Your full name"
+              required
+            />
+            <AuthFieldError id="signup-full-name-error" />
+          </label>
+          <label className="signin-field">
+            <span>Username</span>
+            <input
+              autoComplete="username"
+              aria-describedby="signup-username-hint signup-username-error"
+              data-error-message="Use 3–30 letters, numbers, or underscores."
+              id="signup-username"
+              maxLength={30}
+              minLength={3}
+              name="username"
+              pattern="[A-Za-z0-9_]{3,30}"
+              placeholder="Choose a username"
+              required
+            />
+            <AuthFieldError id="signup-username-error" />
+            <span className="signin-field-hint" id="signup-username-hint">
+              3–30 letters, numbers, or underscores.
+            </span>
+          </label>
+          <label className="signin-field">
+            <span>Email</span>
+            <input
+              autoComplete="email"
+              aria-describedby="signup-email-error"
+              id="signup-email"
+              maxLength={254}
+              name="email"
+              placeholder="you@example.com"
+              required
+              type="email"
+            />
+            <AuthFieldError id="signup-email-error" />
+          </label>
+          <label className="signin-field" htmlFor="signup-password">
+            <span>Password</span>
+            <AuthPasswordInput
+              autoComplete="new-password"
+              aria-describedby="signup-password-hint signup-password-error"
+              id="signup-password"
+              maxLength={128}
+              minLength={12}
+              name="password"
+              placeholder="Create a password"
+              required
+            />
+            <AuthFieldError id="signup-password-error" />
+            <span className="signin-field-hint" id="signup-password-hint">
+              Use at least 12 characters.
+            </span>
+          </label>
+          <label className="signin-field" htmlFor="signup-confirm-password">
+            <span>Confirm password</span>
+            <AuthPasswordInput
+              autoComplete="new-password"
+              aria-describedby="signup-confirm-password-error"
+              id="signup-confirm-password"
+              maxLength={128}
+              minLength={12}
+              name="confirm_password"
+              placeholder="Re-enter your password"
+              required
+            />
+            <AuthFieldError id="signup-confirm-password-error" />
+          </label>
+          <AuthSubmitButton
+            className="signin-primary-button"
+            pendingLabel="Submitting request…"
+          >
+            Request access
+          </AuthSubmitButton>
+        </AuthValidatedForm>
 
-        <section className="google-section" aria-labelledby="google-heading">
-          <h2 id="google-heading">Or continue with Google</h2>
+        <div className="signin-divider" aria-hidden="true">
+          <span>or</span>
+        </div>
+
+        <section aria-label="Google sign-in" className="signin-google-section">
           <form action={googleSignInAction}>
-            <button
-              className="button-secondary"
+            <AuthSubmitButton
+              className="signin-secondary-button signin-google-button"
+              describedBy={!googleEnabled ? "signup-google-note" : undefined}
               disabled={!googleEnabled}
-              type="submit"
+              pendingLabel="Connecting to Google…"
             >
+              <GoogleMark />
               Continue with Google
-            </button>
+            </AuthSubmitButton>
           </form>
-          <p className="muted">
-            New Google accounts also remain pending until an authorized officer
-            approves the membership request.
+          <p className="signin-google-note">
+            New Google accounts also need email confirmation and officer
+            approval before member access is enabled.
           </p>
           {!googleEnabled ? (
-            <p className="muted">
+            <p className="signin-google-note" id="signup-google-note">
               Google is available after its OAuth credentials are configured in
               Supabase Auth.
             </p>
           ) : null}
         </section>
 
-        <div className="auth-switcher">
-          <p>Already have an account?</p>
-          <Link className="button-link button-link-secondary" href="/">
-            Return to sign in
-          </Link>
-        </div>
-      </section>
-    </main>
+        <p className="signin-account-prompt">
+          Already have an account? <Link href="/">Sign in</Link>
+        </p>
+      </div>
+    </AuthPageLayout>
   );
 }
