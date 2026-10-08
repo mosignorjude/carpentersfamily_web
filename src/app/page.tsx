@@ -145,7 +145,6 @@ export default async function HomePage({
             <form action={googleSignInAction}>
               <AuthSubmitButton
                 className="signin-secondary-button signin-google-button"
-                describedBy={!googleEnabled ? "signin-google-note" : undefined}
                 disabled={!googleEnabled}
                 pendingLabel="Connecting to Google…"
               >
@@ -153,12 +152,6 @@ export default async function HomePage({
                 Continue with Google
               </AuthSubmitButton>
             </form>
-            {!googleEnabled ? (
-              <p className="signin-google-note" id="signin-google-note">
-                Available after Google OAuth credentials are configured in
-                Supabase Auth.
-              </p>
-            ) : null}
           </section>
 
           <p className="signin-account-prompt">

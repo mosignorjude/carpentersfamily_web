@@ -199,7 +199,6 @@ export default async function SignupPage({
           <form action={googleSignInAction}>
             <AuthSubmitButton
               className="signin-secondary-button signin-google-button"
-              describedBy={!googleEnabled ? "signup-google-note" : undefined}
               disabled={!googleEnabled}
               pendingLabel="Connecting to Google…"
             >
@@ -207,16 +206,6 @@ export default async function SignupPage({
               Continue with Google
             </AuthSubmitButton>
           </form>
-          <p className="signin-google-note">
-            New Google accounts also need email confirmation and officer
-            approval before member access is enabled.
-          </p>
-          {!googleEnabled ? (
-            <p className="signin-google-note" id="signup-google-note">
-              Google is available after its OAuth credentials are configured in
-              Supabase Auth.
-            </p>
-          ) : null}
         </section>
 
         <p className="signin-account-prompt">

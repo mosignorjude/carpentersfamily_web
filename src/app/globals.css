@@ -392,11 +392,13 @@ summary {
   display: grid;
   width: min(100%, 1680px);
   min-height: 100svh;
-  grid-template-columns: minmax(0, 0.96fr) minmax(0, 1.04fr);
+  grid-template-areas: "promo form";
+  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
   margin-inline: auto;
 }
 
 .signin-form-panel {
+  grid-area: form;
   display: flex;
   min-width: 0;
   align-items: center;
@@ -744,15 +746,6 @@ summary {
   flex: 0 0 auto;
 }
 
-.signin-google-note {
-  max-width: 36ch;
-  margin: 0.55rem auto 0;
-  color: var(--color-muted);
-  font-size: 0.78rem;
-  line-height: 1.45;
-  text-align: center;
-}
-
 .signin-account-prompt {
   margin: 1.45rem 0 0;
   color: var(--color-muted);
@@ -776,6 +769,7 @@ summary {
 }
 
 .signin-promo-panel {
+  grid-area: promo;
   position: relative;
   display: flex;
   min-width: 0;
@@ -866,6 +860,9 @@ summary {
 
 @media (max-width: 56rem) {
   .signin-layout {
+    grid-template-areas:
+      "form"
+      "promo";
     grid-template-columns: minmax(0, 1fr);
   }
 
