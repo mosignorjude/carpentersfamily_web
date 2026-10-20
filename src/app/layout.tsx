@@ -18,6 +18,14 @@ const ibmPlexSans = IBM_Plex_Sans({
 export const metadata: Metadata = {
   title: clubBrand.name,
   description: clubBrand.description,
+  icons: {
+    icon: [
+      { url: "/icon.png", type: "image/png" },
+      { url: clubBrand.logoSrc, type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
+    shortcut: "/favicon.ico",
+  },
   robots: {
     index: false,
     follow: false,
