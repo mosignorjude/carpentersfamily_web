@@ -5,7 +5,6 @@ import {
   Calendar,
   CheckCheck,
   ChevronRight,
-  ExternalLink,
   Megaphone,
   Users,
   Wallet,
@@ -281,15 +280,16 @@ export function NotificationsDrawer({
 
         {/* Drawer Footer */}
         <div className="p-3.5 border-t border-[#E5DDD3] bg-white flex items-center justify-between text-xs text-[#54433A] shrink-0">
-          <span className="font-medium">Private Member Portal</span>
-          <Link
-            className="font-bold text-[#174C37] hover:underline inline-flex items-center gap-1"
-            href="/notifications"
+          <span className="font-medium text-[#7A685D]">
+            Private Member Portal
+          </span>
+          <button
+            type="button"
+            className="font-semibold text-[#174C37] hover:underline cursor-pointer"
             onClick={onClose}
           >
-            <span>All notifications & settings</span>
-            <ExternalLink className="w-3 h-3" />
-          </Link>
+            Close
+          </button>
         </div>
       </aside>
     </div>
