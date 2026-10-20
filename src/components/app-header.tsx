@@ -10,6 +10,9 @@ import {
   type AppNotification,
   NotificationsDrawer,
 } from "@/components/notifications/notifications-drawer";
+import UserProfileBadge, {
+  type UserProfileData,
+} from "@/components/user-profile-badge";
 import { clubBrand } from "@/lib/brand";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -28,6 +31,7 @@ interface AppHeaderProps {
     events: { id: string; title: string }[];
   };
   dashboard?: boolean;
+  userProfile?: UserProfileData;
 }
 
 export default function AppHeader({
@@ -37,6 +41,7 @@ export default function AppHeader({
   currentUserId,
   searchData,
   dashboard = false,
+  userProfile,
 }: AppHeaderProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
@@ -146,6 +151,9 @@ export default function AppHeader({
               </span>
             ) : null}
           </button>
+
+          {/* User Profile Badge (Desktop inline, mobile avatar dropdown) */}
+          {userProfile && <UserProfileBadge user={userProfile} />}
         </div>
       </header>
 

@@ -4,6 +4,9 @@ import { signOutAction } from "@/app/actions";
 import AppHeader from "@/components/app-header";
 import AppNavigationLinks from "@/components/app-navigation-links";
 import type { AppNotification } from "@/components/notifications/notifications-drawer";
+import UserProfileBadge, {
+  type UserProfileData,
+} from "@/components/user-profile-badge";
 import { clubBrand } from "@/lib/brand";
 
 type NavigationItem = { href: string; label: string };
@@ -16,6 +19,7 @@ export default function AppShell({
   initialNotifications = [],
   currentUserId,
   searchData,
+  userProfile,
 }: {
   children: ReactNode;
   items: NavigationItem[];
@@ -27,6 +31,7 @@ export default function AppShell({
     announcements: { id: string; title: string }[];
     events: { id: string; title: string }[];
   };
+  userProfile?: UserProfileData;
 }) {
   const memberNavigationItems = items;
 
@@ -60,9 +65,10 @@ export default function AppShell({
             showIcons={dashboard}
           />
         </nav>
-        {dashboard ? (
-          <footer className="app-sidebar-footer">
-            <p>{clubBrand.location}</p>
+        <footer className="app-sidebar-footer">
+          {userProfile ? (
+            <UserProfileBadge user={userProfile} variant="sidebar" />
+          ) : (
             <form action={signOutAction} className="app-signout-form">
               <button
                 id="btn-app-signout"
@@ -72,18 +78,8 @@ export default function AppShell({
                 Sign out
               </button>
             </form>
-          </footer>
-        ) : (
-          <form action={signOutAction} className="app-signout-form">
-            <button
-              id="btn-app-signout-alt"
-              className="button-secondary"
-              type="submit"
-            >
-              Sign out
-            </button>
-          </form>
-        )}
+          )}
+        </footer>
       </aside>
       <div className="app-shell-main">
         <AppHeader
@@ -93,6 +89,7 @@ export default function AppShell({
           memberNavigationItems={memberNavigationItems}
           searchData={searchData}
           unreadCount={unreadCount}
+          userProfile={userProfile}
         />
         <div className="app-page-content" id="main-content" tabIndex={-1}>
           {children}

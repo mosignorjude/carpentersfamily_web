@@ -2,15 +2,28 @@ import type { ReactNode } from "react";
 import { ClubIcon } from "@/components/club-icon";
 import { clubBrand } from "@/lib/brand";
 
-export function AuthBrand({ inverse = false }: { inverse?: boolean }) {
+export function AuthBrand({
+  inverse = false,
+  showText = false,
+}: {
+  inverse?: boolean;
+  showText?: boolean;
+}) {
   return (
     <div className={`signin-brand${inverse ? " signin-brand-inverse" : ""}`}>
       {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
-      <img alt="" height={194} src={clubBrand.logoSrc} width={105} />
-      <span>
-        <strong>{clubBrand.shortName}</strong>
-        <small>{clubBrand.slogan}</small>
-      </span>
+      <img
+        alt={clubBrand.name}
+        height={194}
+        src={clubBrand.logoSrc}
+        width={105}
+      />
+      {showText && (
+        <span>
+          <strong>{clubBrand.shortName}</strong>
+          <small>{clubBrand.slogan}</small>
+        </span>
+      )}
     </div>
   );
 }
@@ -72,7 +85,7 @@ function AuthPhotoPanel({ variant }: { variant: AuthPageVariant }) {
       <div aria-hidden="true" className="signin-hero-shade" />
       <div className="signin-hero-content">
         <div>
-          <AuthBrand inverse />
+          <AuthBrand inverse showText />
           <div className="signin-hero-message">
             <h2 id="auth-hero-heading">
               {copy.heading}

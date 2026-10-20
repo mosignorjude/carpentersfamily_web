@@ -3,6 +3,7 @@ import AppShell from "@/components/app-shell";
 import type { AppNotification } from "@/components/notifications/notifications-drawer";
 import { getActiveMemberNavigationItems } from "@/lib/app-navigation.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { formatPrimaryRole } from "@/lib/user-profile";
 
 export default async function MemberLayout({
   children,
@@ -28,7 +29,7 @@ export default async function MemberLayout({
   ] = await Promise.all([
     supabase
       .from("member_profiles")
-      .select("status")
+      .select("status, full_name, username")
       .eq("id", authData.user.id)
       .maybeSingle(),
     supabase
@@ -54,13 +55,27 @@ export default async function MemberLayout({
       .limit(20),
   ]);
 
+  const roles = (roleResult.data ?? []).map((assignment) => assignment.role);
   const items = getActiveMemberNavigationItems(
     profileResult.error ? null : profileResult.data?.status,
-    (roleResult.data ?? []).map((assignment) => assignment.role),
+    roles,
     Boolean(roleResult.error),
   );
 
   if (!items) return children;
+
+  const userProfile = {
+    fullName:
+      profileResult.data?.full_name ||
+      (authData.user.user_metadata?.full_name as string) ||
+      "Club Member",
+    username:
+      profileResult.data?.username ||
+      (authData.user.user_metadata?.username as string) ||
+      authData.user.email?.split("@")[0] ||
+      "member",
+    role: formatPrimaryRole(roles),
+  };
 
   const notifications = (notificationResult.data ?? []) as AppNotification[];
   const unreadCount = notifications.filter((n) => n.read_at === null).length;
@@ -83,6 +98,7 @@ export default async function MemberLayout({
       items={items}
       searchData={searchData}
       unreadCount={unreadCount}
+      userProfile={userProfile}
     >
       {children}
     </AppShell>

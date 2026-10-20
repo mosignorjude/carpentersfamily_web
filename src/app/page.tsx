@@ -21,6 +21,7 @@ import { clubBrand } from "@/lib/brand";
 import { getHomeDashboardData } from "@/lib/home-dashboard.server";
 import { isGoogleAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { formatPrimaryRole } from "@/lib/user-profile";
 
 const notices: Record<string, string> = {
   credentials: "The email or password could not be verified.",
@@ -355,6 +356,19 @@ export default async function HomePage({
     })),
   };
 
+  const userProfile = {
+    fullName:
+      profile.full_name ||
+      (authData.user.user_metadata?.full_name as string) ||
+      "Club Member",
+    username:
+      profile.username ||
+      (authData.user.user_metadata?.username as string) ||
+      authData.user.email?.split("@")[0] ||
+      "member",
+    role: formatPrimaryRole(roles),
+  };
+
   return (
     <AppShell
       currentUserId={authData.user.id}
@@ -363,6 +377,7 @@ export default async function HomePage({
       items={navigationItems}
       searchData={searchData}
       unreadCount={unreadCount}
+      userProfile={userProfile}
     >
       <HomeDashboardView
         dashboard={dashboard}

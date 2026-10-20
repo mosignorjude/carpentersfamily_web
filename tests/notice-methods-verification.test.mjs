@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { getSystemNotice, SYSTEM_NOTICES } from "../src/lib/system-notices.ts";
+import { formatPrimaryRole } from "../src/lib/user-profile.ts";
 
 // ============================================================================
 // 1. FLASH MESSAGES & TOAST NOTIFICATIONS (Phase 1 & 2 Verification)
@@ -429,7 +430,10 @@ test("micro-interactions: chevron rotation classes toggle smoothly", () => {
 
 test("mobile header: renders mobile brand logo and shortName with lg:hidden", async () => {
   const fs = await import("node:fs");
-  const headerContent = fs.readFileSync("src/components/app-header.tsx", "utf8");
+  const headerContent = fs.readFileSync(
+    "src/components/app-header.tsx",
+    "utf8",
+  );
 
   // Verified brand import and mobile Link existence
   assert.ok(headerContent.includes('import { clubBrand } from "@/lib/brand"'));
@@ -469,9 +473,252 @@ test("mobile drawer: panel css anchors to left under menu toggle button", async 
 
 test("mobile drawer: includes outside click dismissal backdrop", async () => {
   const fs = await import("node:fs");
-  const menuContent = fs.readFileSync("src/components/mobile-app-menu.tsx", "utf8");
+  const menuContent = fs.readFileSync(
+    "src/components/mobile-app-menu.tsx",
+    "utf8",
+  );
 
   assert.ok(menuContent.includes("isOpen && ("));
   assert.ok(menuContent.includes("setIsOpen(false)"));
   assert.ok(menuContent.includes("fixed inset-0 z-70"));
+});
+
+// ============================================================================
+// 7. NAVIGATION LOADING FEEDBACK & SKELETON SUSPENSE
+// ============================================================================
+
+test("navigation progress: root layout renders NavigationProgressBar", async () => {
+  const fs = await import("node:fs");
+  const layoutContent = fs.readFileSync("src/app/layout.tsx", "utf8");
+
+  assert.ok(
+    layoutContent.includes(
+      'import { NavigationProgressBar } from "@/components/ui/navigation-progress-bar"',
+    ),
+    "Root layout should import NavigationProgressBar",
+  );
+  assert.ok(
+    layoutContent.includes("<NavigationProgressBar />"),
+    "Root layout should render NavigationProgressBar in body",
+  );
+});
+
+test("navigation progress: component intercepts internal links and manages progress role", async () => {
+  const fs = await import("node:fs");
+  const progressContent = fs.readFileSync(
+    "src/components/ui/navigation-progress-bar.tsx",
+    "utf8",
+  );
+
+  assert.ok(progressContent.includes('role="progressbar"'));
+  assert.ok(progressContent.includes("aria-valuemin={0}"));
+  assert.ok(progressContent.includes("aria-valuemax={100}"));
+  assert.ok(progressContent.includes("usePathname()"));
+  assert.ok(progressContent.includes("useSearchParams()"));
+  assert.ok(progressContent.includes('document.addEventListener("click"'));
+  assert.ok(progressContent.includes('window.addEventListener("popstate"'));
+  assert.ok(progressContent.includes("Suspense"));
+});
+
+test("member loading: route fallback provides accessible skeleton with aria-busy", async () => {
+  const fs = await import("node:fs");
+  const loadingContent = fs.readFileSync(
+    "src/app/(member)/loading.tsx",
+    "utf8",
+  );
+
+  assert.ok(
+    loadingContent.includes('role="status"'),
+    "Loading skeleton should have status role",
+  );
+  assert.ok(
+    loadingContent.includes('aria-busy="true"'),
+    "Loading skeleton should indicate busy state",
+  );
+  assert.ok(
+    loadingContent.includes("animate-pulse"),
+    "Loading skeleton should use subtle pulsing animations",
+  );
+  assert.ok(
+    loadingContent.includes("sr-only"),
+    "Loading skeleton should provide screen reader text",
+  );
+});
+
+// ============================================================================
+// 8. AUTH BRAND & USER PROFILE BADGE VERIFICATION
+// ============================================================================
+
+test("formatPrimaryRole: correctly prioritizes club governance roles", () => {
+  assert.equal(formatPrimaryRole(["admin", "executive"]), "ADMIN");
+  assert.equal(formatPrimaryRole(["backup_admin", "member"]), "BACKUP ADMIN");
+  assert.equal(formatPrimaryRole(["executive", "committee"]), "EXECUTIVE");
+  assert.equal(formatPrimaryRole(["lead"]), "EVENT LEAD");
+  assert.equal(formatPrimaryRole(["assistant"]), "EVENT ASSISTANT");
+  assert.equal(formatPrimaryRole(["committee"]), "COMMITTEE");
+  assert.equal(formatPrimaryRole(["member"]), "MEMBER");
+  assert.equal(formatPrimaryRole([]), "MEMBER");
+  assert.equal(formatPrimaryRole(["unknown_role"]), "MEMBER");
+});
+
+test("user profile badge: initial calculation handles edge cases gracefully", () => {
+  function getBadgeInitial(fullName, username) {
+    return (fullName || username || "M").trim().charAt(0).toUpperCase();
+  }
+
+  assert.equal(getBadgeInitial("John Doe", "jdoe"), "J");
+  assert.equal(getBadgeInitial("", "mosignor"), "M");
+  assert.equal(getBadgeInitial("  alex  ", ""), "A");
+  assert.equal(getBadgeInitial("", ""), "M");
+  assert.equal(getBadgeInitial("carlos", "admin"), "C");
+});
+
+test("auth brand: form sections display logo only without brand name or slogan", async () => {
+  const fs = await import("node:fs");
+
+  const authLayoutContent = fs.readFileSync(
+    "src/components/auth-page-layout.tsx",
+    "utf8",
+  );
+  assert.ok(
+    authLayoutContent.includes("showText = false"),
+    "AuthBrand showText parameter must default to false",
+  );
+  assert.ok(
+    authLayoutContent.includes("{showText && ("),
+    "Brand name and slogan must only render when showText is true",
+  );
+
+  // Check form pages render <AuthBrand /> without showText
+  const signInContent = fs.readFileSync("src/app/page.tsx", "utf8");
+  assert.ok(
+    signInContent.includes("<AuthBrand />"),
+    "Sign in page must use logo-only AuthBrand in form section",
+  );
+
+  const signUpContent = fs.readFileSync("src/app/signup/page.tsx", "utf8");
+  assert.ok(
+    signUpContent.includes("<AuthBrand />"),
+    "Sign up page must use logo-only AuthBrand in form section",
+  );
+
+  const forgotPwContent = fs.readFileSync(
+    "src/app/forgot-password/page.tsx",
+    "utf8",
+  );
+  assert.ok(
+    forgotPwContent.includes("<AuthBrand />"),
+    "Forgot password page must use logo-only AuthBrand in form section",
+  );
+
+  const resetPwContent = fs.readFileSync(
+    "src/app/reset-password/page.tsx",
+    "utf8",
+  );
+  assert.ok(
+    resetPwContent.includes("<AuthBrand />"),
+    "Reset password page must use logo-only AuthBrand in form section",
+  );
+
+  // Auth photo panel retains showText
+  assert.ok(
+    authLayoutContent.includes("<AuthBrand inverse showText />"),
+    "Auth photo panel should retain brand name and slogan with contrast",
+  );
+});
+
+test("user profile badge: component supports desktop inline, mobile dropdown, and escape dismissal", async () => {
+  const fs = await import("node:fs");
+
+  const badgeContent = fs.readFileSync(
+    "src/components/user-profile-badge.tsx",
+    "utf8",
+  );
+
+  // Structural checks
+  assert.ok(
+    badgeContent.includes("hidden sm:flex"),
+    "Must provide desktop inline badge layout",
+  );
+  assert.ok(
+    badgeContent.includes("sm:hidden"),
+    "Must provide mobile dropdown layout",
+  );
+  assert.ok(
+    badgeContent.includes('aria-haspopup="menu"'),
+    "Mobile toggle button must have aria-haspopup",
+  );
+  assert.ok(
+    badgeContent.includes("aria-expanded={isDropdownOpen}"),
+    "Mobile toggle button must indicate expanded state",
+  );
+  assert.ok(
+    badgeContent.includes('role="menu"'),
+    "Dropdown container must have menu role",
+  );
+  assert.ok(
+    badgeContent.includes('role="menuitem"'),
+    "Dropdown signout button must have menuitem role",
+  );
+  assert.ok(
+    badgeContent.includes('event.key === "Escape"'),
+    "Must dismiss dropdown on Escape key",
+  );
+  assert.ok(
+    badgeContent.includes("handleClickOutside"),
+    "Must dismiss dropdown on outside click",
+  );
+  assert.ok(
+    badgeContent.includes("signOutAction"),
+    "Must bind sign out action",
+  );
+
+  // Shell & Header integration checks
+  const headerContent = fs.readFileSync(
+    "src/components/app-header.tsx",
+    "utf8",
+  );
+  assert.ok(
+    headerContent.includes("<UserProfileBadge user={userProfile} />"),
+    "AppHeader must render UserProfileBadge",
+  );
+
+  const shellContent = fs.readFileSync("src/components/app-shell.tsx", "utf8");
+  assert.ok(
+    shellContent.includes("userProfile?: UserProfileData"),
+    "AppShell must accept userProfile prop",
+  );
+  assert.ok(
+    shellContent.includes('variant="sidebar"'),
+    "AppShell sidebar footer must render UserProfileBadge in sidebar variant",
+  );
+
+  const memberLayoutContent = fs.readFileSync(
+    "src/app/(member)/layout.tsx",
+    "utf8",
+  );
+  assert.ok(
+    memberLayoutContent.includes('from "@/lib/user-profile"'),
+    "Member layout must import formatPrimaryRole from @/lib/user-profile (server-safe)",
+  );
+  assert.ok(
+    memberLayoutContent.includes("userProfile={userProfile}"),
+    "Member layout must forward userProfile to AppShell",
+  );
+
+  const homePageContent = fs.readFileSync("src/app/page.tsx", "utf8");
+  assert.ok(
+    homePageContent.includes('from "@/lib/user-profile"'),
+    "Home page must import formatPrimaryRole from @/lib/user-profile (server-safe)",
+  );
+  assert.ok(
+    homePageContent.includes("userProfile={userProfile}"),
+    "Home page must forward userProfile to AppShell",
+  );
+
+  assert.ok(
+    !badgeContent.includes("export function formatPrimaryRole") &&
+      !badgeContent.includes("export { formatPrimaryRole"),
+    "Client component user-profile-badge must not export server utilities",
+  );
 });
