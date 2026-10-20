@@ -1,16 +1,9 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signOutAction } from "@/app/actions";
+import { DuesPageView } from "@/components/dues/dues-page-view";
+import type { DuesPaymentRequestItem } from "@/components/dues/officer-dues-approvals-card";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import {
-  type DuesMemberOption,
-  type DuesMonthOption,
-  DuesPaymentCorrectionForm,
-  DuesPaymentForm,
-  DuesRateForm,
-  DuesWriteOffForm,
-  type PaymentCorrection,
-} from "./dues-forms";
+import type { DuesMemberOption, DuesMonthOption } from "./dues-forms";
 
 type DuesStatusRow = {
   member_id: string;
@@ -62,6 +55,11 @@ const notices: Record<string, string> = {
   "invalid-request": "The dues operation details were invalid.",
   "operation-failed":
     "The request was rejected. Check the member state, selected months, amount, rate, and reason, then try again.",
+  "dues-request-submitted":
+    "Your dues payment submission has been received and queued for officer review.",
+  "dues-request-approved":
+    "The dues payment submission was verified and approved into the club ledger.",
+  "dues-request-rejected": "The dues payment submission was rejected.",
 };
 
 function todayInWAT() {
@@ -91,32 +89,6 @@ function formatMonth(month: string) {
   }).format(value);
 }
 
-function formatDate(date: string) {
-  const value = new Date(`${date.slice(0, 10)}T00:00:00.000Z`);
-  return new Intl.DateTimeFormat("en-NG", {
-    dateStyle: "medium",
-    timeZone: "Africa/Lagos",
-  }).format(value);
-}
-
-function formatNaira(value: string | number | null | undefined) {
-  if (value === null || value === undefined) return "Rate unavailable";
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(Number(value));
-}
-
-function statusLabel(row: DuesStatusRow, currentMonth: string) {
-  if (row.status === "paid") return "Paid";
-  if (row.status === "written_off") return "Written off";
-  if (row.is_overdue) return "Overdue";
-  if (row.covered_month.slice(0, 7) > currentMonth) return "Upcoming";
-  if (row.covered_month.slice(0, 7) === currentMonth) return "Due at month end";
-  return "Unpaid";
-}
-
 function toMonthOption(row: DuesStatusRow): DuesMonthOption {
   return {
     month: row.covered_month,
@@ -129,14 +101,6 @@ function pageNumber(value?: string) {
   if (!value || !/^\d{1,6}$/.test(value)) return 0;
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) ? parsed : 0;
-}
-
-function historyPageHref(memberId: string, key: string, page: number) {
-  const params = new URLSearchParams({
-    member_id: memberId,
-    [key]: String(page),
-  });
-  return `/dues?${params.toString()}`;
 }
 
 export default async function DuesPage({
@@ -297,6 +261,70 @@ export default async function DuesPage({
     coverageRows = (data ?? []) as DispositionRow[];
   }
 
+  let pendingRequests: DuesPaymentRequestItem[] = [];
+  const pendingMembersMap: Record<
+    string,
+    { full_name: string; username: string; roles: string[] }
+  > = {};
+
+  if (isOfficer) {
+    const { data: pendingData } = await supabase
+      .from("dues_payment_requests")
+      .select(
+        "id, member_id, amount_ngn, covered_months, payment_method, payment_reference, notes, status, created_at, reviewed_by, reviewed_at, review_reason",
+      )
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (pendingData) {
+      pendingRequests = pendingData as DuesPaymentRequestItem[];
+      const pendingMemberIds = [
+        ...new Set(pendingRequests.map((r) => r.member_id)),
+      ];
+      if (pendingMemberIds.length > 0) {
+        const [profilesRes, rolesRes] = await Promise.all([
+          supabase
+            .from("member_profiles")
+            .select("id, full_name, username")
+            .in("id", pendingMemberIds),
+          supabase
+            .from("member_role_assignments")
+            .select("member_id, role")
+            .in("member_id", pendingMemberIds)
+            .is("revoked_at", null),
+        ]);
+        const rolesByMember = new Map<string, string[]>();
+        for (const row of rolesRes.data ?? []) {
+          const list = rolesByMember.get(row.member_id) ?? [];
+          list.push(row.role);
+          rolesByMember.set(row.member_id, list);
+        }
+        for (const p of profilesRes.data ?? []) {
+          pendingMembersMap[p.id] = {
+            full_name: p.full_name,
+            username: p.username,
+            roles: rolesByMember.get(p.id) ?? [],
+          };
+        }
+      }
+    }
+  }
+
+  let ownRequests: DuesPaymentRequestItem[] = [];
+  const { data: ownRequestsData } = await supabase
+    .from("dues_payment_requests")
+    .select(
+      "id, member_id, amount_ngn, covered_months, payment_method, payment_reference, notes, status, created_at, reviewed_by, reviewed_at, review_reason",
+    )
+    .eq("member_id", authData.user.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (ownRequestsData) {
+    ownRequests = ownRequestsData as DuesPaymentRequestItem[];
+  }
+
   let duesAudit: AuditRow[] = [];
   let auditError = false;
   let auditCount = 0;
@@ -312,6 +340,9 @@ export default async function DuesPage({
         "dues_payment_corrected",
         "dues_month_written_off",
         "dues_rate_changed",
+        "dues_payment_request_submitted",
+        "dues_payment_request_approved",
+        "dues_payment_request_rejected",
       ])
       .or(`target_member_id.eq.${targetMemberId},action.eq.dues_rate_changed`)
       .order("occurred_at", { ascending: false })
@@ -361,438 +392,48 @@ export default async function DuesPage({
     statusResult.error || paymentResult.error || coverageError,
   );
 
+  const isAdmin = roles.has("admin");
+
   return (
-    <main className="shell dues-page">
-      <section className="panel dues-panel">
-        <div className="dues-heading">
-          <div>
-            <p className="eyebrow">Private financial record</p>
-            <h1>Dues</h1>
-            <p>
-              {isOfficer
-                ? "Officer access is recorded. Changes are checked in PostgreSQL and written to the audit history."
-                : "You can see your own dues history. Other members’ individual dues details are private."}
-            </p>
-          </div>
-          <nav aria-label="Member navigation" className="dues-nav">
-            <Link href="/">Member portal</Link>
-            <Link href="/finances">Club finances</Link>
-            {isOfficer ? (
-              <Link href="/admin/members">Member administration</Link>
-            ) : null}
-            <form action={signOutAction}>
-              <button className="button-secondary" type="submit">
-                Sign out
-              </button>
-            </form>
-          </nav>
-        </div>
-
-        <section
-          aria-label="Dues report exports"
-          className="report-export-actions"
-        >
-          <form
-            action="/api/reports/dues"
-            method="post"
-            target="_blank"
-            rel="noopener"
-          >
-            <input name="format" type="hidden" value="csv" />
-            <button className="button-secondary" type="submit">
-              Download dues CSV
-            </button>
-          </form>
-          <form
-            action="/api/reports/dues"
-            method="post"
-            target="_blank"
-            rel="noopener"
-          >
-            <input name="format" type="hidden" value="pdf" />
-            <button className="button-secondary" type="submit">
-              Download dues PDF
-            </button>
-          </form>
-          <p className="muted">
-            Members receive their own dues rows. Executive, Admin, and Backup
-            Admin reports follow the existing officer access rules.
-          </p>
-        </section>
-
-        {notice ? (
-          <p className="notice" role="status">
-            {notice}
-          </p>
-        ) : null}
-        {invalidSelection ? (
-          <p className="notice" role="status">
-            That member selection could not be verified. Your own dues are
-            shown.
-          </p>
-        ) : null}
-        {roleError ? (
-          <p className="notice" role="status">
-            Officer access could not be verified, so this page shows only your
-            own records.
-          </p>
-        ) : null}
-
-        <section aria-labelledby="club-total-heading" className="dues-total">
-          <div>
-            <p className="eyebrow">Club aggregate</p>
-            <h2 id="club-total-heading">All-time dues income</h2>
-          </div>
-          <strong>
-            {incomeResult.error
-              ? "Unavailable"
-              : formatNaira(incomeResult.data)}
-          </strong>
-        </section>
-
-        {isOfficer ? (
-          <form action="/dues" className="member-picker" method="get">
-            <label>
-              Review member dues
-              <select defaultValue={targetMemberId} name="member_id">
-                {members.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.full_name} · @{option.username} · {option.status}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button className="button-secondary" type="submit">
-              View member dues
-            </button>
-            {memberListError ? (
-              <p className="muted" role="alert">
-                The member list could not be verified; no other member was
-                loaded.
-              </p>
-            ) : null}
-          </form>
-        ) : null}
-
-        <section aria-labelledby="member-dues-heading" className="dues-section">
-          <div className="section-heading dues-record-heading">
-            <div>
-              <p className="eyebrow">
-                {isOfficer ? "Officer view" : "Your record"}
-              </p>
-              <h2 id="member-dues-heading">{member.full_name}</h2>
-              <p className="muted">
-                @{member.username} · {member.status}
-              </p>
-            </div>
-            <div className="dues-balance">
-              <span>Unpaid total</span>
-              <strong>{formatNaira(openTotal)}</strong>
-            </div>
-          </div>
-
-          {detailedDataError ? (
-            <p role="alert">
-              Dues details could not be verified. No financial data or mutation
-              forms are available.
-            </p>
-          ) : duesRows.length === 0 ? (
-            <p>No dues months are available for this membership period.</p>
-          ) : (
-            <div className="table-scroll">
-              <table className="dues-table">
-                <caption>
-                  Dues status by eligible month for {member.full_name}
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Month</th>
-                    <th scope="col">Amount</th>
-                    <th scope="col">Due date</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...duesRows].reverse().map((row) => (
-                    <tr key={row.covered_month}>
-                      <th scope="row">{formatMonth(row.covered_month)}</th>
-                      <td>
-                        <span aria-hidden="true" className="dues-cell-label">
-                          Amount
-                        </span>
-                        {formatNaira(row.amount_ngn)}
-                      </td>
-                      <td>
-                        <span aria-hidden="true" className="dues-cell-label">
-                          Due date
-                        </span>
-                        {formatDate(row.due_date)}
-                      </td>
-                      <td>
-                        <span aria-hidden="true" className="dues-cell-label">
-                          Status
-                        </span>
-                        <span className="dues-row-status">
-                          {statusLabel(row, currentMonth.slice(0, 7))}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
-        <section
-          aria-labelledby="payment-history-heading"
-          className="dues-section"
-        >
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Payment history</p>
-              <h2 id="payment-history-heading">Recorded payments</h2>
-            </div>
-          </div>
-          {detailedDataError ? (
-            <p role="alert">
-              Payment history could not be verified. No payment records or
-              correction forms are available.
-            </p>
-          ) : payments.length > 0 ? (
-            <div className="member-list">
-              {payments.map((payment) => {
-                const paymentMonths = coverageByPayment.get(payment.id) ?? [];
-                const correction: PaymentCorrection = {
-                  id: payment.id,
-                  member_id: payment.member_id,
-                  amount_ngn: payment.amount_ngn,
-                  payment_date: payment.payment_date,
-                  covered_months: paymentMonths,
-                };
-                return (
-                  <article className="payment-card" key={payment.id}>
-                    <div className="section-heading">
-                      <div>
-                        <h3>{formatNaira(payment.amount_ngn)}</h3>
-                        <p className="muted">
-                          Paid {formatDate(payment.payment_date)}
-                        </p>
-                      </div>
-                      {payment.corrected_at ? (
-                        <span className="status-pill complete">Corrected</span>
-                      ) : null}
-                    </div>
-                    <p>
-                      Covered months:{" "}
-                      {paymentMonths.length > 0
-                        ? paymentMonths.map(formatMonth).join(", ")
-                        : "No current coverage"}
-                    </p>
-                    {canCorrect && paymentMonths.length > 0 ? (
-                      <DuesPaymentCorrectionForm
-                        members={members}
-                        payment={correction}
-                      />
-                    ) : null}
-                  </article>
-                );
-              })}
-            </div>
-          ) : paymentPage === 0 ? (
-            <p>No payment records are available.</p>
-          ) : (
-            <p>No payments exist on this page.</p>
-          )}
-          {!paymentResult.error &&
-          (paymentResult.count ?? 0) > HISTORY_PAGE_SIZE ? (
-            <nav
-              aria-label="Payment history pages"
-              className="history-pagination"
-            >
-              {paymentPage > 0 ? (
-                <Link
-                  href={historyPageHref(
-                    targetMemberId,
-                    "payment_page",
-                    paymentPage - 1,
-                  )}
-                >
-                  Newer payments
-                </Link>
-              ) : (
-                <span />
-              )}
-              <span>
-                Page {paymentPage + 1} of{" "}
-                {Math.ceil((paymentResult.count ?? 0) / HISTORY_PAGE_SIZE)}
-              </span>
-              {(paymentPage + 1) * HISTORY_PAGE_SIZE <
-              (paymentResult.count ?? 0) ? (
-                <Link
-                  href={historyPageHref(
-                    targetMemberId,
-                    "payment_page",
-                    paymentPage + 1,
-                  )}
-                >
-                  Older payments
-                </Link>
-              ) : (
-                <span />
-              )}
-            </nav>
-          ) : null}
-        </section>
-
-        {!detailedDataError && canRecord ? (
-          <section
-            aria-labelledby="record-payment-heading"
-            className="dues-section"
-          >
-            <p className="eyebrow">Officer mutation</p>
-            <h2 id="record-payment-heading">Record a dues payment</h2>
-            <DuesPaymentForm
-              availableMonths={availableMonths}
-              memberId={targetMemberId}
-              today={today}
-            />
-          </section>
-        ) : null}
-
-        {!detailedDataError && canWriteOff ? (
-          <section aria-labelledby="writeoff-heading" className="dues-section">
-            <p className="eyebrow">Final financial disposition</p>
-            <h2 id="writeoff-heading">Write off old unpaid dues</h2>
-            <p className="muted">
-              Executive, Admin, and Backup Admin actions require a reason and
-              remain in the audit history.
-            </p>
-            <DuesWriteOffForm
-              memberId={targetMemberId}
-              memberName={member.full_name}
-              pastUnpaidMonths={pastUnpaidMonths}
-            />
-          </section>
-        ) : null}
-
-        <section
-          aria-labelledby="rate-history-heading"
-          className="dues-section"
-        >
-          <p className="eyebrow">Rate history</p>
-          <h2 id="rate-history-heading">Monthly dues rates</h2>
-          {rateResult.error ? (
-            <p role="alert">The dues rate schedule could not be verified.</p>
-          ) : (
-            <div className="rate-list">
-              {rates.map((rate) => (
-                <article className="rate-item" key={rate.id}>
-                  <strong>{formatNaira(rate.monthly_amount_ngn)}</strong>
-                  <span>Effective {formatMonth(rate.effective_month)}</span>
-                  <span className="muted">{rate.reason}</span>
-                </article>
-              ))}
-            </div>
-          )}
-          {canChangeRate && !rateResult.error ? (
-            <div className="rate-change">
-              <h3>Change next month’s rate</h3>
-              <p className="muted">
-                Only the Admin or Backup Admin can schedule a rate. Effective
-                rates for past months cannot be edited.
-              </p>
-              <DuesRateForm nextMonth={nextMonth} />
-            </div>
-          ) : null}
-        </section>
-
-        {isOfficer ? (
-          <section
-            aria-labelledby="dues-audit-heading"
-            className="dues-section"
-          >
-            <p className="eyebrow">Officer-only audit history</p>
-            <h2 id="dues-audit-heading">Dues changes</h2>
-            {auditError ? (
-              <p role="alert">Dues audit history could not be loaded.</p>
-            ) : combinedAudit.length === 0 ? (
-              <p>
-                {auditPage === 0
-                  ? "No dues changes have been recorded."
-                  : "No changes exist on this page."}
-              </p>
-            ) : (
-              <div className="member-list">
-                {combinedAudit.map((entry) => (
-                  <article className="audit-card" key={entry.id}>
-                    <div className="section-heading">
-                      <div>
-                        <h3>{entry.action.replaceAll("_", " ")}</h3>
-                        <p className="muted">
-                          {formatDate(entry.occurred_at)} ·{" "}
-                          {actorNames.get(entry.actor_id) ?? "Club officer"}
-                        </p>
-                      </div>
-                      <span className="muted">{entry.entity_type}</span>
-                    </div>
-                    <p>
-                      <strong>Reason:</strong> {entry.reason}
-                    </p>
-                    <details>
-                      <summary>View recorded change</summary>
-                      <pre className="audit-data">
-                        {JSON.stringify(
-                          {
-                            before: entry.before_data,
-                            after: entry.after_data,
-                          },
-                          null,
-                          2,
-                        )}
-                      </pre>
-                    </details>
-                  </article>
-                ))}
-              </div>
-            )}
-            {!auditError && auditCount > HISTORY_PAGE_SIZE ? (
-              <nav aria-label="Dues audit pages" className="history-pagination">
-                {auditPage > 0 ? (
-                  <Link
-                    href={historyPageHref(
-                      targetMemberId,
-                      "audit_page",
-                      auditPage - 1,
-                    )}
-                  >
-                    Newer changes
-                  </Link>
-                ) : (
-                  <span />
-                )}
-                <span>
-                  Page {auditPage + 1} of{" "}
-                  {Math.ceil(auditCount / HISTORY_PAGE_SIZE)}
-                </span>
-                {(auditPage + 1) * HISTORY_PAGE_SIZE < auditCount ? (
-                  <Link
-                    href={historyPageHref(
-                      targetMemberId,
-                      "audit_page",
-                      auditPage + 1,
-                    )}
-                  >
-                    Older changes
-                  </Link>
-                ) : (
-                  <span />
-                )}
-              </nav>
-            ) : null}
-          </section>
-        ) : null}
-      </section>
-    </main>
+    <DuesPageView
+      actorNames={actorNames}
+      auditError={auditError}
+      auditPage={auditPage}
+      availableMonths={availableMonths}
+      canChangeRate={canChangeRate}
+      canCorrect={canCorrect}
+      canRecord={canRecord}
+      canWriteOff={canWriteOff}
+      clubTotalIncome={incomeResult.error ? null : incomeResult.data}
+      combinedAudit={combinedAudit}
+      coverageByPayment={coverageByPayment}
+      currentMonth={currentMonth}
+      detailedDataError={detailedDataError}
+      duesRows={duesRows}
+      invalidSelection={invalidSelection}
+      isAdmin={isAdmin}
+      isOfficer={isOfficer}
+      member={member}
+      memberListError={memberListError}
+      members={members}
+      nextMonth={nextMonth}
+      notice={notice}
+      openTotal={openTotal}
+      ownRequests={ownRequests}
+      pageSize={HISTORY_PAGE_SIZE}
+      pastUnpaidMonths={pastUnpaidMonths}
+      paymentPage={paymentPage}
+      payments={payments}
+      pendingMembersMap={pendingMembersMap}
+      pendingRequests={pendingRequests}
+      rates={rates}
+      roleError={Boolean(roleError)}
+      targetMemberId={targetMemberId}
+      today={today}
+      totalAuditCount={auditCount}
+      totalPaymentsCount={paymentResult.count ?? 0}
+      viewerId={authData.user.id}
+      viewerRoles={Array.from(roles)}
+    />
   );
 }

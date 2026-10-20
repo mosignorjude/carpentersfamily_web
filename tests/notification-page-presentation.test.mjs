@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   getNotificationCategoryLabel,
+  getNotificationHref,
   getNotificationReadLabel,
   getNotificationTimestamp,
   routinePreferenceCategories,
@@ -64,50 +65,37 @@ test("valid timestamps are localized to Lagos and malformed dates fail softly", 
   });
 });
 
-test("active account and caller-scoped queries remain required before showing data", () => {
-  assert.match(page, /supabase\.auth\.getUser\(\)/);
-  assert.match(page, /profile\?\.status !== "active"/);
-  assert.match(page, /\.eq\("id", authData\.user\.id\)/);
-  assert.match(page, /supabase\s*\.from\("notifications"\)/);
-  assert.match(page, /supabase\.from\("notification_preferences"\)/);
-  assert.match(page, /notificationResult\.error \|\| preferenceResult\.error/);
-  assert.ok(
-    page.indexOf("notificationResult.error || preferenceResult.error") <
-      page.indexOf("const notifications ="),
-    "failed reads must return before notification rows are rendered",
+test("notification href routes accurately to domain areas", () => {
+  assert.equal(getNotificationHref({ category: "dues_reminder" }), "/dues");
+  assert.equal(
+    getNotificationHref({ category: "officer_money", event_id: "evt-123" }),
+    "/events/evt-123/finance",
   );
-});
-
-test("empty inbox has a clear empty state without invented sample notices", () => {
-  assert.match(page, /notifications\.length === 0/);
-  assert.match(page, /You have no notifications yet\./);
-  assert.doesNotMatch(page, /Jane Doe|₦[\d,]+|pending dues/i);
-});
-
-test("read and preference actions are presented only through the intended controls", () => {
-  assert.match(page, /notification\.read_at === null\s*\?\s*\(/);
-  assert.match(page, /action=\{markNotificationReadAction\}/);
-  assert.match(page, /routinePreferenceCategories\.map/);
-  assert.match(page, /action=\{setNotificationPreferenceAction\}/);
-  assert.match(page, /Dues reminders and\s*officer alerts stay enabled/);
-});
-
-test("member-authored notification text stays escaped React text", () => {
-  assert.match(page, /\{notification\.title\}/);
-  assert.match(page, /\{notification\.body\}/);
-  assert.doesNotMatch(page, /dangerouslySetInnerHTML|\binnerHTML\s*=/i);
-});
-
-test("only allowlisted query notices are reflected and error state hides data", () => {
-  assert.match(page, /const notices: Record<string, string>/);
-  assert.match(
-    page,
-    /const notice = params\.notice \? notices\[params\.notice\] : undefined/,
+  assert.equal(
+    getNotificationHref({ category: "officer_money", event_id: null }),
+    "/finances",
   );
-  assert.match(
-    page,
-    /Notification data could not be loaded\. Your notifications and\s*preferences are hidden/,
+  assert.equal(
+    getNotificationHref({ category: "officer_member" }),
+    "/admin/members",
   );
-  assert.match(page, /role="alert"/);
-  assert.match(page, /href="\/notifications"/);
+  assert.equal(getNotificationHref({ category: "officer_event" }), "/events");
+  assert.equal(
+    getNotificationHref({ category: "attendance_open", event_id: "evt-123" }),
+    "/attendance?event=evt-123",
+  );
+  assert.equal(
+    getNotificationHref({ category: "attendance_open", event_id: null }),
+    "/attendance",
+  );
+  assert.equal(
+    getNotificationHref({ category: "announcement" }),
+    "/announcements",
+  );
+  assert.equal(getNotificationHref({ category: "new_poll" }), "/polls");
+  assert.equal(getNotificationHref({ category: "poll_closing" }), "/polls");
+});
+
+test("notifications page route redirects to home since notifications are in the header drawer", () => {
+  assert.match(page, /redirect\("\/"\)/);
 });

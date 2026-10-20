@@ -63,7 +63,10 @@ test("rejects invalid operation, member ID, empty/long/control-character reasons
     null,
   );
   assert.equal(parseExecutiveRoleRequest(validRequest({ reason: "  " })), null);
-  assert.equal(parseExecutiveRoleRequest(validRequest({ reason: "x".repeat(501) })), null);
+  assert.equal(
+    parseExecutiveRoleRequest(validRequest({ reason: "x".repeat(501) })),
+    null,
+  );
   assert.equal(
     parseExecutiveRoleRequest(validRequest({ reason: "Change\nrole" })),
     null,

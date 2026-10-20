@@ -51,3 +51,36 @@ export function getNotificationTimestamp(timestamp) {
     dateTime: date.toISOString(),
   };
 }
+
+/**
+ * Route target for a notification record.
+ * @param {{ category: string, event_id?: string | null }} notification
+ * @returns {string}
+ */
+export function getNotificationHref(notification) {
+  switch (notification.category) {
+    case "dues_reminder":
+      return "/dues";
+    case "officer_money":
+      return notification.event_id
+        ? `/events/${notification.event_id}/finance`
+        : "/finances";
+    case "officer_member":
+      return "/admin/members";
+    case "officer_event":
+      return "/events";
+    case "attendance_open":
+      return notification.event_id
+        ? `/attendance?event=${encodeURIComponent(notification.event_id)}`
+        : "/attendance";
+    case "event_activity":
+      return "/events";
+    case "announcement":
+      return "/announcements";
+    case "new_poll":
+    case "poll_closing":
+      return "/polls";
+    default:
+      return "/announcements";
+  }
+}

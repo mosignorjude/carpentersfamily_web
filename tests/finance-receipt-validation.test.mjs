@@ -46,8 +46,7 @@ describe("receipt file validation", () => {
       "application/pdf",
     );
     assert.equal(
-      validateReceiptBytes("receipt.jpeg", "image/jpeg", jpegBytes)
-        ?.extension,
+      validateReceiptBytes("receipt.jpeg", "image/jpeg", jpegBytes)?.extension,
       "jpeg",
     );
     assert.equal(
@@ -57,7 +56,10 @@ describe("receipt file validation", () => {
   });
 
   it("rejects empty, over-limit, renamed, and signature-spoofed files", () => {
-    assert.equal(validateReceiptBytes("empty.pdf", "application/pdf", new Uint8Array()), null);
+    assert.equal(
+      validateReceiptBytes("empty.pdf", "application/pdf", new Uint8Array()),
+      null,
+    );
     assert.equal(
       validateReceiptBytes(
         "large.pdf",
@@ -71,7 +73,11 @@ describe("receipt file validation", () => {
       null,
     );
     assert.equal(
-      validateReceiptBytes("fake.pdf", "application/pdf", new TextEncoder().encode("<script>")),
+      validateReceiptBytes(
+        "fake.pdf",
+        "application/pdf",
+        new TextEncoder().encode("<script>"),
+      ),
       null,
     );
     assert.equal(
@@ -82,8 +88,11 @@ describe("receipt file validation", () => {
 
   it("strips path components and neutralizes unsafe filename characters", () => {
     assert.equal(
-      validateReceiptBytes("../../club\\<receipt>.pdf", "application/pdf", pdfBytes)
-        ?.filename,
+      validateReceiptBytes(
+        "../../club\\<receipt>.pdf",
+        "application/pdf",
+        pdfBytes,
+      )?.filename,
       "_receipt_.pdf",
     );
   });
@@ -102,7 +111,11 @@ describe("receipt file validation", () => {
   it("parses bounded multipart data when Content-Length is absent", async () => {
     const form = new FormData();
     form.set("transactionId", "11111111-1111-1111-1111-111111111111");
-    form.set("receipt", new Blob([pdfBytes], { type: "application/pdf" }), "receipt.pdf");
+    form.set(
+      "receipt",
+      new Blob([pdfBytes], { type: "application/pdf" }),
+      "receipt.pdf",
+    );
     const request = new Request("https://club.example/api/finance-receipts", {
       method: "POST",
       body: form,
@@ -110,7 +123,10 @@ describe("receipt file validation", () => {
 
     const result = await readBoundedFormData(request, 1024);
     assert.equal(result.kind, "ok");
-    assert.equal(result.form.get("transactionId"), "11111111-1111-1111-1111-111111111111");
+    assert.equal(
+      result.form.get("transactionId"),
+      "11111111-1111-1111-1111-111111111111",
+    );
   });
 
   it("rejects a streamed request as soon as it exceeds the request cap", async () => {

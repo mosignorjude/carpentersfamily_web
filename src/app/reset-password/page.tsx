@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signOutAction, updatePasswordAction } from "@/app/actions";
+import { AuthBrand, AuthPageLayout } from "@/components/auth-page-layout";
 import AuthPasswordInput from "@/components/auth-password-input";
+import AuthSubmitButton from "@/components/auth-submit-button";
 import AuthValidatedForm, {
   AuthFieldError,
 } from "@/components/auth-validated-form";
@@ -24,12 +27,19 @@ export default async function ResetPasswordPage({
     supabase = await createSupabaseServerClient();
   } catch {
     return (
-      <main className="shell">
-        <section className="panel narrow-panel">
+      <AuthPageLayout variant="reset-password">
+        <div className="signin-content signin-config-state">
+          <AuthBrand />
+          <p className="signin-eyebrow">Account security</p>
           <h1>Reset password</h1>
-          <p>Authentication is not configured for this environment.</p>
-        </section>
-      </main>
+          <p className="signin-intro" role="alert">
+            Authentication is not configured for this environment.
+          </p>
+          <p className="signup-return-link">
+            <Link href="/">Return to sign in</Link>
+          </p>
+        </div>
+      </AuthPageLayout>
     );
   }
 
@@ -38,22 +48,34 @@ export default async function ResetPasswordPage({
 
   const notice = params.notice ? notices[params.notice] : undefined;
   return (
-    <main className="shell">
-      <section className="panel narrow-panel">
-        <p className="eyebrow">Account security</p>
-        <h1>Choose a new password</h1>
+    <AuthPageLayout variant="reset-password">
+      <div className="signin-content reset-password-content">
+        <AuthBrand />
+        <header className="signin-heading">
+          <p className="signin-eyebrow">Account security</p>
+          <h1 id="reset-password-heading">Choose a new password</h1>
+          <p className="signin-intro">
+            Create a strong password to secure your Carpenters Family account.
+          </p>
+        </header>
+
         {notice ? (
-          <p className="notice" role="status">
+          <p className="signin-notice signin-notice-error" role="alert">
             {notice}
           </p>
         ) : null}
-        <AuthValidatedForm action={updatePasswordAction} className="form-stack">
-          <label htmlFor="reset-new-password">
-            New password
+
+        <AuthValidatedForm
+          action={updatePasswordAction}
+          aria-labelledby="reset-password-heading"
+          className="signin-credentials-form"
+        >
+          <label className="signin-field" htmlFor="reset-new-password">
+            <span>New password</span>
             <AuthPasswordInput
               autoComplete="new-password"
+              aria-describedby="reset-new-password-hint reset-new-password-error"
               id="reset-new-password"
-              aria-describedby="reset-new-password-error"
               maxLength={128}
               minLength={12}
               name="password"
@@ -61,13 +83,16 @@ export default async function ResetPasswordPage({
               required
             />
             <AuthFieldError id="reset-new-password-error" />
+            <span className="signin-field-hint" id="reset-new-password-hint">
+              Use at least 12 characters.
+            </span>
           </label>
-          <label htmlFor="reset-confirm-password">
-            Confirm new password
+          <label className="signin-field" htmlFor="reset-confirm-password">
+            <span>Confirm new password</span>
             <AuthPasswordInput
               autoComplete="new-password"
-              id="reset-confirm-password"
               aria-describedby="reset-confirm-password-error"
+              id="reset-confirm-password"
               maxLength={128}
               minLength={12}
               name="confirm_password"
@@ -76,14 +101,23 @@ export default async function ResetPasswordPage({
             />
             <AuthFieldError id="reset-confirm-password-error" />
           </label>
-          <button type="submit">Update password</button>
+          <AuthSubmitButton
+            className="signin-primary-button"
+            pendingLabel="Updating password…"
+          >
+            Update password
+          </AuthSubmitButton>
         </AuthValidatedForm>
-        <form action={signOutAction}>
-          <button className="button-secondary" type="submit">
+
+        <form action={signOutAction} className="auth-cancel-form">
+          <AuthSubmitButton
+            className="signin-secondary-button auth-cancel-button"
+            pendingLabel="Signing out…"
+          >
             Cancel and sign out
-          </button>
+          </AuthSubmitButton>
         </form>
-      </section>
-    </main>
+      </div>
+    </AuthPageLayout>
   );
 }

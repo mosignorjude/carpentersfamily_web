@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertCircle, AlertTriangle, Plus, Tag } from "lucide-react";
 import {
   correctClubFinanceAction,
   createFinanceCategoryAction,
@@ -7,6 +8,8 @@ import {
   retireFinanceCategoryAction,
   voidClubFinanceAction,
 } from "@/app/actions";
+import { FormattedAmountInput } from "@/components/formatted-amount-input";
+import { FormSubmitButton } from "@/components/ui/cf-button";
 
 export type FinanceCategory = {
   id: string;
@@ -41,48 +44,114 @@ export function ClubIncomeForm({
   today,
   canBackdate,
   idempotencyKey,
+  onCancel,
 }: {
   today: string;
   canBackdate: boolean;
   idempotencyKey: string;
+  onCancel?: () => void;
 }) {
   const yearStart = `${today.slice(0, 4)}-01-01`;
   return (
-    <form action={recordClubFinanceAction} className="form-stack finance-form">
+    <form
+      action={recordClubFinanceAction}
+      className="space-y-4 text-xs text-[#3D291F]"
+    >
       <input name="kind" type="hidden" value="income" />
       <input name="idempotency_key" type="hidden" value={idempotencyKey} />
-      <label>
-        Amount in whole Naira
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label
+            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+            htmlFor="income-amount"
+          >
+            Amount in whole Naira (₦) <span className="text-[#BA3C2A]">*</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#7A685D]">
+              ₦
+            </span>
+            <FormattedAmountInput
+              className="w-full h-10 pl-8 pr-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+              id="income-amount"
+              name="amount_ngn"
+              placeholder="e.g. 50,000"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+            htmlFor="income-date"
+          >
+            Transaction Date <span className="text-[#BA3C2A]">*</span>
+          </label>
+          <input
+            id="income-date"
+            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+            defaultValue={today}
+            max={today}
+            min={canBackdate ? yearStart : today}
+            name="transaction_date"
+            required
+            type="date"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label
+          className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+          htmlFor="income-source-note"
+        >
+          Source Note / Income Description{" "}
+          <span className="text-[#BA3C2A]">*</span>
+        </label>
         <input
-          inputMode="numeric"
-          max="1000000000000"
-          min="1"
-          name="amount_ngn"
+          id="income-source-note"
+          autoComplete="off"
+          className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+          maxLength={500}
+          name="source_note"
+          placeholder="e.g. Corporate donation for community outreach project"
           required
-          step="1"
-          type="number"
         />
-      </label>
-      <label>
-        Date
+      </div>
+
+      <div>
+        <label
+          className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+          htmlFor="income-payer"
+        >
+          Payer / Donor Entity (Optional)
+        </label>
         <input
-          defaultValue={today}
-          max={today}
-          min={canBackdate ? yearStart : today}
-          name="transaction_date"
-          required
-          type="date"
+          id="income-payer"
+          autoComplete="off"
+          className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+          maxLength={160}
+          name="payer_payee"
+          placeholder="e.g. Chief O. Emeka Foundation"
         />
-      </label>
-      <label>
-        Source note
-        <input autoComplete="off" maxLength={500} name="source_note" required />
-      </label>
-      <label>
-        Payer, if available
-        <input autoComplete="off" maxLength={160} name="payer_payee" />
-      </label>
-      <button type="submit">Record non-dues income</button>
+      </div>
+
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E5DDD3]">
+        {onCancel && (
+          <button
+            className="px-4 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer min-h-[40px]"
+            onClick={onCancel}
+            type="button"
+          >
+            Cancel
+          </button>
+        )}
+        <FormSubmitButton className="min-h-[40px]" loadingText="Recording...">
+          Record Non-Dues Income
+        </FormSubmitButton>
+      </div>
     </form>
   );
 }
@@ -92,129 +161,309 @@ export function ClubExpenseForm({
   today,
   canBackdate,
   idempotencyKey,
+  onCancel,
 }: {
   categories: FinanceCategory[];
   today: string;
   canBackdate: boolean;
   idempotencyKey: string;
+  onCancel?: () => void;
 }) {
   const yearStart = `${today.slice(0, 4)}-01-01`;
+  const activeCategories = categories.filter((c) => !c.retired_at);
+
   return (
-    <form action={recordClubFinanceAction} className="form-stack finance-form">
+    <form
+      action={recordClubFinanceAction}
+      className="space-y-4 text-xs text-[#3D291F]"
+    >
       <input name="kind" type="hidden" value="expense" />
       <input name="idempotency_key" type="hidden" value={idempotencyKey} />
-      <label>
-        Amount in whole Naira
-        <input
-          inputMode="numeric"
-          max="1000000000000"
-          min="1"
-          name="amount_ngn"
-          required
-          step="1"
-          type="number"
-        />
-      </label>
-      <label>
-        Date
-        <input
-          defaultValue={today}
-          max={today}
-          min={canBackdate ? yearStart : today}
-          name="transaction_date"
-          required
-          type="date"
-        />
-      </label>
-      <label>
-        Description
-        <input autoComplete="off" maxLength={500} name="description" required />
-      </label>
-      <label>
-        Category
-        <select name="category_id" required>
-          <option value="">Choose a category</option>
-          {categories
-            .filter((category) => !category.retired_at)
-            .map((category) => (
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label
+            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+            htmlFor="expense-amount"
+          >
+            Disbursement Amount in whole Naira (₦){" "}
+            <span className="text-[#BA3C2A]">*</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#7A685D]">
+              ₦
+            </span>
+            <FormattedAmountInput
+              className="w-full h-10 pl-8 pr-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
+              id="expense-amount"
+              name="amount_ngn"
+              placeholder="e.g. 25,000"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+            htmlFor="expense-date"
+          >
+            Disbursement Date <span className="text-[#BA3C2A]">*</span>
+          </label>
+          <input
+            id="expense-date"
+            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
+            defaultValue={today}
+            max={today}
+            min={canBackdate ? yearStart : today}
+            name="transaction_date"
+            required
+            type="date"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label
+            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+            htmlFor="expense-category"
+          >
+            Expense Category / Cost Center{" "}
+            <span className="text-[#BA3C2A]">*</span>
+          </label>
+          <select
+            id="expense-category"
+            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
+            defaultValue=""
+            name="category_id"
+            required
+          >
+            <option value="">Choose an active category</option>
+            {activeCategories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
             ))}
-        </select>
-      </label>
-      <label>
-        Payee
-        <input autoComplete="off" maxLength={160} name="payer_payee" required />
-      </label>
-      <button type="submit">Record expense</button>
+          </select>
+        </div>
+
+        <div>
+          <label
+            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+            htmlFor="expense-payee"
+          >
+            Payee / Vendor Entity <span className="text-[#BA3C2A]">*</span>
+          </label>
+          <input
+            id="expense-payee"
+            autoComplete="off"
+            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
+            maxLength={160}
+            name="payer_payee"
+            placeholder="e.g. Asaba Electric Disco Co."
+            required
+          />
+        </div>
+      </div>
+
+      <div>
+        <label
+          className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+          htmlFor="expense-description"
+        >
+          Disbursement Description / Justification{" "}
+          <span className="text-[#BA3C2A]">*</span>
+        </label>
+        <input
+          id="expense-description"
+          autoComplete="off"
+          className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
+          maxLength={500}
+          name="description"
+          placeholder="e.g. Secretariat generator fueling and maintenance"
+          required
+        />
+      </div>
+
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E5DDD3]">
+        {onCancel && (
+          <button
+            className="px-4 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer min-h-[40px]"
+            onClick={onCancel}
+            type="button"
+          >
+            Cancel
+          </button>
+        )}
+        <FormSubmitButton
+          className="min-h-[40px]"
+          loadingText="Recording..."
+          variant="danger"
+        >
+          Record Expense Disbursement
+        </FormSubmitButton>
+      </div>
     </form>
   );
 }
 
 export function FinanceCategoryForms({
   categories,
+  onCancel,
 }: {
   categories: FinanceCategory[];
+  onCancel?: () => void;
 }) {
   return (
-    <div className="finance-category-list">
+    <div className="space-y-6 text-xs text-[#3D291F]">
+      {/* Create New Category Form */}
       <form
         action={createFinanceCategoryAction}
-        className="form-stack finance-form"
+        className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-3"
       >
-        <label>
-          New category name
-          <input
-            autoComplete="off"
-            maxLength={80}
-            minLength={2}
-            name="name"
-            required
-          />
-        </label>
-        <label>
-          Reason
-          <input autoComplete="off" maxLength={500} name="reason" required />
-        </label>
-        <button type="submit">Add category</button>
+        <div className="flex items-center gap-2">
+          <Tag className="w-4 h-4 text-[#174C37]" />
+          <h4 className="text-xs font-bold text-[#3D291F] uppercase tracking-wider">
+            Register New Cost Center / Category
+          </h4>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label
+              className="block text-[11px] font-bold text-[#54433A] mb-1"
+              htmlFor="cat-name"
+            >
+              Category Name <span className="text-[#BA3C2A]">*</span>
+            </label>
+            <input
+              id="cat-name"
+              autoComplete="off"
+              className="w-full h-9 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+              maxLength={80}
+              minLength={2}
+              name="name"
+              placeholder="e.g. Welfare & Benevolence"
+              required
+            />
+          </div>
+
+          <div>
+            <label
+              className="block text-[11px] font-bold text-[#54433A] mb-1"
+              htmlFor="cat-reason"
+            >
+              Governance Reason <span className="text-[#BA3C2A]">*</span>
+            </label>
+            <input
+              id="cat-reason"
+              autoComplete="off"
+              className="w-full h-9 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+              maxLength={500}
+              name="reason"
+              placeholder="e.g. Approved budget head per Q4 Assembly"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-1">
+          <FormSubmitButton
+            leftIcon={Plus}
+            loadingText="Adding..."
+            size="compact"
+          >
+            Add Category
+          </FormSubmitButton>
+        </div>
       </form>
-      <ul className="finance-categories">
-        {categories.map((category) => (
-          <li key={category.id}>
-            <span>
-              {category.name}
-              {category.retired_at ? " · Retired" : " · Active"}
-            </span>
-            {!category.retired_at ? (
-              <form
-                action={retireFinanceCategoryAction}
-                className="finance-retire-form"
-                onSubmit={(event) =>
-                  confirmSubmit(
-                    event,
-                    `Retire “${category.name}”? Historical entries will keep this category.`,
-                  )
-                }
-              >
-                <input name="category_id" type="hidden" value={category.id} />
-                <label>
-                  Retirement reason
+
+      {/* Categories Roster */}
+      <div className="space-y-2">
+        <h4 className="text-[11px] font-bold text-[#7A685D] uppercase tracking-wider">
+          Existing Cost Centers ({categories.length})
+        </h4>
+
+        <div className="border border-[#E5DDD3] rounded-xl overflow-hidden divide-y divide-[#E5DDD3] bg-white">
+          {categories.map((category) => (
+            <div
+              className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+              key={category.id}
+            >
+              <div className="flex items-center gap-2.5">
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                    category.retired_at
+                      ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]"
+                      : "bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20"
+                  }`}
+                >
+                  {category.retired_at ? "Retired" : "Active"}
+                </span>
+                <strong
+                  className={`font-bold ${category.retired_at ? "text-[#7A685D] line-through" : "text-[#3D291F]"}`}
+                >
+                  {category.name}
+                </strong>
+              </div>
+
+              {!category.retired_at ? (
+                <form
+                  action={retireFinanceCategoryAction}
+                  className="flex items-center gap-2"
+                  onSubmit={(event) =>
+                    confirmSubmit(
+                      event,
+                      `Retire “${category.name}”? Historical entries will keep this category.`,
+                    )
+                  }
+                >
+                  <input name="category_id" type="hidden" value={category.id} />
+                  <label
+                    className="visually-hidden"
+                    htmlFor={`retire-reason-${category.id}`}
+                  >
+                    Retirement reason
+                  </label>
                   <input
+                    id={`retire-reason-${category.id}`}
                     autoComplete="off"
+                    className="h-8 px-2.5 bg-white border border-[#E5DDD3] rounded-md text-[11px] text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-1 focus:ring-[#BA3C2A]"
                     maxLength={500}
                     name="reason"
+                    placeholder="Reason for retirement..."
                     required
                   />
-                </label>
-                <button className="button-secondary" type="submit">
-                  Retire
-                </button>
-              </form>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+                  <FormSubmitButton
+                    loadingText="Retiring..."
+                    size="compact"
+                    variant="danger"
+                  >
+                    Retire
+                  </FormSubmitButton>
+                </form>
+              ) : (
+                <span className="text-[11px] text-[#7A685D] italic">
+                  Preserved for audit retention
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {onCancel && (
+        <div className="flex justify-end pt-3 border-t border-[#E5DDD3]">
+          <button
+            className="px-4 py-2 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer"
+            onClick={onCancel}
+            type="button"
+          >
+            Close
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -223,36 +472,57 @@ export function FinanceCorrectionForm({
   transaction,
   categories,
   today,
+  onCancel,
 }: {
   transaction: FinanceTransaction;
   categories: FinanceCategory[];
   today: string;
+  onCancel?: () => void;
 }) {
   const yearStart = `${today.slice(0, 4)}-01-01`;
+
   return (
-    <details className="finance-correction">
-      <summary>Correct record</summary>
-      <form
-        action={correctClubFinanceAction}
-        className="form-stack finance-form"
-      >
-        <input name="transaction_id" type="hidden" value={transaction.id} />
-        <label>
-          Amount in whole Naira
-          <input
+    <form
+      action={correctClubFinanceAction}
+      className="space-y-4 text-xs text-[#3D291F]"
+    >
+      <input name="transaction_id" type="hidden" value={transaction.id} />
+
+      <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] text-[11px] text-[#5C4638] flex items-center gap-2">
+        <AlertCircle className="w-4 h-4 text-[#D6A23A] shrink-0" />
+        <span>
+          Modifying record parameters will update the posted ledger and log an
+          indelible diff in the officer audit log.
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label
+            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
+            htmlFor="correct-amount"
+          >
+            Amount in whole Naira (₦) <span className="text-[#BA3C2A]">*</span>
+          </label>
+          <FormattedAmountInput
+            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
             defaultValue={transaction.amount_ngn}
-            inputMode="numeric"
-            max="1000000000000"
-            min="1"
+            id="correct-amount"
             name="amount_ngn"
             required
-            step="1"
-            type="number"
           />
-        </label>
-        <label>
-          Date
+        </div>
+
+        <div>
+          <label
+            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
+            htmlFor="correct-date"
+          >
+            Transaction Date <span className="text-[#BA3C2A]">*</span>
+          </label>
           <input
+            id="correct-date"
+            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
             defaultValue={transaction.transaction_date}
             max={today}
             min={yearStart}
@@ -260,21 +530,39 @@ export function FinanceCorrectionForm({
             required
             type="date"
           />
-        </label>
-        {transaction.kind === "expense" ? (
-          <>
-            <label>
-              Description
-              <input
-                defaultValue={transaction.description ?? ""}
-                maxLength={500}
-                name="description"
-                required
-              />
+        </div>
+      </div>
+
+      {transaction.kind === "expense" ? (
+        <>
+          <div>
+            <label
+              className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
+              htmlFor="correct-desc"
+            >
+              Description <span className="text-[#BA3C2A]">*</span>
             </label>
-            <label>
-              Category
+            <input
+              id="correct-desc"
+              className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+              defaultValue={transaction.description ?? ""}
+              maxLength={500}
+              name="description"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label
+                className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
+                htmlFor="correct-cat"
+              >
+                Category <span className="text-[#BA3C2A]">*</span>
+              </label>
               <select
+                id="correct-cat"
+                className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
                 defaultValue={transaction.category_id ?? ""}
                 name="category_id"
                 required
@@ -293,77 +581,168 @@ export function FinanceCorrectionForm({
                   </option>
                 ))}
               </select>
-            </label>
-            <label>
-              Payee
+            </div>
+
+            <div>
+              <label
+                className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
+                htmlFor="correct-payee"
+              >
+                Payee <span className="text-[#BA3C2A]">*</span>
+              </label>
               <input
+                id="correct-payee"
+                className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
                 defaultValue={transaction.payer_payee ?? ""}
                 maxLength={160}
                 name="payer_payee"
                 required
               />
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label
+              className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
+              htmlFor="correct-source"
+            >
+              Source Note <span className="text-[#BA3C2A]">*</span>
             </label>
-          </>
-        ) : (
-          <>
-            <label>
-              Source note
-              <input
-                defaultValue={transaction.source_note ?? ""}
-                maxLength={500}
-                name="source_note"
-                required
-              />
+            <input
+              id="correct-source"
+              className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+              defaultValue={transaction.source_note ?? ""}
+              maxLength={500}
+              name="source_note"
+              required
+            />
+          </div>
+
+          <div>
+            <label
+              className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
+              htmlFor="correct-payer"
+            >
+              Payer (Optional)
             </label>
-            <label>
-              Payer, if available
-              <input
-                defaultValue={transaction.payer_payee ?? ""}
-                maxLength={160}
-                name="payer_payee"
-              />
-            </label>
-          </>
-        )}
-        <label>
-          Required correction reason
-          <input autoComplete="off" maxLength={500} name="reason" required />
+            <input
+              id="correct-payer"
+              className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+              defaultValue={transaction.payer_payee ?? ""}
+              maxLength={160}
+              name="payer_payee"
+            />
+          </div>
+        </div>
+      )}
+
+      <div>
+        <label
+          className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
+          htmlFor="correct-reason"
+        >
+          Required Correction Reason (Audited){" "}
+          <span className="text-[#BA3C2A]">*</span>
         </label>
-        <button className="button-secondary" type="submit">
-          Save correction
-        </button>
-      </form>
-    </details>
+        <input
+          id="correct-reason"
+          autoComplete="off"
+          className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+          maxLength={500}
+          name="reason"
+          placeholder="e.g. Correcting typo in vendor invoice amount per receipt voucher"
+          required
+        />
+      </div>
+
+      <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5DDD3]">
+        {onCancel && (
+          <button
+            className="px-4 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer min-h-[40px]"
+            onClick={onCancel}
+            type="button"
+          >
+            Cancel
+          </button>
+        )}
+        <FormSubmitButton className="min-h-[40px]" loadingText="Saving...">
+          Save Correction
+        </FormSubmitButton>
+      </div>
+    </form>
   );
 }
 
 export function FinanceVoidForm({
   transaction,
+  onCancel,
 }: {
   transaction: FinanceTransaction;
+  onCancel?: () => void;
 }) {
   return (
-    <details className="finance-correction">
-      <summary>Void record</summary>
-      <form
-        action={voidClubFinanceAction}
-        className="form-stack finance-form"
-        onSubmit={(event) =>
-          confirmSubmit(
-            event,
-            "Void this financial record? It will remain in the history and no longer count toward the balance.",
-          )
-        }
-      >
-        <input name="transaction_id" type="hidden" value={transaction.id} />
-        <label>
-          Required reason
-          <input autoComplete="off" maxLength={500} name="reason" required />
+    <form
+      action={voidClubFinanceAction}
+      className="space-y-4 text-xs text-[#3D291F]"
+      onSubmit={(event) =>
+        confirmSubmit(
+          event,
+          "Void this financial record? It will remain in the history and no longer count toward the balance.",
+        )
+      }
+    >
+      <input name="transaction_id" type="hidden" value={transaction.id} />
+
+      <div className="p-3 bg-[#FDF2F2] rounded-xl border border-[#F5C2C2] text-xs text-[#BA3C2A] flex items-start gap-2.5">
+        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+        <div>
+          <strong className="block font-bold">Irreversible Action:</strong>
+          <span>
+            Voiding permanently excludes this record from club balances while
+            preserving full immutable history.
+          </span>
+        </div>
+      </div>
+
+      <div>
+        <label
+          className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
+          htmlFor="void-reason"
+        >
+          Required Void Reason (Audited){" "}
+          <span className="text-[#BA3C2A]">*</span>
         </label>
-        <button className="button-danger" type="submit">
-          Void transaction
-        </button>
-      </form>
-    </details>
+        <input
+          id="void-reason"
+          autoComplete="off"
+          className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
+          maxLength={500}
+          name="reason"
+          placeholder="e.g. Duplicated voucher entry created in error"
+          required
+        />
+      </div>
+
+      <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5DDD3]">
+        {onCancel && (
+          <button
+            className="px-4 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer min-h-[40px]"
+            onClick={onCancel}
+            type="button"
+          >
+            Cancel
+          </button>
+        )}
+        <FormSubmitButton
+          className="min-h-[40px]"
+          loadingText="Voiding..."
+          variant="danger"
+        >
+          Confirm Void
+        </FormSubmitButton>
+      </div>
+    </form>
   );
 }

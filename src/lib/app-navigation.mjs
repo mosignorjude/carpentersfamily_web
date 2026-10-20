@@ -13,10 +13,11 @@ export function getNavigationItems(roles) {
   return [
     { href: "/", label: "Home" },
     { href: "/events", label: "Events" },
+    { href: "/attendance", label: "Minutes & attendance" },
     { href: "/dues", label: "Dues" },
     ...(canSeeOfficerAreas ? [{ href: "/finances", label: "Finances" }] : []),
     { href: "/announcements", label: "Announcements" },
-    { href: "/notifications", label: "Notifications" },
+    { href: "/polls", label: "Polls" },
     ...(canSeeOfficerAreas
       ? [{ href: "/admin/members", label: "Member administration" }]
       : []),

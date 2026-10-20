@@ -1,40 +1,9 @@
-import { randomUUID } from "node:crypto";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { signOutAction } from "@/app/actions";
+import { FinancesPageView } from "@/components/finances/finances-page-view";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import {
-  ClubExpenseForm,
-  ClubIncomeForm,
-  type FinanceCategory,
-  FinanceCategoryForms,
-  FinanceCorrectionForm,
-  type FinanceTransaction,
-  FinanceVoidForm,
-} from "./finance-forms";
+import type { FinanceCategory, FinanceTransaction } from "./finance-forms";
 
 const PAGE_SIZE = 50;
-const notices: Record<string, string> = {
-  saved: "The financial transaction was recorded.",
-  corrected: "The record was corrected and the prior values were audited.",
-  voided: "The record was voided and retained in the history.",
-  "category-saved": "The category was added.",
-  "category-retired":
-    "The category was retired; historical records retain its name.",
-  "receipt-uploaded":
-    "The receipt was securely attached to the financial record.",
-  "receipt-duplicate":
-    "That receipt is already attached to this financial record.",
-  "receipt-invalid": "Choose a valid PDF, JPEG, or PNG receipt under 4 MiB.",
-  "receipt-too-large": "The receipt upload is too large.",
-  "receipt-failed": "The receipt could not be attached. Try again later.",
-  "receipt-unavailable":
-    "Receipt storage is not configured or is temporarily unavailable.",
-  denied: "You do not have permission to perform that operation.",
-  "invalid-request": "The request details were invalid.",
-  "operation-failed":
-    "The request was rejected. Check the amount, date, category, account state, and required reason.",
-};
 
 type FinanceAuditRow = {
   id: string;
@@ -55,6 +24,7 @@ type FinanceReceipt = {
   size_bytes: number;
   uploaded_at: string;
 };
+
 type EventLedgerEntry = {
   id: string;
   event_id: string;
@@ -83,35 +53,6 @@ function pageNumber(value?: string) {
   return Number.isSafeInteger(parsed) ? parsed : 0;
 }
 
-function financePageHref(key: "page" | "audit_page", value: number) {
-  return `/finances?${new URLSearchParams({ [key]: String(value) }).toString()}`;
-}
-
-function formatNaira(value: number | string | null | undefined) {
-  if (value === null || value === undefined) return "Unavailable";
-  const amount = typeof value === "number" ? BigInt(value) : BigInt(value);
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en-NG", {
-    dateStyle: "medium",
-    timeZone: "UTC",
-  }).format(new Date(`${value.slice(0, 10)}T00:00:00.000Z`));
-}
-
-function formatTimestamp(value: string) {
-  return new Intl.DateTimeFormat("en-NG", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Africa/Lagos",
-  }).format(new Date(value));
-}
-
 export default async function FinancesPage({
   searchParams,
 }: {
@@ -127,14 +68,14 @@ export default async function FinancesPage({
     supabase = await createSupabaseServerClient();
   } catch {
     return (
-      <main className="shell">
-        <section className="panel">
-          <h1>Club finances unavailable</h1>
-          <p>
-            No financial data was displayed because membership could not be
-            verified.
-          </p>
-        </section>
+      <main className="p-6 max-w-xl mx-auto my-12 bg-white rounded-2xl border border-[#E5DDD3] shadow-xs text-center space-y-3">
+        <h1 className="text-xl font-extrabold text-[#3D291F]">
+          Club finances unavailable
+        </h1>
+        <p className="text-xs text-[#54433A]">
+          No financial data was displayed because membership could not be
+          verified.
+        </p>
       </main>
     );
   }
@@ -149,17 +90,14 @@ export default async function FinancesPage({
     .maybeSingle();
   if (profileError || profile?.status !== "active") {
     return (
-      <main className="shell">
-        <section className="panel narrow-panel">
-          <p className="eyebrow">Member privacy</p>
-          <h1>Access denied</h1>
-          <p>This account cannot access club financial records.</p>
-          <form action={signOutAction}>
-            <button className="button-secondary" type="submit">
-              Sign out
-            </button>
-          </form>
-        </section>
+      <main className="p-6 max-w-xl mx-auto my-12 bg-white rounded-2xl border border-[#E5DDD3] shadow-xs text-center space-y-3">
+        <p className="text-xs font-bold uppercase tracking-wider text-[#BA3C2A]">
+          Member privacy
+        </p>
+        <h1 className="text-xl font-extrabold text-[#3D291F]">Access denied</h1>
+        <p className="text-xs text-[#54433A]">
+          This account cannot access club financial records.
+        </p>
       </main>
     );
   }
@@ -218,6 +156,9 @@ export default async function FinancesPage({
             "club_finance_receipt_attached",
             "finance_category_created",
             "finance_category_retired",
+            "event_finance_category_created",
+            "event_finance_category_renamed",
+            "event_finance_category_retired",
           ])
       : Promise.resolve({ count: 0, error: null }),
   ]);
@@ -237,6 +178,9 @@ export default async function FinancesPage({
           "club_finance_receipt_attached",
           "finance_category_created",
           "finance_category_retired",
+          "event_finance_category_created",
+          "event_finance_category_renamed",
+          "event_finance_category_retired",
         ])
         .order("occurred_at", { ascending: false })
         .range(auditPage * PAGE_SIZE, (auditPage + 1) * PAGE_SIZE - 1)
@@ -312,462 +256,31 @@ export default async function FinancesPage({
   const today = todayInWAT();
 
   return (
-    <main className="shell">
-      <section className="panel">
-        <header className="finance-heading">
-          <div>
-            <p className="eyebrow">Shared club records</p>
-            <h1>Club finances</h1>
-            <p>
-              Members can review recorded club income and expenses, including
-              payer or payee details. Individual dues records stay private to
-              the member and authorized officers.
-            </p>
-          </div>
-          <nav aria-label="Member navigation" className="dues-nav">
-            <Link href="/">Member portal</Link>
-            <Link href="/dues">Private dues</Link>
-            <form action={signOutAction}>
-              <button className="button-secondary" type="submit">
-                Sign out
-              </button>
-            </form>
-          </nav>
-        </header>
-
-        {params.notice && notices[params.notice] ? (
-          <p className="notice" role="status">
-            {notices[params.notice]}
-          </p>
-        ) : null}
-        {roleError ? (
-          <p className="notice" role="status">
-            Officer privileges could not be verified. You can still view shared
-            records, but no officer actions or audit history are shown.
-          </p>
-        ) : null}
-
-        <section aria-label="Club balance" className="finance-overview">
-          {financeUnavailable || !summary ? (
-            <p role="alert">
-              Finance totals could not be verified, so no balance is displayed.
-            </p>
-          ) : (
-            <>
-              <div className="finance-balance-total">
-                <p className="eyebrow">Shared financial snapshot · all time</p>
-                <span>Current balance</span>
-                <strong>{formatNaira(summary.balance)}</strong>
-              </div>
-              <dl className="finance-balance-grid">
-                <div>
-                  <dt>Dues income</dt>
-                  <dd>{formatNaira(summary.dues_income)}</dd>
-                </div>
-                <div>
-                  <dt>Other income</dt>
-                  <dd>{formatNaira(summary.other_income)}</dd>
-                </div>
-                <div>
-                  <dt>Expenses</dt>
-                  <dd>{formatNaira(summary.expenses)}</dd>
-                </div>
-              </dl>
-            </>
-          )}
-          <p className="finance-overview-note muted">
-            The balance uses all-time dues and non-dues records. CSV and PDF
-            exports cover the current Africa/Lagos calendar year and include
-            receipt filenames when available.
-          </p>
-        </section>
-        <section
-          aria-label="Club finance exports"
-          className="report-export-actions"
-        >
-          <form
-            action="/api/reports/finances"
-            method="post"
-            target="_blank"
-            rel="noopener"
-          >
-            <input name="format" type="hidden" value="csv" />
-            <button className="button-secondary" type="submit">
-              Download finance CSV
-            </button>
-          </form>
-          <form
-            action="/api/reports/finances"
-            method="post"
-            target="_blank"
-            rel="noopener"
-          >
-            <input name="format" type="hidden" value="pdf" />
-            <button className="button-secondary" type="submit">
-              Download finance PDF
-            </button>
-          </form>
-        </section>
-
-        {isOfficer && !financeUnavailable ? (
-          <section
-            aria-label="Officer finance tools"
-            className="finance-officer-tools"
-          >
-            <header className="finance-tools-heading">
-              <div>
-                <p className="eyebrow">Officer actions</p>
-                <h2>Record and manage club finances</h2>
-              </div>
-              <p>
-                Executive, Admin, and Backup Admin can record income and
-                expenses. Only Admin and Backup Admin can correct or void a
-                posted entry. Corrections and voids require reasons and are
-                included in the officer-only audit history.
-              </p>
-            </header>
-            <div className="finance-entry-grid">
-              <section
-                className="dues-section"
-                aria-labelledby="income-entry-heading"
-              >
-                <p className="eyebrow">Officer entry</p>
-                <h2 id="income-entry-heading">Record non-dues income</h2>
-                <ClubIncomeForm
-                  today={today}
-                  canBackdate={canCorrect}
-                  idempotencyKey={randomUUID()}
-                />
-              </section>
-              <section
-                className="dues-section"
-                aria-labelledby="expense-entry-heading"
-              >
-                <p className="eyebrow">Officer entry</p>
-                <h2 id="expense-entry-heading">Record an expense</h2>
-                {categoryUnavailable ? (
-                  <p role="alert">
-                    Categories could not be verified. Expense entry is disabled.
-                  </p>
-                ) : categories.some((category) => !category.retired_at) ? (
-                  <ClubExpenseForm
-                    categories={categories}
-                    today={today}
-                    canBackdate={canCorrect}
-                    idempotencyKey={randomUUID()}
-                  />
-                ) : (
-                  <p>Create an active category before recording an expense.</p>
-                )}
-              </section>
-              <section
-                className="dues-section"
-                aria-labelledby="category-heading"
-              >
-                <p className="eyebrow">Officer category management</p>
-                <h2 id="category-heading">Expense categories</h2>
-                {categoryUnavailable ? (
-                  <p role="alert">
-                    Categories could not be verified. Category changes are
-                    disabled.
-                  </p>
-                ) : (
-                  <FinanceCategoryForms categories={categories} />
-                )}
-              </section>
-            </div>
-          </section>
-        ) : null}
-
-        <section className="dues-section" aria-labelledby="ledger-heading">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Member-visible ledger</p>
-              <h2 id="ledger-heading">Income and expenses</h2>
-            </div>
-            <p className="muted">
-              Showing page {page + 1} of {pageCount}
-            </p>
-          </div>
-          {financeUnavailable ? (
-            <p role="alert">
-              The ledger or balance could not be verified. No transaction
-              records or entry forms are available.
-            </p>
-          ) : transactions.length === 0 ? (
-            <p>No club income or expenses have been recorded yet.</p>
-          ) : (
-            <div className="finance-record-list">
-              {transactions.map((transaction) => (
-                <article
-                  className={`finance-record${transaction.voided_at ? " finance-record-voided" : ""}`}
-                  key={transaction.id}
-                >
-                  <div className="finance-record-heading">
-                    <div>
-                      <p className="eyebrow">
-                        {transaction.kind === "income"
-                          ? "Non-dues income"
-                          : "Expense"}
-                        {transaction.voided_at
-                          ? " · Voided — retained in history"
-                          : ""}
-                      </p>
-                      <h3>
-                        {transaction.kind === "income"
-                          ? transaction.source_note
-                          : transaction.description}
-                      </h3>
-                    </div>
-                    <strong>{formatNaira(transaction.amount_ngn)}</strong>
-                  </div>
-                  <dl className="finance-details">
-                    <div>
-                      <dt>Date</dt>
-                      <dd>{formatDate(transaction.transaction_date)}</dd>
-                    </div>
-                    {transaction.category_name_snapshot ? (
-                      <div>
-                        <dt>Category</dt>
-                        <dd>{transaction.category_name_snapshot}</dd>
-                      </div>
-                    ) : null}
-                    {transaction.payer_payee ? (
-                      <div>
-                        <dt>
-                          {transaction.kind === "income" ? "Payer" : "Payee"}
-                        </dt>
-                        <dd>{transaction.payer_payee}</dd>
-                      </div>
-                    ) : null}
-                    <div>
-                      <dt>Recorded</dt>
-                      <dd>{formatTimestamp(transaction.created_at)}</dd>
-                    </div>
-                    {transaction.voided_at ? (
-                      <div>
-                        <dt>Void reason</dt>
-                        <dd>{transaction.void_reason}</dd>
-                      </div>
-                    ) : null}
-                  </dl>
-                  <div className="finance-receipts">
-                    <h4>Receipts</h4>
-                    {receiptUnavailable ? (
-                      <p role="alert">
-                        Receipt attachments could not be verified. Download and
-                        upload controls are unavailable.
-                      </p>
-                    ) : (receiptsByTransaction.get(transaction.id) ?? [])
-                        .length > 0 ? (
-                      <ul>
-                        {(receiptsByTransaction.get(transaction.id) ?? []).map(
-                          (receipt) => (
-                            <li key={receipt.id}>
-                              <a
-                                href={`/api/finance-receipts/${receipt.id}`}
-                                download
-                              >
-                                {receipt.original_filename}
-                              </a>
-                              <span className="muted">
-                                {" "}
-                                ({Math.ceil(receipt.size_bytes / 1024)} KB)
-                              </span>
-                            </li>
-                          ),
-                        )}
-                      </ul>
-                    ) : (
-                      <p className="muted">No receipt attached.</p>
-                    )}
-                    {isOfficer &&
-                    !transaction.voided_at &&
-                    !receiptUnavailable ? (
-                      <form
-                        action="/api/finance-receipts"
-                        className="receipt-upload-form"
-                        encType="multipart/form-data"
-                        method="post"
-                      >
-                        <input
-                          name="transactionId"
-                          type="hidden"
-                          value={transaction.id}
-                        />
-                        <label>
-                          Attach a receipt (PDF, JPEG, or PNG; up to 4 MiB)
-                          <input
-                            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                            name="receipt"
-                            required
-                            type="file"
-                          />
-                        </label>
-                        <button className="button-secondary" type="submit">
-                          Attach receipt
-                        </button>
-                      </form>
-                    ) : null}
-                  </div>
-                  {canCorrect && !transaction.voided_at ? (
-                    <div className="finance-record-actions">
-                      <FinanceCorrectionForm
-                        transaction={transaction}
-                        categories={categories}
-                        today={today}
-                      />
-                      <FinanceVoidForm transaction={transaction} />
-                    </div>
-                  ) : null}
-                </article>
-              ))}
-            </div>
-          )}
-          {!financeUnavailable && transactionCount > PAGE_SIZE ? (
-            <nav
-              aria-label="Finance ledger pages"
-              className="history-pagination"
-            >
-              {page > 0 ? (
-                <Link href={financePageHref("page", page - 1)}>
-                  Newer records
-                </Link>
-              ) : (
-                <span />
-              )}
-              <span>
-                Page {page + 1} of {pageCount}
-              </span>
-              {(page + 1) * PAGE_SIZE < transactionCount ? (
-                <Link href={financePageHref("page", page + 1)}>
-                  Older records
-                </Link>
-              ) : (
-                <span />
-              )}
-            </nav>
-          ) : null}
-        </section>
-
-        <section
-          className="dues-section"
-          aria-labelledby="event-ledger-heading"
-        >
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Event results</p>
-              <h2 id="event-ledger-heading">
-                Event ledger posts and reversals
-              </h2>
-            </div>
-            <p className="muted">Latest 50 entries</p>
-          </div>
-          {eventLedgerResult.error || eventLedgerEventsResult.error ? (
-            <p role="alert">Event ledger entries could not be verified.</p>
-          ) : eventLedgerEntries.length === 0 ? (
-            <p>No event results have been posted yet.</p>
-          ) : (
-            <div className="finance-record-list">
-              {eventLedgerEntries.map((entry) => (
-                <article className="finance-record" key={entry.id}>
-                  <div className="finance-record-heading">
-                    <div>
-                      <p className="eyebrow">
-                        Generation {entry.generation} · {entry.entry_kind}
-                      </p>
-                      <h3>
-                        <Link href={`/events/${entry.event_id}/finance`}>
-                          {eventTitles.get(entry.event_id) ?? "Retained event"}
-                        </Link>
-                      </h3>
-                    </div>
-                    <strong>{formatNaira(entry.signed_amount_ngn)}</strong>
-                  </div>
-                  <p className="muted">
-                    {entry.event_status} · {formatTimestamp(entry.created_at)} ·{" "}
-                    {entry.entry_kind === "reversal"
-                      ? "Offsets its original result; both remain in history."
-                      : "Posted when the event was completed or cancelled."}
-                  </p>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {isOfficer ? (
-          <section
-            className="dues-section"
-            aria-labelledby="finance-audit-heading"
-          >
-            <p className="eyebrow">Officer-only history</p>
-            <h2 id="finance-audit-heading">Finance changes</h2>
-            {auditError ? (
-              <p role="alert">Audit history could not be verified.</p>
-            ) : auditRows.length === 0 ? (
-              <p>No finance changes are recorded.</p>
-            ) : (
-              <div className="audit-list">
-                {auditRows.map((entry) => (
-                  <article className="audit-card" key={entry.id}>
-                    <div className="section-heading">
-                      <div>
-                        <h3>{entry.action.replaceAll("_", " ")}</h3>
-                        <p className="muted">
-                          {actorNames.get(entry.actor_id) ?? "Club officer"} ·{" "}
-                          {formatTimestamp(entry.occurred_at)}
-                        </p>
-                      </div>
-                    </div>
-                    <p>
-                      <strong>Reason:</strong> {entry.reason}
-                    </p>
-                    <details>
-                      <summary>Recorded changes</summary>
-                      <pre className="audit-data">
-                        {JSON.stringify(
-                          {
-                            target: entry.entity_id,
-                            before: entry.before_data,
-                            after: entry.after_data,
-                          },
-                          null,
-                          2,
-                        )}
-                      </pre>
-                    </details>
-                  </article>
-                ))}
-              </div>
-            )}
-            {!auditError && auditCount > PAGE_SIZE ? (
-              <nav
-                aria-label="Finance audit pages"
-                className="history-pagination"
-              >
-                {auditPage > 0 ? (
-                  <Link href={financePageHref("audit_page", auditPage - 1)}>
-                    Newer changes
-                  </Link>
-                ) : (
-                  <span />
-                )}
-                <span>
-                  Page {auditPage + 1} of {auditPageCount}
-                </span>
-                {(auditPage + 1) * PAGE_SIZE < auditCount ? (
-                  <Link href={financePageHref("audit_page", auditPage + 1)}>
-                    Older changes
-                  </Link>
-                ) : (
-                  <span />
-                )}
-              </nav>
-            ) : null}
-          </section>
-        ) : null}
-      </section>
-    </main>
+    <FinancesPageView
+      actorNames={actorNames}
+      auditCount={auditCount}
+      auditError={auditError}
+      auditPage={auditPage}
+      auditPageCount={auditPageCount}
+      auditRows={auditRows}
+      canCorrect={canCorrect}
+      categories={categories}
+      categoryUnavailable={categoryUnavailable}
+      eventLedgerEntries={eventLedgerEntries}
+      eventTitles={eventTitles}
+      financeUnavailable={financeUnavailable}
+      isOfficer={isOfficer}
+      notice={params.notice}
+      page={page}
+      pageCount={pageCount}
+      pageSize={PAGE_SIZE}
+      receiptUnavailable={receiptUnavailable}
+      receiptsByTransaction={receiptsByTransaction}
+      roleError={Boolean(roleError)}
+      summary={summary}
+      today={today}
+      transactionCount={transactionCount}
+      transactions={transactions}
+    />
   );
 }

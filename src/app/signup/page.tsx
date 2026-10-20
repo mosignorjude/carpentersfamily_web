@@ -8,6 +8,7 @@ import AuthSubmitButton from "@/components/auth-submit-button";
 import AuthValidatedForm, {
   AuthFieldError,
 } from "@/components/auth-validated-form";
+import { ClubIcon } from "@/components/club-icon";
 import GoogleMark from "@/components/google-mark";
 import { isGoogleAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -33,7 +34,6 @@ function SignupUnavailable({ children }: { children: string }) {
     <AuthPageLayout variant="signup">
       <div className="signin-content signin-config-state">
         <AuthBrand />
-        <p className="signin-eyebrow">Membership request</p>
         <h1>Request account access</h1>
         <p className="signin-intro" role="alert">
           {children}
@@ -83,12 +83,9 @@ export default async function SignupPage({
       <div className="signin-content signup-auth-content">
         <AuthBrand />
         <header className="signin-heading">
-          <p className="signin-eyebrow">Membership request</p>
           <h1 id="signup-heading">Request account access</h1>
           <p className="signin-intro">
-            Create your profile to join the Carpenters Family community. After
-            confirming your email, an authorized club officer reviews your
-            request.
+            Create your profile to join the Carpenters Family
           </p>
         </header>
 
@@ -140,16 +137,19 @@ export default async function SignupPage({
           </label>
           <label className="signin-field">
             <span>Email</span>
-            <input
-              autoComplete="email"
-              aria-describedby="signup-email-error"
-              id="signup-email"
-              maxLength={254}
-              name="email"
-              placeholder="you@example.com"
-              required
-              type="email"
-            />
+            <span className="signin-field-control">
+              <ClubIcon className="signin-field-icon" name="mail" />
+              <input
+                autoComplete="email"
+                aria-describedby="signup-email-error"
+                id="signup-email"
+                maxLength={254}
+                name="email"
+                placeholder="you@example.com"
+                required
+                type="email"
+              />
+            </span>
             <AuthFieldError id="signup-email-error" />
           </label>
           <label className="signin-field" htmlFor="signup-password">

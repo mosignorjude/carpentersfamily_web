@@ -2,15 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ClubIcon, type ClubIconName } from "@/components/club-icon";
 
 type NavigationItem = { href: string; label: string };
+const navigationIcons: Record<string, ClubIconName> = {
+  "/": "home",
+  "/admin/members": "users",
+  "/announcements": "megaphone",
+  "/polls": "poll",
+  "/dues": "wallet",
+  "/events": "calendar",
+  "/attendance": "check-circle",
+  "/finances": "chart",
+};
 
 export default function AppNavigationLinks({
   items,
   onNavigate,
+  showIcons = false,
 }: {
   items: NavigationItem[];
   onNavigate?: () => void;
+  showIcons?: boolean;
 }) {
   const pathname = usePathname();
 
@@ -29,7 +42,16 @@ export default function AppNavigationLinks({
               href={item.href}
               onClick={onNavigate}
             >
-              {item.label}
+              {showIcons ? (
+                <>
+                  <span aria-hidden="true" className="app-nav-icon">
+                    <ClubIcon name={navigationIcons[item.href] ?? "file"} />
+                  </span>
+                  <span className="app-nav-label">{item.label}</span>
+                </>
+              ) : (
+                item.label
+              )}
             </Link>
           </li>
         );

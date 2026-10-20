@@ -1,49 +1,107 @@
 import type { ReactNode } from "react";
+import { ClubIcon } from "@/components/club-icon";
 import { clubBrand } from "@/lib/brand";
 
-export function AuthBrand() {
+export function AuthBrand({ inverse = false }: { inverse?: boolean }) {
   return (
-    <div className="signin-brand">
+    <div className={`signin-brand${inverse ? " signin-brand-inverse" : ""}`}>
       {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
-      <img
-        alt=""
-        height={194}
-        src="/brand/carpenters-family-mark.png"
-        width={105}
-      />
+      <img alt="" height={194} src={clubBrand.logoSrc} width={105} />
       <span>
         <strong>{clubBrand.shortName}</strong>
-        <small>Social Club</small>
+        <small>{clubBrand.slogan}</small>
       </span>
     </div>
   );
 }
 
-function AuthPromotion() {
+type AuthPageVariant =
+  | "signin"
+  | "signup"
+  | "forgot-password"
+  | "reset-password";
+
+type AuthHeroCopy = {
+  heading: string;
+  emphasis: string;
+  description: string;
+};
+
+const authHeroCopy: Record<AuthPageVariant, AuthHeroCopy> = {
+  signin: {
+    heading: "Welcome Back,",
+    emphasis: "Good to See You Again.",
+    description:
+      "Stay connected with your family, track dues and updates, and be part of what’s next.",
+  },
+  signup: {
+    heading: "A Family Built",
+    emphasis: "Together.",
+    description:
+      "Request access to the Carpenters Family community and stay close to members, events, and club updates.",
+  },
+  "forgot-password": {
+    heading: "Let’s Get You",
+    emphasis: "Back In.",
+    description:
+      "Request a secure password reset to regain access to your Carpenters Family account.",
+  },
+  "reset-password": {
+    heading: "Secure Your",
+    emphasis: "Account.",
+    description:
+      "Choose a new password to protect your member account and continue using the portal.",
+  },
+};
+
+function AuthPhotoPanel({ variant }: { variant: AuthPageVariant }) {
+  const copy = authHeroCopy[variant];
   return (
-    <aside
-      aria-labelledby="auth-promotion-heading"
-      className="signin-promo-panel"
-    >
-      <div className="signin-promo-inner">
-        <p className="signin-promo-kicker">WELCOME</p>
-        <div className="signin-promo-artwork">
-          {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
-          <img
-            alt="Illustration of a member completing online account setup at a computer."
-            height={864}
-            src="/brand/carpenters-family-auth-promo.jpg"
-            width={1229}
-          />
+    <aside aria-labelledby="auth-hero-heading" className="auth-hero-panel">
+      {/* biome-ignore lint/performance/noImgElement: CSS positioning avoids Next/Image inline styles blocked by the production CSP. */}
+      <img
+        alt=""
+        aria-hidden="true"
+        className="signin-hero-image"
+        decoding="async"
+        fetchPriority="high"
+        height={1024}
+        src={clubBrand.eventHeroSrc}
+        width={1536}
+      />
+      <div aria-hidden="true" className="signin-hero-shade" />
+      <div className="signin-hero-content">
+        <div>
+          <AuthBrand inverse />
+          <div className="signin-hero-message">
+            <h2 id="auth-hero-heading">
+              {copy.heading}
+              <span>{copy.emphasis}</span>
+            </h2>
+            <p>{copy.description}</p>
+          </div>
         </div>
-        <div className="signin-promo-copy">
-          <p className="signin-promo-eyebrow">Your private member portal</p>
-          <h2 id="auth-promotion-heading">Keep the club connected.</h2>
-          <p>
-            Manage membership, dues, events, attendance, and club updates in one
-            private place.
-          </p>
-        </div>
+        <ul
+          aria-label="Member portal features"
+          className="signin-hero-features"
+        >
+          <li>
+            <ClubIcon name="calendar" />
+            <span>Events &amp; Ticketing</span>
+          </li>
+          <li>
+            <ClubIcon name="users" />
+            <span>Members &amp; Community</span>
+          </li>
+          <li>
+            <ClubIcon name="wallet" />
+            <span>Finances &amp; Dues</span>
+          </li>
+          <li>
+            <ClubIcon name="megaphone" />
+            <span>Updates &amp; Announcements</span>
+          </li>
+        </ul>
       </div>
     </aside>
   );
@@ -51,18 +109,16 @@ function AuthPromotion() {
 
 export function AuthPageLayout({
   children,
-  variant,
+  variant = "signin",
 }: {
   children: ReactNode;
-  variant?: "signup";
+  variant?: AuthPageVariant;
 }) {
   return (
-    <main
-      className={`signin-experience${variant ? ` ${variant}-experience` : ""}`}
-    >
-      <div className="signin-layout">
+    <main className={`signin-experience signin-experience-${variant}`}>
+      <div className={`signin-layout signin-layout-${variant}`}>
         <section className="signin-form-panel">{children}</section>
-        <AuthPromotion />
+        <AuthPhotoPanel variant={variant} />
       </div>
     </main>
   );

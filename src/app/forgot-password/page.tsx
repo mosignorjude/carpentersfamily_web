@@ -5,6 +5,7 @@ import AuthSubmitButton from "@/components/auth-submit-button";
 import AuthValidatedForm, {
   AuthFieldError,
 } from "@/components/auth-validated-form";
+import { ClubIcon } from "@/components/club-icon";
 
 const notices: Record<string, { message: string; isError: boolean }> = {
   "reset-requested": {
@@ -27,7 +28,7 @@ export default async function ForgotPasswordPage({
   const notice = params.notice ? notices[params.notice] : undefined;
 
   return (
-    <AuthPageLayout>
+    <AuthPageLayout variant="forgot-password">
       <div className="signin-content">
         <AuthBrand />
         <header className="signin-heading">
@@ -55,16 +56,19 @@ export default async function ForgotPasswordPage({
         >
           <label className="signin-field">
             <span>Email</span>
-            <input
-              autoComplete="email"
-              aria-describedby="forgot-password-email-error"
-              id="forgot-password-email"
-              maxLength={254}
-              name="email"
-              placeholder="you@example.com"
-              required
-              type="email"
-            />
+            <span className="signin-field-control">
+              <ClubIcon className="signin-field-icon" name="mail" />
+              <input
+                autoComplete="email"
+                aria-describedby="forgot-password-email-error"
+                id="forgot-password-email"
+                maxLength={254}
+                name="email"
+                placeholder="you@example.com"
+                required
+                type="email"
+              />
+            </span>
             <AuthFieldError id="forgot-password-email-error" />
           </label>
           <AuthSubmitButton

@@ -117,7 +117,7 @@ function financeRowsToCsv(
   const reportRows: Array<Array<string | number | null>> = [
     ["Report", "Club finance", ...emptyColumns],
     ["Report year", year, ...emptyColumns],
-    ["As of (Africa/Lagos)", asOf, ...emptyColumns],
+    ["As of", asOf, ...emptyColumns],
     [
       "All-time dues income (NGN)",
       String(summary.dues_income),
@@ -156,7 +156,7 @@ function financeRowsToPdf(
 ) {
   const lines = [
     `Report year: ${year}`,
-    `As of (Africa/Lagos): ${asOf}`,
+    `As of: ${asOf}`,
     `All-time dues income: ${formatPdfAmount(summary.dues_income)}`,
     `All-time other income: ${formatPdfAmount(summary.other_income)}`,
     `All-time expenses: ${formatPdfAmount(summary.expenses)}`,
@@ -229,7 +229,7 @@ function duesRowsToCsv(
   return toCsvRows([
     ["Report", "Member dues", "", "", "", "", "", ""],
     ["Report year", String(year), "", "", "", "", "", ""],
-    ["As of (Africa/Lagos)", asOf, "", "", "", "", "", ""],
+    ["As of", asOf, "", "", "", "", "", ""],
     columns,
     ...rows,
   ]);
@@ -246,7 +246,7 @@ function duesRowsToPdf(
   const currentMonth = asOf.slice(0, 7);
   const lines = [
     `Report year: ${year}`,
-    `As of (Africa/Lagos): ${asOf}`,
+    `As of: ${asOf}`,
     `Individual dues rows returned under your current access: ${duesRows.length}`,
     "Total owed includes unpaid months in this report year with a due date on or before the report date.",
     "Text-only PDF. Unsupported glyphs are transliterated; CSV preserves original Unicode.",

@@ -257,7 +257,7 @@ select throws_ok(
 );
 reset role;
 
--- Primary Admin can appoint a successor before relinquishing their own role.
+-- A Primary Admin can appoint a successor, then the successor removes the prior role.
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
 select lives_ok(
@@ -284,11 +284,11 @@ select throws_ok(
   'duplicate key value violates unique constraint "member_role_assignments_one_current_backup_admin_uidx"',
   'primary Admin cannot create a second active Backup Admin'
 );
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000005', true);
 select lives_ok(
   $$select public.revoke_club_role('00000000-0000-0000-0000-000000000001', 'admin', 'Transferred primary administration')$$,
-  'primary Admin can transfer the role after a successor is active'
+  'a different primary Admin can remove the former Admin role'
 );
-select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000005', true);
 select is(
   (select count(*) from public.member_role_assignments as mra
    join public.member_profiles as mp on mp.id = mra.member_id

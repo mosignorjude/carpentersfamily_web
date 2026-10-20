@@ -15,7 +15,7 @@ test("ordinary members receive member links without officer-only areas", () => {
   assert.ok(links.includes("/events"));
   assert.ok(links.includes("/dues"));
   assert.ok(links.includes("/announcements"));
-  assert.ok(links.includes("/notifications"));
+  assert.ok(!links.includes("/notifications"));
   assert.ok(!links.includes("/finances"));
   assert.ok(!links.includes("/admin/members"));
 });

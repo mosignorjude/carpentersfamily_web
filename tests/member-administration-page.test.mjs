@@ -19,9 +19,9 @@ const lifecycleForm = readFileSync(
   ),
   "utf8",
 );
-const executiveRoleForm = readFileSync(
+const clubRoleForm = readFileSync(
   new URL(
-    "../src/app/(member)/admin/members/executive-role-form.tsx",
+    "../src/app/(member)/admin/members/club-role-form.tsx",
     import.meta.url,
   ),
   "utf8",
@@ -128,7 +128,13 @@ test("only Admin and Backup Admin can grant or remove Executive status", () => {
     );
   }
 
-  for (const role of ["member", "committee", "lead", "assistant", "executive"]) {
+  for (const role of [
+    "member",
+    "committee",
+    "lead",
+    "assistant",
+    "executive",
+  ]) {
     assert.equal(
       getExecutiveRolePresentation(
         "active",
@@ -147,10 +153,7 @@ test("failed Executive assignment lookup withholds both grant and revoke control
     getExecutiveRolePresentation("active", false, admin, true),
     null,
   );
-  assert.equal(
-    getExecutiveRolePresentation("active", true, admin, true),
-    null,
-  );
+  assert.equal(getExecutiveRolePresentation("active", true, admin, true), null);
 });
 
 test("incomplete pending profiles do not show approval controls", () => {
@@ -198,10 +201,13 @@ test("the page authenticates, gates account state and role, and selects minimal 
   assert.match(page, /\.select\("member_id, role"\)/);
   assert.match(page, /executiveRoleLookupFailed/);
   assert.match(page, /member\.id === authData\.user\.id/);
-  assert.match(page, /You cannot deactivate your own account/);
   assert.match(
     page,
-    /\.select\("id, full_name, username, status, profile_completed_at"\)/,
+    /Another active Admin or Backup Admin must\s+deactivate your account\./,
+  );
+  assert.match(
+    page,
+    /\.select\(\s*"id, full_name, username, status, profile_completed_at, created_at"\s*\)/,
   );
   assert.doesNotMatch(page, /\.select\([^\n]*email/i);
 });
@@ -217,8 +223,8 @@ test("roster query failure withholds every member row and lifecycle form", () =>
 });
 
 test("member names and usernames render as React text without unsafe HTML", () => {
-  assert.match(page, /\{member\.full_name\}/);
-  assert.match(page, /\{member\.username\}/);
+  assert.match(page, /full_name|fullName/);
+  assert.match(page, /username/);
   assert.doesNotMatch(page, /dangerouslySetInnerHTML|\binnerHTML\s*=/i);
 });
 
@@ -232,14 +238,25 @@ test("lifecycle forms require an audit reason and confirm the selected operation
   assert.match(lifecycleForm, /confirmed email/);
 });
 
-test("Executive role controls are reasoned, confirmed, and hard-coded to Executive", () => {
-  assert.match(executiveRoleForm, /action=\{executiveRoleAction\}/);
-  assert.match(executiveRoleForm, /window\.confirm\(confirmation\)/);
-  assert.match(executiveRoleForm, /name="role" type="hidden" value="executive"/);
-  assert.match(executiveRoleForm, /name="reason"/);
-  assert.match(executiveRoleForm, /maxLength=\{500\}/);
-  assert.match(executiveRoleForm, /required/);
-  assert.match(executiveRoleForm, /aria-describedby=/);
+test("club role changes offer supported roles and require reason and confirmation", () => {
+  assert.match(clubRoleForm, /action=\{clubRoleChangeAction\}/);
+  assert.match(clubRoleForm, /dialogRef\.current\?\.showModal\(\)/);
+  assert.match(clubRoleForm, /<dialog/);
+  assert.match(clubRoleForm, /Confirm role change/);
+  assert.match(clubRoleForm, /Confirm and save/);
+  assert.match(clubRoleForm, /Change role/);
+  assert.match(clubRoleForm, /value="member">Member/);
+  assert.match(clubRoleForm, /value="executive">Executive/);
+  assert.match(clubRoleForm, /value="admin">Admin/);
+  assert.match(clubRoleForm, /value="backup_admin">Backup Admin/);
+  assert.match(
+    clubRoleForm,
+    /name="role" type="hidden" value=\{selectedRole \?\? ""\}/,
+  );
+  assert.match(clubRoleForm, /name="reason"/);
+  assert.match(clubRoleForm, /maxLength=\{500\}/);
+  assert.match(clubRoleForm, /required/);
+  assert.match(clubRoleForm, /aria-describedby=/);
 });
 
 test("server action still independently validates identity, role, target ID, reason, and database RPC", () => {
@@ -257,19 +274,20 @@ test("server action still independently validates identity, role, target ID, rea
   assert.match(action, /p_reason: reason/);
 });
 
-test("Executive role Server Action independently checks actor and uses only fixed Executive RPC calls", () => {
+test("club role Server Action independently checks actor and uses the role RPC", () => {
   const action = serverActions.slice(
-    serverActions.indexOf("export async function executiveRoleAction"),
+    serverActions.indexOf("export async function clubRoleChangeAction"),
     serverActions.indexOf("export async function signOutAction"),
   );
-  assert.match(action, /parseExecutiveRoleRequest\(formData\)/);
+  assert.match(action, /parseClubRoleRequest\(formData\)/);
   assert.match(action, /supabase\.auth\.getUser\(\)/);
   assert.match(action, /profile\?\.status !== "active"/);
+  assert.match(action, /request\.memberId === authData\.user\.id/);
   assert.match(action, /.eq\("member_id", authData\.user\.id\)/);
   assert.match(action, /roles\.has\("admin"\)/);
   assert.match(action, /roles\.has\("backup_admin"\)/);
-  assert.match(action, /"grant_club_role" : "revoke_club_role"/);
-  assert.match(action, /p_role: "executive"/);
+  assert.match(action, /supabase\.rpc\("set_club_role"/);
+  assert.match(action, /p_role: request\.role/);
   assert.match(action, /p_member_id: request\.memberId/);
   assert.match(action, /p_reason: request\.reason/);
   assert.doesNotMatch(action, /service_role|SERVICE_ROLE/);

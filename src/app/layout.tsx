@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, IBM_Plex_Sans } from "next/font/google";
 import type { ReactNode } from "react";
+import { GlobalFlashListener } from "@/components/ui/global-flash-listener";
 import { clubBrand } from "@/lib/brand";
 import "./globals.css";
 
@@ -26,7 +27,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html className={`${dmSans.variable} ${ibmPlexSans.variable}`} lang="en">
-      <body>{children}</body>
+      <body>
+        <GlobalFlashListener />
+        {children}
+      </body>
     </html>
   );
 }

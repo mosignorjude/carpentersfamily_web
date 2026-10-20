@@ -6,6 +6,7 @@ import {
   setDuesRateAction,
   writeOffDuesAction,
 } from "@/app/actions";
+import { FormattedAmountInput } from "@/components/formatted-amount-input";
 
 export type DuesMonthOption = {
   month: string;
@@ -47,63 +48,95 @@ export function DuesPaymentForm({
   today: string;
 }) {
   return (
-    <form action={recordDuesPaymentAction} className="form-stack dues-form">
+    <form
+      action={recordDuesPaymentAction}
+      className="space-y-4 bg-white p-5 rounded-xl border border-[#E5DDD3] shadow-2xs"
+    >
       <input name="member_id" type="hidden" value={memberId} />
+
       {availableMonths.length > 0 ? (
-        <label>
-          Unpaid months to cover
+        <label className="block text-xs font-bold text-[#54433A] space-y-1.5">
+          <span>
+            Unpaid Months to Cover (Hold Ctrl / Cmd to select multiple)
+          </span>
           <select
+            className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden shadow-2xs font-medium"
             multiple
             name="covered_month"
             size={Math.min(8, availableMonths.length)}
           >
             {availableMonths.map((option) => (
-              <option key={option.month} value={option.month.slice(0, 7)}>
+              <option
+                className="py-1 px-1.5 rounded hover:bg-[#174C37]/10"
+                key={option.month}
+                value={option.month.slice(0, 7)}
+              >
                 {option.label} · {displayAmount(option.amount)}
               </option>
             ))}
           </select>
         </label>
       ) : (
-        <div>
-          <span className="field-label">Unpaid months to cover</span>
-          <span className="muted">
-            There are no unpaid months in the current schedule.
+        <div className="p-3 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#54433A]">
+          <span className="font-bold block text-[#3D291F]">
+            Unpaid Months to Cover
           </span>
+          <span>There are no unpaid months in the current schedule.</span>
         </div>
       )}
-      <label>
-        Additional future months, if needed
+
+      <label className="block text-xs font-bold text-[#54433A] space-y-1.5">
+        <span>Additional Future Pre-payment Months (Optional)</span>
         <input
           autoComplete="off"
+          className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden font-mono"
           maxLength={10000}
           name="prepay_months"
           placeholder="YYYY-MM, YYYY-MM"
         />
+        <p className="text-[11px] font-normal text-[#7A685D] mt-1">
+          Select full months or enter additional future months. The database
+          checks the exact total against each month&apos;s configured rate;
+          partial payments are rejected.
+        </p>
       </label>
-      <p className="muted">
-        Select full months or enter additional future months. The database
-        checks the exact total against each month’s configured rate; partial
-        payments are rejected.
-      </p>
-      <label>
-        Exact payment amount in whole Naira
-        <input
-          inputMode="numeric"
-          max="1200000000000"
-          min="1"
-          name="amount_ngn"
-          pattern="[0-9]+"
-          required
-          step="1"
-          type="number"
-        />
-      </label>
-      <label>
-        Payment date
-        <input max={today} name="payment_date" required type="date" />
-      </label>
-      <button type="submit">Record dues payment</button>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <label
+          className="block text-xs font-bold text-[#54433A] space-y-1.5"
+          htmlFor="dues-payment-amount"
+        >
+          <span>Exact Payment Amount in Whole Naira (₦)</span>
+          <FormattedAmountInput
+            className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] font-mono font-bold focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+            id="dues-payment-amount"
+            name="amount_ngn"
+            placeholder="e.g. 10,000"
+            required
+          />
+        </label>
+
+        <label className="block text-xs font-bold text-[#54433A] space-y-1.5">
+          <span>Payment Date</span>
+          <input
+            className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+            defaultValue={today}
+            max={today}
+            name="payment_date"
+            required
+            type="date"
+          />
+        </label>
+      </div>
+
+      <div className="pt-2">
+        <button
+          className="inline-flex items-center justify-center px-5 py-2.5 rounded-[10px] bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-xs cursor-pointer min-h-[42px]"
+          type="submit"
+        >
+          Record Dues Payment
+        </button>
+      </div>
     </form>
   );
 }
@@ -119,14 +152,16 @@ export function DuesWriteOffForm({
 }) {
   if (pastUnpaidMonths.length === 0) {
     return (
-      <p className="muted">No old unpaid months are eligible for write-off.</p>
+      <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#54433A]">
+        No past unpaid months are currently eligible for statutory write-off.
+      </div>
     );
   }
 
   return (
     <form
       action={writeOffDuesAction}
-      className="form-stack dues-form"
+      className="space-y-4 bg-white p-5 rounded-xl border border-[#F5C2C2] shadow-2xs"
       onSubmit={(event) => {
         if (
           !window.confirm(
@@ -138,28 +173,48 @@ export function DuesWriteOffForm({
       }}
     >
       <input name="member_id" type="hidden" value={memberId} />
-      <label>
-        Old unpaid months to write off
+
+      <label className="block text-xs font-bold text-[#BA3C2A] space-y-1.5">
+        <span>Old Unpaid Months to Write Off</span>
         <select
+          className="w-full rounded-lg border border-[#F5C2C2] bg-[#FFF9F8] p-2.5 text-xs text-[#3D291F] focus:border-[#BA3C2A] focus:ring-1 focus:ring-[#BA3C2A] outline-hidden font-medium"
           multiple
           name="covered_month"
           required
           size={Math.min(8, pastUnpaidMonths.length)}
         >
           {pastUnpaidMonths.map((option) => (
-            <option key={option.month} value={option.month.slice(0, 7)}>
+            <option
+              className="py-1 px-1.5 rounded hover:bg-[#BA3C2A]/10"
+              key={option.month}
+              value={option.month.slice(0, 7)}
+            >
               {option.label} · {displayAmount(option.amount)}
             </option>
           ))}
         </select>
       </label>
-      <label>
-        Required reason
-        <input autoComplete="off" maxLength={500} name="reason" required />
+
+      <label className="block text-xs font-bold text-[#54433A] space-y-1.5">
+        <span>Required Governance & Audit Reason</span>
+        <input
+          autoComplete="off"
+          className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] focus:border-[#BA3C2A] focus:ring-1 focus:ring-[#BA3C2A] outline-hidden"
+          maxLength={500}
+          name="reason"
+          placeholder="State the executive resolution or justification..."
+          required
+        />
       </label>
-      <button className="button-secondary" type="submit">
-        Write off selected months
-      </button>
+
+      <div className="pt-2">
+        <button
+          className="inline-flex items-center justify-center px-5 py-2.5 rounded-[10px] bg-[#BA3C2A] text-white text-xs font-bold hover:bg-[#a33222] transition-colors shadow-xs cursor-pointer min-h-[42px]"
+          type="submit"
+        >
+          Confirm Statutory Write-Off
+        </button>
+      </div>
     </form>
   );
 }
@@ -172,11 +227,17 @@ export function DuesPaymentCorrectionForm({
   members: DuesMemberOption[];
 }) {
   return (
-    <details className="dues-correction">
-      <summary>Correct this payment</summary>
+    <details className="group border border-[#E5DDD3] rounded-xl bg-white overflow-hidden text-xs">
+      <summary className="p-3 font-bold text-[#174C37] hover:bg-[#FAF6F0] cursor-pointer flex items-center justify-between transition-colors">
+        <span>Officer Action: Correct This Payment Record</span>
+        <span className="text-[11px] text-[#54433A] font-medium">
+          Audit Retained
+        </span>
+      </summary>
+
       <form
         action={correctDuesPaymentAction}
-        className="form-stack dues-form"
+        className="p-4 border-t border-[#E5DDD3] bg-[#FAF6F0] space-y-3.5"
         onSubmit={(event) => {
           if (
             !window.confirm(
@@ -188,58 +249,86 @@ export function DuesPaymentCorrectionForm({
         }}
       >
         <input name="payment_id" type="hidden" value={payment.id} />
-        <label>
-          Member
-          <select defaultValue={payment.member_id} name="member_id" required>
-            {members.map((member) => (
-              <option key={member.id} value={member.id}>
-                {member.full_name} · @{member.username} · {member.status}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Corrected covered months, comma-separated
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <label className="block text-xs font-bold text-[#54433A] space-y-1">
+            <span>Member Assignment</span>
+            <select
+              className="w-full rounded-lg border border-[#E5DDD3] bg-white p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden font-medium"
+              defaultValue={payment.member_id}
+              name="member_id"
+              required
+            >
+              {members.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.full_name} · @{member.username} · {member.status}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block text-xs font-bold text-[#54433A] space-y-1">
+            <span>Corrected Covered Months (comma-separated YYYY-MM)</span>
+            <input
+              autoComplete="off"
+              className="w-full rounded-lg border border-[#E5DDD3] bg-white p-2.5 text-xs text-[#3D291F] font-mono focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+              defaultValue={payment.covered_months
+                .map((month) => month.slice(0, 7))
+                .join(", ")}
+              maxLength={10000}
+              name="covered_months"
+              required
+            />
+          </label>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <label
+            className="block text-xs font-bold text-[#54433A] space-y-1"
+            htmlFor="dues-correct-amount"
+          >
+            <span>Corrected Amount in Whole Naira (₦)</span>
+            <FormattedAmountInput
+              className="w-full rounded-lg border border-[#E5DDD3] bg-white p-2.5 text-xs text-[#3D291F] font-mono font-bold focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+              defaultValue={payment.amount_ngn}
+              id="dues-correct-amount"
+              name="amount_ngn"
+              required
+            />
+          </label>
+
+          <label className="block text-xs font-bold text-[#54433A] space-y-1">
+            <span>Corrected Payment Date</span>
+            <input
+              className="w-full rounded-lg border border-[#E5DDD3] bg-white p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+              defaultValue={payment.payment_date}
+              name="payment_date"
+              required
+              type="date"
+            />
+          </label>
+        </div>
+
+        <label className="block text-xs font-bold text-[#54433A] space-y-1">
+          <span>Required Correction Reason (Recorded in Audit Trail)</span>
           <input
             autoComplete="off"
-            defaultValue={payment.covered_months
-              .map((month) => month.slice(0, 7))
-              .join(", ")}
-            maxLength={10000}
-            name="covered_months"
+            className="w-full rounded-lg border border-[#E5DDD3] bg-white p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+            maxLength={500}
+            name="reason"
+            placeholder="Explain why this receipt record is being corrected..."
             required
           />
         </label>
-        <label>
-          Corrected amount in whole Naira
-          <input
-            defaultValue={payment.amount_ngn}
-            inputMode="numeric"
-            max="1200000000000"
-            min="1"
-            name="amount_ngn"
-            pattern="[0-9]+"
-            required
-            step="1"
-            type="number"
-          />
-        </label>
-        <label>
-          Corrected payment date
-          <input
-            defaultValue={payment.payment_date}
-            name="payment_date"
-            required
-            type="date"
-          />
-        </label>
-        <label>
-          Required correction reason
-          <input autoComplete="off" maxLength={500} name="reason" required />
-        </label>
-        <button className="button-secondary" type="submit">
-          Save correction
-        </button>
+
+        <div className="pt-1">
+          <button
+            className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[38px]"
+            type="submit"
+          >
+            Save Payment Correction
+          </button>
+        </div>
       </form>
     </details>
   );
@@ -249,7 +338,7 @@ export function DuesRateForm({ nextMonth }: { nextMonth: string }) {
   return (
     <form
       action={setDuesRateAction}
-      className="form-stack dues-form"
+      className="space-y-3.5 bg-white p-4 rounded-xl border border-[#E5DDD3] shadow-2xs text-xs"
       onSubmit={(event) => {
         if (
           !window.confirm(
@@ -260,35 +349,53 @@ export function DuesRateForm({ nextMonth }: { nextMonth: string }) {
         }
       }}
     >
-      <label>
-        Effective month (next month only)
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <label className="block text-xs font-bold text-[#54433A] space-y-1">
+          <span>Effective Month (Next month only)</span>
+          <input
+            className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] font-mono focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+            defaultValue={nextMonth}
+            name="effective_month"
+            required
+            type="month"
+          />
+        </label>
+
+        <label
+          className="block text-xs font-bold text-[#54433A] space-y-1"
+          htmlFor="dues-monthly-amount"
+        >
+          <span>New Monthly Rate in Whole Naira (₦)</span>
+          <FormattedAmountInput
+            className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] font-mono font-bold focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+            id="dues-monthly-amount"
+            name="amount_ngn"
+            placeholder="e.g. 10,000"
+            required
+          />
+        </label>
+      </div>
+
+      <label className="block text-xs font-bold text-[#54433A] space-y-1">
+        <span>Governance Resolution or Justification</span>
         <input
-          defaultValue={nextMonth}
-          name="effective_month"
+          autoComplete="off"
+          className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+          maxLength={500}
+          name="reason"
+          placeholder="e.g. General Assembly Resolution GA-2026-03"
           required
-          type="month"
         />
       </label>
-      <label>
-        New monthly rate in whole Naira
-        <input
-          inputMode="numeric"
-          max="1000000000"
-          min="1"
-          name="amount_ngn"
-          pattern="[0-9]+"
-          required
-          step="1"
-          type="number"
-        />
-      </label>
-      <label>
-        Required reason
-        <input autoComplete="off" maxLength={500} name="reason" required />
-      </label>
-      <button className="button-secondary" type="submit">
-        Schedule dues rate
-      </button>
+
+      <div className="pt-1">
+        <button
+          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[38px]"
+          type="submit"
+        >
+          Schedule Dues Rate
+        </button>
+      </div>
     </form>
   );
 }

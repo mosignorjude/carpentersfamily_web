@@ -12,8 +12,10 @@ import AuthSubmitButton from "@/components/auth-submit-button";
 import AuthValidatedForm, {
   AuthFieldError,
 } from "@/components/auth-validated-form";
+import { ClubIcon } from "@/components/club-icon";
 import GoogleMark from "@/components/google-mark";
 import HomeDashboardView from "@/components/home-dashboard-view";
+import type { AppNotification } from "@/components/notifications/notifications-drawer";
 import { getNavigationItems } from "@/lib/app-navigation.mjs";
 import { clubBrand } from "@/lib/brand";
 import { getHomeDashboardData } from "@/lib/home-dashboard.server";
@@ -57,7 +59,7 @@ export default async function HomePage({
     supabase = await createSupabaseServerClient();
   } catch {
     return (
-      <AuthPageLayout>
+      <AuthPageLayout variant="signin">
         <div className="signin-content signin-config-state">
           <AuthBrand />
           <p className="signin-eyebrow">Private member portal</p>
@@ -74,14 +76,13 @@ export default async function HomePage({
   const { data: authData } = await supabase.auth.getUser();
   if (!authData.user) {
     return (
-      <AuthPageLayout>
+      <AuthPageLayout variant="signin">
         <div className="signin-content">
           <AuthBrand />
           <header className="signin-heading">
-            <p className="signin-eyebrow">Private member portal</p>
             <h1 id="sign-in-heading">Sign in</h1>
             <p className="signin-intro">
-              Sign in to your member account to continue.
+              Access your account to continue with Carpenters Family.
             </p>
           </header>
 
@@ -94,22 +95,42 @@ export default async function HomePage({
             </p>
           ) : null}
 
+          <section className="signin-google-section">
+            <form action={googleSignInAction}>
+              <AuthSubmitButton
+                className="signin-secondary-button signin-google-button"
+                disabled={!googleEnabled}
+                pendingLabel="Connecting to Google…"
+              >
+                <GoogleMark />
+                Continue with Google
+              </AuthSubmitButton>
+            </form>
+          </section>
+
+          <div className="signin-divider" aria-hidden="true">
+            <span>or</span>
+          </div>
+
           <AuthValidatedForm
             action={signInAction}
             className="signin-credentials-form"
           >
             <label className="signin-field">
               <span>Email</span>
-              <input
-                autoComplete="email"
-                aria-describedby="sign-in-email-error"
-                id="sign-in-email"
-                maxLength={254}
-                name="email"
-                required
-                placeholder="you@example.com"
-                type="email"
-              />
+              <span className="signin-field-control">
+                <ClubIcon className="signin-field-icon" name="mail" />
+                <input
+                  autoComplete="email"
+                  aria-describedby="sign-in-email-error"
+                  id="sign-in-email"
+                  maxLength={254}
+                  name="email"
+                  required
+                  placeholder="you@example.com"
+                  type="email"
+                />
+              </span>
               <AuthFieldError id="sign-in-email-error" />
             </label>
             <label className="signin-field" htmlFor="sign-in-password">
@@ -125,34 +146,17 @@ export default async function HomePage({
               />
               <AuthFieldError id="sign-in-password-error" />
             </label>
+            <Link className="signin-forgot-link" href="/forgot-password">
+              Forgot your password?
+            </Link>
             <AuthSubmitButton
               className="signin-primary-button"
               pendingLabel="Signing in…"
             >
               Sign in
+              <ClubIcon name="arrow-right" />
             </AuthSubmitButton>
           </AuthValidatedForm>
-
-          <Link className="signin-forgot-link" href="/forgot-password">
-            Forgot your password?
-          </Link>
-
-          <div className="signin-divider" aria-hidden="true">
-            <span>or</span>
-          </div>
-
-          <section className="signin-google-section">
-            <form action={googleSignInAction}>
-              <AuthSubmitButton
-                className="signin-secondary-button signin-google-button"
-                disabled={!googleEnabled}
-                pendingLabel="Connecting to Google…"
-              >
-                <GoogleMark />
-                Continue with Google
-              </AuthSubmitButton>
-            </form>
-          </section>
 
           <p className="signin-account-prompt">
             New to the club? <Link href="/signup">Request account access</Link>
@@ -284,24 +288,86 @@ export default async function HomePage({
     );
   }
 
-  const [assignmentResult, dashboard] = await Promise.all([
+  if (profile.status === "rejected") {
+    return (
+      <main className="shell">
+        <section className="panel narrow-panel">
+          <p className="eyebrow">Membership status</p>
+          <h1>Membership request declined</h1>
+          <p>
+            This request was not approved, so member features are unavailable.
+            Contact a club administrator if you need more information.
+          </p>
+          <form action={signOutAction}>
+            <button className="button-secondary" type="submit">
+              Sign out
+            </button>
+          </form>
+        </section>
+      </main>
+    );
+  }
+
+  const [
+    assignmentResult,
+    dashboard,
+    notificationResult,
+    eventsResult,
+    announcementsResult,
+  ] = await Promise.all([
     supabase
       .from("member_role_assignments")
       .select("role")
       .eq("member_id", authData.user.id)
       .is("revoked_at", null),
     getHomeDashboardData(supabase, authData.user.id),
+    supabase
+      .from("notifications")
+      .select("id,category,title,body,event_id,created_at,read_at")
+      .eq("recipient_id", authData.user.id)
+      .order("created_at", { ascending: false })
+      .limit(30),
+    supabase
+      .from("events")
+      .select("id,title")
+      .order("starts_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("announcements")
+      .select("id,title")
+      .order("created_at", { ascending: false })
+      .limit(20),
   ]);
   const roles = assignmentResult.error
     ? []
     : (assignmentResult.data ?? []).map((assignment) => assignment.role);
   const navigationItems = getNavigationItems(roles);
+  const notifications = (notificationResult.data ?? []) as AppNotification[];
+  const unreadCount = notifications.filter((n) => n.read_at === null).length;
+  const searchData = {
+    events: (eventsResult.data ?? []).map((e) => ({
+      id: e.id,
+      title: e.title,
+    })),
+    announcements: (announcementsResult.data ?? []).map((a) => ({
+      id: a.id,
+      title: a.title,
+    })),
+  };
 
   return (
-    <AppShell items={navigationItems}>
+    <AppShell
+      currentUserId={authData.user.id}
+      dashboard
+      initialNotifications={notifications}
+      items={navigationItems}
+      searchData={searchData}
+      unreadCount={unreadCount}
+    >
       <HomeDashboardView
         dashboard={dashboard}
         memberName={profile.full_name}
+        roles={roles}
         notice={notice}
       />
     </AppShell>

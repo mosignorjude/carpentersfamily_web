@@ -1,250 +1,132 @@
-import Link from "next/link";
-import {
-  announcementPreview,
-  type HomeDashboardData,
+"use client";
+
+import { MapPin } from "lucide-react";
+import { useState } from "react";
+import ClubLogo from "@/components/club-logo";
+import AnnouncementDetailModal from "@/components/home/announcement-detail-modal";
+import MemberDuesCard from "@/components/home/member-dues-card";
+import NextUpEventsCard from "@/components/home/next-up-events-card";
+import PersonalNotificationsCard from "@/components/home/personal-notifications-card";
+import QuickLinksSection from "@/components/home/quick-links-section";
+import RecentAnnouncementsCard from "@/components/home/recent-announcements-card";
+import { clubBrand } from "@/lib/brand";
+import type {
+  HomeDashboardAnnouncement,
+  HomeDashboardData,
 } from "@/lib/home-dashboard.server";
 
 type HomeDashboardViewProps = {
   dashboard: HomeDashboardData;
   memberName: string;
+  roles: string[];
   notice?: string;
 };
-
-function formatDashboardMonth(month: string) {
-  return new Intl.DateTimeFormat("en-NG", {
-    month: "long",
-    timeZone: "UTC",
-    year: "numeric",
-  }).format(new Date(`${month}T12:00:00.000Z`));
-}
-
-function formatDashboardDate(date: string) {
-  return new Intl.DateTimeFormat("en-NG", {
-    dateStyle: "long",
-    timeZone: "Africa/Lagos",
-  }).format(new Date(`${date}T12:00:00+01:00`));
-}
-
-function formatDashboardDateTime(timestamp: string) {
-  return new Intl.DateTimeFormat("en-NG", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Africa/Lagos",
-  }).format(new Date(timestamp));
-}
-
-function formatDashboardAmount(amount: number) {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function eventTypeLabel(eventType: string) {
-  if (eventType === "meeting") return "Meeting";
-  if (eventType === "party") return "Celebration";
-  return "Club event";
-}
-
-function eventStampMonth(timestamp: string) {
-  return new Intl.DateTimeFormat("en-NG", {
-    month: "short",
-    timeZone: "Africa/Lagos",
-  }).format(new Date(timestamp));
-}
-
-function eventStampDay(timestamp: string) {
-  return new Intl.DateTimeFormat("en-NG", {
-    day: "2-digit",
-    timeZone: "Africa/Lagos",
-  }).format(new Date(timestamp));
-}
 
 export default function HomeDashboardView({
   dashboard,
   memberName,
-  notice,
+  roles,
+  notice: _notice,
 }: HomeDashboardViewProps) {
-  const currentDues = dashboard.dues.rows[0] ?? null;
-  const duesStatusLabel = currentDues
-    ? currentDues.status === "paid"
-      ? "Paid"
-      : currentDues.status === "written_off"
-        ? "Written off"
-        : currentDues.isOverdue
-          ? "Overdue"
-          : "Due by month end"
-    : null;
-  const duesStatusTone = currentDues
-    ? currentDues.status === "paid"
-      ? "is-paid"
-      : currentDues.status === "written_off"
-        ? "is-written-off"
-        : currentDues.isOverdue
-          ? "is-overdue"
-          : "is-due"
-    : "";
+  const [selectedAnnouncement, setSelectedAnnouncement] =
+    useState<HomeDashboardAnnouncement | null>(null);
 
   return (
-    <main className="shell home-shell">
-      <div className="home-dashboard">
-        <header className="home-dashboard-header">
-          <div>
-            <p className="eyebrow">Carpenters Family Social Club</p>
-            <h1>Welcome, {memberName}</h1>
-            <p className="home-dashboard-intro">
-              Your next gatherings, current dues status, and club news.
-            </p>
+    <div className="home-dashboard min-h-full p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full font-sans antialiased text-[#3D291F]">
+      {/* Welcoming Family-Oriented Member Header */}
+      <section
+        aria-labelledby="welcome-heading"
+        className="bg-white rounded-xl border border-[#E5DDD3] p-6 sm:p-7 shadow-xs relative overflow-hidden"
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex items-start gap-4">
+            {/* Club Brand Emblem */}
+            <div className="hidden sm:flex shrink-0 p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] items-center justify-center shadow-2xs">
+              <ClubLogo size="md" variant="dark" />
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 text-xs font-bold text-[#174C37] uppercase tracking-wider mb-1.5">
+                <span>{clubBrand.name}</span>
+                <span aria-hidden="true" className="text-[#B8ACA0]">
+                  ·
+                </span>
+                <span className="text-[#3D291F]">{clubBrand.location}</span>
+              </div>
+
+              <h1
+                className="font-bold text-[#3D291F] tracking-tight"
+                id="welcome-heading"
+              >
+                Welcome, {memberName}
+              </h1>
+
+              <p className="home-dashboard-intro-copy mt-2 max-w-2xl text-xs leading-relaxed font-normal sm:text-sm">
+                Peace and goodwill to you and your household. Here is your
+                private overview of upcoming gatherings, club circulars, and
+                personal dues status.
+              </p>
+
+              {/* Member Trust & Identification Metadata */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3.5 pt-3.5 border-t border-[#E5DDD3] text-xs font-medium text-[#7A685D]">
+                <div>
+                  Location:{" "}
+                  <strong className="text-[#3D291F] font-bold">
+                    {clubBrand.location}
+                  </strong>
+                </div>
+              </div>
+            </div>
           </div>
-          <span className="home-member-mark">Member home</span>
-        </header>
 
-        {notice ? (
-          <p className="notice" role="status">
-            {notice}
-          </p>
-        ) : null}
-
-        <div className="home-dashboard-grid">
-          <section
-            aria-labelledby="home-events-heading"
-            className="home-dashboard-section home-events-section"
-          >
-            <div className="home-section-heading">
-              <div>
-                <p className="eyebrow">On the calendar</p>
-                <h2 id="home-events-heading">Coming up</h2>
-              </div>
-              <Link href="/events">All events</Link>
+          {/* Location Stamp Capsule */}
+          <div className="bg-[#FAF6F0] p-4 sm:p-5 rounded-xl border border-[#E5DDD3] lg:text-right shrink-0 space-y-1 shadow-2xs">
+            <span className="text-xs font-semibold text-[#7A685D] block">
+              Club Headquarters
+            </span>
+            <span className="text-base font-bold text-[#3D291F] block tracking-tight">
+              {clubBrand.location}
+            </span>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-[#174C37] justify-start lg:justify-end">
+              <MapPin className="w-3.5 h-3.5 text-[#174C37]" />
+              <span>Delta State, Nigeria</span>
             </div>
-
-            {dashboard.events.unavailable ? (
-              <p className="home-data-error" role="alert">
-                Upcoming events could not be loaded. Try opening the events page
-                again.
-              </p>
-            ) : dashboard.events.rows.length ? (
-              <ol className="home-event-list">
-                {dashboard.events.rows.map((event, index) => (
-                  <li
-                    className={
-                      index === 0
-                        ? "home-event-item home-event-primary"
-                        : "home-event-item"
-                    }
-                    key={event.id}
-                  >
-                    <div aria-hidden="true" className="home-event-date">
-                      <span>{eventStampMonth(event.startsAt)}</span>
-                      <strong>{eventStampDay(event.startsAt)}</strong>
-                    </div>
-                    <div className="home-event-copy">
-                      <p className="home-event-kind">
-                        {index === 0
-                          ? "Next gathering"
-                          : eventTypeLabel(event.eventType)}
-                      </p>
-                      <h3>{event.title}</h3>
-                      <p>
-                        <time dateTime={event.startsAt}>
-                          {formatDashboardDateTime(event.startsAt)}
-                        </time>
-                      </p>
-                      <p className="home-event-location">{event.location}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p className="home-empty-state">
-                No upcoming events have been scheduled.
-              </p>
-            )}
-          </section>
-
-          <section
-            aria-labelledby="home-dues-heading"
-            className="home-dashboard-section home-dues-section"
-          >
-            <div className="home-section-heading">
-              <div>
-                <p className="eyebrow">Private to you</p>
-                <h2 id="home-dues-heading">Your dues</h2>
-              </div>
-              <Link href="/dues">My dues</Link>
-            </div>
-
-            {dashboard.dues.unavailable ? (
-              <p className="home-data-error" role="alert">
-                Your current dues status could not be loaded. Open My dues to
-                check it.
-              </p>
-            ) : currentDues ? (
-              <>
-                <p className="home-dues-period">
-                  {dashboard.currentMonth
-                    ? formatDashboardMonth(dashboard.currentMonth)
-                    : "Current month"}
-                </p>
-                <p className="home-dues-amount">
-                  {formatDashboardAmount(currentDues.amountNgn)}
-                </p>
-                <p className={`home-dues-status ${duesStatusTone}`}>
-                  <span aria-hidden="true" />
-                  {duesStatusLabel}
-                </p>
-                {currentDues.status === "unpaid" ? (
-                  <p className="home-dues-deadline">
-                    Payment due by {formatDashboardDate(currentDues.dueDate)}
-                  </p>
-                ) : null}
-              </>
-            ) : (
-              <p className="home-empty-state">
-                No current-month dues status is available.
-              </p>
-            )}
-          </section>
-
-          <section
-            aria-labelledby="home-announcements-heading"
-            className="home-dashboard-section home-announcements-section"
-          >
-            <div className="home-section-heading">
-              <div>
-                <p className="eyebrow">From the club</p>
-                <h2 id="home-announcements-heading">Latest news</h2>
-              </div>
-              <Link href="/announcements">All announcements</Link>
-            </div>
-
-            {dashboard.announcements.unavailable ? (
-              <p className="home-data-error" role="alert">
-                Club news could not be loaded. Try opening announcements again.
-              </p>
-            ) : dashboard.announcements.rows.length ? (
-              <div className="home-announcement-list">
-                {dashboard.announcements.rows.map((announcement) => (
-                  <article key={announcement.id}>
-                    <div className="home-announcement-meta">
-                      <h3>{announcement.title}</h3>
-                      <time dateTime={announcement.createdAt}>
-                        {formatDashboardDateTime(announcement.createdAt)}
-                      </time>
-                    </div>
-                    <p>{announcementPreview(announcement.message)}</p>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="home-empty-state">
-                There are no announcements yet.
-              </p>
-            )}
-          </section>
+          </div>
         </div>
+      </section>
+
+      {/* 1. Signed-in Member's Own Dues Status (Private, month-by-month) */}
+      <MemberDuesCard
+        currentMonth={dashboard.currentMonth}
+        currentYear={dashboard.currentYear}
+        dues={dashboard.dues}
+        memberName={memberName}
+      />
+
+      {/* 2. 2-Column Split: Next Up Scheduled Events & Recent Announcements */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Next Up Events */}
+        <NextUpEventsCard events={dashboard.events} roles={roles} />
+
+        {/* Recent Announcements */}
+        <RecentAnnouncementsCard
+          announcements={dashboard.announcements}
+          onOpenAnnouncement={(ann) => setSelectedAnnouncement(ann)}
+        />
       </div>
-    </main>
+
+      {/* 3. Personal Activity & Notifications */}
+      <PersonalNotificationsCard activity={dashboard.activity} />
+
+      {/* 4. Quick Access & Club Services */}
+      <QuickLinksSection roles={roles} />
+
+      {/* Announcement Detail Modal */}
+      <AnnouncementDetailModal
+        announcement={selectedAnnouncement}
+        isOpen={Boolean(selectedAnnouncement)}
+        onClose={() => setSelectedAnnouncement(null)}
+      />
+    </div>
   );
 }

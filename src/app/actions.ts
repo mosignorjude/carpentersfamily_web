@@ -4,6 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import QRCode from "qrcode";
+import { parseClubRoleRequest } from "@/lib/club-role-request.mjs";
 import { parseExecutiveRoleRequest } from "@/lib/executive-role-request.mjs";
 import { getSiteOrigin, isGoogleAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -66,11 +67,11 @@ function parseDuesMonths(
 
   const months: string[] = [];
   for (const token of tokens) {
-    const match = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(token);
+    const match = /^(\d{4})-(0[1-9]|1[0-2])(-01)?$/.exec(token);
     if (!match || Number(match[1]) < 1900 || Number(match[1]) > 9999) {
       return null;
     }
-    months.push(`${token}-01`);
+    months.push(`${match[1]}-${match[2]}-01`);
   }
 
   if (new Set(months).size !== months.length) return null;
@@ -78,8 +79,10 @@ function parseDuesMonths(
 }
 
 function parseDuesAmount(formData: FormData) {
-  const value = formData.get("amount_ngn");
-  if (typeof value !== "string" || !/^\d{1,13}$/.test(value)) return null;
+  const raw = formData.get("amount_ngn") ?? formData.get("monthly_amount_ngn");
+  if (typeof raw !== "string") return null;
+  const value = raw.replace(/,/g, "").trim();
+  if (!/^\d{1,13}$/.test(value)) return null;
   const amount = Number(value);
   return Number.isSafeInteger(amount) &&
     amount > 0 &&
@@ -140,8 +143,10 @@ function parseFinanceDate(value: FormDataEntryValue | null) {
 }
 
 function parseFinanceAmount(value: FormDataEntryValue | null) {
-  if (typeof value !== "string" || !/^\d{1,13}$/.test(value)) return null;
-  const amount = Number(value);
+  if (typeof value !== "string") return null;
+  const sanitized = value.replace(/,/g, "").trim();
+  if (!/^\d{1,13}$/.test(sanitized)) return null;
+  const amount = Number(sanitized);
   return Number.isSafeInteger(amount) &&
     amount > 0 &&
     amount <= 1_000_000_000_000
@@ -204,11 +209,18 @@ function eventNoticeUrl(notice: string) {
 }
 
 function eventFinanceNoticeUrl(eventId: string, notice: string) {
-  return `/events/${encodeURIComponent(eventId)}/finance?${new URLSearchParams({ notice }).toString()}`;
+  return `/events/${encodeURIComponent(eventId)}/dashboard?${new URLSearchParams({ notice }).toString()}`;
 }
 
-function eventAttendanceNoticeUrl(eventId: string, notice: string) {
-  return `/events/${encodeURIComponent(eventId)}/attendance?${new URLSearchParams({ notice }).toString()}`;
+function eventAttendanceNoticeUrl(
+  eventId: string,
+  notice: string,
+  _returnTo?: string | null,
+) {
+  const params = new URLSearchParams();
+  if (eventId) params.set("event", eventId);
+  params.set("notice", notice);
+  return `/attendance?${params.toString()}`;
 }
 
 function eventManagerAllowed(roles: Set<string>) {
@@ -262,8 +274,10 @@ function eventCheckbox(formData: FormData, key: string) {
 }
 
 function eventAmount(value: FormDataEntryValue | null) {
-  if (typeof value !== "string" || !/^[1-9]\d{0,12}$/.test(value)) return null;
-  const amount = Number(value);
+  if (typeof value !== "string") return null;
+  const sanitized = value.replace(/,/g, "").trim();
+  if (!/^[1-9]\d{0,12}$/.test(sanitized)) return null;
+  const amount = Number(sanitized);
   return Number.isSafeInteger(amount) && amount <= 1_000_000_000_000
     ? amount
     : null;
@@ -558,6 +572,113 @@ export async function setDuesRateAction(formData: FormData) {
 
   revalidatePath("/dues");
   redirect(duesNoticeUrl("rate-saved"));
+}
+
+export async function submitDuesPaymentRequestAction(formData: FormData) {
+  const amount = parseDuesAmount(formData);
+  const months = parseDuesMonths(formData, "covered_months");
+  const paymentMethod = formString(formData, "payment_method", 32);
+  const paymentReference = formString(formData, "payment_reference", 160);
+  const notes = optionalFormString(formData, "notes", 500);
+
+  if (
+    amount === null ||
+    !months ||
+    months.length === 0 ||
+    !paymentMethod ||
+    !["bank_transfer", "paystack", "pos", "cash", "other"].includes(
+      paymentMethod,
+    ) ||
+    !paymentReference ||
+    paymentReference.length < 2 ||
+    notes === undefined ||
+    (notes !== null && containsControlCharacters(notes))
+  ) {
+    redirect(duesNoticeUrl("invalid-request"));
+  }
+
+  const actor = await getActiveDuesActor();
+  // Admins do not pay dues
+  if (actor.roles.has("admin")) {
+    redirect(duesNoticeUrl("denied"));
+  }
+
+  const { error } = await actor.supabase.rpc("submit_dues_payment_request", {
+    p_amount_ngn: amount,
+    p_covered_months: months,
+    p_payment_method: paymentMethod,
+    p_payment_reference: paymentReference,
+    p_notes: notes,
+  });
+
+  if (error) {
+    redirect(duesNoticeUrl("operation-failed"));
+  }
+
+  revalidatePath("/dues");
+  redirect(duesNoticeUrl("dues-request-submitted"));
+}
+
+export async function approveDuesPaymentRequestAction(formData: FormData) {
+  const requestId = formString(formData, "request_id", 36);
+  if (!requestId || !uuidPattern.test(requestId)) {
+    redirect(duesNoticeUrl("invalid-request"));
+  }
+
+  const actor = await getActiveDuesActor();
+  const isOfficer =
+    actor.roles.has("executive") ||
+    actor.roles.has("admin") ||
+    actor.roles.has("backup_admin");
+  if (!isOfficer) {
+    redirect(duesNoticeUrl("denied"));
+  }
+
+  const { error } = await actor.supabase.rpc("approve_dues_payment_request", {
+    p_request_id: requestId,
+  });
+
+  if (error) {
+    redirect(duesNoticeUrl("operation-failed"));
+  }
+
+  revalidatePath("/dues");
+  redirect(duesNoticeUrl("dues-request-approved"));
+}
+
+export async function rejectDuesPaymentRequestAction(formData: FormData) {
+  const requestId = formString(formData, "request_id", 36);
+  const reason = formString(formData, "reason", 500);
+
+  if (
+    !requestId ||
+    !uuidPattern.test(requestId) ||
+    !reason ||
+    containsControlCharacters(reason)
+  ) {
+    redirect(duesNoticeUrl("invalid-request"));
+  }
+
+  const actor = await getActiveDuesActor();
+  const isOfficer =
+    actor.roles.has("executive") ||
+    actor.roles.has("admin") ||
+    actor.roles.has("backup_admin");
+  if (!isOfficer) {
+    redirect(duesNoticeUrl("denied"));
+  }
+
+  const { error } = await actor.supabase.rpc("reject_dues_payment_request", {
+    p_request_id: requestId,
+    p_reason: reason,
+  });
+
+  if (error) {
+    redirect(duesNoticeUrl("operation-failed"));
+  }
+
+  revalidatePath("/dues");
+  redirect(duesNoticeUrl("dues-request-rejected"));
 }
 
 export async function recordClubFinanceAction(formData: FormData) {
@@ -894,9 +1015,10 @@ export async function memberLifecycleAction(formData: FormData) {
   const operation = formString(formData, "operation", 20);
   const memberId = formString(formData, "member_id", 36);
   const reason = formString(formData, "reason", 500);
+
   if (
     !operation ||
-    !["approve", "deactivate", "reactivate"].includes(operation) ||
+    !["approve", "deactivate", "reactivate", "reject"].includes(operation) ||
     !memberId ||
     !uuidPattern.test(memberId) ||
     !reason
@@ -935,9 +1057,14 @@ export async function memberLifecycleAction(formData: FormData) {
 
   const rpcName = {
     approve: "approve_member",
+    reject: "reject_member",
     deactivate: "deactivate_member",
     reactivate: "reactivate_member",
-  }[operation] as "approve_member" | "deactivate_member" | "reactivate_member";
+  }[operation] as
+    | "approve_member"
+    | "reject_member"
+    | "deactivate_member"
+    | "reactivate_member";
 
   const { error } = await supabase.rpc(rpcName, {
     p_member_id: memberId,
@@ -946,7 +1073,11 @@ export async function memberLifecycleAction(formData: FormData) {
   if (error) redirect("/admin/members?notice=operation-failed");
 
   revalidatePath("/admin/members");
-  redirect("/admin/members?notice=saved");
+  redirect(
+    operation === "reject"
+      ? "/admin/members?notice=rejected"
+      : "/admin/members?notice=saved",
+  );
 }
 
 export async function executiveRoleAction(formData: FormData) {
@@ -985,6 +1116,52 @@ export async function executiveRoleAction(formData: FormData) {
   const { error } = await supabase.rpc(rpcName, {
     p_member_id: request.memberId,
     p_role: "executive",
+    p_reason: request.reason,
+  });
+  if (error) redirect("/admin/members?notice=operation-failed");
+
+  revalidatePath("/admin/members");
+  redirect("/admin/members?notice=role-updated");
+}
+
+export async function clubRoleChangeAction(formData: FormData) {
+  const request = parseClubRoleRequest(formData);
+  if (!request) redirect("/admin/members?notice=invalid-request");
+
+  const supabase = await clientOrRedirect("/?notice=configuration");
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) redirect("/?notice=sign-in");
+
+  if (request.memberId === authData.user.id) {
+    redirect("/admin/members?notice=denied");
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("member_profiles")
+    .select("status")
+    .eq("id", authData.user.id)
+    .maybeSingle();
+  if (profileError || profile?.status !== "active") {
+    redirect("/admin/members?notice=denied");
+  }
+
+  const { data: assignments, error: assignmentsError } = await supabase
+    .from("member_role_assignments")
+    .select("role")
+    .eq("member_id", authData.user.id)
+    .is("revoked_at", null);
+  if (assignmentsError) redirect("/admin/members?notice=denied");
+
+  const roles = new Set(
+    (assignments ?? []).map((assignment) => assignment.role),
+  );
+  if (!roles.has("admin") && !roles.has("backup_admin")) {
+    redirect("/admin/members?notice=denied");
+  }
+
+  const { error } = await supabase.rpc("set_club_role", {
+    p_member_id: request.memberId,
+    p_role: request.role,
     p_reason: request.reason,
   });
   if (error) redirect("/admin/members?notice=operation-failed");
@@ -1124,21 +1301,31 @@ export async function updateEventDetailsAction(formData: FormData) {
   redirect(eventNoticeUrl("updated"));
 }
 
+function eventRoleNoticeUrl(notice: string, returnTo?: string | null) {
+  if (returnTo === "admin-members") {
+    return `/admin/members?${new URLSearchParams({ notice }).toString()}`;
+  }
+  return eventNoticeUrl(notice);
+}
+
 export async function assignEventRoleAction(formData: FormData) {
+  const returnTo = optionalEventText(formData, "return_to", 40);
   const eventId = eventText(formData, "event_id", 36);
   if (!eventId || !uuidPattern.test(eventId))
-    redirect(eventNoticeUrl("invalid-request"));
+    redirect(eventRoleNoticeUrl("invalid-request", returnTo));
   const actor = await getActiveEventActor(eventId);
-  if (!eventManagerAllowed(actor.roles)) redirect(eventNoticeUrl("denied"));
+  if (!eventManagerAllowed(actor.roles))
+    redirect(eventRoleNoticeUrl("denied", returnTo));
   if (
     !eventFieldsOnly(formData, [
       "event_id",
       "member_id",
       "event_role",
       "reason",
+      "return_to",
     ])
   ) {
-    redirect(eventNoticeUrl("invalid-request"));
+    redirect(eventRoleNoticeUrl("invalid-request", returnTo));
   }
   const memberId = eventText(formData, "member_id", 36);
   const role = eventText(formData, "event_role", 20);
@@ -1149,7 +1336,7 @@ export async function assignEventRoleAction(formData: FormData) {
     !["lead", "assistant", "committee"].includes(role ?? "") ||
     !reason
   ) {
-    redirect(eventNoticeUrl("invalid-request"));
+    redirect(eventRoleNoticeUrl("invalid-request", returnTo));
   }
   const { error } = await actor.supabase.rpc("assign_event_role", {
     p_event_id: eventId,
@@ -1157,33 +1344,39 @@ export async function assignEventRoleAction(formData: FormData) {
     p_role: role,
     p_reason: reason,
   });
-  if (error) redirect(eventNoticeUrl("operation-failed"));
+  if (error) redirect(eventRoleNoticeUrl("operation-failed", returnTo));
   revalidatePath("/events");
-  redirect(eventNoticeUrl("role-saved"));
+  revalidatePath("/admin/members");
+  redirect(eventRoleNoticeUrl("role-saved", returnTo));
 }
 
 export async function revokeEventRoleAction(formData: FormData) {
+  const returnTo = optionalEventText(formData, "return_to", 40);
   const eventId = eventText(formData, "event_id", 36);
   if (!eventId || !uuidPattern.test(eventId))
-    redirect(eventNoticeUrl("invalid-request"));
+    redirect(eventRoleNoticeUrl("invalid-request", returnTo));
   const actor = await getActiveEventActor(eventId);
-  if (!eventManagerAllowed(actor.roles)) redirect(eventNoticeUrl("denied"));
-  if (!eventFieldsOnly(formData, ["event_id", "member_id", "reason"])) {
-    redirect(eventNoticeUrl("invalid-request"));
+  if (!eventManagerAllowed(actor.roles))
+    redirect(eventRoleNoticeUrl("denied", returnTo));
+  if (
+    !eventFieldsOnly(formData, ["event_id", "member_id", "reason", "return_to"])
+  ) {
+    redirect(eventRoleNoticeUrl("invalid-request", returnTo));
   }
   const memberId = eventText(formData, "member_id", 36);
   const reason = eventText(formData, "reason", 500);
   if (!memberId || !uuidPattern.test(memberId) || !reason) {
-    redirect(eventNoticeUrl("invalid-request"));
+    redirect(eventRoleNoticeUrl("invalid-request", returnTo));
   }
   const { error } = await actor.supabase.rpc("revoke_event_role", {
     p_event_id: eventId,
     p_member_id: memberId,
     p_reason: reason,
   });
-  if (error) redirect(eventNoticeUrl("operation-failed"));
+  if (error) redirect(eventRoleNoticeUrl("operation-failed", returnTo));
   revalidatePath("/events");
-  redirect(eventNoticeUrl("role-saved"));
+  revalidatePath("/admin/members");
+  redirect(eventRoleNoticeUrl("role-saved", returnTo));
 }
 
 export async function setEventBudgetAction(formData: FormData) {
@@ -1493,6 +1686,19 @@ export async function recordEventFinancialTransactionAction(
     "payment_method",
     24,
   );
+  const rawCategoryId = eventFinanceOptionalText(formData, "category_id", 80);
+  const rawCategoryName = eventFinanceOptionalText(
+    formData,
+    "category_name",
+    80,
+  );
+  const rawBudgetAllocId = eventFinanceOptionalText(
+    formData,
+    "budget_allocation_category_id",
+    36,
+  );
+  const rawPaymentStatus =
+    eventFinanceOptionalText(formData, "payment_status", 16) ?? "paid";
   const idempotencyKey = eventText(formData, "idempotency_key", 36);
   if (
     !eventFieldsOnly(formData, [
@@ -1504,6 +1710,10 @@ export async function recordEventFinancialTransactionAction(
       "payer_payee",
       "source_note",
       "payment_method",
+      "category_id",
+      "category_name",
+      "budget_allocation_category_id",
+      "payment_status",
       "idempotency_key",
     ]) ||
     !["income", "expense"].includes(kind ?? "") ||
@@ -1513,9 +1723,12 @@ export async function recordEventFinancialTransactionAction(
     payerPayee === undefined ||
     sourceNote === undefined ||
     paymentMethod === undefined ||
+    rawCategoryId === undefined ||
+    rawCategoryName === undefined ||
+    rawBudgetAllocId === undefined ||
     !idempotencyKey ||
     !uuidPattern.test(idempotencyKey) ||
-    (kind === "income" && (!sourceNote || !paymentMethod || description)) ||
+    (kind === "income" && (!sourceNote || !paymentMethod)) ||
     (kind === "expense" &&
       (!description || !payerPayee || sourceNote || paymentMethod))
   ) {
@@ -1531,6 +1744,56 @@ export async function recordEventFinancialTransactionAction(
   ) {
     redirect(eventFinanceNoticeUrl(eventId, "denied"));
   }
+
+  const targetCategoryType = kind === "income" ? "revenue" : "expense";
+  let resolvedCategoryId: string | null =
+    rawCategoryId && uuidPattern.test(rawCategoryId) ? rawCategoryId : null;
+
+  if (!resolvedCategoryId) {
+    const { data: activeCategories } = await actor.supabase
+      .from("event_finance_categories")
+      .select("id, name")
+      .eq("category_type", targetCategoryType)
+      .is("retired_at", null)
+      .order("name", { ascending: true });
+
+    const desiredName = (rawCategoryName || rawCategoryId || "General").trim();
+    const matched = (activeCategories ?? []).find(
+      (c) => c.name.toLowerCase() === desiredName.toLowerCase(),
+    );
+    if (matched) {
+      resolvedCategoryId = matched.id;
+    } else if (desiredName.length >= 2) {
+      const { data: createdId } = await actor.supabase.rpc(
+        "create_event_finance_category",
+        {
+          p_category_type: targetCategoryType,
+          p_name: desiredName.slice(0, 80),
+          p_reason: "Initialized standard event finance category",
+        },
+      );
+      if (typeof createdId === "string" && uuidPattern.test(createdId)) {
+        resolvedCategoryId = createdId;
+      }
+    }
+    if (
+      !resolvedCategoryId &&
+      activeCategories &&
+      activeCategories.length > 0
+    ) {
+      resolvedCategoryId = activeCategories[0].id;
+    }
+  }
+
+  if (!resolvedCategoryId) {
+    redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  }
+
+  const budgetAllocationCategoryId =
+    kind === "expense" && rawBudgetAllocId && uuidPattern.test(rawBudgetAllocId)
+      ? rawBudgetAllocId
+      : null;
+
   const { error } = await actor.supabase.rpc(
     "record_event_financial_transaction",
     {
@@ -1538,17 +1801,21 @@ export async function recordEventFinancialTransactionAction(
       p_kind: kind,
       p_amount_ngn: amount,
       p_transaction_date: transactionDate.date,
-      p_description: description,
-      p_payer_payee: payerPayee,
-      p_source_note: sourceNote,
-      p_payment_method: paymentMethod,
+      p_description: kind === "expense" ? description : null,
+      p_payer_payee: payerPayee ?? null,
+      p_source_note: kind === "income" ? sourceNote : null,
+      p_payment_method: kind === "income" ? paymentMethod : null,
+      p_category_id: resolvedCategoryId,
+      p_budget_allocation_category_id: budgetAllocationCategoryId,
+      p_payment_status: rawPaymentStatus,
       p_idempotency_key: idempotencyKey,
     },
   );
   if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
-  redirect(eventFinanceNoticeUrl(eventId, "saved"));
+  redirect(eventFinanceNoticeUrl(eventId, "transaction-recorded"));
 }
 
 export async function correctEventFinancialTransactionAction(
@@ -1597,7 +1864,9 @@ export async function correctEventFinancialTransactionAction(
   }
   const { data: current, error: currentError } = await actor.supabase
     .from("event_financial_transactions")
-    .select("id, event_id, kind")
+    .select(
+      "id, event_id, kind, category_id, budget_allocation_category_id, payment_status",
+    )
     .eq("id", transactionId)
     .maybeSingle();
   if (currentError || !current || current.event_id !== eventId) {
@@ -1621,13 +1890,17 @@ export async function correctEventFinancialTransactionAction(
       p_payer_payee: payerPayee,
       p_source_note: sourceNote,
       p_payment_method: paymentMethod,
+      p_category_id: current.category_id,
+      p_budget_allocation_category_id: current.budget_allocation_category_id,
+      p_payment_status: current.payment_status ?? "paid",
       p_reason: reason,
     },
   );
   if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
-  redirect(eventFinanceNoticeUrl(eventId, "corrected"));
+  redirect(eventFinanceNoticeUrl(eventId, "transaction-corrected"));
 }
 
 export async function voidEventFinancialTransactionAction(formData: FormData) {
@@ -1647,9 +1920,10 @@ export async function voidEventFinancialTransactionAction(formData: FormData) {
     { p_transaction_id: transactionId, p_reason: reason },
   );
   if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
-  redirect(eventFinanceNoticeUrl(eventId, "voided"));
+  redirect(eventFinanceNoticeUrl(eventId, "transaction-voided"));
 }
 
 export async function recordEventTicketSaleAction(formData: FormData) {
@@ -1704,9 +1978,10 @@ export async function recordEventTicketSaleAction(formData: FormData) {
     p_idempotency_key: idempotencyKey,
   });
   if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
-  redirect(eventFinanceNoticeUrl(eventId, "sale-saved"));
+  redirect(eventFinanceNoticeUrl(eventId, "ticket-recorded"));
 }
 
 export async function editEventTicketSaleAction(formData: FormData) {
@@ -1756,9 +2031,10 @@ export async function editEventTicketSaleAction(formData: FormData) {
     p_reason: reason,
   });
   if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
-  redirect(eventFinanceNoticeUrl(eventId, "sale-edited"));
+  redirect(eventFinanceNoticeUrl(eventId, "ticket-recorded"));
 }
 
 export async function refundEventTicketSaleAction(formData: FormData) {
@@ -1778,123 +2054,152 @@ export async function refundEventTicketSaleAction(formData: FormData) {
     p_reason: reason,
   });
   if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
-  redirect(eventFinanceNoticeUrl(eventId, "refunded"));
+  redirect(eventFinanceNoticeUrl(eventId, "ticket-refunded"));
 }
 
 export async function saveEventMinutesAction(formData: FormData) {
   const eventId = eventText(formData, "event_id", 36);
   const content = eventMinutesContent(formData);
   const reason = optionalEventText(formData, "reason", 500);
+  const returnTo = optionalEventText(formData, "return_to", 50);
   if (
     !eventId ||
     !uuidPattern.test(eventId) ||
     content === null ||
     reason === undefined ||
-    !eventFieldsOnly(formData, ["event_id", "content", "reason"])
+    !eventFieldsOnly(formData, ["event_id", "content", "reason", "return_to"])
   ) {
-    redirect(eventAttendanceNoticeUrl(eventId ?? "", "invalid-request"));
+    redirect(
+      eventAttendanceNoticeUrl(eventId ?? "", "invalid-request", returnTo),
+    );
   }
 
   const actor = await getActiveEventActor(eventId);
   if (!actor.roles.has("admin") && !actor.roles.has("executive")) {
-    redirect(eventAttendanceNoticeUrl(eventId, "denied"));
+    redirect(eventAttendanceNoticeUrl(eventId, "denied", returnTo));
   }
   const { error } = await actor.supabase.rpc("save_event_minutes", {
     p_event_id: eventId,
     p_content: content,
     p_reason: reason,
   });
-  if (error) redirect(eventAttendanceNoticeUrl(eventId, "operation-failed"));
+  if (error)
+    redirect(eventAttendanceNoticeUrl(eventId, "operation-failed", returnTo));
   revalidatePath(`/events/${eventId}/attendance`);
   revalidatePath("/events");
-  redirect(eventAttendanceNoticeUrl(eventId, "minutes-saved"));
+  revalidatePath("/attendance");
+  redirect(eventAttendanceNoticeUrl(eventId, "minutes-saved", returnTo));
 }
 
 export async function setAttendanceDefaultAction(formData: FormData) {
   const eventId = eventText(formData, "event_id", 36);
   const cutoff = eventAttendanceCutoff(formData, true);
   const reason = eventText(formData, "reason", 500);
+  const returnTo = optionalEventText(formData, "return_to", 50);
   if (
     !eventId ||
     !uuidPattern.test(eventId) ||
     cutoff === undefined ||
     !reason ||
-    !eventFieldsOnly(formData, ["event_id", "late_after_minutes", "reason"])
+    !eventFieldsOnly(formData, [
+      "event_id",
+      "late_after_minutes",
+      "reason",
+      "return_to",
+    ])
   ) {
-    redirect(eventAttendanceNoticeUrl(eventId ?? "", "invalid-request"));
+    redirect(
+      eventAttendanceNoticeUrl(eventId ?? "", "invalid-request", returnTo),
+    );
   }
   const actor = await getActiveEventActor(eventId);
   if (!attendanceSessionControllerAllowed(actor.roles)) {
-    redirect(eventAttendanceNoticeUrl(eventId, "denied"));
+    redirect(eventAttendanceNoticeUrl(eventId, "denied", returnTo));
   }
   const { error } = await actor.supabase.rpc("set_attendance_default", {
     p_late_after_minutes: cutoff,
     p_reason: reason,
   });
-  if (error) redirect(eventAttendanceNoticeUrl(eventId, "operation-failed"));
+  if (error)
+    redirect(eventAttendanceNoticeUrl(eventId, "operation-failed", returnTo));
   revalidatePath(`/events/${eventId}/attendance`);
   revalidatePath("/events");
-  redirect(eventAttendanceNoticeUrl(eventId, "cutoff-saved"));
+  revalidatePath("/attendance");
+  redirect(eventAttendanceNoticeUrl(eventId, "cutoff-saved", returnTo));
 }
 
 export async function openEventAttendanceAction(formData: FormData) {
   const eventId = eventText(formData, "event_id", 36);
   const cutoff = eventAttendanceCutoff(formData, false);
+  const returnTo = optionalEventText(formData, "return_to", 50);
   if (
     !eventId ||
     !uuidPattern.test(eventId) ||
     cutoff === undefined ||
-    !eventFieldsOnly(formData, ["event_id", "late_after_minutes"])
+    !eventFieldsOnly(formData, ["event_id", "late_after_minutes", "return_to"])
   ) {
-    redirect(eventAttendanceNoticeUrl(eventId ?? "", "invalid-request"));
+    redirect(
+      eventAttendanceNoticeUrl(eventId ?? "", "invalid-request", returnTo),
+    );
   }
   const actor = await getActiveEventActor(eventId);
   if (!attendanceSessionControllerAllowed(actor.roles)) {
-    redirect(eventAttendanceNoticeUrl(eventId, "denied"));
+    redirect(eventAttendanceNoticeUrl(eventId, "denied", returnTo));
   }
   const { error } = await actor.supabase.rpc("open_event_attendance", {
     p_event_id: eventId,
     p_late_after_minutes: cutoff,
   });
-  if (error) redirect(eventAttendanceNoticeUrl(eventId, "operation-failed"));
+  if (error)
+    redirect(eventAttendanceNoticeUrl(eventId, "operation-failed", returnTo));
   revalidatePath(`/events/${eventId}/attendance`);
-  redirect(eventAttendanceNoticeUrl(eventId, "attendance-opened"));
+  revalidatePath("/attendance");
+  redirect(eventAttendanceNoticeUrl(eventId, "attendance-opened", returnTo));
 }
 
 export async function closeEventAttendanceAction(formData: FormData) {
   const eventId = eventText(formData, "event_id", 36);
+  const returnTo = optionalEventText(formData, "return_to", 50);
   if (
     !eventId ||
     !uuidPattern.test(eventId) ||
-    !eventFieldsOnly(formData, ["event_id"])
+    !eventFieldsOnly(formData, ["event_id", "return_to"])
   ) {
-    redirect(eventAttendanceNoticeUrl(eventId ?? "", "invalid-request"));
+    redirect(
+      eventAttendanceNoticeUrl(eventId ?? "", "invalid-request", returnTo),
+    );
   }
   const actor = await getActiveEventActor(eventId);
   if (!attendanceSessionControllerAllowed(actor.roles)) {
-    redirect(eventAttendanceNoticeUrl(eventId, "denied"));
+    redirect(eventAttendanceNoticeUrl(eventId, "denied", returnTo));
   }
   const { error } = await actor.supabase.rpc("close_event_attendance", {
     p_event_id: eventId,
   });
-  if (error) redirect(eventAttendanceNoticeUrl(eventId, "operation-failed"));
+  if (error)
+    redirect(eventAttendanceNoticeUrl(eventId, "operation-failed", returnTo));
   revalidatePath(`/events/${eventId}/attendance`);
-  redirect(eventAttendanceNoticeUrl(eventId, "attendance-closed"));
+  revalidatePath("/attendance");
+  redirect(eventAttendanceNoticeUrl(eventId, "attendance-closed", returnTo));
 }
 
 export async function checkInEventAttendanceAction(formData: FormData) {
   const eventId = eventText(formData, "event_id", 36);
   const qrToken = optionalEventText(formData, "qr_token", 64);
+  const returnTo = optionalEventText(formData, "return_to", 50);
   if (
     !eventId ||
     !uuidPattern.test(eventId) ||
     qrToken === undefined ||
     (qrToken !== null && !/^[0-9a-f]{64}$/.test(qrToken)) ||
-    !eventFieldsOnly(formData, ["event_id", "qr_token"])
+    !eventFieldsOnly(formData, ["event_id", "qr_token", "return_to"])
   ) {
-    redirect(eventAttendanceNoticeUrl(eventId ?? "", "invalid-request"));
+    redirect(
+      eventAttendanceNoticeUrl(eventId ?? "", "invalid-request", returnTo),
+    );
   }
   const actor = await getActiveEventActor(eventId);
   const challengeHash = qrToken
@@ -1904,9 +2209,11 @@ export async function checkInEventAttendanceAction(formData: FormData) {
     p_event_id: eventId,
     p_challenge_hash: challengeHash,
   });
-  if (error) redirect(eventAttendanceNoticeUrl(eventId, "operation-failed"));
+  if (error)
+    redirect(eventAttendanceNoticeUrl(eventId, "operation-failed", returnTo));
   revalidatePath(`/events/${eventId}/attendance`);
-  redirect(eventAttendanceNoticeUrl(eventId, "checked-in"));
+  revalidatePath("/attendance");
+  redirect(eventAttendanceNoticeUrl(eventId, "checked-in", returnTo));
 }
 
 export async function correctEventAttendanceAction(formData: FormData) {
@@ -1914,6 +2221,7 @@ export async function correctEventAttendanceAction(formData: FormData) {
   const memberId = eventText(formData, "member_id", 36);
   const status = eventText(formData, "attendance_status", 20);
   const reason = eventText(formData, "reason", 500);
+  const returnTo = optionalEventText(formData, "return_to", 50);
   if (
     !eventId ||
     !uuidPattern.test(eventId) ||
@@ -1926,9 +2234,12 @@ export async function correctEventAttendanceAction(formData: FormData) {
       "member_id",
       "attendance_status",
       "reason",
+      "return_to",
     ])
   ) {
-    redirect(eventAttendanceNoticeUrl(eventId ?? "", "invalid-request"));
+    redirect(
+      eventAttendanceNoticeUrl(eventId ?? "", "invalid-request", returnTo),
+    );
   }
   const actor = await getActiveEventActor(eventId);
   if (
@@ -1936,7 +2247,7 @@ export async function correctEventAttendanceAction(formData: FormData) {
     !actor.eventRoles.has("lead") &&
     !actor.eventRoles.has("assistant")
   ) {
-    redirect(eventAttendanceNoticeUrl(eventId, "denied"));
+    redirect(eventAttendanceNoticeUrl(eventId, "denied", returnTo));
   }
   const { error } = await actor.supabase.rpc("correct_event_attendance", {
     p_event_id: eventId,
@@ -1944,9 +2255,11 @@ export async function correctEventAttendanceAction(formData: FormData) {
     p_status: status,
     p_reason: reason,
   });
-  if (error) redirect(eventAttendanceNoticeUrl(eventId, "operation-failed"));
+  if (error)
+    redirect(eventAttendanceNoticeUrl(eventId, "operation-failed", returnTo));
   revalidatePath(`/events/${eventId}/attendance`);
-  redirect(eventAttendanceNoticeUrl(eventId, "attendance-corrected"));
+  revalidatePath("/attendance");
+  redirect(eventAttendanceNoticeUrl(eventId, "attendance-corrected", returnTo));
 }
 
 export async function issueEventAttendanceQrAction(
@@ -2010,7 +2323,10 @@ export async function issueEventAttendanceQrAction(
     };
   }
 
-  const scanUrl = new URL(`/events/${eventId}/attendance`, siteOrigin);
+  const scanUrl = new URL(
+    `/attendance?event=${encodeURIComponent(eventId)}`,
+    siteOrigin,
+  );
   scanUrl.hash = `checkin=${token}`;
   try {
     const qrDataUrl = await QRCode.toDataURL(scanUrl.toString(), {
@@ -2121,23 +2437,72 @@ function communicationNotice(notice: string) {
   return `/announcements?notice=${encodeURIComponent(notice)}`;
 }
 
+function communicationPriority(formData: FormData) {
+  if (!formData.has("priority")) return "standard" as const;
+  const value = communicationSingleText(formData, "priority", 20);
+  return value === "standard" || value === "important" || value === "urgent"
+    ? value
+    : null;
+}
+
+function communicationExpiresAt(
+  formData: FormData,
+  priority: "standard" | "important" | "urgent",
+) {
+  if (priority === "standard") return null;
+  const values = formData.getAll("expires_at");
+  if (values.length === 0) return priority === "urgent" ? undefined : null;
+  if (values.length !== 1 || typeof values[0] !== "string") return undefined;
+  const raw = values[0].trim();
+  if (!raw) return priority === "urgent" ? undefined : null;
+  const parsed = eventDateTimeToISOString(raw);
+  return parsed ?? undefined;
+}
+
 export async function createAnnouncementAction(formData: FormData) {
-  if (!communicationFieldsOnly(formData, ["event_id", "title", "message"])) {
+  if (
+    !communicationFieldsOnly(formData, [
+      "event_id",
+      "title",
+      "message",
+      "priority",
+      "expires_at",
+    ])
+  ) {
     redirect(communicationNotice("invalid-request"));
   }
   const eventId = communicationEventId(formData);
   const title = communicationSingleText(formData, "title", 160);
   const message = communicationSingleText(formData, "message", 10_000, true);
-  if (eventId === undefined || !title || !message) {
+  const priority = communicationPriority(formData);
+  const expiresAt = priority
+    ? communicationExpiresAt(formData, priority)
+    : undefined;
+  if (
+    eventId === undefined ||
+    !title ||
+    !message ||
+    !priority ||
+    expiresAt === undefined
+  ) {
     redirect(communicationNotice("invalid-request"));
   }
 
   const supabase = await getActiveCommunicationActor();
-  const { error } = await supabase.rpc("create_announcement", {
-    p_event_id: eventId,
-    p_title: title,
-    p_message: message,
-  });
+  const { error } =
+    priority === "standard" && expiresAt === null
+      ? await supabase.rpc("create_announcement", {
+          p_event_id: eventId,
+          p_title: title,
+          p_message: message,
+        })
+      : await supabase.rpc("create_announcement", {
+          p_event_id: eventId,
+          p_title: title,
+          p_message: message,
+          p_priority: priority,
+          p_expires_at: expiresAt,
+        });
   if (error) redirect(communicationNotice("operation-failed"));
   revalidatePath("/announcements");
   redirect(communicationNotice("created"));
@@ -2150,6 +2515,8 @@ export async function updateAnnouncementAction(formData: FormData) {
       "title",
       "message",
       "reason",
+      "priority",
+      "expires_at",
     ])
   ) {
     redirect(communicationNotice("invalid-request"));
@@ -2158,17 +2525,38 @@ export async function updateAnnouncementAction(formData: FormData) {
   const title = communicationSingleText(formData, "title", 160);
   const message = communicationSingleText(formData, "message", 10_000, true);
   const reason = communicationSingleText(formData, "reason", 500);
-  if (!announcementId || !title || !message || !reason) {
+  const hasPriorityField = formData.has("priority");
+  const priority = communicationPriority(formData);
+  const expiresAt = priority
+    ? communicationExpiresAt(formData, priority)
+    : undefined;
+  if (
+    !announcementId ||
+    !title ||
+    !message ||
+    !reason ||
+    !priority ||
+    expiresAt === undefined
+  ) {
     redirect(communicationNotice("invalid-request"));
   }
 
   const supabase = await getActiveCommunicationActor();
-  const { error } = await supabase.rpc("update_announcement", {
-    p_announcement_id: announcementId,
-    p_title: title,
-    p_message: message,
-    p_reason: reason,
-  });
+  const { error } = hasPriorityField
+    ? await supabase.rpc("update_announcement", {
+        p_announcement_id: announcementId,
+        p_title: title,
+        p_message: message,
+        p_reason: reason,
+        p_priority: priority,
+        p_expires_at: expiresAt,
+      })
+    : await supabase.rpc("update_announcement", {
+        p_announcement_id: announcementId,
+        p_title: title,
+        p_message: message,
+        p_reason: reason,
+      });
   if (error) redirect(communicationNotice("operation-failed"));
   revalidatePath("/announcements");
   redirect(communicationNotice("updated"));
@@ -2318,7 +2706,7 @@ const inAppPreferenceCategories = new Set([
 ]);
 
 function notificationNotice(notice: string) {
-  return `/notifications?notice=${encodeURIComponent(notice)}`;
+  return `/?notice=${encodeURIComponent(notice)}`;
 }
 
 export async function markNotificationReadAction(formData: FormData) {
@@ -2333,7 +2721,7 @@ export async function markNotificationReadAction(formData: FormData) {
     p_notification_id: notificationId,
   });
   if (error) redirect(notificationNotice("operation-failed"));
-  revalidatePath("/notifications");
+  revalidatePath("/");
   redirect(notificationNotice("read"));
 }
 
@@ -2357,6 +2745,78 @@ export async function setNotificationPreferenceAction(formData: FormData) {
     p_enabled: enabled === "true",
   });
   if (error) redirect(notificationNotice("operation-failed"));
-  revalidatePath("/notifications");
+  revalidatePath("/");
   redirect(notificationNotice("preference-saved"));
+}
+
+export async function markAllNotificationsReadAction() {
+  const supabase = await getActiveCommunicationActor();
+  const { error } = await supabase.rpc("mark_all_notifications_read");
+  if (error) redirect(notificationNotice("operation-failed"));
+  revalidatePath("/");
+  redirect(notificationNotice("read"));
+}
+
+export async function markNotificationReadAsyncAction(notificationId: string) {
+  if (!uuidPattern.test(notificationId)) {
+    return { ok: false, error: "invalid-request" };
+  }
+  try {
+    const supabase = await getActiveCommunicationActor();
+    const { error } = await supabase.rpc("mark_notification_read", {
+      p_notification_id: notificationId,
+    });
+    if (error) return { ok: false, error: "operation-failed" };
+    revalidatePath("/");
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "unauthorized" };
+  }
+}
+
+export async function markAllNotificationsReadAsyncAction() {
+  try {
+    const supabase = await getActiveCommunicationActor();
+    const { error } = await supabase.rpc("mark_all_notifications_read");
+    if (error) return { ok: false, error: "operation-failed" };
+    revalidatePath("/");
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "unauthorized" };
+  }
+}
+
+export async function markNotificationUnreadAction(formData: FormData) {
+  if (!communicationFieldsOnly(formData, ["notification_id"])) {
+    redirect(notificationNotice("invalid-request"));
+  }
+  const notificationId = communicationUuid(formData, "notification_id");
+  if (!notificationId) redirect(notificationNotice("invalid-request"));
+
+  const supabase = await getActiveCommunicationActor();
+  const { error } = await supabase.rpc("mark_notification_unread", {
+    p_notification_id: notificationId,
+  });
+  if (error) redirect(notificationNotice("operation-failed"));
+  revalidatePath("/");
+  redirect(notificationNotice("unread"));
+}
+
+export async function markNotificationUnreadAsyncAction(
+  notificationId: string,
+) {
+  if (!uuidPattern.test(notificationId)) {
+    return { ok: false, error: "invalid-request" };
+  }
+  try {
+    const supabase = await getActiveCommunicationActor();
+    const { error } = await supabase.rpc("mark_notification_unread", {
+      p_notification_id: notificationId,
+    });
+    if (error) return { ok: false, error: "operation-failed" };
+    revalidatePath("/");
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "unauthorized" };
+  }
 }

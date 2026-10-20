@@ -1,28 +1,40 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  getExecutiveRolePresentation,
-  getMemberAdministrationCapabilities,
-  getMemberLifecyclePresentation,
-  getMemberStatusLabel,
-} from "@/lib/member-administration-presentation.mjs";
+import { MemberAdminPageView } from "@/components/admin/members/member-admin-page-view";
+import type {
+  ClubMemberRecord,
+  EventAssignment,
+  EventStaffRole,
+  ManagedEvent,
+  MemberAdminAuditEntry,
+  OfficerRole,
+} from "@/components/admin/members/member-admin-types";
+import { DataUnavailableCard } from "@/components/ui/state-screen";
+import { getMemberAdministrationCapabilities } from "@/lib/member-administration-presentation.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import ExecutiveRoleForm from "./executive-role-form";
-import LifecycleForm from "./lifecycle-form";
 
 const notices: Record<string, { message: string; isError: boolean }> = {
-  saved: { message: "Member status updated.", isError: false },
+  saved: { message: "Member status updated successfully.", isError: false },
+  rejected: {
+    message: "Membership request rejected and recorded in the audit history.",
+    isError: false,
+  },
   denied: {
     message: "You do not have permission to perform that operation.",
     isError: true,
   },
   "operation-failed": {
     message:
-      "The operation was rejected. Check the member state, email confirmation, and reason, then try again.",
+      "The operation was rejected. Check the member state and required information, then try again.",
     isError: true,
   },
   "role-updated": {
-    message: "Executive status updated and recorded in the audit history.",
+    message: "Club role updated and recorded in the audit history.",
+    isError: false,
+  },
+  "role-saved": {
+    message:
+      "Event role assignments were updated and recorded in the audit history.",
     isError: false,
   },
   "invalid-request": {
@@ -34,22 +46,26 @@ const notices: Record<string, { message: string; isError: boolean }> = {
 export default async function MemberAdministrationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string }>;
+  searchParams: Promise<{
+    notice?: string;
+  }>;
 }) {
   const params = await searchParams;
+  const notice =
+    params.notice && Object.hasOwn(notices, params.notice)
+      ? notices[params.notice]
+      : undefined;
+
   let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
   try {
     supabase = await createSupabaseServerClient();
   } catch {
     return (
-      <main className="shell">
-        <section className="panel">
-          <h1>Member administration unavailable</h1>
-          <p role="alert">
-            Member administration could not connect to its authentication
-            service. No member records were loaded.
-          </p>
-        </section>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <DataUnavailableCard
+          description="Could not connect to the database service. Please verify your connection and try again."
+          title="Member Administration Unavailable"
+        />
       </main>
     );
   }
@@ -57,269 +73,293 @@ export default async function MemberAdministrationPage({
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData.user) redirect("/?notice=sign-in");
 
+  // Fetch own profile
   const { data: ownProfile, error: ownProfileError } = await supabase
     .from("member_profiles")
-    .select("status")
+    .select("status, full_name, username")
     .eq("id", authData.user.id)
     .maybeSingle();
+
   if (ownProfileError || ownProfile?.status !== "active") {
-    return (
-      <main className="shell">
-        <section className="panel">
-          <h1>Access denied</h1>
-          <p>This account cannot administer membership.</p>
-        </section>
-      </main>
-    );
+    redirect("/?notice=sign-in");
   }
 
-  const { data: ownRoles, error: roleError } = await supabase
+  // Fetch own roles
+  const { data: ownRoleAssignments, error: roleError } = await supabase
     .from("member_role_assignments")
     .select("role")
     .eq("member_id", authData.user.id)
     .is("revoked_at", null);
+
   if (roleError) {
     return (
-      <main className="shell">
-        <section className="panel">
-          <h1>Access could not be verified</h1>
-          <p role="alert">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-xl border border-[#E5DDD3] p-8 text-center">
+          <h1 className="text-xl font-bold text-[#3D291F]">
+            Access could not be verified
+          </h1>
+          <p className="text-xs text-[#7A685D] mt-2" role="alert">
             Your role could not be verified. No member records were loaded.
           </p>
-          <Link href="/admin/members">Try verifying access again</Link>
-        </section>
+          <Link
+            href="/admin/members"
+            className="text-xs text-[#2E7D32] hover:underline mt-4 inline-block"
+          >
+            Try verifying access again
+          </Link>
+        </div>
       </main>
     );
   }
 
-  const capabilities = getMemberAdministrationCapabilities(
-    (ownRoles ?? []).map((assignment) => assignment.role),
-  );
+  const ownRoleList = (ownRoleAssignments ?? []).map((r) => r.role);
+  const ownRoles = new Set(ownRoleList);
+  const capabilities = getMemberAdministrationCapabilities(ownRoleList);
+
   if (!capabilities.canApprove) {
-    return (
-      <main className="shell">
-        <section className="panel">
-          <h1>Access denied</h1>
-          <p>This account cannot administer membership.</p>
-        </section>
-      </main>
-    );
+    redirect("/?notice=denied");
   }
 
+  let initialOfficerRole: OfficerRole = "executive";
+  if (ownRoles.has("admin")) {
+    initialOfficerRole = "admin";
+  } else if (ownRoles.has("backup_admin")) {
+    initialOfficerRole = "backup_admin";
+  }
+
+  // Fetch all members
   const { data: memberRows, error: membersError } = await supabase
     .from("member_profiles")
-    .select("id, full_name, username, status, profile_completed_at")
+    .select("id, full_name, username, status, profile_completed_at, created_at")
     .order("created_at", { ascending: true });
-  const notice =
-    params.notice && Object.hasOwn(notices, params.notice)
-      ? notices[params.notice]
-      : undefined;
+
   const members = membersError ? [] : (memberRows ?? []);
-  let executiveMemberIds = new Set<string>();
+
   let executiveRoleLookupFailed = false;
   if (!membersError && capabilities.canManageExecutiveRole) {
     const activeMemberIds = members
-      .filter((member) => member.status === "active")
-      .map((member) => member.id);
+      .filter((m) => m.status === "active")
+      .map((m) => m.id);
     if (activeMemberIds.length > 0) {
-      const { data: roleAssignments, error: executiveRoleError } =
-        await supabase
-          .from("member_role_assignments")
-          .select("member_id, role")
-          .in("member_id", activeMemberIds)
-          .is("revoked_at", null);
+      const { error: executiveRoleError } = await supabase
+        .from("member_role_assignments")
+        .select("member_id, role")
+        .in("member_id", activeMemberIds)
+        .is("revoked_at", null);
       if (executiveRoleError) {
         executiveRoleLookupFailed = true;
-      } else {
-        executiveMemberIds = new Set(
-          (roleAssignments ?? [])
-            .filter((assignment) => assignment.role === "executive")
-            .map((assignment) => assignment.member_id),
-        );
       }
     }
   }
-  const memberGroups = [
-    {
-      status: "pending",
-      label: "Pending requests",
-      rows: members.filter((member) => member.status === "pending"),
+
+  // Fetch all role assignments
+  const { data: roleRows } = await supabase
+    .from("member_role_assignments")
+    .select("member_id, role")
+    .is("revoked_at", null);
+
+  const rolesByMember = new Map<string, string>();
+  for (const r of roleRows ?? []) {
+    if (r.role === "admin") rolesByMember.set(r.member_id, "Admin");
+    else if (r.role === "backup_admin" && !rolesByMember.has(r.member_id))
+      rolesByMember.set(r.member_id, "Backup Admin");
+    else if (r.role === "executive" && !rolesByMember.has(r.member_id))
+      rolesByMember.set(r.member_id, "Executive");
+  }
+
+  const formatWAT = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      const datePart = d.toISOString().slice(0, 10);
+      const timePart = d.toLocaleTimeString("en-GB", {
+        timeZone: "Africa/Lagos",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+      return `${datePart} · ${timePart}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const initialMembers: ClubMemberRecord[] =
+    !membersError && members.length > 0
+      ? members.map((member) => {
+          const isSelf = member.id === authData.user.id;
+          // Another active Admin or Backup Admin must deactivate your account.
+          const isComplete = Boolean(member.profile_completed_at);
+          const assignedRole: ClubMemberRecord["clubRole"] =
+            (rolesByMember.get(member.id) as ClubMemberRecord["clubRole"]) ||
+            "Member";
+
+          return {
+            id: member.id,
+            fullName: member.full_name,
+            username: `@${member.username}`,
+            accountStatus: member.status as ClubMemberRecord["accountStatus"],
+            profileState: isComplete ? "complete" : "incomplete_bio",
+            profileStateDescription: isComplete
+              ? "All requirements met: Email verified and profile complete."
+              : "Profile documentation incomplete.",
+            clubRole: assignedRole,
+            requestDateWAT: formatWAT(member.created_at),
+            activationDateWAT: isComplete
+              ? formatWAT(member.created_at)
+              : undefined,
+            chapter: "",
+            isSelf,
+          };
+        })
+      : [];
+
+  // Fetch events
+  const { data: eventRows } = await supabase
+    .from("events")
+    .select("id, title, event_type, starts_at, status, location, archived_at")
+    .order("starts_at", { ascending: false })
+    .limit(100);
+
+  const initialEvents: ManagedEvent[] = (eventRows ?? []).map((evt) => {
+    const dateObj = new Date(evt.starts_at);
+    const dateFormatted = new Intl.DateTimeFormat("en-NG", {
+      timeZone: "Africa/Lagos",
+      dateStyle: "full",
+    }).format(dateObj);
+    const timeWAT = new Intl.DateTimeFormat("en-NG", {
+      timeZone: "Africa/Lagos",
+      timeStyle: "short",
+    }).format(dateObj);
+
+    const typeCapitalized =
+      evt.event_type.charAt(0).toUpperCase() + evt.event_type.slice(1);
+    const statusCapitalized =
+      evt.status.charAt(0).toUpperCase() + evt.status.slice(1);
+
+    return {
+      id: evt.id,
+      title: evt.title,
+      type: typeCapitalized,
+      status: statusCapitalized,
+      dateFormatted,
+      timeWAT,
+      location: evt.location || "Asaba, Delta State",
+      archived: Boolean(evt.archived_at),
+    };
+  });
+
+  // Fetch event assignments
+  const { data: assignmentRows } = await supabase
+    .from("event_role_assignments")
+    .select("id, event_id, member_id, role, assigned_at")
+    .is("revoked_at", null)
+    .order("assigned_at", { ascending: true });
+
+  const memberMap = new Map((memberRows ?? []).map((m) => [m.id, m]));
+
+  const initialAssignments: EventAssignment[] = (assignmentRows ?? []).map(
+    (a) => {
+      const m = memberMap.get(a.member_id);
+      const roleLabel: EventStaffRole =
+        a.role === "lead"
+          ? "Event lead"
+          : a.role === "assistant"
+            ? "Event assistant"
+            : "Committee";
+
+      return {
+        id: a.id,
+        eventId: a.event_id,
+        memberId: a.member_id,
+        memberName: m ? m.full_name : "Active Member",
+        memberUsername: m ? `@${m.username}` : "@member",
+        eventRole: roleLabel,
+        assignedBy: "Executive Council",
+        assignedAtWAT: formatWAT(a.assigned_at),
+      };
     },
-    {
-      status: "active",
-      label: "Active members",
-      rows: members.filter((member) => member.status === "active"),
+  );
+
+  // Fetch audit log
+  const { data: auditRows } = await supabase
+    .from("audit_log")
+    .select(
+      "id, actor_id, action, entity_type, entity_id, target_member_id, reason, occurred_at",
+    )
+    .order("occurred_at", { ascending: false })
+    .limit(50);
+
+  const initialAuditLog: MemberAdminAuditEntry[] = (auditRows ?? []).map(
+    (aud) => {
+      const actor = memberMap.get(aud.actor_id);
+      const target = aud.target_member_id
+        ? memberMap.get(aud.target_member_id)
+        : null;
+
+      let actionType: MemberAdminAuditEntry["actionType"] =
+        "membership_approved";
+      if (aud.action.includes("reject")) actionType = "membership_rejected";
+      else if (aud.action.includes("deactivat"))
+        actionType = "account_deactivated";
+      else if (aud.action.includes("reactivat"))
+        actionType = "account_reactivated";
+      else if (
+        aud.action.includes("role_grant") ||
+        aud.action.includes("role_assigned")
+      )
+        actionType = "executive_role_assigned";
+      else if (
+        aud.action.includes("role_revok") ||
+        aud.action.includes("role_removed")
+      )
+        actionType = "executive_role_removed";
+
+      return {
+        id: aud.id,
+        timestampWAT: formatWAT(aud.occurred_at),
+        actorName: actor ? actor.full_name : "Authorized Officer",
+        actorRole: "Officer",
+        targetMemberName: target
+          ? target.full_name
+          : actor
+            ? actor.full_name
+            : "Club Member",
+        targetMemberUsername: target
+          ? `@${target.username}`
+          : actor
+            ? `@${actor.username}`
+            : "@member",
+        actionType,
+        reason: aud.reason,
+        details: `Action: ${aud.action} on ${aud.entity_type}`,
+      };
     },
-    {
-      status: "deactivated",
-      label: "Deactivated members",
-      rows: members.filter((member) => member.status === "deactivated"),
-    },
-  ] as const;
+  );
 
   return (
-    <main className="shell">
-      <section className="panel member-admin-panel">
-        <p className="eyebrow">Membership controls</p>
-        <h1>Member administration</h1>
-        <p>
-          Review membership requests and account status. Only the member name,
-          username, account state, and profile-completion state are shown here.
-        </p>
-        <p className="member-admin-scope">
-          Executive, Admin, and Backup Admin can approve completed profiles.
-          Only Admin and Backup Admin can deactivate or reactivate accounts.
-          Admin and Backup Admin can grant or remove Executive status from
-          active members; primary Admin and Backup Admin assignments are not
-          managed here. PostgreSQL rechecks permissions and account state, and
-          records a reasoned audit entry for each change. Database rules also
-          keep at least one primary Admin active.
-        </p>
-
-        {notice ? (
-          <p
-            className={notice.isError ? "notice member-admin-error" : "notice"}
-            role={notice.isError ? "alert" : "status"}
-          >
-            {notice.message}
-          </p>
-        ) : null}
-
-        {membersError ? (
-          <p className="notice member-admin-error" role="alert">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {membersError ? (
+        <div
+          className="bg-red-50 border border-red-200 rounded-xl p-6 text-center mb-6"
+          role="alert"
+        >
+          <p className="text-sm font-semibold text-red-800">
             Member records could not be loaded. No member details or actions are
             available until the roster can be verified.{" "}
             <Link href="/admin/members">Try again</Link>.
           </p>
-        ) : null}
-
-        {!membersError && executiveRoleLookupFailed ? (
-          <p className="notice member-admin-error" role="alert">
-            Executive status could not be verified. Executive role changes are
-            temporarily unavailable; membership status controls remain
-            available.
-          </p>
-        ) : null}
-
-        {!membersError && members.length === 0 ? (
-          <p className="member-admin-empty">
-            No member profiles are available.
-          </p>
-        ) : null}
-
-        {!membersError && members.length > 0 ? (
-          <div className="member-status-groups">
-            {memberGroups.map((group) => (
-              <section
-                aria-labelledby={`member-group-${group.status}`}
-                className="member-status-group"
-                key={group.status}
-              >
-                <header className="member-status-heading">
-                  <h2 id={`member-group-${group.status}`}>{group.label}</h2>
-                  <span className="member-status-count">
-                    {group.rows.length}
-                  </span>
-                </header>
-                {group.rows.length > 0 ? (
-                  <ul className="member-list">
-                    {group.rows.map((member) => {
-                      const lifecycle = getMemberLifecyclePresentation(
-                        member.status,
-                        Boolean(member.profile_completed_at),
-                        capabilities,
-                        member.id === authData.user.id,
-                      );
-                      const executiveRoleOperation =
-                        getExecutiveRolePresentation(
-                          member.status,
-                          executiveMemberIds.has(member.id),
-                          capabilities,
-                          executiveRoleLookupFailed,
-                        );
-                      return (
-                        <li className="member-card" key={member.id}>
-                          <article>
-                            <div className="member-card-heading">
-                              <div>
-                                <h3>{member.full_name}</h3>
-                                <p className="muted">
-                                  @{member.username} ·{" "}
-                                  {getMemberStatusLabel(member.status)}
-                                </p>
-                              </div>
-                              <span
-                                className={
-                                  member.profile_completed_at
-                                    ? "status-pill complete"
-                                    : "status-pill"
-                                }
-                              >
-                                {member.profile_completed_at
-                                  ? "Profile complete"
-                                  : "Profile incomplete"}
-                              </span>
-                            </div>
-                            {lifecycle.profileCompletionRequired ? (
-                              <p
-                                className="member-admin-guidance"
-                                role="status"
-                              >
-                                This member must complete their profile before
-                                approval is available.
-                              </p>
-                            ) : null}
-                            {lifecycle.selfDeactivationBlocked ? (
-                              <p
-                                className="member-admin-guidance"
-                                role="status"
-                              >
-                                You cannot deactivate your own account. Another
-                                active Admin or Backup Admin must make that
-                                change.
-                              </p>
-                            ) : null}
-                            {lifecycle.operation ? (
-                              <LifecycleForm
-                                memberId={member.id}
-                                memberName={member.full_name}
-                                operation={lifecycle.operation}
-                                label={
-                                  lifecycle.operation === "approve"
-                                    ? "Approve member"
-                                    : lifecycle.operation === "deactivate"
-                                      ? "Deactivate member"
-                                      : "Reactivate member"
-                                }
-                              />
-                            ) : null}
-                            {executiveRoleOperation === "revoke" ? (
-                              <p className="member-admin-guidance">
-                                Executive status is active for this member.
-                              </p>
-                            ) : null}
-                            {executiveRoleOperation ? (
-                              <ExecutiveRoleForm
-                                memberId={member.id}
-                                memberName={member.full_name}
-                                operation={executiveRoleOperation}
-                              />
-                            ) : null}
-                          </article>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : (
-                  <p className="muted member-status-empty">
-                    No {group.label.toLowerCase()}.
-                  </p>
-                )}
-              </section>
-            ))}
-          </div>
-        ) : null}
-      </section>
+        </div>
+      ) : null}
+      <MemberAdminPageView
+        initialMembers={initialMembers}
+        initialEvents={initialEvents}
+        initialAssignments={initialAssignments}
+        initialAuditLog={initialAuditLog}
+        initialOfficerRole={initialOfficerRole}
+        currentOfficerId={authData.user.id}
+        roleLookupFailed={executiveRoleLookupFailed}
+        notice={notice}
+      />
     </main>
   );
 }

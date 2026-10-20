@@ -1,6 +1,7 @@
 "use client";
 
 import { type InputHTMLAttributes, useState } from "react";
+import { ClubIcon } from "@/components/club-icon";
 
 type AuthPasswordInputProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -12,6 +13,7 @@ export default function AuthPasswordInput(props: AuthPasswordInputProps) {
 
   return (
     <span className="auth-password-input">
+      <ClubIcon className="auth-password-leading-icon" name="lock" />
       <input {...props} type={visible ? "text" : "password"} />
       <button
         aria-label={visible ? "Hide password" : "Show password"}

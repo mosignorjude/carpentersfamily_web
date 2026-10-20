@@ -17,11 +17,14 @@
     "test:communications-ui": "node --test tests/communications-page-access.test.mjs",
     "test:notifications-ui": "node --test tests/notification-page-presentation.test.mjs",
     "test:member-admin-ui": "node --test tests/member-administration-page.test.mjs",
-    "test:executive-role-request": "node --test tests/executive-role-request.test.mjs"
+    "test:executive-role-request": "node --test tests/executive-role-request.test.mjs",
+    "test:workspace": "node --test tests/event-finance-workspace.test.mjs",
+    "test:categories": "node --test tests/event-category-permissions.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.2",
+    "lucide-react": "^1.56.0",
     "next": "16.3.8",
     "qrcode": "1.5.4",
     "react": "19.2.8",
@@ -29,11 +32,13 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.5",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20",
     "@types/qrcode": "1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "supabase": "2.119.0",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5"
   }
 }

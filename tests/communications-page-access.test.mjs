@@ -7,10 +7,22 @@ import {
 } from "../src/lib/communications-page-access.mjs";
 
 const activeEventIds = ["event-a", "event-b"];
-const announcementsPage = readFileSync(
-  new URL("../src/app/(member)/announcements/page.tsx", import.meta.url),
-  "utf8",
-);
+const announcementsPage =
+  readFileSync(
+    new URL("../src/app/(member)/announcements/page.tsx", import.meta.url),
+    "utf8",
+  ) +
+  readFileSync(
+    new URL(
+      "../src/components/communications/announcement-card.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  ) +
+  readFileSync(
+    new URL("../src/components/communications/poll-card.tsx", import.meta.url),
+    "utf8",
+  );
 
 function access({
   roles = [],

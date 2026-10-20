@@ -1,11 +1,19 @@
 "use client";
 
-import { type KeyboardEvent, useRef, useState } from "react";
+import { type KeyboardEvent, type ReactNode, useRef, useState } from "react";
 import AppNavigationLinks from "@/components/app-navigation-links";
 
 type NavigationItem = { href: string; label: string };
 
-export default function MobileAppMenu({ items }: { items: NavigationItem[] }) {
+export default function MobileAppMenu({
+  items,
+  children,
+  showIcons = false,
+}: {
+  items: NavigationItem[];
+  children?: ReactNode;
+  showIcons?: boolean;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
 
@@ -38,7 +46,12 @@ export default function MobileAppMenu({ items }: { items: NavigationItem[] }) {
         id="mobile-primary-navigation"
         onKeyDown={closeOnEscape}
       >
-        <AppNavigationLinks items={items} onNavigate={() => setIsOpen(false)} />
+        <AppNavigationLinks
+          items={items}
+          onNavigate={() => setIsOpen(false)}
+          showIcons={showIcons}
+        />
+        {children}
       </nav>
     </div>
   );

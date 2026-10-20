@@ -98,6 +98,7 @@ export function getMemberStatusLabel(status) {
     pending: "Pending",
     active: "Active",
     deactivated: "Deactivated",
+    rejected: "Rejected",
   };
 
   return Object.hasOwn(labels, status) ? labels[status] : "Status unavailable";
