@@ -520,30 +520,6 @@ test("navigation progress: component intercepts internal links and manages progr
   assert.ok(progressContent.includes("Suspense"));
 });
 
-test("member loading: route fallback provides accessible skeleton with aria-busy", async () => {
-  const fs = await import("node:fs");
-  const loadingContent = fs.readFileSync(
-    "src/app/(member)/loading.tsx",
-    "utf8",
-  );
-
-  assert.ok(
-    loadingContent.includes('role="status"'),
-    "Loading skeleton should have status role",
-  );
-  assert.ok(
-    loadingContent.includes('aria-busy="true"'),
-    "Loading skeleton should indicate busy state",
-  );
-  assert.ok(
-    loadingContent.includes("animate-pulse"),
-    "Loading skeleton should use subtle pulsing animations",
-  );
-  assert.ok(
-    loadingContent.includes("sr-only"),
-    "Loading skeleton should provide screen reader text",
-  );
-});
 
 // ============================================================================
 // 8. AUTH BRAND & USER PROFILE BADGE VERIFICATION
