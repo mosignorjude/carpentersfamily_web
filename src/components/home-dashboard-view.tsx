@@ -46,14 +46,6 @@ export default function HomeDashboardView({
             </div>
 
             <div>
-              <div className="flex items-center gap-2 text-xs font-bold text-[#174C37] uppercase tracking-wider mb-1.5">
-                <span>{clubBrand.name}</span>
-                <span aria-hidden="true" className="text-[#B8ACA0]">
-                  ·
-                </span>
-                <span className="text-[#3D291F]">{clubBrand.location}</span>
-              </div>
-
               <h1
                 className="font-bold text-[#3D291F] tracking-tight"
                 id="welcome-heading"
@@ -66,31 +58,21 @@ export default function HomeDashboardView({
                 private overview of upcoming gatherings, club circulars, and
                 personal dues status.
               </p>
-
-              {/* Member Trust & Identification Metadata */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3.5 pt-3.5 border-t border-[#E5DDD3] text-xs font-medium text-[#7A685D]">
-                <div>
-                  Location:{" "}
-                  <strong className="text-[#3D291F] font-bold">
-                    {clubBrand.location}
-                  </strong>
-                </div>
-              </div>
             </div>
           </div>
 
           {/* Location Stamp Capsule */}
-          <div className="bg-[#FAF6F0] p-4 sm:p-5 rounded-xl border border-[#E5DDD3] lg:text-right shrink-0 space-y-1 shadow-2xs">
+          <div className="hidden sm:block bg-[#FAF6F0] p-4 sm:p-5 rounded-xl border border-[#E5DDD3] lg:text-right shrink-0 space-y-1 shadow-2xs">
             <span className="text-xs font-semibold text-[#7A685D] block">
               Club Headquarters
             </span>
-            <span className="text-base font-bold text-[#3D291F] block tracking-tight">
-              {clubBrand.location}
-            </span>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-[#174C37] justify-start lg:justify-end">
-              <MapPin className="w-3.5 h-3.5 text-[#174C37]" />
-              <span>Delta State, Nigeria</span>
+            <div className="flex items-center gap-1.5 text-sm sm:text-base font-bold text-[#3D291F] tracking-tight justify-start lg:justify-end">
+              <MapPin className="w-4 h-4 text-[#174C37] shrink-0" />
+              <span>{clubBrand.location}</span>
             </div>
+            <span className="text-xs font-semibold text-[#7A685D] block">
+              Nigeria
+            </span>
           </div>
         </div>
       </section>

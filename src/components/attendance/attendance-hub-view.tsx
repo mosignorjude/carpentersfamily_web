@@ -187,12 +187,6 @@ export function AttendanceHubView({
               <span className="font-extrabold text-[#174C37] uppercase tracking-wider text-[11px]">
                 Secretariat & Assembly Roll Call
               </span>
-              <span aria-hidden="true" className="text-[#E5DDD3]">
-                ·
-              </span>
-              <span className="text-[#7A685D]">
-                Carpenters Family Social Club
-              </span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#3D291F] tracking-tight">

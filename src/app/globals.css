@@ -3936,6 +3936,11 @@ textarea:focus-visible {
     padding: 0.5rem 0.85rem;
     min-height: 3.5rem;
   }
+
+  .app-mobile-menu-panel {
+    top: 3.75rem;
+    left: 0.75rem;
+  }
 }
 
 .app-mobile-header {
@@ -3963,7 +3968,8 @@ textarea:focus-visible {
   position: fixed;
   z-index: 80;
   top: 4.5rem;
-  right: 1rem;
+  left: 1rem;
+  right: auto;
   width: min(20rem, calc(100vw - 2rem));
   padding: 0.65rem;
   border: 1px solid var(--line);

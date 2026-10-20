@@ -1,6 +1,7 @@
 "use client";
 
 import { Bell, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { signOutAction } from "@/app/actions";
 import DashboardSearch from "@/components/dashboard-search";
@@ -9,6 +10,7 @@ import {
   type AppNotification,
   NotificationsDrawer,
 } from "@/components/notifications/notifications-drawer";
+import { clubBrand } from "@/lib/brand";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 interface NavigationItem {
@@ -82,13 +84,35 @@ export default function AppHeader({
   return (
     <>
       <header className="app-sticky-header">
-        {/* Left Side: Mobile Menu */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 lg:hidden">
-          <MobileAppMenu items={memberNavigationItems} showIcons={dashboard}>
-            <form action={signOutAction} className="app-mobile-menu-signout">
-              <button type="submit">Sign out</button>
-            </form>
-          </MobileAppMenu>
+        {/* Left Side: Mobile Menu & Mobile Brand Logo/Name */}
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+          <div className="flex items-center lg:hidden">
+            <MobileAppMenu items={memberNavigationItems} showIcons={dashboard}>
+              <form action={signOutAction} className="app-mobile-menu-signout">
+                <button type="submit">Sign out</button>
+              </form>
+            </MobileAppMenu>
+          </div>
+
+          <Link
+            aria-label={`${clubBrand.shortName} home`}
+            className="flex items-center gap-2 lg:hidden text-inherit no-underline focus-visible:outline-2 focus-visible:outline-[#174C37] rounded-lg"
+            href="/"
+          >
+            {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
+            <img
+              alt=""
+              className="w-[18px] h-[32px] object-contain shrink-0"
+              height={32}
+              src={clubBrand.logoSrc}
+              width={18}
+            />
+            <span className="flex flex-col">
+              <span className="text-sm font-bold tracking-tight text-[#3D291F] leading-tight">
+                {clubBrand.shortName}
+              </span>
+            </span>
+          </Link>
         </div>
 
         {/* Center: Search Omnibar */}

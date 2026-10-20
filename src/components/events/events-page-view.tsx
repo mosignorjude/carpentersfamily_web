@@ -6,7 +6,6 @@ import {
   CalendarCheck,
   History,
   Search,
-  Shield,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { FormAlertBanner } from "@/components/ui";
@@ -25,7 +24,7 @@ interface EventsPageViewProps {
   eventRolesByEvent: Record<string, string[]>;
   isManager: boolean;
   userRoleTitle: string;
-  userName: string;
+  userName?: string;
   notice?: string;
 }
 
@@ -35,7 +34,7 @@ export function EventsPageView({
   eventRolesByEvent,
   isManager,
   userRoleTitle,
-  userName,
+  userName: _userName,
   notice,
 }: EventsPageViewProps) {
   // Filters
@@ -129,17 +128,9 @@ export function EventsPageView({
         />
       )}
       {/* 1. Header & Local Time Convention */}
-      <section className="bg-white rounded-2xl border border-[#E5DDD3] p-6 sm:p-8 shadow-xs space-y-5">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 pb-5 border-b border-[#E5DDD3]">
+      <section className="bg-white rounded-2xl border border-[#E5DDD3] p-6 sm:p-8 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-[#174C37] uppercase tracking-wider mb-1.5">
-              <span>Carpenters Family Social Club</span>
-              <span aria-hidden="true" className="text-[#D6A23A]">
-                ·
-              </span>
-              <span className="text-[#D6A23A]">Asaba, Delta State</span>
-            </div>
-
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#3D291F] tracking-tight">
               Events and planning
             </h1>
@@ -164,25 +155,6 @@ export function EventsPageView({
               <span>Carpenters Family Portal</span>
             </div>
           </div>
-        </div>
-
-        {/* Active Identity Pill */}
-        <div className="p-3.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] flex items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2.5">
-            <Shield className="w-4 h-4 text-[#174C37] shrink-0" />
-            <div>
-              <span className="font-medium text-[#7A685D]">Signed In: </span>
-              <strong className="text-[#3D291F]">{userName}</strong>
-              <span className="text-[#174C37] font-semibold">
-                {" "}
-                · {userRoleTitle}
-              </span>
-            </div>
-          </div>
-
-          <span className="text-[11px] font-mono text-[#7A685D] hidden sm:inline">
-            Club Governance Active
-          </span>
         </div>
       </section>
 

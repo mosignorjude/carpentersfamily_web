@@ -422,3 +422,56 @@ test("micro-interactions: chevron rotation classes toggle smoothly", () => {
     "w-3.5 h-3.5 transition-transform duration-200 rotate-180",
   );
 });
+
+// ============================================================================
+// 6. MOBILE HEADER BRANDING & LEFT-ALIGNED DRAWER
+// ============================================================================
+
+test("mobile header: renders mobile brand logo and shortName with lg:hidden", async () => {
+  const fs = await import("node:fs");
+  const headerContent = fs.readFileSync("src/components/app-header.tsx", "utf8");
+
+  // Verified brand import and mobile Link existence
+  assert.ok(headerContent.includes('import { clubBrand } from "@/lib/brand"'));
+  assert.ok(headerContent.includes('href="/"'));
+  assert.ok(headerContent.includes("clubBrand.logoSrc"));
+  assert.ok(headerContent.includes("clubBrand.shortName"));
+  assert.ok(headerContent.includes("lg:hidden"));
+});
+
+test("mobile drawer: panel css anchors to left under menu toggle button", async () => {
+  const fs = await import("node:fs");
+  const cssContent = fs.readFileSync("src/app/globals.css", "utf8");
+
+  // Ensure .app-mobile-menu-panel sets left: 1rem (and not right: 1rem)
+  const panelMatches = [
+    ...cssContent.matchAll(/\.app-mobile-menu-panel\s*\{([^}]+)\}/g),
+  ];
+  assert.ok(
+    panelMatches.length >= 2,
+    "Expected .app-mobile-menu-panel definitions in globals.css",
+  );
+  const basePanel = panelMatches.find((m) => m[1].includes("position: fixed"));
+  assert.ok(basePanel, "Expected base .app-mobile-menu-panel definition");
+  assert.ok(
+    basePanel[1].includes("left: 1rem"),
+    "Panel should anchor to left: 1rem",
+  );
+  assert.ok(
+    basePanel[1].includes("right: auto"),
+    "Panel should explicitly reset right: auto",
+  );
+  assert.ok(
+    !basePanel[1].includes("right: 1rem"),
+    "Panel should NOT anchor to right: 1rem",
+  );
+});
+
+test("mobile drawer: includes outside click dismissal backdrop", async () => {
+  const fs = await import("node:fs");
+  const menuContent = fs.readFileSync("src/components/mobile-app-menu.tsx", "utf8");
+
+  assert.ok(menuContent.includes("isOpen && ("));
+  assert.ok(menuContent.includes("setIsOpen(false)"));
+  assert.ok(menuContent.includes("fixed inset-0 z-70"));
+});

@@ -147,11 +147,7 @@ export function DuesPageView({
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-xs font-bold text-[#174C37] uppercase tracking-wider">
-              <span>{clubBrand.name}</span>
-              <span aria-hidden="true" className="text-[#B8ACA0]">
-                ·
-              </span>
-              <span className="text-[#3D291F]">Club Treasury</span>
+              <span>Club Treasury</span>
             </div>
 
             <h1

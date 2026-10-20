@@ -39,6 +39,13 @@ export default function MobileAppMenu({
           {isOpen ? "×" : "☰"}
         </span>
       </button>
+      {isOpen && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 z-70 bg-black/20 backdrop-blur-[1px] lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
       <nav
         aria-label="Mobile primary navigation"
         className="app-mobile-menu-panel"

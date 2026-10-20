@@ -121,12 +121,6 @@ export function FinancesPageView({
           <div className="space-y-2 max-w-3xl">
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#174C37]">
-                Carpenters Family Social Club
-              </span>
-              <span aria-hidden="true" className="text-[#B8ACA0]">
-                ·
-              </span>
-              <span className="text-xs text-[#7A685D] font-mono">
                 Club Treasury
               </span>
             </div>
