@@ -9,14 +9,14 @@ function hrefs(roles) {
   return getNavigationItems(roles).map((item) => item.href);
 }
 
-test("ordinary members receive member links without officer-only areas", () => {
+test("ordinary members see the shared finance ledger but not officer-only areas", () => {
   const links = hrefs(["member"]);
   assert.ok(links.includes("/"));
   assert.ok(links.includes("/events"));
   assert.ok(links.includes("/dues"));
   assert.ok(links.includes("/announcements"));
   assert.ok(!links.includes("/notifications"));
-  assert.ok(!links.includes("/finances"));
+  assert.ok(links.includes("/finances"));
   assert.ok(!links.includes("/admin/members"));
 });
 
@@ -30,17 +30,17 @@ test("Admin and Backup Admin receive the same navigation links", () => {
   assert.deepEqual(hrefs(["admin"]), hrefs(["backup_admin"]));
 });
 
-test("event roles do not imply club officer navigation", () => {
+test("event roles receive member links without implying club officer access", () => {
   for (const role of ["lead", "assistant", "committee"]) {
     const links = hrefs([role]);
     assert.ok(links.includes("/events"));
-    assert.ok(!links.includes("/finances"));
+    assert.ok(links.includes("/finances"));
     assert.ok(!links.includes("/admin/members"));
   }
 });
 
-test("role lookup failures fail closed for officer-only links", () => {
-  assert.ok(!hrefs([]).includes("/finances"));
+test("role lookup failures retain shared finances and fail closed for member administration", () => {
+  assert.ok(hrefs([]).includes("/finances"));
   assert.ok(!hrefs([]).includes("/admin/members"));
 });
 
@@ -52,6 +52,6 @@ test("pending and deactivated members do not receive the private shell", () => {
 test("active status gates role links, and role lookup errors omit officer links", () => {
   const links = getActiveMemberNavigationItems("active", ["admin"], true);
   assert.ok(links);
-  assert.ok(!links.some((item) => item.href === "/finances"));
+  assert.ok(links.some((item) => item.href === "/finances"));
   assert.ok(!links.some((item) => item.href === "/admin/members"));
 });

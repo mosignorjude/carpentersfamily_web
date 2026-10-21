@@ -1,7 +1,7 @@
 const clubOfficerRoles = new Set(["executive", "admin", "backup_admin"]);
 
 /**
- * Build presentation links from roles that were read on the server.
+ * Build navigation from roles read on the server. The shared finance ledger is available to active members; administrative areas remain role-specific.
  * These links do not grant access; routes and mutations enforce permissions.
  *
  * @param {readonly string[]} roles
@@ -15,7 +15,7 @@ export function getNavigationItems(roles) {
     { href: "/events", label: "Events" },
     { href: "/attendance", label: "Minutes & attendance" },
     { href: "/dues", label: "Dues" },
-    ...(canSeeOfficerAreas ? [{ href: "/finances", label: "Finances" }] : []),
+    { href: "/finances", label: "Finances" },
     { href: "/announcements", label: "Announcements" },
     { href: "/polls", label: "Polls" },
     ...(canSeeOfficerAreas
@@ -26,7 +26,7 @@ export function getNavigationItems(roles) {
 
 /**
  * Do not build a private shell for users whose membership is not active.
- * If the role query fails, keep only the standard member navigation.
+ * If the role query fails, keep member links and omit officer-only areas.
  *
  * @param {string | null | undefined} status
  * @param {readonly string[]} roles
