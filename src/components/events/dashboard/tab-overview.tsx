@@ -11,8 +11,8 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
+import { formatNaira, formatPercent } from "@/lib/format";
 import { percentWidthClass } from "@/lib/percent-width-class";
-import { formatNaira, formatPercent } from "./dashboard-mock-data";
 import type {
   DashboardCostCenter,
   DashboardEventInfo,

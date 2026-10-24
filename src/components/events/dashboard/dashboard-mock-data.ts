@@ -1,3 +1,4 @@
+import { downloadLedgerCSV, formatNaira, formatPercent } from "@/lib/format";
 import type {
   ActivityLogItem,
   DashboardCostCenter,
@@ -7,69 +8,11 @@ import type {
   DashboardTransaction,
 } from "./dashboard-types";
 
+export { downloadLedgerCSV, formatNaira, formatPercent };
+
 export const PROTOTYPE_BUDGET_TOTAL = 5_000_000;
 export const DISCLAIMER_NOTE =
   "DEMONSTRATION PROTOTYPE DATA ONLY — Configured for ₦5,000,000 event budget. Invented figures for testing; not actual Carpenters Family club records.";
-
-export function formatNaira(amount: number, showDecimals = false): string {
-  const formatted = new Intl.NumberFormat("en-NG", {
-    minimumFractionDigits: showDecimals ? 2 : 0,
-    maximumFractionDigits: showDecimals ? 2 : 0,
-  }).format(amount);
-  return `₦${formatted}`;
-}
-
-export function formatPercent(value: number): string {
-  return `${value.toFixed(1)}%`;
-}
-
-export function downloadLedgerCSV(transactions: DashboardTransaction[]): void {
-  const headers = [
-    "Transaction ID",
-    "Date",
-    "Type",
-    "Category",
-    "Description",
-    "Amount (NGN)",
-    "Payer / Payee",
-    "Payment Method",
-    "Reference",
-    "Authorized By",
-    "Status",
-    "Audit Notes / Void Reason",
-  ];
-
-  const rows = transactions.map((t) => [
-    `"${t.id}"`,
-    `"${t.date}"`,
-    `"${t.type.toUpperCase()}"`,
-    `"${t.categoryLabel}"`,
-    `"${t.description.replace(/"/g, '""')}"`,
-    t.amount,
-    `"${t.payerPayee.replace(/"/g, '""')}"`,
-    `"${t.paymentMethod}"`,
-    `"${t.paymentRef}"`,
-    `"${t.authorizedBy}"`,
-    `"${t.status.toUpperCase()}"`,
-    `"${(t.voidReason || "").replace(/"/g, '""')}"`,
-  ]);
-
-  const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join(
-    "\n",
-  );
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute(
-    "download",
-    `CarpentersClub_Event_FinanceLedger_${new Date().toISOString().slice(0, 10)}.csv`,
-  );
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
 
 export const INITIAL_TICKET_TIERS: DashboardTicketTier[] = [
   {

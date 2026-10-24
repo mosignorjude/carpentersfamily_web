@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check next.config.ts src",
+    "test": "node --test",
     "test:security-regression": "node --test",
     "test:receipts": "node --test tests/finance-receipt-validation.test.mjs",
     "test:reports": "node --test tests/report-export-security.test.mjs",

@@ -1969,6 +1969,9 @@ export async function recordEventTicketSaleAction(formData: FormData) {
     redirect(eventFinanceNoticeUrl(eventId, "invalid-request"));
   }
   const actor = await getActiveEventActor(eventId);
+  if (!eventFinanceManagerAllowed(actor)) {
+    redirect(eventFinanceNoticeUrl(eventId, "denied"));
+  }
   const { error } = await actor.supabase.rpc("record_event_ticket_sale", {
     p_event_id: eventId,
     p_tier_id: tierId,
@@ -2023,6 +2026,9 @@ export async function editEventTicketSaleAction(formData: FormData) {
     redirect(eventFinanceNoticeUrl(eventId, "invalid-request"));
   }
   const actor = await getActiveEventActor(eventId);
+  if (!eventFinanceManagerAllowed(actor)) {
+    redirect(eventFinanceNoticeUrl(eventId, "denied"));
+  }
   const { error } = await actor.supabase.rpc("edit_event_ticket_sale", {
     p_sale_id: saleId,
     p_quantity: quantity,

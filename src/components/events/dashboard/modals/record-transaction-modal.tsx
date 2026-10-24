@@ -5,8 +5,8 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { FormattedAmountInput } from "@/components/formatted-amount-input";
 import { FormAlertBanner } from "@/components/ui";
+import { formatNaira, formatPercent } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
-import { formatNaira, formatPercent } from "../dashboard-mock-data";
 import type {
   DashboardCostCenter,
   DashboardTicketTier,

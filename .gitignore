@@ -45,7 +45,13 @@ yarn-error.log*
 /AGENTS.md
 /requirements-brief.md
 /DESIGN.md
-/docs/
+# Local scripts & user data exports
+scripts/*firebase_users*
+scripts/*.local.*
+scripts/*-local*
+scripts/seed-local*
+scripts/migrate-firebase-users*
+AUDIT-REPORT-*.md
 
 # Keep only the UI/UX skill explicitly configured for this project.
 /.agents/skills/*

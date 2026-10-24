@@ -17,6 +17,7 @@ import {
   DataUnavailableCard,
   EmptyStateCard,
 } from "@/components/ui/state-screen";
+import { formatNaira } from "@/lib/format";
 import type { FinanceReceipt } from "./receipt-modal";
 
 interface ClubTransactionLedgerProps {
@@ -32,17 +33,6 @@ interface ClubTransactionLedgerProps {
   onViewReceipt: (transaction: FinanceTransaction) => void;
   onInitiateCorrect: (transaction: FinanceTransaction) => void;
   onInitiateVoid: (transaction: FinanceTransaction) => void;
-}
-
-function formatNaira(value: number | string | null | undefined) {
-  if (value === null || value === undefined) return "₦—";
-  const num =
-    typeof value === "number" ? BigInt(Math.round(value)) : BigInt(value);
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(num);
 }
 
 function formatDate(value: string) {

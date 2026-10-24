@@ -381,14 +381,6 @@ export async function saveEventBudgetAllocationCategoryAction(
       redirect(redirectTarget(formData, "invalid-request"));
     }
 
-    if (rawCategoryId && oldName && finalName && oldName.trim() !== finalName) {
-      await supabase.rpc("rename_event_finance_category", {
-        p_category_id: rawCategoryId,
-        p_name: finalName,
-        p_reason: reason,
-      });
-    }
-
     updatedAllocations = existingAllocations.map((a) => {
       if (
         (rawCategoryId && a.categoryId === rawCategoryId) ||
@@ -403,6 +395,37 @@ export async function saveEventBudgetAllocationCategoryAction(
       }
       return a;
     });
+
+    const needsRename = Boolean(
+      rawCategoryId && oldName && finalName && oldName.trim() !== finalName,
+    );
+
+    // Validate ceiling before mutating category definitions
+    const checkSumPercent = updatedAllocations.reduce(
+      (sum, a) => sum + a.percent,
+      0,
+    );
+    const checkSumAmount = updatedAllocations.reduce(
+      (sum, a) => sum + a.amount_ngn,
+      0,
+    );
+    if (checkSumPercent > 100.0001 || checkSumAmount > totalNgn) {
+      redirect(redirectTarget(formData, "invalid-request"));
+    }
+
+    if (needsRename) {
+      const { error: renameError } = await supabase.rpc(
+        "rename_event_finance_category",
+        {
+          p_category_id: rawCategoryId,
+          p_name: finalName,
+          p_reason: reason,
+        },
+      );
+      if (renameError) {
+        redirect(redirectTarget(formData, "operation-failed"));
+      }
+    }
   } else if (actionType === "remove") {
     const lookupKey = (oldName || name || "").trim().toLowerCase();
     updatedAllocations = existingAllocations.filter(

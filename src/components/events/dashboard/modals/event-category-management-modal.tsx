@@ -23,8 +23,8 @@ import {
   FormFieldHint,
   FormSubmitButton,
 } from "@/components/ui";
+import { formatNaira, formatPercent } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
-import { formatNaira, formatPercent } from "../dashboard-mock-data";
 import type {
   DashboardCostCenter,
   EventFinanceCategoryItem,

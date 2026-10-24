@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { formatNaira } from "@/lib/format";
 import type { HomeDashboardDues } from "@/lib/home-dashboard.server";
 import { percentWidthClass } from "@/lib/percent-width-class";
 
@@ -32,14 +33,6 @@ const monthNames = [
   { shortName: "Nov", fullName: "November", index: 10 },
   { shortName: "Dec", fullName: "December", index: 11 },
 ];
-
-function formatNaira(amount: number) {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 function formatPaymentDate(date: string) {
   return new Intl.DateTimeFormat("en-NG", {

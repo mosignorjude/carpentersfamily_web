@@ -8,6 +8,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { formatNaira } from "@/lib/format";
 
 export type DuesScheduleRow = {
   member_id: string;
@@ -40,15 +41,6 @@ function formatDate(date: string) {
     dateStyle: "medium",
     timeZone: "Africa/Lagos",
   }).format(value);
-}
-
-function formatNaira(value: string | number | null | undefined) {
-  if (value === null || value === undefined) return "Rate unavailable";
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(Number(value));
 }
 
 export function DuesScheduleCard({
@@ -256,7 +248,9 @@ export function DuesScheduleCard({
                       </div>
                     </td>
                     <td className="py-3.5 px-5 font-mono font-bold text-[#174C37]">
-                      {formatNaira(row.amount_ngn)}
+                      {row.amount_ngn != null
+                        ? formatNaira(row.amount_ngn)
+                        : "Rate unavailable"}
                     </td>
                     <td className="py-3.5 px-5 text-[#54433A]">
                       {formatDate(row.due_date)}

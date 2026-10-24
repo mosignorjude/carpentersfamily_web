@@ -7,6 +7,7 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
+import { formatNaira } from "@/lib/format";
 
 interface ClubFinancialSummaryProps {
   currentBalance: number | string | null | undefined;
@@ -14,17 +15,6 @@ interface ClubFinancialSummaryProps {
   otherIncome: number | string | null | undefined;
   totalExpenses: number | string | null | undefined;
   isUnavailable?: boolean;
-}
-
-function formatNaira(value: number | string | null | undefined) {
-  if (value === null || value === undefined) return "₦—";
-  const num =
-    typeof value === "number" ? BigInt(Math.round(value)) : BigInt(value);
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(num);
 }
 
 export function ClubFinancialSummary({

@@ -3,8 +3,8 @@
 import { Check, ChevronDown, Ticket } from "lucide-react";
 import { useState } from "react";
 import { EmptyStateCard } from "@/components/ui/state-screen";
+import { formatNaira, formatPercent } from "@/lib/format";
 import { percentWidthClass } from "@/lib/percent-width-class";
-import { formatNaira, formatPercent } from "./dashboard-mock-data";
 import type { DashboardTicketTier } from "./dashboard-types";
 
 interface TabTicketsProps {
