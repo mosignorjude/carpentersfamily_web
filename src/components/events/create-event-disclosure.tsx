@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { createEventAction } from "@/app/actions";
+import { FormSubmitButton } from "@/components/ui";
 
 interface CreateEventDisclosureProps {
   canCreate: boolean;
@@ -405,12 +406,13 @@ export function CreateEventDisclosure({
                   >
                     Cancel
                   </button>
-                  <button
+                  <FormSubmitButton
                     className="cf-btn cf-btn--primary min-h-[44px] px-6 py-2.5 rounded-xl cursor-pointer"
-                    type="submit"
+                    pendingLabel="Creating Event…"
+                    statusToastMessage="Publishing new event to the club calendar."
                   >
                     Publish & Create Event
-                  </button>
+                  </FormSubmitButton>
                 </div>
               </div>
             </form>

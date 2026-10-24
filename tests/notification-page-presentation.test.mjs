@@ -94,6 +94,20 @@ test("notification href routes accurately to domain areas", () => {
   );
   assert.equal(getNotificationHref({ category: "new_poll" }), "/polls");
   assert.equal(getNotificationHref({ category: "poll_closing" }), "/polls");
+  assert.equal(
+    getNotificationHref({
+      category: "officer_money",
+      event_id: "../admin/members?notice=spoof",
+    }),
+    "/finances",
+  );
+  assert.equal(
+    getNotificationHref({
+      category: "attendance_open",
+      event_id: "evt/123?bad=1",
+    }),
+    "/attendance",
+  );
 });
 
 test("notifications page route redirects to home since notifications are in the header drawer", () => {

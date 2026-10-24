@@ -6,6 +6,7 @@ import {
   checkInEventAttendanceAction,
   issueEventAttendanceQrAction,
 } from "@/app/actions";
+import { FormSubmitButton } from "@/components/ui";
 
 const initialQrState = {
   qrDataUrl: null,
@@ -72,15 +73,16 @@ export function AttendanceCheckIn({
           <input name="qr_token" type="hidden" value={qrToken} />
         </div>
       ) : null}
-      <button
+      <FormSubmitButton
         className="px-6 py-2.5 rounded-xl bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-bold transition-colors shadow-xs cursor-pointer min-h-[42px] flex items-center gap-2"
-        type="submit"
+        pendingLabel="Recording Check-In…"
+        statusToastMessage="Verifying and recording your event attendance."
       >
         <CheckCircle2 className="w-4 h-4 text-[#D6A23A]" />
         <span>
           {qrToken ? "Confirm My QR Check-In" : "Record My Attendance"}
         </span>
-      </button>
+      </FormSubmitButton>
     </form>
   );
 }

@@ -152,14 +152,36 @@ function ProgressBarInner() {
       className="fixed top-0 left-0 right-0 z-[99999] pointer-events-none h-[3px]"
       role="progressbar"
     >
-      <div
-        className="h-full bg-gradient-to-r from-[#174C37] via-[#2F855A] to-[#D6A23A] transition-[width,opacity] duration-200 ease-out shadow-[0_0_10px_rgba(23,76,55,0.7),0_0_5px_rgba(214,162,58,0.5)]"
-        style={{
-          width: `${progress}%`,
-          opacity: status === "completing" ? 0 : 1,
-          transitionDuration: status === "completing" ? "200ms" : "250ms",
-        }}
-      />
+      <svg
+        aria-hidden="true"
+        className={`w-full h-full block transition-opacity duration-200 ease-out shadow-[0_0_10px_rgba(23,76,55,0.7),0_0_5px_rgba(214,162,58,0.5)] ${
+          status === "completing" ? "opacity-0" : "opacity-100"
+        }`}
+        preserveAspectRatio="none"
+        viewBox="0 0 100 1"
+      >
+        <defs>
+          <linearGradient
+            id="cf-nav-progress-gradient"
+            x1="0%"
+            x2="100%"
+            y1="0%"
+            y2="0%"
+          >
+            <stop offset="0%" stopColor="#174C37" />
+            <stop offset="55%" stopColor="#2F855A" />
+            <stop offset="100%" stopColor="#D6A23A" />
+          </linearGradient>
+        </defs>
+        <rect
+          className="transition-all duration-200 ease-out"
+          fill="url(#cf-nav-progress-gradient)"
+          height="1"
+          width={progress}
+          x="0"
+          y="0"
+        />
+      </svg>
     </div>
   );
 }

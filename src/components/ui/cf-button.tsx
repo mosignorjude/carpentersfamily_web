@@ -2,8 +2,14 @@
 
 import { Loader2 } from "lucide-react";
 import type React from "react";
-import { type ButtonHTMLAttributes, forwardRef } from "react";
+import {
+  type ButtonHTMLAttributes,
+  forwardRef,
+  useEffect,
+  useRef,
+} from "react";
 import { useFormStatus } from "react-dom";
+import { dispatchActionStatusToast } from "./flash-card";
 
 export type CfButtonVariant =
   | "primary"
@@ -96,20 +102,51 @@ CfButton.displayName = "CfButton";
 export interface FormSubmitButtonProps
   extends Omit<CfButtonProps, "loading" | "type"> {
   pendingLabel?: string;
+  statusToastTitle?: string;
+  statusToastMessage?: string;
+  showStatusToast?: boolean;
 }
 
 /**
  * Connected server-action submit button that automatically listens to React `useFormStatus`
- * and manages disabled and loading spinner micro-interaction state.
+ * and manages disabled and loading spinner micro-interaction state plus an Action Status Toast.
  */
 export function FormSubmitButton({
   children,
   pendingLabel,
   loadingText,
+  statusToastTitle,
+  statusToastMessage,
+  showStatusToast = true,
   disabled,
   ...props
 }: FormSubmitButtonProps) {
   const { pending } = useFormStatus();
+  const wasPendingRef = useRef(false);
+  const resolvedLabel =
+    loadingText ??
+    pendingLabel ??
+    (typeof children === "string" ? `${children}…` : "Processing Action…");
+
+  useEffect(() => {
+    if (pending && !wasPendingRef.current && showStatusToast) {
+      wasPendingRef.current = true;
+      dispatchActionStatusToast({
+        title: statusToastTitle ?? resolvedLabel.replace(/\.+$/, ""),
+        message:
+          statusToastMessage ??
+          "Processing your request and updating club records…",
+      });
+    } else if (!pending) {
+      wasPendingRef.current = false;
+    }
+  }, [
+    pending,
+    resolvedLabel,
+    showStatusToast,
+    statusToastMessage,
+    statusToastTitle,
+  ]);
 
   return (
     <CfButton

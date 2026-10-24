@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { rpcErrorNotice } from "@/lib/rpc-error-notice";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const uuidPattern =
@@ -137,7 +138,7 @@ export async function createEventFinanceCategoryAction(formData: FormData) {
     p_name: name,
     p_reason: reason,
   });
-  if (error) redirect(redirectTarget(formData, "operation-failed"));
+  if (error) redirect(redirectTarget(formData, rpcErrorNotice(error)));
   finishMutation(formData, "category-created");
 }
 
@@ -155,7 +156,7 @@ export async function renameEventFinanceCategoryAction(formData: FormData) {
     p_name: name,
     p_reason: reason,
   });
-  if (error) redirect(redirectTarget(formData, "operation-failed"));
+  if (error) redirect(redirectTarget(formData, rpcErrorNotice(error)));
   finishMutation(formData, "category-renamed");
 }
 
@@ -171,7 +172,7 @@ export async function retireEventFinanceCategoryAction(formData: FormData) {
     p_category_id: id,
     p_reason: reason,
   });
-  if (error) redirect(redirectTarget(formData, "operation-failed"));
+  if (error) redirect(redirectTarget(formData, rpcErrorNotice(error)));
   finishMutation(formData, "category-retired");
 }
 
@@ -211,7 +212,7 @@ export async function saveEventBudgetAllocationCategoryAction(
     totalNgn = Math.round(Number(rawTotal.replace(/[^0-9.]/g, ""))) || 0;
   }
   if (totalNgn <= 0) {
-    redirect(redirectTarget(formData, "operation-failed"));
+    redirect(redirectTarget(formData, "budget-required"));
   }
 
   // 2. Fetch current allocations
@@ -319,7 +320,7 @@ export async function saveEventBudgetAllocationCategoryAction(
             p_reason: reason,
           });
         if (createCatError || !createdCatId) {
-          redirect(redirectTarget(formData, "operation-failed"));
+          redirect(redirectTarget(formData, rpcErrorNotice(createCatError)));
         }
         targetCategoryId = createdCatId as string;
 
@@ -423,7 +424,7 @@ export async function saveEventBudgetAllocationCategoryAction(
         },
       );
       if (renameError) {
-        redirect(redirectTarget(formData, "operation-failed"));
+        redirect(redirectTarget(formData, rpcErrorNotice(renameError)));
       }
     }
   } else if (actionType === "remove") {
@@ -464,7 +465,7 @@ export async function saveEventBudgetAllocationCategoryAction(
   });
 
   if (error) {
-    redirect(redirectTarget(formData, "operation-failed"));
+    redirect(redirectTarget(formData, rpcErrorNotice(error)));
   }
 
   finishMutation(formData, "budget-saved");

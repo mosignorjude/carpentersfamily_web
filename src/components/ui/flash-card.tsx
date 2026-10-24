@@ -5,12 +5,18 @@ import {
   AlertTriangle,
   CheckCircle2,
   Info,
+  Loader2,
   X,
 } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 
-export type FlashCardType = "success" | "error" | "warning" | "info";
+export type FlashCardType =
+  | "success"
+  | "error"
+  | "warning"
+  | "info"
+  | "loading";
 
 export interface FlashCardItem {
   id: string;
@@ -40,15 +46,43 @@ export function dispatchFlashCard(payload: {
   };
 
   if (typeof window !== "undefined") {
-    const win = window as unknown as { __cf_flash_queue__?: FlashCardItem[] };
-    win.__cf_flash_queue__ = win.__cf_flash_queue__ || [];
-    win.__cf_flash_queue__.push(item);
+    const win = window as unknown as FlashWindow;
+    // Queue only while no container is listening, so mounted containers never
+    // replay already-delivered toasts after a remount.
+    if (!win.__cf_flash_listening__) {
+      win.__cf_flash_queue__ = win.__cf_flash_queue__ || [];
+      win.__cf_flash_queue__.push(item);
+      return;
+    }
 
     window.dispatchEvent(
       new CustomEvent<FlashCardItem>(FLASH_EVENT_NAME, { detail: item }),
     );
   }
 }
+
+/**
+ * Show an in-progress Action Status Toast for slow mutations (approvals, role
+ * updates, ledger writes, file uploads). Automatically replaced when the
+ * terminal success/error/warning/info toast arrives.
+ */
+export function dispatchActionStatusToast(payload: {
+  title?: string;
+  message: string;
+  durationMs?: number;
+}) {
+  dispatchFlashCard({
+    type: "loading",
+    title: payload.title ?? "Processing Action",
+    message: payload.message,
+    durationMs: payload.durationMs ?? 15000,
+  });
+}
+
+type FlashWindow = {
+  __cf_flash_queue__?: FlashCardItem[];
+  __cf_flash_listening__?: boolean;
+};
 
 const typeStyles: Record<
   FlashCardType,
@@ -98,6 +132,15 @@ const typeStyles: Record<
     Icon: Info,
     defaultTitle: "Information",
   },
+  loading: {
+    border: "border-[#174C37]/40 shadow-emerald-950/10",
+    iconBg: "bg-[#174C37]",
+    iconColor: "text-[#D6A23A]",
+    titleColor: "text-[#174C37]",
+    progressColor: "bg-[#D6A23A]",
+    Icon: Loader2,
+    defaultTitle: "Processing Action",
+  },
 };
 
 /**
@@ -146,6 +189,7 @@ export function FlashCard({
     // biome-ignore lint/a11y/noStaticElementInteractions: Mouse hover pauses the notification auto-dismiss timer
     <div
       aria-atomic="true"
+      aria-busy={item.type === "loading" ? true : undefined}
       aria-live={item.type === "error" ? "assertive" : "polite"}
       className={`pointer-events-auto relative w-full sm:w-[380px] rounded-2xl bg-white border ${config.border} p-4 shadow-2xl transition-all duration-200 ease-out overflow-hidden ${
         isClosing
@@ -161,7 +205,9 @@ export function FlashCard({
         <div
           className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center ${config.iconBg} ${config.iconColor} shadow-xs mt-0.5`}
         >
-          <IconComponent className="w-4 h-4" />
+          <IconComponent
+            className={`w-4 h-4 ${item.type === "loading" ? "animate-spin" : ""}`}
+          />
         </div>
 
         {/* Content */}
@@ -187,15 +233,13 @@ export function FlashCard({
         </button>
       </div>
 
-      {/* Auto-Dismiss Progress Bar */}
+      {/* Auto-Dismiss Progress Bar (CSP-safe class-based transition, no style attr) */}
       {duration > 0 && (
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#E5DDD3]/40 overflow-hidden">
           <div
-            className={`h-full ${config.progressColor} opacity-60 transition-[width] ease-linear`}
-            style={{
-              width: started && !isPaused ? "0%" : "100%",
-              transitionDuration: `${duration}ms`,
-            }}
+            className={`h-full ${config.progressColor} opacity-60 transition-[width] ease-linear duration-[7000ms] ${
+              started && !isPaused ? "w-0" : "w-full"
+            }`}
           />
         </div>
       )}
@@ -212,7 +256,7 @@ export function FlashCardContainer() {
 
   useEffect(() => {
     // Flush any pending notifications queued before component mount
-    const win = window as unknown as { __cf_flash_queue__?: FlashCardItem[] };
+    const win = window as unknown as FlashWindow;
     if (win.__cf_flash_queue__ && win.__cf_flash_queue__.length > 0) {
       const queued = [...win.__cf_flash_queue__];
       win.__cf_flash_queue__ = [];
@@ -229,12 +273,17 @@ export function FlashCardContainer() {
       const incoming = customEvent.detail;
       setCards((prev) => {
         if (prev.some((c) => c.id === incoming.id)) return prev;
-        return [incoming, ...prev.slice(0, 3)];
+        // Replace any in-flight "loading" status toast when a new loading or
+        // terminal (success/error/warning/info) toast arrives.
+        const withoutLoading = prev.filter((c) => c.type !== "loading");
+        return [incoming, ...withoutLoading.slice(0, 3)];
       });
     };
 
     window.addEventListener(FLASH_EVENT_NAME, handleFlashEvent);
+    win.__cf_flash_listening__ = true;
     return () => {
+      win.__cf_flash_listening__ = false;
       window.removeEventListener(FLASH_EVENT_NAME, handleFlashEvent);
     };
   }, []);

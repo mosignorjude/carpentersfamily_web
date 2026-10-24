@@ -52,26 +52,32 @@ export function getNotificationTimestamp(timestamp) {
   };
 }
 
+const SAFE_EVENT_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+
 /**
  * Route target for a notification record.
  * @param {{ category: string, event_id?: string | null }} notification
  * @returns {string}
  */
 export function getNotificationHref(notification) {
+  const validEventId =
+    typeof notification.event_id === "string" &&
+    SAFE_EVENT_ID_PATTERN.test(notification.event_id)
+      ? notification.event_id
+      : null;
+
   switch (notification.category) {
     case "dues_reminder":
       return "/dues";
     case "officer_money":
-      return notification.event_id
-        ? `/events/${notification.event_id}/finance`
-        : "/finances";
+      return validEventId ? `/events/${validEventId}/finance` : "/finances";
     case "officer_member":
       return "/admin/members";
     case "officer_event":
       return "/events";
     case "attendance_open":
-      return notification.event_id
-        ? `/attendance?event=${encodeURIComponent(notification.event_id)}`
+      return validEventId
+        ? `/attendance?event=${encodeURIComponent(validEventId)}`
         : "/attendance";
     case "event_activity":
       return "/events";

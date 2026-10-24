@@ -2,7 +2,7 @@
 
 import { Bell, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { signOutAction } from "@/app/actions";
 import DashboardSearch from "@/components/dashboard-search";
 import MobileAppMenu from "@/components/mobile-app-menu";
@@ -14,6 +14,10 @@ import UserProfileBadge, {
   type UserProfileData,
 } from "@/components/user-profile-badge";
 import { clubBrand } from "@/lib/brand";
+import {
+  NOTIFICATION_SYNC_EVENT,
+  type NotificationSyncPayload,
+} from "@/lib/notification-sync";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 interface NavigationItem {
@@ -47,16 +51,69 @@ export default function AppHeader({
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [notifications, setNotifications] =
     useState<AppNotification[]>(initialNotifications);
+  const notificationsRef = useRef<AppNotification[]>(initialNotifications);
 
   useEffect(() => {
     setUnreadCount(initialUnreadCount);
   }, [initialUnreadCount]);
 
   useEffect(() => {
+    notificationsRef.current = initialNotifications;
     setNotifications(initialNotifications);
   }, [initialNotifications]);
 
-  // Optional Supabase Realtime listener for live alerts
+  // Synchronize with read/unread mutations triggered from the Home card or drawer
+  useEffect(() => {
+    const handleSync = (event: Event) => {
+      const detail = (event as CustomEvent<NotificationSyncPayload>).detail;
+      if (!detail) return;
+
+      if (detail.kind === "mark-all-read") {
+        const next = notificationsRef.current.map((n) =>
+          n.read_at === null ? { ...n, read_at: detail.readAt } : n,
+        );
+        notificationsRef.current = next;
+        setNotifications(next);
+        setUnreadCount(0);
+        return;
+      }
+
+      if (detail.kind === "mark-read") {
+        const current = notificationsRef.current;
+        const target = current.find((n) => n.id === detail.id);
+        const shouldDecrement = !target || target.read_at === null;
+        const next = current.map((n) =>
+          n.id === detail.id ? { ...n, read_at: detail.readAt } : n,
+        );
+        notificationsRef.current = next;
+        setNotifications(next);
+        if (shouldDecrement) {
+          setUnreadCount((c) => Math.max(0, c - 1));
+        }
+        return;
+      }
+
+      if (detail.kind === "mark-unread") {
+        const current = notificationsRef.current;
+        const target = current.find((n) => n.id === detail.id);
+        const shouldIncrement = !target || target.read_at !== null;
+        const next = current.map((n) =>
+          n.id === detail.id ? { ...n, read_at: null } : n,
+        );
+        notificationsRef.current = next;
+        setNotifications(next);
+        if (shouldIncrement) {
+          setUnreadCount((c) => c + 1);
+        }
+      }
+    };
+
+    window.addEventListener(NOTIFICATION_SYNC_EVENT, handleSync);
+    return () =>
+      window.removeEventListener(NOTIFICATION_SYNC_EVENT, handleSync);
+  }, []);
+
+  // Optional Supabase Realtime listener for live alerts (INSERT + UPDATE, deduplicated)
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -75,8 +132,48 @@ export default function AppHeader({
         },
         (payload: { new: Record<string, unknown> }) => {
           const newRow = payload.new as unknown as AppNotification;
-          setNotifications((prev) => [newRow, ...prev]);
-          setUnreadCount((c) => c + 1);
+          if (!newRow?.id) return;
+          const current = notificationsRef.current;
+          if (current.some((n) => n.id === newRow.id)) return;
+          const next = [newRow, ...current];
+          notificationsRef.current = next;
+          setNotifications(next);
+          if (newRow.read_at === null) {
+            setUnreadCount((c) => c + 1);
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${currentUserId}`,
+        },
+        (payload: {
+          new: Record<string, unknown>;
+          old: Record<string, unknown>;
+        }) => {
+          const updatedRow = payload.new as unknown as AppNotification;
+          if (!updatedRow?.id) return;
+          const current = notificationsRef.current;
+          const existing = current.find((n) => n.id === updatedRow.id);
+          if (existing) {
+            if (existing.read_at === null && updatedRow.read_at !== null) {
+              setUnreadCount((c) => Math.max(0, c - 1));
+            } else if (
+              existing.read_at !== null &&
+              updatedRow.read_at === null
+            ) {
+              setUnreadCount((c) => c + 1);
+            }
+          }
+          const next = current.map((n) =>
+            n.id === updatedRow.id ? { ...n, ...updatedRow } : n,
+          );
+          notificationsRef.current = next;
+          setNotifications(next);
         },
       )
       .subscribe();
@@ -138,6 +235,8 @@ export default function AppHeader({
 
           {/* Interactive Fixed Notification Bell Button */}
           <button
+            aria-expanded={isDrawerOpen}
+            aria-haspopup="dialog"
             aria-label={`View notifications (${unreadCount} unread)`}
             className="relative p-2.5 text-[#3D291F] hover:text-[#174C37] hover:bg-white border border-[#E5DDD3] rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center transition-all bg-white/75 shadow-2xs cursor-pointer focus-visible:outline-2 focus-visible:outline-[#174C37]"
             onClick={() => setIsDrawerOpen(true)}
@@ -163,6 +262,7 @@ export default function AppHeader({
         notifications={notifications}
         onClose={() => setIsDrawerOpen(false)}
         onUnreadCountChange={(count) => setUnreadCount(count)}
+        unreadCount={unreadCount}
       />
     </>
   );

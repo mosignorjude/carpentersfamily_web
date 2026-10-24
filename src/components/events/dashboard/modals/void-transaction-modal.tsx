@@ -1,14 +1,15 @@
 "use client";
 
-import { ShieldAlert, X } from "lucide-react";
+import { Loader2, ShieldAlert, X } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatNaira } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 import type { DashboardTransaction } from "../dashboard-types";
 
 interface VoidTransactionModalProps {
   isOpen: boolean;
+  isPending?: boolean;
   transaction: DashboardTransaction | null;
   onClose: () => void;
   onConfirmVoid: (txnId: string, reason: string) => void;
@@ -16,6 +17,7 @@ interface VoidTransactionModalProps {
 
 export function VoidTransactionModal({
   isOpen,
+  isPending = false,
   transaction,
   onClose,
   onConfirmVoid,
@@ -25,10 +27,18 @@ export function VoidTransactionModal({
 
   useModalHygiene({ isOpen, onClose });
 
+  useEffect(() => {
+    if (!isOpen) {
+      setReason("");
+      setError("");
+    }
+  }, [isOpen]);
+
   if (!isOpen || !transaction) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isPending) return;
     if (!reason.trim()) {
       setError(
         "A transparent, explanatory audit reason is mandatory to void this record.",
@@ -37,9 +47,6 @@ export function VoidTransactionModal({
     }
 
     onConfirmVoid(transaction.id, reason.trim());
-    setReason("");
-    setError("");
-    onClose();
   };
 
   return (
@@ -146,18 +153,29 @@ export function VoidTransactionModal({
           {/* Footer Action Buttons */}
           <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#E5DDD3]">
             <button
-              className="px-4 py-2.5 text-xs font-semibold text-[#5C4638] bg-[#FAF6F0] hover:bg-[#E5DDD3]/60 rounded-xl transition-colors min-h-[42px]"
+              className="px-4 py-2.5 text-xs font-semibold text-[#5C4638] bg-[#FAF6F0] hover:bg-[#E5DDD3]/60 rounded-xl transition-colors min-h-[42px] disabled:opacity-50"
+              disabled={isPending}
               onClick={onClose}
               type="button"
             >
               Cancel
             </button>
             <button
-              className="px-5 py-2.5 text-xs font-semibold text-white bg-[#BA3C2A] hover:bg-[#8E2A1C] rounded-xl transition-colors min-h-[42px] shadow-xs flex items-center gap-1.5"
+              className="px-5 py-2.5 text-xs font-semibold text-white bg-[#BA3C2A] hover:bg-[#8E2A1C] rounded-xl transition-colors min-h-[42px] shadow-xs flex items-center gap-1.5 disabled:opacity-75"
+              disabled={isPending}
               type="submit"
             >
-              <ShieldAlert className="w-4 h-4" />
-              <span>Confirm Void Record</span>
+              {isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Voiding Record…</span>
+                </>
+              ) : (
+                <>
+                  <ShieldAlert className="w-4 h-4" />
+                  <span>Confirm Void Record</span>
+                </>
+              )}
             </button>
           </div>
         </form>

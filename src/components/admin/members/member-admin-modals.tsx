@@ -4,6 +4,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Info,
+  Loader2,
   RefreshCw,
   UserCog,
   UserX,
@@ -11,7 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type {
   ClubMemberRecord,
   EventAssignment,
@@ -31,6 +32,7 @@ export type ActiveModalType =
 
 interface MemberAdminModalsProps {
   activeModal: ActiveModalType;
+  isPending?: boolean;
   onClose: () => void;
   selectedMember: ClubMemberRecord | null;
   selectedAssignment: EventAssignment | null;
@@ -61,6 +63,7 @@ interface MemberAdminModalsProps {
 
 export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
   activeModal,
+  isPending = false,
   onClose,
   selectedMember,
   selectedAssignment,
@@ -82,7 +85,17 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
     useState<EventStaffRole>("Committee");
   const [actionError, setActionError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!activeModal) {
+      setReasonInput("");
+      setTargetStaffMemberId("");
+      setTargetEventRole("Committee");
+      setActionError(null);
+    }
+  }, [activeModal]);
+
   const resetAndClose = () => {
+    if (isPending) return;
     setReasonInput("");
     setTargetStaffMemberId("");
     setTargetEventRole("Committee");
@@ -142,6 +155,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
+                disabled={isPending}
                 onClick={resetAndClose}
                 className="cf-btn cf-btn--neutral cf-btn--modal"
               >
@@ -149,13 +163,20 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               </button>
               <button
                 type="button"
+                disabled={isPending}
                 onClick={() => {
                   onConfirmApprove(selectedMember);
-                  resetAndClose();
                 }}
                 className="cf-btn cf-btn--primary cf-btn--modal cf-btn--wide"
               >
-                Confirm & Activate Member
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    <span>Approving Member…</span>
+                  </>
+                ) : (
+                  "Confirm & Activate Member"
+                )}
               </button>
             </div>
           </div>
@@ -229,6 +250,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
+                disabled={isPending}
                 onClick={resetAndClose}
                 className="cf-btn cf-btn--neutral cf-btn--modal"
               >
@@ -236,6 +258,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               </button>
               <button
                 type="button"
+                disabled={isPending}
                 onClick={() => {
                   if (!reasonInput.trim()) {
                     setActionError(
@@ -244,11 +267,17 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                     return;
                   }
                   onConfirmReject(selectedMember, reasonInput.trim());
-                  resetAndClose();
                 }}
                 className="cf-btn cf-btn--danger cf-btn--modal cf-btn--wide"
               >
-                Confirm Rejection
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    <span>Declining Request…</span>
+                  </>
+                ) : (
+                  "Confirm Rejection"
+                )}
               </button>
             </div>
           </div>
@@ -322,12 +351,14 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               <button
                 type="button"
                 onClick={resetAndClose}
-                className="cf-btn cf-btn--neutral cf-btn--modal"
+                disabled={isPending}
+                className="cf-btn cf-btn--neutral cf-btn--modal disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
+                disabled={isPending}
                 onClick={() => {
                   if (selectedMember.id === currentOfficerId) {
                     setActionError(
@@ -342,11 +373,17 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                     return;
                   }
                   onConfirmDeactivate(selectedMember, reasonInput.trim());
-                  resetAndClose();
                 }}
-                className="cf-btn cf-btn--danger cf-btn--modal cf-btn--wide"
+                className="cf-btn cf-btn--danger cf-btn--modal cf-btn--wide inline-flex items-center justify-center gap-2 disabled:opacity-75"
               >
-                Confirm Deactivation
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    <span>Deactivating…</span>
+                  </>
+                ) : (
+                  "Confirm Deactivation"
+                )}
               </button>
             </div>
           </div>
@@ -411,6 +448,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
+                disabled={isPending}
                 onClick={resetAndClose}
                 className="cf-btn cf-btn--neutral cf-btn--modal"
               >
@@ -418,6 +456,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               </button>
               <button
                 type="button"
+                disabled={isPending}
                 onClick={() => {
                   if (!reasonInput.trim()) {
                     setActionError(
@@ -426,11 +465,17 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                     return;
                   }
                   onConfirmReactivate(selectedMember, reasonInput.trim());
-                  resetAndClose();
                 }}
                 className="cf-btn cf-btn--primary cf-btn--modal cf-btn--wide"
               >
-                Reactivate Account
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    <span>Reactivating…</span>
+                  </>
+                ) : (
+                  "Reactivate Account"
+                )}
               </button>
             </div>
           </div>
@@ -508,6 +553,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
+                disabled={isPending}
                 onClick={resetAndClose}
                 className="cf-btn cf-btn--neutral cf-btn--modal"
               >
@@ -515,6 +561,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               </button>
               <button
                 type="button"
+                disabled={isPending}
                 onClick={() => {
                   if (!reasonInput.trim()) {
                     setActionError(
@@ -527,11 +574,17 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                     targetClubRole,
                     reasonInput.trim(),
                   );
-                  resetAndClose();
                 }}
                 className="cf-btn cf-btn--primary cf-btn--modal cf-btn--wide"
               >
-                Confirm Role Change
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    <span>Updating Role…</span>
+                  </>
+                ) : (
+                  "Confirm Role Change"
+                )}
               </button>
             </div>
           </div>
@@ -662,6 +715,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
+                disabled={isPending}
                 onClick={resetAndClose}
                 className="cf-btn cf-btn--neutral cf-btn--modal"
               >
@@ -669,6 +723,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               </button>
               <button
                 type="button"
+                disabled={isPending}
                 onClick={() => {
                   if (!targetStaffMemberId) {
                     setActionError("Please select an active member to assign.");
@@ -680,11 +735,17 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                     targetEventRole,
                     reasonInput.trim(),
                   );
-                  resetAndClose();
                 }}
                 className="cf-btn cf-btn--primary cf-btn--modal cf-btn--wide"
               >
-                Confirm Assignment
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    <span>Assigning Role…</span>
+                  </>
+                ) : (
+                  "Confirm Assignment"
+                )}
               </button>
             </div>
           </div>
@@ -752,6 +813,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
+                disabled={isPending}
                 onClick={resetAndClose}
                 className="cf-btn cf-btn--neutral cf-btn--modal"
               >
@@ -759,6 +821,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               </button>
               <button
                 type="button"
+                disabled={isPending}
                 onClick={() => {
                   if (!reasonInput.trim()) {
                     setActionError(
@@ -770,11 +833,17 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                     selectedAssignment,
                     reasonInput.trim(),
                   );
-                  resetAndClose();
                 }}
                 className="cf-btn cf-btn--danger cf-btn--modal cf-btn--wide"
               >
-                Confirm Removal
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    <span>Removing Role…</span>
+                  </>
+                ) : (
+                  "Confirm Removal"
+                )}
               </button>
             </div>
           </div>

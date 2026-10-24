@@ -14,6 +14,7 @@ import {
   setEventStatusAction,
 } from "@/app/actions";
 import { FormFieldHint } from "@/components/ui";
+import { dispatchActionStatusToast } from "@/components/ui/flash-card";
 import type { EventRow } from "./event-types";
 
 export type EventLifecycleAction = "complete" | "cancel" | "reopen" | "archive";
@@ -193,7 +194,13 @@ export function EventLifecycleModal({
         <form
           action={config.serverAction}
           className="p-6 space-y-4"
-          onSubmit={() => setIsPending(true)}
+          onSubmit={() => {
+            setIsPending(true);
+            dispatchActionStatusToast({
+              title: `${config.title}…`,
+              message: `Updating lifecycle state for ${event.title}.`,
+            });
+          }}
         >
           <input name="event_id" type="hidden" value={event.id} />
           {config.statusValue && (

@@ -78,9 +78,20 @@ function createSupabase({ tables = {}, rpcs = {} } = {}) {
         // biome-ignore lint/suspicious/noThenProperty: This mock intentionally mirrors Supabase's thenable query builder.
         then(resolve, reject) {
           const result = tables[table] ?? { data: [], error: null };
+          const filteredForCount =
+            Array.isArray(result.data) && call.options?.head
+              ? result.data.filter((row) =>
+                  call.filters.every((filter) => {
+                    if (filter.method === "is") {
+                      return (row?.[filter.column] ?? null) === filter.value;
+                    }
+                    return true;
+                  }),
+                )
+              : result.data;
           const count =
             result.count ??
-            (Array.isArray(result.data) ? result.data.length : null);
+            (Array.isArray(filteredForCount) ? filteredForCount.length : null);
           const data =
             Array.isArray(result.data) && call.range
               ? result.data.slice(call.range.start, call.range.end + 1)
@@ -534,4 +545,62 @@ test("dues reports empty schedule when member has no scheduled dues months in th
   const dashboard = await getHomeDashboardData(supabase, memberId, now);
   assert.equal(dashboard.dues.unavailable, false);
   assert.deepEqual(dashboard.dues.rows, []);
+});
+
+test("activity unreadCount counts only rows with read_at === null even when total notifications exceed ACTIVITY_LIMIT", async () => {
+  const notificationsRows = Array.from({ length: 8 }, (_, index) => ({
+    id: `47e7ca15-f80d-4a67-a967-1a34d4506d1${index}`,
+    category: "officer_money",
+    title: "A financial record changed",
+    body: "Review the relevant private or event finance records.",
+    event_id: null,
+    created_at: `2026-10-2${index}T14:00:00.000Z`,
+    read_at: "2026-10-24T15:00:00.000Z",
+  }));
+
+  const allReadSupabase = createSupabase({
+    tables: {
+      notifications: {
+        data: notificationsRows,
+        error: null,
+      },
+    },
+  });
+  const allReadDashboard = await getHomeDashboardData(
+    allReadSupabase,
+    memberId,
+    now,
+  );
+  const unreadHeadQuery = allReadSupabase.calls.find(
+    (call) => call.table === "notifications" && call.options?.head === true,
+  );
+  assert.ok(
+    unreadHeadQuery,
+    "Expected dedicated head count query for unread notifications",
+  );
+  assert.deepEqual(unreadHeadQuery.filters, [
+    { method: "eq", column: "recipient_id", value: memberId },
+    { method: "is", column: "read_at", value: null },
+  ]);
+  assert.equal(allReadDashboard.activity.unreadCount, 0);
+  assert.equal(allReadDashboard.activity.unreadCountUnavailable, false);
+
+  // Mark 1 notification as unread out of 8 total
+  const oneUnreadRows = notificationsRows.map((row, idx) =>
+    idx === 2 ? { ...row, read_at: null } : row,
+  );
+  const oneUnreadSupabase = createSupabase({
+    tables: {
+      notifications: {
+        data: oneUnreadRows,
+        error: null,
+      },
+    },
+  });
+  const oneUnreadDashboard = await getHomeDashboardData(
+    oneUnreadSupabase,
+    memberId,
+    now,
+  );
+  assert.equal(oneUnreadDashboard.activity.unreadCount, 1);
 });

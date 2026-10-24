@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { castAnnouncementPollVoteAction } from "@/app/actions";
+import { FormSubmitButton } from "@/components/ui";
 import { percentWidthClass } from "@/lib/percent-width-class";
 import type { PollItem } from "./communications-types";
 import { PollEditModal } from "./poll-edit-modal";
@@ -184,13 +185,14 @@ export function PollCard({ poll }: PollCardProps) {
                     </span>
                   </p>
 
-                  <button
-                    type="submit"
+                  <FormSubmitButton
                     disabled={!selectedOptionId || !confirmed}
                     className="cf-btn cf-btn--primary shrink-0"
+                    pendingLabel="Recording Vote…"
+                    statusToastMessage="Sealing your anonymous ballot."
                   >
                     Submit Final Vote
-                  </button>
+                  </FormSubmitButton>
                 </div>
               </div>
             </form>

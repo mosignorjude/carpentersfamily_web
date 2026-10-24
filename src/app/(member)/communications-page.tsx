@@ -75,8 +75,11 @@ type EventRow = { id: string; title: string; archived_at: string | null };
 
 const notices: Record<string, string> = {
   created: "The announcement was posted.",
+  "announcement-created": "The announcement was posted.",
   updated: "The announcement edit and its reason were saved.",
+  "announcement-updated": "The announcement edit and its reason were saved.",
   read: "Your private read marker was saved.",
+  "announcement-read": "Your private read marker was saved.",
   "poll-created": "The poll is open for voting.",
   "poll-updated": "The poll edit and its reason were saved.",
   voted: "Your final vote was recorded.",

@@ -697,3 +697,335 @@ test("user profile badge: component supports desktop inline, mobile dropdown, an
     "Client component user-profile-badge must not export server utilities",
   );
 });
+
+// ============================================================================
+// 5. NOTIFICATION & NOTICE HARDENING AUDIT VERIFICATION
+// ============================================================================
+
+test("notification hardening: GlobalFlashListener rejects arbitrary unallowlisted notice strings and avoids auth duplicate toasts", async () => {
+  const fs = await import("node:fs");
+  const listenerSource = fs.readFileSync(
+    "src/components/ui/global-flash-listener.tsx",
+    "utf8",
+  );
+
+  assert.ok(
+    !listenerSource.includes("message: noticeCode"),
+    "GlobalFlashListener must never echo raw unallowlisted noticeCode strings as toast messages",
+  );
+  assert.ok(
+    listenerSource.includes("INLINE_NOTICE_ROUTES") &&
+      listenerSource.includes("ROOT_INLINE_NOTICE_CODES"),
+    "GlobalFlashListener must skip public auth inline notice routes/codes to prevent duplicate alerts",
+  );
+  assert.ok(
+    listenerSource.includes("router.replace"),
+    "GlobalFlashListener must clean ?notice= via Next router.replace so repeated identical notices re-trigger",
+  );
+});
+
+test("notification hardening: every member/event/poll/comms notice slug emitted by server actions exists in SYSTEM_NOTICES", async () => {
+  const requiredSlugs = [
+    "announcement-created",
+    "announcement-updated",
+    "announcement-read",
+    "poll-created",
+    "poll-updated",
+    "voted",
+    "member-approved",
+    "member-rejected",
+    "member-deactivated",
+    "member-reactivated",
+    "role-updated",
+    "event-role-assigned",
+    "event-role-revoked",
+    "self-action-denied",
+    "already-checked-in",
+    "event-read-only",
+    "closed-or-locked",
+    "budget-exceeded",
+    "budget-required",
+    "already-processed",
+    "duplicate-record",
+    "invalid-state",
+  ];
+
+  for (const slug of requiredSlugs) {
+    const def = getSystemNotice(slug);
+    assert.ok(def, `Expected SYSTEM_NOTICES to define "${slug}"`);
+  }
+});
+
+test("notification hardening: Realtime publication, poll redirects, drawer rollback, and CSP-safe progress bars", async () => {
+  const fs = await import("node:fs");
+
+  const migrationSource = fs.readFileSync(
+    "supabase/migrations/20261024140000_notification_system_hardening.sql",
+    "utf8",
+  );
+  assert.ok(
+    migrationSource.includes(
+      "alter publication supabase_realtime add table public.notifications",
+    ),
+    "Migration must publish public.notifications to supabase_realtime",
+  );
+  assert.ok(
+    migrationSource.includes("poll-closing:"),
+    "Migration must deduplicate poll_closing cron jobs in private.notification_job_runs",
+  );
+
+  const actionsSource = fs.readFileSync("src/app/actions.ts", "utf8");
+  assert.ok(
+    actionsSource.includes('redirect(pollNotice("poll-created"))') &&
+      actionsSource.includes('redirect(pollNotice("poll-updated"))') &&
+      actionsSource.includes('redirect(pollNotice("voted"))'),
+    "Poll actions must redirect back to /polls instead of /announcements",
+  );
+
+  const drawerSource = fs.readFileSync(
+    "src/components/notifications/notifications-drawer.tsx",
+    "utf8",
+  );
+  assert.ok(
+    drawerSource.includes("useModalHygiene({ isOpen, onClose })"),
+    "NotificationsDrawer must enforce useModalHygiene",
+  );
+
+  const flashSource = fs.readFileSync(
+    "src/components/ui/flash-card.tsx",
+    "utf8",
+  );
+  const progressSource = fs.readFileSync(
+    "src/components/ui/navigation-progress-bar.tsx",
+    "utf8",
+  );
+  assert.ok(
+    !flashSource.includes("style={{") && !progressSource.includes("style={{"),
+    "FlashCard and NavigationProgressBar must not use inline style attributes blocked by CSP style-src-attr 'none'",
+  );
+});
+
+// ============================================================================
+// 6. ACTION STATUS TOAST & PENDING MODAL OVERLAY VERIFICATION
+// ============================================================================
+
+test("action status toast: FlashCard supports 'loading' state, dispatchActionStatusToast, and auto-replaces in-flight loading toasts", async () => {
+  const fs = await import("node:fs");
+  const flashSource = fs.readFileSync(
+    "src/components/ui/flash-card.tsx",
+    "utf8",
+  );
+  const buttonSource = fs.readFileSync(
+    "src/components/ui/cf-button.tsx",
+    "utf8",
+  );
+
+  assert.ok(
+    flashSource.includes('| "loading"') &&
+      flashSource.includes("export function dispatchActionStatusToast"),
+    "FlashCard must support 'loading' FlashCardType and export dispatchActionStatusToast",
+  );
+  assert.ok(
+    flashSource.includes('prev.filter((c) => c.type !== "loading")'),
+    "FlashCardContainer must automatically replace any in-flight 'loading' toast when a new or terminal toast arrives",
+  );
+  assert.ok(
+    buttonSource.includes("dispatchActionStatusToast"),
+    "FormSubmitButton must automatically dispatch an Action Status Toast when form submission enters pending state",
+  );
+});
+
+test("action status toast: Member Administration and Event Dashboard modals stay open with spinner and dispatch status toasts", async () => {
+  const fs = await import("node:fs");
+  const memberViewSource = fs.readFileSync(
+    "src/components/admin/members/member-admin-page-view.tsx",
+    "utf8",
+  );
+  const memberModalsSource = fs.readFileSync(
+    "src/components/admin/members/member-admin-modals.tsx",
+    "utf8",
+  );
+  const eventDashboardSource = fs.readFileSync(
+    "src/components/events/dashboard/event-dashboard-view.tsx",
+    "utf8",
+  );
+  const recordTxnModalSource = fs.readFileSync(
+    "src/components/events/dashboard/modals/record-transaction-modal.tsx",
+    "utf8",
+  );
+  const voidTxnModalSource = fs.readFileSync(
+    "src/components/events/dashboard/modals/void-transaction-modal.tsx",
+    "utf8",
+  );
+
+  // Member Admin checks
+  for (const expectedTitle of [
+    "Approving Member",
+    "Declining Request",
+    "Deactivating Member",
+    "Reactivating Member",
+    "Updating Club Role",
+    "Assigning Event Role",
+    "Removing Event Role",
+  ]) {
+    assert.ok(
+      memberViewSource.includes(expectedTitle),
+      `MemberAdminPageView must dispatch Action Status Toast "${expectedTitle}"`,
+    );
+  }
+  assert.ok(
+    memberViewSource.includes("isPending={isPending}"),
+    "MemberAdminPageView must pass isPending to MemberAdminModals",
+  );
+  assert.ok(
+    memberModalsSource.includes("Approving Member…") &&
+      memberModalsSource.includes("Declining Request…") &&
+      memberModalsSource.includes("Deactivating…") &&
+      memberModalsSource.includes("Reactivating…") &&
+      memberModalsSource.includes("Updating Role…") &&
+      memberModalsSource.includes("Assigning Role…") &&
+      memberModalsSource.includes("Removing Role…"),
+    "All 7 MemberAdminModals confirmation buttons must render an in-flight pending state",
+  );
+
+  // Event Dashboard checks
+  for (const expectedTitle of [
+    "Recording Ticket Sale…",
+    "Recording Revenue…",
+    "Recording Disbursement…",
+    "Refunding Ticket Sale…",
+    "Voiding Ledger Record…",
+  ]) {
+    assert.ok(
+      eventDashboardSource.includes(expectedTitle),
+      `EventDashboardView must dispatch Action Status Toast "${expectedTitle}"`,
+    );
+  }
+  assert.ok(
+    recordTxnModalSource.includes("Posting Ticket Sale…") &&
+      voidTxnModalSource.includes("Voiding Record…"),
+    "RecordTransactionModal and VoidTransactionModal must display pending spinner states while server action is in flight",
+  );
+});
+
+// ============================================================================
+// 11. MOBILE AUTH CENTERING & SELF-HOSTED FONT PARITY
+// ============================================================================
+
+test("mobile auth centering and self-hosted font parity across dev and prod", async () => {
+  const fs = await import("node:fs");
+  const layoutContent = fs.readFileSync("src/app/layout.tsx", "utf8");
+  const cssContent = fs.readFileSync("src/app/globals.css", "utf8");
+  const proxyContent = fs.readFileSync("src/proxy.ts", "utf8");
+
+  // 1. Self-hosted fonts in layout.tsx & public/fonts
+  assert.ok(
+    layoutContent.includes('import localFont from "next/font/local"'),
+    "src/app/layout.tsx must use next/font/local instead of network-dependent next/font/google",
+  );
+  assert.ok(
+    layoutContent.includes("../fonts/dm-sans-latin.woff2") &&
+      layoutContent.includes("../fonts/ibm-plex-sans-latin.woff2"),
+    "src/app/layout.tsx must point to local DM Sans and IBM Plex Sans .woff2 files",
+  );
+  for (const fontPath of [
+    "src/fonts/dm-sans-latin.woff2",
+    "src/fonts/dm-sans-latin-ext.woff2",
+    "src/fonts/ibm-plex-sans-latin.woff2",
+    "src/fonts/ibm-plex-sans-latin-ext.woff2",
+    "public/fonts/dm-sans-latin.woff2",
+    "public/fonts/dm-sans-latin-ext.woff2",
+    "public/fonts/ibm-plex-sans-latin.woff2",
+    "public/fonts/ibm-plex-sans-latin-ext.woff2",
+  ]) {
+    assert.ok(
+      fs.existsSync(fontPath),
+      `Expected self-hosted font file ${fontPath} to exist`,
+    );
+  }
+
+  // 2. Proxy matcher excludes .woff2 static font requests
+  assert.ok(
+    proxyContent.includes("woff2"),
+    "src/proxy.ts matcher must exclude .woff2 font requests",
+  );
+
+  // 3. globals.css registers @font-face and @theme --font-sans
+  assert.ok(
+    cssContent.includes('font-family: "DM Sans"') &&
+      cssContent.includes('font-family: "IBM Plex Sans"') &&
+      cssContent.includes('url("/fonts/dm-sans-latin-ext.woff2")'),
+    "src/app/globals.css must declare self-hosted @font-face rules for DM Sans and IBM Plex Sans including latin-ext (U+20A6 Naira symbol)",
+  );
+
+  // 4. Mobile auth pages keep brand, heading, and intro centered
+  const mobileMediaMatch = cssContent.match(
+    /@media\s*\(max-width:\s*56rem\)\s*\{([\s\S]*?)\n\}/,
+  );
+  assert.ok(
+    mobileMediaMatch,
+    "Expected @media (max-width: 56rem) block in src/app/globals.css",
+  );
+  const mobileBlock = mobileMediaMatch[1];
+  assert.ok(
+    !mobileBlock.includes("justify-content: flex-start"),
+    "@media (max-width: 56rem) must not override .signin-brand to justify-content: flex-start",
+  );
+  assert.ok(
+    !mobileBlock.includes("text-align: left"),
+    "@media (max-width: 56rem) must not override .signin-heading to text-align: left",
+  );
+  assert.ok(
+    !mobileBlock.includes("margin-inline: 0"),
+    "@media (max-width: 56rem) must not override .signin-intro to margin-inline: 0",
+  );
+});
+
+// ============================================================================
+// 12. NOTIFICATION SYNC PURITY (NO STRICT-MODE DOUBLE-INCREMENT)
+// ============================================================================
+
+test("notification sync: AppHeader, NotificationsDrawer, and PersonalNotificationsCard never double-increment unreadCount", async () => {
+  const fs = await import("node:fs");
+  const headerSource = fs.readFileSync("src/components/app-header.tsx", "utf8");
+  const drawerSource = fs.readFileSync(
+    "src/components/notifications/notifications-drawer.tsx",
+    "utf8",
+  );
+  const homeCardSource = fs.readFileSync(
+    "src/components/home/personal-notifications-card.tsx",
+    "utf8",
+  );
+
+  // 1. AppHeader must never call setNotifications((prev) => { ... setUnreadCount(...) ... })
+  assert.ok(
+    !headerSource.includes("setNotifications((prev) =>"),
+    "AppHeader must not nest setUnreadCount inside a setNotifications((prev) => ...) updater (causes StrictMode double-invocation)",
+  );
+
+  // 2. PersonalNotificationsCard handleMarkUnread/handleMarkRead must delegate count updates to NOTIFICATION_SYNC_EVENT
+  const markUnreadMatch = homeCardSource.match(
+    /async function handleMarkUnread[\s\S]*?setIsPending\(false\);/,
+  );
+  assert.ok(
+    markUnreadMatch,
+    "Expected handleMarkUnread in PersonalNotificationsCard",
+  );
+  assert.ok(
+    !markUnreadMatch[0].includes("setUnreadCount("),
+    "handleMarkUnread in PersonalNotificationsCard must not call setUnreadCount directly alongside dispatchNotificationSync",
+  );
+
+  // 3. NotificationsDrawer handleMarkSingleUnread/Read must delegate count updates to NOTIFICATION_SYNC_EVENT
+  const drawerUnreadMatch = drawerSource.match(
+    /async function handleMarkSingleUnread[\s\S]*?setIsPending\(false\);/,
+  );
+  assert.ok(
+    drawerUnreadMatch,
+    "Expected handleMarkSingleUnread in NotificationsDrawer",
+  );
+  assert.ok(
+    !drawerUnreadMatch[0].includes("onUnreadCountChange"),
+    "handleMarkSingleUnread in NotificationsDrawer must not call onUnreadCountChange alongside dispatchNotificationSync",
+  );
+});

@@ -3,6 +3,7 @@
 import { ChevronDown, ChevronUp, Lock, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { createAnnouncementPollAction } from "@/app/actions";
+import { FormSubmitButton } from "@/components/ui";
 import type { EventOption } from "./communications-types";
 
 interface CreatePollDisclosureProps {
@@ -301,9 +302,13 @@ export function CreatePollDisclosure({
               >
                 Cancel
               </button>
-              <button type="submit" className="cf-btn cf-btn--primary">
+              <FormSubmitButton
+                className="cf-btn cf-btn--primary"
+                pendingLabel="Opening Poll…"
+                statusToastMessage="Publishing anonymous consultation ballot."
+              >
                 Open Poll
-              </button>
+              </FormSubmitButton>
             </div>
           </form>
         </div>

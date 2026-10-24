@@ -7,6 +7,7 @@ import {
   openEventAttendanceAction,
   setAttendanceDefaultAction,
 } from "@/app/actions";
+import { FormSubmitButton } from "@/components/ui";
 import { AttendanceQrIssuer } from "./attendance-controls";
 import type { SessionRow } from "./attendance-types";
 
@@ -196,12 +197,13 @@ export function OfficerSessionControls({
                   </span>
                 </div>
 
-                <button
+                <FormSubmitButton
                   className="px-5 py-2.5 rounded-xl bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-bold transition-colors shadow-xs cursor-pointer min-h-[42px]"
-                  type="submit"
+                  pendingLabel="Opening Session…"
+                  statusToastMessage="Opening live attendance check-in session."
                 >
                   Open Attendance Session Now
-                </button>
+                </FormSubmitButton>
               </form>
             </div>
           )}
@@ -248,12 +250,13 @@ export function OfficerSessionControls({
                   {returnTo && (
                     <input name="return_to" type="hidden" value={returnTo} />
                   )}
-                  <button
+                  <FormSubmitButton
                     className="w-full px-4 py-2.5 rounded-xl bg-[#BA3C2A] hover:bg-[#9B2F20] text-white text-xs font-bold transition-colors shadow-xs cursor-pointer min-h-[42px]"
-                    type="submit"
+                    pendingLabel="Closing Session…"
+                    statusToastMessage="Concluding session and finalizing attendance roster."
                   >
                     Close Session & Mark Missing Absent
-                  </button>
+                  </FormSubmitButton>
                 </form>
               </div>
             </div>
@@ -321,12 +324,13 @@ export function OfficerSessionControls({
             </div>
 
             <div className="pt-2">
-              <button
+              <FormSubmitButton
                 className="px-5 py-2.5 rounded-xl bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-bold transition-colors shadow-xs cursor-pointer min-h-[42px]"
-                type="submit"
+                pendingLabel="Saving Cutoff Policy…"
+                statusToastMessage="Updating club-wide attendance cutoff policy."
               >
                 Save Club-Wide Default Policy
-              </button>
+              </FormSubmitButton>
             </div>
           </form>
         </div>
