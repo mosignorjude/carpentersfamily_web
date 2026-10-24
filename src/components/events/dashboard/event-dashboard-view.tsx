@@ -26,6 +26,8 @@ import {
   refundEventTicketSaleAction,
   voidEventFinancialTransactionAction,
 } from "@/app/actions";
+import { dispatchActionStatusToast } from "@/components/ui/flash-card";
+import { useSuccessNotice } from "@/components/ui/use-success-notice";
 import { downloadLedgerCSV } from "@/lib/format";
 import type {
   ActivityLogItem,
@@ -109,34 +111,14 @@ export function EventDashboardView({
   notice: _notice,
 }: EventDashboardViewProps) {
   const [activeTab, setActiveTab] = useState<DashboardTab>(initialTab);
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
-  // Local state synchronized with server props
-  const [ticketTiers, setTicketTiers] =
-    useState<DashboardTicketTier[]>(initialTicketTiers);
-  const [revenueStreams, setRevenueStreams] = useState<
-    DashboardRevenueStream[]
-  >(initialRevenueStreams);
-  const [costCenters, setCostCenters] =
-    useState<DashboardCostCenter[]>(initialCostCenters);
-  const [transactions, setTransactions] =
-    useState<DashboardTransaction[]>(initialTransactions);
-  const [activityLogs, setActivityLogs] =
-    useState<ActivityLogItem[]>(initialActivityLogs);
-
-  useEffect(() => {
-    setTicketTiers(initialTicketTiers);
-    setRevenueStreams(initialRevenueStreams);
-    setCostCenters(initialCostCenters);
-    setTransactions(initialTransactions);
-    setActivityLogs(initialActivityLogs);
-  }, [
-    initialTicketTiers,
-    initialRevenueStreams,
-    initialCostCenters,
-    initialTransactions,
-    initialActivityLogs,
-  ]);
+  // Authoritative state from server props (updated via revalidatePath on success)
+  const ticketTiers = initialTicketTiers;
+  const revenueStreams = initialRevenueStreams;
+  const costCenters = initialCostCenters;
+  const transactions = initialTransactions;
+  const activityLogs = initialActivityLogs;
 
   // Modals state
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
@@ -159,6 +141,12 @@ export function EventDashboardView({
   const [categoryModalType, setCategoryModalType] = useState<
     "expense" | "budget_allocation" | "revenue"
   >("expense");
+
+  useSuccessNotice(() => {
+    setIsRecordModalOpen(false);
+    setIsVoidModalOpen(false);
+    setTransactionToVoid(null);
+  });
 
   // Synchronize hash with tab
   useEffect(() => {
@@ -229,80 +217,7 @@ export function EventDashboardView({
 
   // Handlers
   const handleSaveTransaction = (txnData: RecordedTransactionSubmission) => {
-    const newTxnId = `TXN-2026-${String(transactions.length + 1).padStart(3, "0")}`;
-    const newTxn: DashboardTransaction = {
-      ...txnData,
-      id: newTxnId,
-      status: "posted",
-    };
-
-    setTransactions((prev) => [newTxn, ...prev]);
-
-    // Update tickets tier if ticket_sales
-    if (txnData.category === "ticket_sales") {
-      setTicketTiers((prev) =>
-        prev.map((tier) => {
-          if (
-            tier.id === txnData.tierId ||
-            txnData.description.toLowerCase().includes(tier.name.toLowerCase())
-          ) {
-            const qty = txnData.ticketQuantity ?? 1;
-            const nextSold = Math.min(tier.capacity, tier.sold + qty);
-            return {
-              ...tier,
-              sold: nextSold,
-              status: nextSold >= tier.capacity ? "sold_out" : tier.status,
-            };
-          }
-          return tier;
-        }),
-      );
-    }
-
-    // Update cost center spent amount if expense
-    if (txnData.type === "expense") {
-      setCostCenters((prev) =>
-        prev.map((c) => {
-          if (
-            c.id === txnData.category ||
-            c.categoryId === txnData.category ||
-            c.name.toLowerCase() === txnData.categoryLabel.toLowerCase()
-          ) {
-            return {
-              ...c,
-              spent: c.spent + txnData.amount,
-              items: [
-                {
-                  name: txnData.description,
-                  allocated: c.allocated,
-                  spent: txnData.amount,
-                  vendor: txnData.payerPayee,
-                },
-                ...c.items,
-              ],
-            };
-          }
-          return c;
-        }),
-      );
-    }
-
-    // Add activity log
-    const newLog: ActivityLogItem = {
-      id: `LOG-${Date.now().toString().slice(-4)}`,
-      action:
-        txnData.type === "revenue"
-          ? "Revenue Receipt Posted"
-          : "Disbursement Recorded",
-      category: txnData.categoryLabel,
-      details: `${txnData.description} for ₦${txnData.amount.toLocaleString()}`,
-      user: txnData.authorizedBy,
-      userRole: txnData.authorizerRole,
-      timestamp: txnData.date,
-    };
-    setActivityLogs((prev) => [newLog, ...prev]);
-
-    // Persist in Supabase via server actions
+    // Persist in Supabase via server actions; server revalidates on success
     const idempotencyKey =
       typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
         ? crypto.randomUUID()
@@ -317,6 +232,10 @@ export function EventDashboardView({
       fd.set("buyer_name", txnData.payerPayee.slice(0, 160));
       fd.set("payment_method", dbMethod);
       fd.set("idempotency_key", idempotencyKey);
+      dispatchActionStatusToast({
+        title: "Recording Ticket Sale…",
+        message: `Issuing ${txnData.ticketQuantity ?? 1} pass(es) for ${txnData.payerPayee}.`,
+      });
       startTransition(() => {
         void recordEventTicketSaleAction(fd);
       });
@@ -367,6 +286,13 @@ export function EventDashboardView({
       fd.set("payer_payee", txnData.payerPayee.slice(0, 160));
     }
 
+    dispatchActionStatusToast({
+      title:
+        txnData.type === "revenue"
+          ? "Recording Revenue…"
+          : "Recording Disbursement…",
+      message: `Posting ${txnData.categoryLabel} (${txnData.payerPayee}) to the event ledger.`,
+    });
     startTransition(() => {
       void recordEventFinancialTransactionAction(fd);
     });
@@ -374,39 +300,8 @@ export function EventDashboardView({
 
   const handleConfirmVoid = (txnId: string, reason: string) => {
     const targetTxn = transactions.find((t) => t.id === txnId);
-    const now = new Date();
-    const watTime = `${now.toISOString().slice(0, 10)} ${now
-      .getHours()
-      .toString()
-      .padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
 
-    setTransactions((prev) =>
-      prev.map((t) => {
-        if (t.id === txnId) {
-          return {
-            ...t,
-            status: "voided",
-            voidReason: reason,
-            voidedBy: "Club Administrator",
-            voidedAt: watTime,
-          };
-        }
-        return t;
-      }),
-    );
-
-    const voidLog: ActivityLogItem = {
-      id: `LOG-${Date.now().toString().slice(-4)}`,
-      action: "Ledger Record Voided",
-      category: "Audit & Policy",
-      details: `Voided ${txnId}. Stated Reason: ${reason}`,
-      user: "Club Administrator",
-      userRole: "Admin",
-      timestamp: watTime,
-    };
-    setActivityLogs((prev) => [voidLog, ...prev]);
-
-    // Persist in Supabase via server actions
+    // Persist in Supabase via server actions; server revalidates on success
     if (
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
         txnId,
@@ -417,11 +312,19 @@ export function EventDashboardView({
       fd.set("reason", reason.slice(0, 500));
       if (targetTxn?.category === "ticket_sales") {
         fd.set("sale_id", txnId);
+        dispatchActionStatusToast({
+          title: "Refunding Ticket Sale…",
+          message: `Reversing ticket sale ${txnId} and restoring tier capacity.`,
+        });
         startTransition(() => {
           void refundEventTicketSaleAction(fd);
         });
       } else {
         fd.set("transaction_id", txnId);
+        dispatchActionStatusToast({
+          title: "Voiding Ledger Record…",
+          message: `Reversing transaction ${txnId} with audit trail.`,
+        });
         startTransition(() => {
           void voidEventFinancialTransactionAction(fd);
         });
@@ -751,7 +654,10 @@ export function EventDashboardView({
         initialCategory={recordInitialCategory}
         initialType={recordInitialType}
         isOpen={isRecordModalOpen}
-        onClose={() => setIsRecordModalOpen(false)}
+        isPending={isPending}
+        onClose={() => {
+          if (!isPending) setIsRecordModalOpen(false);
+        }}
         onSave={handleSaveTransaction}
         ticketTiers={ticketTiers}
         userRole={userRole}
@@ -759,9 +665,12 @@ export function EventDashboardView({
 
       <VoidTransactionModal
         isOpen={isVoidModalOpen}
+        isPending={isPending}
         onClose={() => {
-          setIsVoidModalOpen(false);
-          setTransactionToVoid(null);
+          if (!isPending) {
+            setIsVoidModalOpen(false);
+            setTransactionToVoid(null);
+          }
         }}
         onConfirmVoid={handleConfirmVoid}
         transaction={transactionToVoid}

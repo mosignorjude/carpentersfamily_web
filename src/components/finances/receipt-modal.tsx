@@ -2,6 +2,7 @@
 
 import { Download, FileText, Paperclip, Upload, X } from "lucide-react";
 import type { FinanceTransaction } from "@/app/(member)/finances/finance-forms";
+import { FormSubmitButton } from "@/components/ui";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 
 export type FinanceReceipt = {
@@ -206,12 +207,13 @@ export function ReceiptModal({
               </div>
 
               <div className="flex justify-end pt-1">
-                <button
+                <FormSubmitButton
                   className="px-4 py-2 rounded-lg bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-bold transition-colors shadow-xs cursor-pointer"
-                  type="submit"
+                  pendingLabel="Uploading Receipt…"
+                  statusToastMessage="Uploading and verifying voucher attachment."
                 >
                   Upload & Verify Receipt
-                </button>
+                </FormSubmitButton>
               </div>
             </form>
           )}

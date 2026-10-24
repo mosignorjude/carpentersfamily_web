@@ -3,6 +3,7 @@
 import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { useState } from "react";
 import { createAnnouncementAction } from "@/app/actions";
+import { FormSubmitButton } from "@/components/ui";
 import type { EventOption } from "./communications-types";
 
 interface PublishAnnouncementDisclosureProps {
@@ -187,9 +188,13 @@ export function PublishAnnouncementDisclosure({
               >
                 Cancel
               </button>
-              <button type="submit" className="cf-btn cf-btn--primary">
+              <FormSubmitButton
+                className="cf-btn cf-btn--primary"
+                pendingLabel="Publishing Notice…"
+                statusToastMessage="Broadcasting official notice to club members."
+              >
                 Publish Notice
-              </button>
+              </FormSubmitButton>
             </div>
           </form>
         </div>

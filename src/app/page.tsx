@@ -25,6 +25,8 @@ import { formatPrimaryRole } from "@/lib/user-profile";
 
 const notices: Record<string, string> = {
   credentials: "The email or password could not be verified.",
+  "auth-failed":
+    "Sign in could not be completed. Try again or use a different sign-in method.",
   configuration: "Authentication is not configured for this environment.",
   "google-unavailable": "Google isn’t available in this environment.",
   "password-updated": "Your password was updated.",
@@ -344,7 +346,10 @@ export default async function HomePage({
     : (assignmentResult.data ?? []).map((assignment) => assignment.role);
   const navigationItems = getNavigationItems(roles);
   const notifications = (notificationResult.data ?? []) as AppNotification[];
-  const unreadCount = notifications.filter((n) => n.read_at === null).length;
+  const unreadCount =
+    typeof dashboard.activity.unreadCount === "number"
+      ? dashboard.activity.unreadCount
+      : notifications.filter((n) => n.read_at === null).length;
   const searchData = {
     events: (eventsResult.data ?? []).map((e) => ({
       id: e.id,

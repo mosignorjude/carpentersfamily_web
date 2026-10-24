@@ -2,6 +2,7 @@
 
 import { Edit3, Lock, X } from "lucide-react";
 import { updateAnnouncementPollAction } from "@/app/actions";
+import { FormSubmitButton } from "@/components/ui";
 import type { PollItem } from "./communications-types";
 
 interface PollEditModalProps {
@@ -210,9 +211,13 @@ export function PollEditModal({ poll, isOpen, onClose }: PollEditModalProps) {
             >
               Cancel
             </button>
-            <button type="submit" className="cf-btn cf-btn--primary">
+            <FormSubmitButton
+              className="cf-btn cf-btn--primary"
+              pendingLabel="Saving Poll…"
+              statusToastMessage="Updating poll parameters and audit trail."
+            >
               Save Poll Edit
-            </button>
+            </FormSubmitButton>
           </div>
         </form>
       </div>

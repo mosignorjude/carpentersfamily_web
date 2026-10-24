@@ -4,6 +4,7 @@ import { Edit3, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { updateEventDetailsAction } from "@/app/actions";
 import { FormFieldHint } from "@/components/ui";
+import { dispatchActionStatusToast } from "@/components/ui/flash-card";
 import type { EventRow } from "./event-types";
 
 interface EventEditModalProps {
@@ -123,7 +124,13 @@ export function EventEditModal({
         <form
           action={updateEventDetailsAction}
           className="p-6 space-y-4 overflow-y-auto"
-          onSubmit={() => setIsPending(true)}
+          onSubmit={() => {
+            setIsPending(true);
+            dispatchActionStatusToast({
+              title: "Saving Event Details…",
+              message: `Updating logistics and schedule for ${event.title}.`,
+            });
+          }}
         >
           <input name="event_id" type="hidden" value={event.id} />
 

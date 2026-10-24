@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import QRCode from "qrcode";
 import { parseClubRoleRequest } from "@/lib/club-role-request.mjs";
 import { parseExecutiveRoleRequest } from "@/lib/executive-role-request.mjs";
+import { rpcErrorNotice } from "@/lib/rpc-error-notice";
 import { getSiteOrigin, isGoogleAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -460,7 +461,7 @@ export async function recordDuesPaymentAction(formData: FormData) {
     p_payment_date: paymentDate,
     p_covered_months: months,
   });
-  if (error) redirect(duesNoticeUrl("operation-failed", memberId));
+  if (error) redirect(duesNoticeUrl(rpcErrorNotice(error), memberId));
 
   revalidatePath("/dues");
   redirect(duesNoticeUrl("saved", memberId));
@@ -494,7 +495,7 @@ export async function writeOffDuesAction(formData: FormData) {
     p_covered_months: months,
     p_reason: reason,
   });
-  if (error) redirect(duesNoticeUrl("operation-failed", memberId));
+  if (error) redirect(duesNoticeUrl(rpcErrorNotice(error), memberId));
 
   revalidatePath("/dues");
   redirect(duesNoticeUrl("saved", memberId));
@@ -534,7 +535,7 @@ export async function correctDuesPaymentAction(formData: FormData) {
     p_covered_months: months,
     p_reason: reason,
   });
-  if (error) redirect(duesNoticeUrl("operation-failed", memberId));
+  if (error) redirect(duesNoticeUrl(rpcErrorNotice(error), memberId));
 
   revalidatePath("/dues");
   redirect(duesNoticeUrl("saved", memberId));
@@ -568,7 +569,7 @@ export async function setDuesRateAction(formData: FormData) {
     p_monthly_amount_ngn: amount,
     p_reason: reason,
   });
-  if (error) redirect(duesNoticeUrl("operation-failed"));
+  if (error) redirect(duesNoticeUrl(rpcErrorNotice(error)));
 
   revalidatePath("/dues");
   redirect(duesNoticeUrl("rate-saved"));
@@ -612,7 +613,7 @@ export async function submitDuesPaymentRequestAction(formData: FormData) {
   });
 
   if (error) {
-    redirect(duesNoticeUrl("operation-failed"));
+    redirect(duesNoticeUrl(rpcErrorNotice(error)));
   }
 
   revalidatePath("/dues");
@@ -639,7 +640,7 @@ export async function approveDuesPaymentRequestAction(formData: FormData) {
   });
 
   if (error) {
-    redirect(duesNoticeUrl("operation-failed"));
+    redirect(duesNoticeUrl(rpcErrorNotice(error)));
   }
 
   revalidatePath("/dues");
@@ -674,7 +675,7 @@ export async function rejectDuesPaymentRequestAction(formData: FormData) {
   });
 
   if (error) {
-    redirect(duesNoticeUrl("operation-failed"));
+    redirect(duesNoticeUrl(rpcErrorNotice(error)));
   }
 
   revalidatePath("/dues");
@@ -731,7 +732,7 @@ export async function recordClubFinanceAction(formData: FormData) {
       p_idempotency_key: idempotencyKey,
     },
   );
-  if (error) redirect(financeNoticeUrl("operation-failed"));
+  if (error) redirect(financeNoticeUrl(rpcErrorNotice(error)));
 
   revalidatePath("/finances");
   redirect(financeNoticeUrl("saved"));
@@ -782,7 +783,7 @@ export async function correctClubFinanceAction(formData: FormData) {
       p_reason: reason,
     },
   );
-  if (error) redirect(financeNoticeUrl("operation-failed"));
+  if (error) redirect(financeNoticeUrl(rpcErrorNotice(error)));
 
   revalidatePath("/finances");
   redirect(financeNoticeUrl("corrected"));
@@ -808,7 +809,7 @@ export async function voidClubFinanceAction(formData: FormData) {
     "void_club_financial_transaction",
     { p_transaction_id: transactionId, p_reason: reason },
   );
-  if (error) redirect(financeNoticeUrl("operation-failed"));
+  if (error) redirect(financeNoticeUrl(rpcErrorNotice(error)));
 
   revalidatePath("/finances");
   redirect(financeNoticeUrl("voided"));
@@ -834,7 +835,7 @@ export async function createFinanceCategoryAction(formData: FormData) {
     p_name: name,
     p_reason: reason,
   });
-  if (error) redirect(financeNoticeUrl("operation-failed"));
+  if (error) redirect(financeNoticeUrl(rpcErrorNotice(error)));
 
   revalidatePath("/finances");
   redirect(financeNoticeUrl("category-saved"));
@@ -859,7 +860,7 @@ export async function retireFinanceCategoryAction(formData: FormData) {
     p_category_id: categoryId,
     p_reason: reason,
   });
-  if (error) redirect(financeNoticeUrl("operation-failed"));
+  if (error) redirect(financeNoticeUrl(rpcErrorNotice(error)));
 
   revalidatePath("/finances");
   redirect(financeNoticeUrl("category-retired"));
@@ -1070,14 +1071,16 @@ export async function memberLifecycleAction(formData: FormData) {
     p_member_id: memberId,
     p_reason: reason,
   });
-  if (error) redirect("/admin/members?notice=operation-failed");
+  if (error) redirect(`/admin/members?notice=${rpcErrorNotice(error)}`);
 
   revalidatePath("/admin/members");
-  redirect(
-    operation === "reject"
-      ? "/admin/members?notice=rejected"
-      : "/admin/members?notice=saved",
-  );
+  const lifecycleNotice = {
+    approve: "member-approved",
+    reject: "member-rejected",
+    deactivate: "member-deactivated",
+    reactivate: "member-reactivated",
+  }[operation];
+  redirect(`/admin/members?notice=${lifecycleNotice}`);
 }
 
 export async function executiveRoleAction(formData: FormData) {
@@ -1118,7 +1121,7 @@ export async function executiveRoleAction(formData: FormData) {
     p_role: "executive",
     p_reason: request.reason,
   });
-  if (error) redirect("/admin/members?notice=operation-failed");
+  if (error) redirect(`/admin/members?notice=${rpcErrorNotice(error)}`);
 
   revalidatePath("/admin/members");
   redirect("/admin/members?notice=role-updated");
@@ -1133,7 +1136,7 @@ export async function clubRoleChangeAction(formData: FormData) {
   if (authError || !authData.user) redirect("/?notice=sign-in");
 
   if (request.memberId === authData.user.id) {
-    redirect("/admin/members?notice=denied");
+    redirect("/admin/members?notice=self-action-denied");
   }
 
   const { data: profile, error: profileError } = await supabase
@@ -1164,7 +1167,7 @@ export async function clubRoleChangeAction(formData: FormData) {
     p_role: request.role,
     p_reason: request.reason,
   });
-  if (error) redirect("/admin/members?notice=operation-failed");
+  if (error) redirect(`/admin/members?notice=${rpcErrorNotice(error)}`);
 
   revalidatePath("/admin/members");
   redirect("/admin/members?notice=role-updated");
@@ -1242,7 +1245,7 @@ export async function createEventAction(formData: FormData) {
     p_expenses_enabled: expensesEnabled,
     p_ticketing_enabled: ticketingEnabled,
   });
-  if (error) redirect(eventNoticeUrl("operation-failed"));
+  if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
   revalidatePath("/events");
   redirect(eventNoticeUrl("created"));
 }
@@ -1296,7 +1299,7 @@ export async function updateEventDetailsAction(formData: FormData) {
     p_description: description,
     p_reason: reason,
   });
-  if (error) redirect(eventNoticeUrl("operation-failed"));
+  if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
   revalidatePath("/events");
   redirect(eventNoticeUrl("updated"));
 }
@@ -1344,10 +1347,10 @@ export async function assignEventRoleAction(formData: FormData) {
     p_role: role,
     p_reason: reason,
   });
-  if (error) redirect(eventRoleNoticeUrl("operation-failed", returnTo));
+  if (error) redirect(eventRoleNoticeUrl(rpcErrorNotice(error), returnTo));
   revalidatePath("/events");
   revalidatePath("/admin/members");
-  redirect(eventRoleNoticeUrl("role-saved", returnTo));
+  redirect(eventRoleNoticeUrl("event-role-assigned", returnTo));
 }
 
 export async function revokeEventRoleAction(formData: FormData) {
@@ -1373,10 +1376,10 @@ export async function revokeEventRoleAction(formData: FormData) {
     p_member_id: memberId,
     p_reason: reason,
   });
-  if (error) redirect(eventRoleNoticeUrl("operation-failed", returnTo));
+  if (error) redirect(eventRoleNoticeUrl(rpcErrorNotice(error), returnTo));
   revalidatePath("/events");
   revalidatePath("/admin/members");
-  redirect(eventRoleNoticeUrl("role-saved", returnTo));
+  redirect(eventRoleNoticeUrl("event-role-revoked", returnTo));
 }
 
 export async function setEventBudgetAction(formData: FormData) {
@@ -1455,7 +1458,7 @@ export async function setEventBudgetAction(formData: FormData) {
     p_allocations: allocations,
     p_reason: reason,
   });
-  if (error) redirect(eventNoticeUrl("operation-failed"));
+  if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
   revalidatePath("/events");
   redirect(eventNoticeUrl("budget-saved"));
 }
@@ -1487,7 +1490,7 @@ export async function setEventStatusAction(formData: FormData) {
     p_status: status,
     p_reason: reason,
   });
-  if (error) redirect(eventNoticeUrl("operation-failed"));
+  if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
   revalidatePath("/events");
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
@@ -1514,7 +1517,7 @@ export async function reopenEventAction(formData: FormData) {
     p_status: "scheduled",
     p_reason: reason,
   });
-  if (error) redirect(eventNoticeUrl("operation-failed"));
+  if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
   revalidatePath("/events");
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
@@ -1539,7 +1542,7 @@ export async function archiveEventAction(formData: FormData) {
     p_event_id: eventId,
     p_reason: reason,
   });
-  if (error) redirect(eventNoticeUrl("operation-failed"));
+  if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
   revalidatePath("/events");
   redirect(eventNoticeUrl("archived"));
 }
@@ -1613,7 +1616,7 @@ export async function createEventTicketTierAction(formData: FormData) {
     p_capacity: capacity,
     p_reason: reason,
   });
-  if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
   revalidatePath(`/events/${eventId}/finance`);
   redirect(eventFinanceNoticeUrl(eventId, "tier-saved"));
 }
@@ -1642,7 +1645,7 @@ export async function updateEventTicketTierAction(formData: FormData) {
     p_capacity: capacity,
     p_reason: reason,
   });
-  if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
   revalidatePath(`/events/${eventId}/finance`);
   redirect(eventFinanceNoticeUrl(eventId, "tier-saved"));
 }
@@ -1663,7 +1666,7 @@ export async function retireEventTicketTierAction(formData: FormData) {
     p_tier_id: tierId,
     p_reason: reason,
   });
-  if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
   revalidatePath(`/events/${eventId}/finance`);
   redirect(eventFinanceNoticeUrl(eventId, "tier-retired"));
 }
@@ -1811,7 +1814,7 @@ export async function recordEventFinancialTransactionAction(
       p_idempotency_key: idempotencyKey,
     },
   );
-  if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
   revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
@@ -1896,7 +1899,7 @@ export async function correctEventFinancialTransactionAction(
       p_reason: reason,
     },
   );
-  if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
   revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
@@ -1919,7 +1922,7 @@ export async function voidEventFinancialTransactionAction(formData: FormData) {
     "void_event_financial_transaction",
     { p_transaction_id: transactionId, p_reason: reason },
   );
-  if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
   revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
@@ -1980,7 +1983,7 @@ export async function recordEventTicketSaleAction(formData: FormData) {
     p_payment_method: paymentMethod,
     p_idempotency_key: idempotencyKey,
   });
-  if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
   revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
@@ -2036,7 +2039,7 @@ export async function editEventTicketSaleAction(formData: FormData) {
     p_payment_method: paymentMethod,
     p_reason: reason,
   });
-  if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
   revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
@@ -2059,7 +2062,7 @@ export async function refundEventTicketSaleAction(formData: FormData) {
     p_sale_id: saleId,
     p_reason: reason,
   });
-  if (error) redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
   revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
@@ -2093,7 +2096,9 @@ export async function saveEventMinutesAction(formData: FormData) {
     p_reason: reason,
   });
   if (error)
-    redirect(eventAttendanceNoticeUrl(eventId, "operation-failed", returnTo));
+    redirect(
+      eventAttendanceNoticeUrl(eventId, rpcErrorNotice(error), returnTo),
+    );
   revalidatePath(`/events/${eventId}/attendance`);
   revalidatePath("/events");
   revalidatePath("/attendance");
@@ -2130,7 +2135,9 @@ export async function setAttendanceDefaultAction(formData: FormData) {
     p_reason: reason,
   });
   if (error)
-    redirect(eventAttendanceNoticeUrl(eventId, "operation-failed", returnTo));
+    redirect(
+      eventAttendanceNoticeUrl(eventId, rpcErrorNotice(error), returnTo),
+    );
   revalidatePath(`/events/${eventId}/attendance`);
   revalidatePath("/events");
   revalidatePath("/attendance");
@@ -2160,7 +2167,9 @@ export async function openEventAttendanceAction(formData: FormData) {
     p_late_after_minutes: cutoff,
   });
   if (error)
-    redirect(eventAttendanceNoticeUrl(eventId, "operation-failed", returnTo));
+    redirect(
+      eventAttendanceNoticeUrl(eventId, rpcErrorNotice(error), returnTo),
+    );
   revalidatePath(`/events/${eventId}/attendance`);
   revalidatePath("/attendance");
   redirect(eventAttendanceNoticeUrl(eventId, "attendance-opened", returnTo));
@@ -2186,7 +2195,9 @@ export async function closeEventAttendanceAction(formData: FormData) {
     p_event_id: eventId,
   });
   if (error)
-    redirect(eventAttendanceNoticeUrl(eventId, "operation-failed", returnTo));
+    redirect(
+      eventAttendanceNoticeUrl(eventId, rpcErrorNotice(error), returnTo),
+    );
   revalidatePath(`/events/${eventId}/attendance`);
   revalidatePath("/attendance");
   redirect(eventAttendanceNoticeUrl(eventId, "attendance-closed", returnTo));
@@ -2216,7 +2227,9 @@ export async function checkInEventAttendanceAction(formData: FormData) {
     p_challenge_hash: challengeHash,
   });
   if (error)
-    redirect(eventAttendanceNoticeUrl(eventId, "operation-failed", returnTo));
+    redirect(
+      eventAttendanceNoticeUrl(eventId, rpcErrorNotice(error), returnTo),
+    );
   revalidatePath(`/events/${eventId}/attendance`);
   revalidatePath("/attendance");
   redirect(eventAttendanceNoticeUrl(eventId, "checked-in", returnTo));
@@ -2262,7 +2275,9 @@ export async function correctEventAttendanceAction(formData: FormData) {
     p_reason: reason,
   });
   if (error)
-    redirect(eventAttendanceNoticeUrl(eventId, "operation-failed", returnTo));
+    redirect(
+      eventAttendanceNoticeUrl(eventId, rpcErrorNotice(error), returnTo),
+    );
   revalidatePath(`/events/${eventId}/attendance`);
   revalidatePath("/attendance");
   redirect(eventAttendanceNoticeUrl(eventId, "attendance-corrected", returnTo));
@@ -2443,6 +2458,16 @@ function communicationNotice(notice: string) {
   return `/announcements?notice=${encodeURIComponent(notice)}`;
 }
 
+function pollNotice(notice: string) {
+  return `/polls?notice=${encodeURIComponent(notice)}`;
+}
+
+function revalidateCommunications() {
+  revalidatePath("/announcements");
+  revalidatePath("/polls");
+  revalidatePath("/");
+}
+
 function communicationPriority(formData: FormData) {
   if (!formData.has("priority")) return "standard" as const;
   const value = communicationSingleText(formData, "priority", 20);
@@ -2509,9 +2534,9 @@ export async function createAnnouncementAction(formData: FormData) {
           p_priority: priority,
           p_expires_at: expiresAt,
         });
-  if (error) redirect(communicationNotice("operation-failed"));
-  revalidatePath("/announcements");
-  redirect(communicationNotice("created"));
+  if (error) redirect(communicationNotice(rpcErrorNotice(error)));
+  revalidateCommunications();
+  redirect(communicationNotice("announcement-created"));
 }
 
 export async function updateAnnouncementAction(formData: FormData) {
@@ -2563,9 +2588,9 @@ export async function updateAnnouncementAction(formData: FormData) {
         p_message: message,
         p_reason: reason,
       });
-  if (error) redirect(communicationNotice("operation-failed"));
-  revalidatePath("/announcements");
-  redirect(communicationNotice("updated"));
+  if (error) redirect(communicationNotice(rpcErrorNotice(error)));
+  revalidateCommunications();
+  redirect(communicationNotice("announcement-updated"));
 }
 
 export async function markAnnouncementReadAction(formData: FormData) {
@@ -2579,9 +2604,9 @@ export async function markAnnouncementReadAction(formData: FormData) {
   const { error } = await supabase.rpc("mark_announcement_read", {
     p_announcement_id: announcementId,
   });
-  if (error) redirect(communicationNotice("operation-failed"));
-  revalidatePath("/announcements");
-  redirect(communicationNotice("read"));
+  if (error) redirect(communicationNotice(rpcErrorNotice(error)));
+  revalidateCommunications();
+  redirect(communicationNotice("announcement-read"));
 }
 
 export async function createAnnouncementPollAction(formData: FormData) {
@@ -2594,7 +2619,7 @@ export async function createAnnouncementPollAction(formData: FormData) {
       "options",
     ])
   ) {
-    redirect(communicationNotice("invalid-request"));
+    redirect(pollNotice("invalid-request"));
   }
   const eventId = communicationEventId(formData);
   const question = communicationSingleText(formData, "question", 300);
@@ -2610,7 +2635,7 @@ export async function createAnnouncementPollAction(formData: FormData) {
     !pollType ||
     !options
   ) {
-    redirect(communicationNotice("invalid-request"));
+    redirect(pollNotice("invalid-request"));
   }
 
   const supabase = await getActiveCommunicationActor();
@@ -2621,9 +2646,9 @@ export async function createAnnouncementPollAction(formData: FormData) {
     p_poll_type: pollType,
     p_options: options,
   });
-  if (error) redirect(communicationNotice("operation-failed"));
-  revalidatePath("/announcements");
-  redirect(communicationNotice("poll-created"));
+  if (error) redirect(pollNotice(rpcErrorNotice(error)));
+  revalidateCommunications();
+  redirect(pollNotice("poll-created"));
 }
 
 export async function updateAnnouncementPollAction(formData: FormData) {
@@ -2637,7 +2662,7 @@ export async function updateAnnouncementPollAction(formData: FormData) {
       "reason",
     ])
   ) {
-    redirect(communicationNotice("invalid-request"));
+    redirect(pollNotice("invalid-request"));
   }
   const pollId = communicationUuid(formData, "poll_id");
   const question = communicationSingleText(formData, "question", 300);
@@ -2655,7 +2680,7 @@ export async function updateAnnouncementPollAction(formData: FormData) {
     !options ||
     !reason
   ) {
-    redirect(communicationNotice("invalid-request"));
+    redirect(pollNotice("invalid-request"));
   }
 
   const supabase = await getActiveCommunicationActor();
@@ -2667,9 +2692,9 @@ export async function updateAnnouncementPollAction(formData: FormData) {
     p_options: options,
     p_reason: reason,
   });
-  if (error) redirect(communicationNotice("operation-failed"));
-  revalidatePath("/announcements");
-  redirect(communicationNotice("poll-updated"));
+  if (error) redirect(pollNotice(rpcErrorNotice(error)));
+  revalidateCommunications();
+  redirect(pollNotice("poll-updated"));
 }
 
 export async function castAnnouncementPollVoteAction(formData: FormData) {
@@ -2680,7 +2705,7 @@ export async function castAnnouncementPollVoteAction(formData: FormData) {
       "confirm_final_vote",
     ])
   ) {
-    redirect(communicationNotice("invalid-request"));
+    redirect(pollNotice("invalid-request"));
   }
   const pollId = communicationUuid(formData, "poll_id");
   const optionId = communicationUuid(formData, "option_id");
@@ -2690,7 +2715,7 @@ export async function castAnnouncementPollVoteAction(formData: FormData) {
     3,
   );
   if (!pollId || !optionId || confirmation !== "yes") {
-    redirect(communicationNotice("invalid-request"));
+    redirect(pollNotice("invalid-request"));
   }
 
   const supabase = await getActiveCommunicationActor();
@@ -2698,9 +2723,9 @@ export async function castAnnouncementPollVoteAction(formData: FormData) {
     p_poll_id: pollId,
     p_option_id: optionId,
   });
-  if (error) redirect(communicationNotice("operation-failed"));
-  revalidatePath("/announcements");
-  redirect(communicationNotice("voted"));
+  if (error) redirect(pollNotice(rpcErrorNotice(error)));
+  revalidateCommunications();
+  redirect(pollNotice("voted"));
 }
 
 const inAppPreferenceCategories = new Set([
@@ -2726,8 +2751,8 @@ export async function markNotificationReadAction(formData: FormData) {
   const { error } = await supabase.rpc("mark_notification_read", {
     p_notification_id: notificationId,
   });
-  if (error) redirect(notificationNotice("operation-failed"));
-  revalidatePath("/");
+  if (error) redirect(notificationNotice(rpcErrorNotice(error)));
+  revalidatePath("/", "layout");
   redirect(notificationNotice("read"));
 }
 
@@ -2750,16 +2775,16 @@ export async function setNotificationPreferenceAction(formData: FormData) {
     p_category: category,
     p_enabled: enabled === "true",
   });
-  if (error) redirect(notificationNotice("operation-failed"));
-  revalidatePath("/");
+  if (error) redirect(notificationNotice(rpcErrorNotice(error)));
+  revalidatePath("/", "layout");
   redirect(notificationNotice("preference-saved"));
 }
 
 export async function markAllNotificationsReadAction() {
   const supabase = await getActiveCommunicationActor();
   const { error } = await supabase.rpc("mark_all_notifications_read");
-  if (error) redirect(notificationNotice("operation-failed"));
-  revalidatePath("/");
+  if (error) redirect(notificationNotice(rpcErrorNotice(error)));
+  revalidatePath("/", "layout");
   redirect(notificationNotice("read"));
 }
 
@@ -2773,7 +2798,7 @@ export async function markNotificationReadAsyncAction(notificationId: string) {
       p_notification_id: notificationId,
     });
     if (error) return { ok: false, error: "operation-failed" };
-    revalidatePath("/");
+    revalidatePath("/", "layout");
     return { ok: true };
   } catch {
     return { ok: false, error: "unauthorized" };
@@ -2785,7 +2810,7 @@ export async function markAllNotificationsReadAsyncAction() {
     const supabase = await getActiveCommunicationActor();
     const { error } = await supabase.rpc("mark_all_notifications_read");
     if (error) return { ok: false, error: "operation-failed" };
-    revalidatePath("/");
+    revalidatePath("/", "layout");
     return { ok: true };
   } catch {
     return { ok: false, error: "unauthorized" };
@@ -2803,8 +2828,8 @@ export async function markNotificationUnreadAction(formData: FormData) {
   const { error } = await supabase.rpc("mark_notification_unread", {
     p_notification_id: notificationId,
   });
-  if (error) redirect(notificationNotice("operation-failed"));
-  revalidatePath("/");
+  if (error) redirect(notificationNotice(rpcErrorNotice(error)));
+  revalidatePath("/", "layout");
   redirect(notificationNotice("unread"));
 }
 
@@ -2820,7 +2845,7 @@ export async function markNotificationUnreadAsyncAction(
       p_notification_id: notificationId,
     });
     if (error) return { ok: false, error: "operation-failed" };
-    revalidatePath("/");
+    revalidatePath("/", "layout");
     return { ok: true };
   } catch {
     return { ok: false, error: "unauthorized" };

@@ -14,25 +14,11 @@ import type {
 import { getAttendancePageAccess } from "@/lib/attendance-page-access.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const noticeText: Record<string, string> = {
-  "minutes-saved":
-    "Meeting minutes were saved and recorded in the Secretariat archive.",
-  "attendance-opened": "Attendance check-in is now open.",
-  "attendance-closed":
-    "Attendance is closed and missing members were marked absent.",
-  "attendance-corrected": "The attendance record was corrected and audited.",
-  "checked-in": "Your attendance was recorded.",
-  "cutoff-saved": "The club-wide late cutoff was updated.",
-  denied: "You are not allowed to make that change.",
-  "invalid-request": "Check the submitted fields and try again.",
-  "operation-failed":
-    "The meeting or attendance change could not be saved. It may be closed, expired, or already recorded.",
-};
-
+// Action outcomes (?notice=) are presented by the global flash toast.
 export default async function AttendancePage({
   searchParams,
 }: {
-  searchParams: Promise<{ event?: string; notice?: string; tab?: string }>;
+  searchParams: Promise<{ event?: string; tab?: string }>;
 }) {
   const query = await searchParams;
 
@@ -234,11 +220,6 @@ export default async function AttendancePage({
     };
   });
 
-  const notice =
-    query.notice && Object.hasOwn(noticeText, query.notice)
-      ? noticeText[query.notice]
-      : null;
-
   return (
     <div className="min-h-full p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
       <AttendanceHubView
@@ -259,7 +240,6 @@ export default async function AttendancePage({
         memberAttendanceHistory={memberAttendanceHistory}
         members={members}
         minutes={minutes}
-        notice={notice}
         ownAttendance={ownAttendance}
         selectedEvent={selectedEvent}
         session={session}

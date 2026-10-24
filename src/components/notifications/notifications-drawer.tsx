@@ -6,6 +6,7 @@ import {
   CheckCheck,
   ChevronRight,
   Megaphone,
+  RotateCcw,
   Users,
   Wallet,
   X,
@@ -15,12 +16,20 @@ import { useEffect, useId, useState } from "react";
 import {
   markAllNotificationsReadAsyncAction,
   markNotificationReadAsyncAction,
+  markNotificationUnreadAsyncAction,
 } from "@/app/actions";
+import { dispatchFlashCard } from "@/components/ui/flash-card";
 import {
   getNotificationCategoryLabel,
   getNotificationHref,
   getNotificationTimestamp,
 } from "@/lib/notification-page-presentation.mjs";
+import {
+  dispatchNotificationSync,
+  NOTIFICATION_SYNC_EVENT,
+  type NotificationSyncPayload,
+} from "@/lib/notification-sync";
+import { useModalHygiene } from "@/lib/use-modal-hygiene";
 
 export interface AppNotification {
   id: string;
@@ -36,6 +45,7 @@ interface NotificationsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   notifications: AppNotification[];
+  unreadCount?: number;
   onUnreadCountChange?: (count: number) => void;
 }
 
@@ -59,6 +69,7 @@ export function NotificationsDrawer({
   isOpen,
   onClose,
   notifications: initialList,
+  unreadCount: externalUnreadCount,
   onUnreadCountChange,
 }: NotificationsDrawerProps) {
   const [items, setItems] = useState<AppNotification[]>(initialList);
@@ -69,53 +80,106 @@ export function NotificationsDrawer({
     setItems(initialList);
   }, [initialList]);
 
-  // Close on Escape key
   useEffect(() => {
-    if (!isOpen) return;
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        onClose();
+    const handleSync = (event: Event) => {
+      const detail = (event as CustomEvent<NotificationSyncPayload>).detail;
+      if (!detail) return;
+      if (detail.kind === "mark-all-read") {
+        setItems((prev) =>
+          prev.map((n) =>
+            n.read_at === null ? { ...n, read_at: detail.readAt } : n,
+          ),
+        );
+      } else if (detail.kind === "mark-read") {
+        setItems((prev) =>
+          prev.map((n) =>
+            n.id === detail.id ? { ...n, read_at: detail.readAt } : n,
+          ),
+        );
+      } else if (detail.kind === "mark-unread") {
+        setItems((prev) =>
+          prev.map((n) => (n.id === detail.id ? { ...n, read_at: null } : n)),
+        );
       }
-    }
+    };
+    window.addEventListener(NOTIFICATION_SYNC_EVENT, handleSync);
+    return () =>
+      window.removeEventListener(NOTIFICATION_SYNC_EVENT, handleSync);
+  }, []);
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  useModalHygiene({ isOpen, onClose });
 
   if (!isOpen) return null;
 
-  const unreadCount = items.filter((n) => n.read_at === null).length;
+  const listUnreadCount = items.filter((n) => n.read_at === null).length;
+  const unreadCount =
+    typeof externalUnreadCount === "number"
+      ? externalUnreadCount
+      : listUnreadCount;
 
   async function handleMarkAllRead() {
     if (isPending || unreadCount === 0) return;
     setIsPending(true);
 
     const prevItems = items;
+    const prevUnread = unreadCount;
     const nowIso = new Date().toISOString();
-    setItems((prev) =>
-      prev.map((n) => (n.read_at === null ? { ...n, read_at: nowIso } : n)),
-    );
-    onUnreadCountChange?.(0);
+    dispatchNotificationSync({ kind: "mark-all-read", readAt: nowIso });
 
     const result = await markAllNotificationsReadAsyncAction();
     if (!result?.ok) {
       setItems(prevItems);
-      onUnreadCountChange?.(unreadCount);
+      onUnreadCountChange?.(prevUnread);
+      dispatchFlashCard({
+        type: "error",
+        title: "Update Failed",
+        message: "Notifications could not be marked as read. Try again.",
+      });
     }
     setIsPending(false);
   }
 
   async function handleMarkSingleRead(id: string) {
     if (isPending) return;
+    setIsPending(true);
     const nowIso = new Date().toISOString();
 
-    setItems((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read_at: nowIso } : n)),
-    );
-    onUnreadCountChange?.(Math.max(0, unreadCount - 1));
+    dispatchNotificationSync({ kind: "mark-read", id, readAt: nowIso });
 
-    await markNotificationReadAsyncAction(id);
+    const result = await markNotificationReadAsyncAction(id);
+    if (!result?.ok) {
+      dispatchNotificationSync({ kind: "mark-unread", id });
+      dispatchFlashCard({
+        type: "error",
+        title: "Update Failed",
+        message: "The notification could not be marked as read. Try again.",
+      });
+    }
+    setIsPending(false);
+  }
+
+  async function handleMarkSingleUnread(id: string) {
+    if (isPending) return;
+    setIsPending(true);
+    const targetPrevReadAt =
+      items.find((n) => n.id === id)?.read_at ?? new Date().toISOString();
+
+    dispatchNotificationSync({ kind: "mark-unread", id });
+
+    const result = await markNotificationUnreadAsyncAction(id);
+    if (!result?.ok) {
+      dispatchNotificationSync({
+        kind: "mark-read",
+        id,
+        readAt: targetPrevReadAt,
+      });
+      dispatchFlashCard({
+        type: "error",
+        title: "Update Failed",
+        message: "The notification could not be marked as unread. Try again.",
+      });
+    }
+    setIsPending(false);
   }
 
   return (
@@ -229,13 +293,26 @@ export function NotificationsDrawer({
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      {isUnread && (
+                      {isUnread ? (
                         <button
-                          className="text-[11px] text-[#174C37] hover:underline font-bold"
+                          className="text-[11px] text-[#174C37] hover:underline font-bold disabled:opacity-50"
+                          disabled={isPending}
                           onClick={() => handleMarkSingleRead(notification.id)}
                           type="button"
                         >
                           Mark read
+                        </button>
+                      ) : (
+                        <button
+                          className="inline-flex items-center gap-1 text-[11px] text-[#5C4638] hover:text-[#174C37] hover:underline font-semibold disabled:opacity-50"
+                          disabled={isPending}
+                          onClick={() =>
+                            handleMarkSingleUnread(notification.id)
+                          }
+                          type="button"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>Mark unread</span>
                         </button>
                       )}
                       <span className="text-[10px] text-[#8C7D73] font-mono">

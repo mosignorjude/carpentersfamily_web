@@ -16,7 +16,13 @@ import {
   markNotificationReadAsyncAction,
   markNotificationUnreadAsyncAction,
 } from "@/app/actions";
+import { dispatchFlashCard } from "@/components/ui/flash-card";
 import type { HomeDashboardActivity } from "@/lib/home-dashboard.server";
+import {
+  dispatchNotificationSync,
+  NOTIFICATION_SYNC_EVENT,
+  type NotificationSyncPayload,
+} from "@/lib/notification-sync";
 
 function formatActivityDate(timestamp: string) {
   return new Intl.DateTimeFormat("en-NG", {
@@ -55,13 +61,58 @@ export function PersonalNotificationsCard({
   const [items, setItems] = useState<HomeDashboardActivity[]>(
     activity.rows ?? [],
   );
+  const initialVisibleUnread = (activity.rows ?? []).filter(
+    (item) => item.readAt === null,
+  ).length;
+  const [unreadCount, setUnreadCount] = useState<number>(
+    typeof activity.unreadCount === "number"
+      ? activity.unreadCount
+      : initialVisibleUnread,
+  );
   const [isPending, setIsPending] = useState(false);
 
   useEffect(() => {
-    setItems(activity.rows ?? []);
-  }, [activity.rows]);
+    const nextRows = activity.rows ?? [];
+    setItems(nextRows);
+    const visibleUnread = nextRows.filter(
+      (item) => item.readAt === null,
+    ).length;
+    setUnreadCount(
+      typeof activity.unreadCount === "number"
+        ? activity.unreadCount
+        : visibleUnread,
+    );
+  }, [activity.rows, activity.unreadCount]);
 
-  const unreadCount = items.filter((item) => item.readAt === null).length;
+  useEffect(() => {
+    const handleSync = (event: Event) => {
+      const detail = (event as CustomEvent<NotificationSyncPayload>).detail;
+      if (!detail) return;
+      if (detail.kind === "mark-all-read") {
+        setItems((prev) =>
+          prev.map((n) =>
+            n.readAt === null ? { ...n, readAt: detail.readAt } : n,
+          ),
+        );
+        setUnreadCount(0);
+      } else if (detail.kind === "mark-read") {
+        setItems((prev) =>
+          prev.map((n) =>
+            n.id === detail.id ? { ...n, readAt: detail.readAt } : n,
+          ),
+        );
+        setUnreadCount((c) => Math.max(0, c - 1));
+      } else if (detail.kind === "mark-unread") {
+        setItems((prev) =>
+          prev.map((n) => (n.id === detail.id ? { ...n, readAt: null } : n)),
+        );
+        setUnreadCount((c) => c + 1);
+      }
+    };
+    window.addEventListener(NOTIFICATION_SYNC_EVENT, handleSync);
+    return () =>
+      window.removeEventListener(NOTIFICATION_SYNC_EVENT, handleSync);
+  }, []);
 
   if (activity.unavailable) {
     return (
@@ -125,16 +176,18 @@ export function PersonalNotificationsCard({
   async function handleMarkRead(id: string) {
     if (isPending) return;
     setIsPending(true);
-    const prevItems = items;
     const nowIso = new Date().toISOString();
 
-    setItems((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, readAt: nowIso } : n)),
-    );
+    dispatchNotificationSync({ kind: "mark-read", id, readAt: nowIso });
 
     const result = await markNotificationReadAsyncAction(id);
     if (!result?.ok) {
-      setItems(prevItems);
+      dispatchNotificationSync({ kind: "mark-unread", id });
+      dispatchFlashCard({
+        type: "error",
+        title: "Update Failed",
+        message: "The notification could not be marked as read. Try again.",
+      });
     }
     setIsPending(false);
   }
@@ -142,15 +195,23 @@ export function PersonalNotificationsCard({
   async function handleMarkUnread(id: string) {
     if (isPending) return;
     setIsPending(true);
-    const prevItems = items;
+    const targetPrevReadAt =
+      items.find((n) => n.id === id)?.readAt ?? new Date().toISOString();
 
-    setItems((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, readAt: null } : n)),
-    );
+    dispatchNotificationSync({ kind: "mark-unread", id });
 
     const result = await markNotificationUnreadAsyncAction(id);
     if (!result?.ok) {
-      setItems(prevItems);
+      dispatchNotificationSync({
+        kind: "mark-read",
+        id,
+        readAt: targetPrevReadAt,
+      });
+      dispatchFlashCard({
+        type: "error",
+        title: "Update Failed",
+        message: "The notification could not be marked as unread. Try again.",
+      });
     }
     setIsPending(false);
   }
@@ -159,15 +220,20 @@ export function PersonalNotificationsCard({
     if (isPending || unreadCount === 0) return;
     setIsPending(true);
     const prevItems = items;
+    const prevUnread = unreadCount;
     const nowIso = new Date().toISOString();
 
-    setItems((prev) =>
-      prev.map((n) => (n.readAt === null ? { ...n, readAt: nowIso } : n)),
-    );
+    dispatchNotificationSync({ kind: "mark-all-read", readAt: nowIso });
 
     const result = await markAllNotificationsReadAsyncAction();
     if (!result?.ok) {
       setItems(prevItems);
+      setUnreadCount(prevUnread);
+      dispatchFlashCard({
+        type: "error",
+        title: "Update Failed",
+        message: "Notifications could not be marked as read. Try again.",
+      });
     }
     setIsPending(false);
   }

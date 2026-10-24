@@ -1,19 +1,33 @@
 import type { Metadata } from "next";
-import { DM_Sans, IBM_Plex_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import { GlobalFlashListener } from "@/components/ui/global-flash-listener";
 import { NavigationProgressBar } from "@/components/ui/navigation-progress-bar";
 import { clubBrand } from "@/lib/brand";
 import "./globals.css";
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
+const dmSans = localFont({
+  src: [
+    {
+      path: "../fonts/dm-sans-latin.woff2",
+      weight: "100 1000",
+      style: "normal",
+    },
+  ],
   variable: "--font-dm-sans",
+  display: "swap",
 });
 
-const ibmPlexSans = IBM_Plex_Sans({
-  subsets: ["latin", "latin-ext"],
+const ibmPlexSans = localFont({
+  src: [
+    {
+      path: "../fonts/ibm-plex-sans-latin.woff2",
+      weight: "100 700",
+      style: "normal",
+    },
+  ],
   variable: "--font-ibm-plex-sans",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -36,7 +50,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html className={`${dmSans.variable} ${ibmPlexSans.variable}`} lang="en">
-      <body>
+      <body className="antialiased">
         <NavigationProgressBar />
         <GlobalFlashListener />
         {children}

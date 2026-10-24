@@ -3,6 +3,7 @@
 import { AlertCircle, Edit3, X } from "lucide-react";
 import { useState } from "react";
 import { updateAnnouncementAction } from "@/app/actions";
+import { FormSubmitButton } from "@/components/ui";
 import type {
   AnnouncementItem,
   AnnouncementPriority,
@@ -195,9 +196,13 @@ export function AnnouncementEditModal({
             >
               Cancel
             </button>
-            <button type="submit" className="cf-btn cf-btn--primary">
+            <FormSubmitButton
+              className="cf-btn cf-btn--primary"
+              pendingLabel="Saving Revision…"
+              statusToastMessage="Recording announcement revision and audit note."
+            >
               Save Revision
-            </button>
+            </FormSubmitButton>
           </div>
         </form>
       </div>

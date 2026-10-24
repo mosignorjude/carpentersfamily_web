@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { markAnnouncementReadAction } from "@/app/actions";
+import { FormSubmitButton } from "@/components/ui";
 import { AnnouncementEditModal } from "./announcement-edit-modal";
 import type { AnnouncementItem } from "./communications-types";
 
@@ -127,10 +128,14 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
                 type="hidden"
                 value={announcement.id}
               />
-              <button type="submit" className="cf-btn cf-btn--primary">
+              <FormSubmitButton
+                className="cf-btn cf-btn--primary"
+                pendingLabel="Marking Read…"
+                statusToastMessage="Updating your announcement read status."
+              >
                 <Check className="w-3.5 h-3.5" />
                 <span>Mark as read</span>
-              </button>
+              </FormSubmitButton>
             </form>
           )}
 

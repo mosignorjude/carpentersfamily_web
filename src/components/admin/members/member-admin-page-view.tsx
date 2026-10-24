@@ -1,13 +1,15 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   assignEventRoleAction,
   clubRoleChangeAction,
   memberLifecycleAction,
   revokeEventRoleAction,
 } from "@/app/actions";
+import { dispatchActionStatusToast } from "@/components/ui/flash-card";
+import { useSuccessNotice } from "@/components/ui/use-success-notice";
 import { EventStaffingSection } from "./event-staffing-section";
 import { MemberAdminAuditSection } from "./member-admin-audit-section";
 import { type ActiveModalType, MemberAdminModals } from "./member-admin-modals";
@@ -47,7 +49,7 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
   initialOfficerRole = "admin",
   currentOfficerId = "",
   roleLookupFailed = false,
-  notice,
+  notice: _notice,
 }) => {
   const officerRole = initialOfficerRole;
   const members = initialMembers;
@@ -79,13 +81,14 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
   const [targetClubRole, setTargetClubRole] = useState<"Member" | "Executive">(
     "Executive",
   );
+  const [isPending, startTransition] = useTransition();
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: close modals when server props refresh
-  useEffect(() => {
+  // Close open modals only when an action succeeds; keep input on errors.
+  useSuccessNotice(() => {
     setActiveModal(null);
     setSelectedMember(null);
     setSelectedAssignment(null);
-  }, [initialMembers, initialAssignments, initialAuditLog, notice]);
+  });
 
   const resolvedOfficerId = currentOfficerId ?? "";
 
@@ -103,7 +106,11 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
 
   // --- REAL SERVER ACTIONS ---
 
-  const handleApproveMembership = async (member: ClubMemberRecord) => {
+  const handleApproveMembership = (member: ClubMemberRecord) => {
+    dispatchActionStatusToast({
+      title: "Approving Member",
+      message: `Activating membership for ${member.fullName} and recording audit entry…`,
+    });
     const formData = new FormData();
     formData.set("operation", "approve");
     formData.set("member_id", member.id);
@@ -111,13 +118,16 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
       "reason",
       "Membership requirements and profile verified by presiding officer.",
     );
-    await memberLifecycleAction(formData);
+    startTransition(() => {
+      void memberLifecycleAction(formData);
+    });
   };
 
-  const handleRejectMembership = async (
-    member: ClubMemberRecord,
-    reason: string,
-  ) => {
+  const handleRejectMembership = (member: ClubMemberRecord, reason: string) => {
+    dispatchActionStatusToast({
+      title: "Declining Request",
+      message: `Recording governance decision for ${member.fullName}…`,
+    });
     const formData = new FormData();
     formData.set("operation", "reject");
     formData.set("member_id", member.id);
@@ -128,13 +138,19 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
         "Membership application declined after officer review.",
       ),
     );
-    await memberLifecycleAction(formData);
+    startTransition(() => {
+      void memberLifecycleAction(formData);
+    });
   };
 
-  const handleDeactivateAccount = async (
+  const handleDeactivateAccount = (
     member: ClubMemberRecord,
     reason: string,
   ) => {
+    dispatchActionStatusToast({
+      title: "Deactivating Member",
+      message: `Suspending account access for ${member.fullName}…`,
+    });
     const formData = new FormData();
     formData.set("operation", "deactivate");
     formData.set("member_id", member.id);
@@ -142,13 +158,19 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
       "reason",
       sanitizeAuditReason(reason, "Member account deactivated by officer."),
     );
-    await memberLifecycleAction(formData);
+    startTransition(() => {
+      void memberLifecycleAction(formData);
+    });
   };
 
-  const handleReactivateAccount = async (
+  const handleReactivateAccount = (
     member: ClubMemberRecord,
     reason: string,
   ) => {
+    dispatchActionStatusToast({
+      title: "Reactivating Member",
+      message: `Restoring account access for ${member.fullName}…`,
+    });
     const formData = new FormData();
     formData.set("operation", "reactivate");
     formData.set("member_id", member.id);
@@ -156,14 +178,20 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
       "reason",
       sanitizeAuditReason(reason, "Member account reactivated by officer."),
     );
-    await memberLifecycleAction(formData);
+    startTransition(() => {
+      void memberLifecycleAction(formData);
+    });
   };
 
-  const handleChangeClubRole = async (
+  const handleChangeClubRole = (
     member: ClubMemberRecord,
     targetRole: "Member" | "Executive",
     reason: string,
   ) => {
+    dispatchActionStatusToast({
+      title: "Updating Club Role",
+      message: `Saving ${targetRole} role assignment for ${member.fullName}…`,
+    });
     const formData = new FormData();
     formData.set("member_id", member.id);
     formData.set("role", targetRole === "Executive" ? "executive" : "member");
@@ -174,15 +202,21 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
         `Club role updated to ${targetRole} by administrator.`,
       ),
     );
-    await clubRoleChangeAction(formData);
+    startTransition(() => {
+      void clubRoleChangeAction(formData);
+    });
   };
 
-  const handleAssignEventRole = async (
+  const handleAssignEventRole = (
     eventId: string,
     memberId: string,
     role: EventStaffRole,
     reason: string,
   ) => {
+    dispatchActionStatusToast({
+      title: "Assigning Event Role",
+      message: `Saving ${role} staffing assignment and logging audit entry…`,
+    });
     const dbRole =
       role === "Event lead"
         ? "lead"
@@ -201,13 +235,19 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
       ),
     );
     formData.set("return_to", "admin-members");
-    await assignEventRoleAction(formData);
+    startTransition(() => {
+      void assignEventRoleAction(formData);
+    });
   };
 
-  const handleRemoveEventRole = async (
+  const handleRemoveEventRole = (
     assignment: EventAssignment,
     reason: string,
   ) => {
+    dispatchActionStatusToast({
+      title: "Removing Event Role",
+      message: `Revoking event role for ${assignment.memberName}…`,
+    });
     const formData = new FormData();
     formData.set("event_id", assignment.eventId);
     formData.set("member_id", assignment.memberId);
@@ -216,7 +256,9 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
       sanitizeAuditReason(reason, "Removed from event staffing assignment."),
     );
     formData.set("return_to", "admin-members");
-    await revokeEventRoleAction(formData);
+    startTransition(() => {
+      void revokeEventRoleAction(formData);
+    });
   };
 
   const currentSelectedEvent =
@@ -301,7 +343,9 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
       {/* 8. MODAL DIALOGS */}
       <MemberAdminModals
         activeModal={activeModal}
+        isPending={isPending}
         onClose={() => {
+          if (isPending) return;
           setActiveModal(null);
           setSelectedMember(null);
           setSelectedAssignment(null);

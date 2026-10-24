@@ -24,6 +24,7 @@ export default async function MemberLayout({
     profileResult,
     roleResult,
     notificationResult,
+    unreadCountResult,
     eventsResult,
     announcementsResult,
   ] = await Promise.all([
@@ -43,6 +44,11 @@ export default async function MemberLayout({
       .eq("recipient_id", authData.user.id)
       .order("created_at", { ascending: false })
       .limit(30),
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("recipient_id", authData.user.id)
+      .is("read_at", null),
     supabase
       .from("events")
       .select("id,title")
@@ -78,7 +84,10 @@ export default async function MemberLayout({
   };
 
   const notifications = (notificationResult.data ?? []) as AppNotification[];
-  const unreadCount = notifications.filter((n) => n.read_at === null).length;
+  const unreadCount =
+    !unreadCountResult.error && typeof unreadCountResult.count === "number"
+      ? unreadCountResult.count
+      : notifications.filter((n) => n.read_at === null).length;
   const searchData = {
     events: (eventsResult.data ?? []).map((e) => ({
       id: e.id,

@@ -2,11 +2,12 @@
 
 import { FileSpreadsheet, FileText, Shield, ShieldAlert } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type {
   FinanceCategory,
   FinanceTransaction,
 } from "@/app/(member)/finances/finance-forms";
+import { useSuccessNotice } from "@/components/ui/use-success-notice";
 import { CategoryManagementModal } from "./category-management-modal";
 import { ClubFinancialSummary } from "./club-financial-summary";
 import { ClubTransactionLedger } from "./club-transaction-ledger";
@@ -67,7 +68,7 @@ export function FinancesPageView({
   receiptUnavailable,
   auditError,
   roleError,
-  notice,
+  notice: _notice,
   transactions,
   receiptsByTransaction,
   categories,
@@ -102,8 +103,8 @@ export function FinancesPageView({
     crypto.randomUUID(),
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reset modals and idempotency keys when server props refresh
-  useEffect(() => {
+  // Close open modals and rotate idempotency keys only when an action succeeds.
+  useSuccessNotice(() => {
     setIsRecordIncomeOpen(false);
     setIsRecordExpenseOpen(false);
     setIsCategoryModalOpen(false);
@@ -111,7 +112,7 @@ export function FinancesPageView({
     setVoidingTransaction(null);
     setIncomeIdempotencyKey(crypto.randomUUID());
     setExpenseIdempotencyKey(crypto.randomUUID());
-  }, [transactions, categories, notice]);
+  });
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-in fade-in duration-150">

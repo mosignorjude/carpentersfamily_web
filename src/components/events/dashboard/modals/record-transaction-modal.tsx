@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Ticket, X } from "lucide-react";
+import { Loader2, Plus, Ticket, X } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { FormattedAmountInput } from "@/components/formatted-amount-input";
@@ -28,6 +28,7 @@ export type RecordedTransactionSubmission = Omit<
 
 interface RecordTransactionModalProps {
   isOpen: boolean;
+  isPending?: boolean;
   onClose: () => void;
   onSave: (txn: RecordedTransactionSubmission) => void;
   userRole: string;
@@ -41,6 +42,7 @@ interface RecordTransactionModalProps {
 
 export function RecordTransactionModal({
   isOpen,
+  isPending = false,
   onClose,
   onSave,
   userRole,
@@ -156,6 +158,14 @@ export function RecordTransactionModal({
         setPaymentRef(`NIBSS-REV-${Date.now().toString().slice(-6)}`);
       }
       setError("");
+    } else {
+      setDescription("");
+      setAmount("");
+      setPayerPayee("");
+      setAttendeePhone("");
+      setNotes("");
+      setTicketQuantity(1);
+      setError("");
     }
   }, [isOpen, initialCategory, initialType]);
 
@@ -176,6 +186,7 @@ export function RecordTransactionModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isPending) return;
     setError("");
 
     const now = new Date();
@@ -228,7 +239,6 @@ export function RecordTransactionModal({
         ticketQuantity,
       });
 
-      onClose();
       return;
     }
 
@@ -286,8 +296,6 @@ export function RecordTransactionModal({
       receiptSize: "320 KB",
       notes: notes.trim() || undefined,
     });
-
-    onClose();
   };
 
   return (
@@ -713,28 +721,40 @@ export function RecordTransactionModal({
           {/* Actions */}
           <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#E5DDD3]">
             <button
-              className="px-4 py-2.5 text-xs font-semibold text-[#5C4638] bg-[#FAF6F0] hover:bg-[#E5DDD3]/60 rounded-xl transition-colors min-h-[42px]"
+              className="px-4 py-2.5 text-xs font-semibold text-[#5C4638] bg-[#FAF6F0] hover:bg-[#E5DDD3]/60 rounded-xl transition-colors min-h-[42px] disabled:opacity-50"
+              disabled={isPending}
               onClick={onClose}
               type="button"
             >
               Cancel
             </button>
             <button
-              className={`px-5 py-2.5 text-xs font-semibold text-white rounded-xl transition-colors min-h-[42px] flex items-center gap-1.5 shadow-xs ${
+              className={`px-5 py-2.5 text-xs font-semibold text-white rounded-xl transition-colors min-h-[42px] flex items-center gap-1.5 shadow-xs disabled:opacity-75 ${
                 mode === "expense"
                   ? "bg-[#BA3C2A] hover:bg-[#8E2A1C]"
                   : "bg-[#174C37] hover:bg-[#103D2B]"
               }`}
+              disabled={isPending}
               id="btn-submit-record-transaction"
               type="submit"
             >
-              <Plus className="w-4 h-4 text-[#D6A23A]" />
+              {isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin text-[#D6A23A]" />
+              ) : (
+                <Plus className="w-4 h-4 text-[#D6A23A]" />
+              )}
               <span>
-                {mode === "ticket"
-                  ? "Issue & Post Ticket Sale"
-                  : mode === "expense"
-                    ? "Post Disbursement"
-                    : "Post Revenue Receipt"}
+                {isPending
+                  ? mode === "ticket"
+                    ? "Posting Ticket Sale…"
+                    : mode === "expense"
+                      ? "Posting Disbursement…"
+                      : "Posting Revenue…"
+                  : mode === "ticket"
+                    ? "Issue & Post Ticket Sale"
+                    : mode === "expense"
+                      ? "Post Disbursement"
+                      : "Post Revenue Receipt"}
               </span>
             </button>
           </div>

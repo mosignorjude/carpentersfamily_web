@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  AlertCircle,
   ArrowLeft,
   Calendar,
   Check,
@@ -62,7 +61,6 @@ interface AttendanceHubViewProps {
     username: string;
     role: string;
   };
-  notice: string | null;
 }
 
 type HubTab = "session" | "minutes" | "history" | "audit";
@@ -102,7 +100,6 @@ export function AttendanceHubView({
   canReviewAttendance,
   isOfficer,
   currentUser,
-  notice,
 }: AttendanceHubViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -428,33 +425,6 @@ export function AttendanceHubView({
           )}
         </div>
       </section>
-
-      {/* Notice Banner */}
-      {notice &&
-        (() => {
-          const isError =
-            /not allowed|do not have permission|invalid|rejected|could not|Check the|failed/i.test(
-              notice,
-            );
-          return (
-            <div
-              aria-live="polite"
-              className={`p-4 rounded-xl border text-xs font-semibold flex items-center gap-2.5 shadow-xs ${
-                isError
-                  ? "bg-[#FFF9F8] border-[#F5C2C2] text-[#BA3C2A]"
-                  : "bg-[#FAF6F0] border-[#174C37]/30 text-[#174C37]"
-              }`}
-              role={isError ? "alert" : "status"}
-            >
-              <AlertCircle
-                className={`w-4 h-4 shrink-0 ${
-                  isError ? "text-[#BA3C2A]" : "text-[#174C37]"
-                }`}
-              />
-              <span>{notice}</span>
-            </div>
-          );
-        })()}
 
       {/* TAB 1: Check-in & Live Roll Call */}
       {activeTab === "session" && selectedEvent && (

@@ -7,8 +7,9 @@ import {
   History,
   Search,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { FormAlertBanner } from "@/components/ui";
+import { useSuccessNotice } from "@/components/ui/use-success-notice";
 import { CreateEventDisclosure } from "./create-event-disclosure";
 import { EventCard } from "./event-card";
 import { EventEditModal } from "./event-edit-modal";
@@ -25,7 +26,8 @@ interface EventsPageViewProps {
   isManager: boolean;
   userRoleTitle: string;
   userName?: string;
-  notice?: string;
+  /** Load failure message. Action outcomes are shown by the global flash toast. */
+  loadError?: string;
 }
 
 export function EventsPageView({
@@ -35,7 +37,7 @@ export function EventsPageView({
   isManager,
   userRoleTitle,
   userName: _userName,
-  notice,
+  loadError,
 }: EventsPageViewProps) {
   // Filters
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -47,12 +49,12 @@ export function EventsPageView({
   const [lifecycleAction, setLifecycleAction] =
     useState<EventLifecycleAction | null>(null);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: close open modals when server props refresh
-  useEffect(() => {
+  // Close open modals only after a successful action; keep input on errors.
+  useSuccessNotice(() => {
     setEditingEvent(null);
     setLifecycleEvent(null);
     setLifecycleAction(null);
-  }, [events, notice]);
+  });
 
   const handleOpenLifecycle = (
     event: EventRow,
@@ -115,18 +117,7 @@ export function EventsPageView({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-150">
-      {notice && (
-        <FormAlertBanner
-          message={notice}
-          variant={
-            notice.toLowerCase().includes("denied") ||
-            notice.toLowerCase().includes("not allowed") ||
-            notice.toLowerCase().includes("could not")
-              ? "error"
-              : "success"
-          }
-        />
-      )}
+      {loadError && <FormAlertBanner message={loadError} variant="error" />}
       {/* 1. Header & Local Time Convention */}
       <section className="bg-white rounded-2xl border border-[#E5DDD3] p-6 sm:p-8 shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">

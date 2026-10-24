@@ -390,6 +390,9 @@ function notificationHref(row) {
       : "/attendance";
   }
   if (row.category === "event_activity") return "/events";
+  if (row.category === "new_poll" || row.category === "poll_closing") {
+    return "/polls";
+  }
   return "/announcements";
 }
 
@@ -748,32 +751,39 @@ function unavailableEventOverview() {
 }
 
 async function getMemberActivity(supabase, memberId) {
-  const result = await safeQuery(
-    supabase
-      .from("notifications")
-      .select("id,category,title,body,event_id,created_at,read_at", {
-        count: "exact",
-      })
-      .eq("recipient_id", memberId)
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .limit(ACTIVITY_LIMIT),
-  );
+  const [result, unreadResult] = await Promise.all([
+    safeQuery(
+      supabase
+        .from("notifications")
+        .select("id,category,title,body,event_id,created_at,read_at")
+        .eq("recipient_id", memberId)
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(ACTIVITY_LIMIT),
+    ),
+    safeQuery(
+      supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("recipient_id", memberId)
+        .is("read_at", null),
+    ),
+  ]);
   const section = makeSection(result, mapNotificationRow);
-  const rawCount = safeNonNegativeInteger(result.count);
+  const rawUnreadCount = unreadResult.error
+    ? null
+    : safeNonNegativeInteger(unreadResult.count);
   const unreadRowsCount = section.unavailable
     ? null
-    : section.rows.filter((r) => r.unread).length;
-  const unreadCount =
-    rawCount !== null &&
-    Array.isArray(result.data) &&
-    rawCount === result.data.length
-      ? unreadRowsCount
-      : rawCount;
+    : section.rows.filter((r) => r.readAt === null).length;
+  const unreadCount = rawUnreadCount ?? unreadRowsCount;
   return {
     ...section,
     unreadCount,
-    unreadCountUnavailable: Boolean(result.error) || unreadCount === null,
+    unreadCountUnavailable:
+      Boolean(result.error) ||
+      Boolean(unreadResult.error) ||
+      unreadCount === null,
   };
 }
 

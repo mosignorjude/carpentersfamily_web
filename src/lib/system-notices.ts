@@ -225,6 +225,21 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
   },
 
   // Communications & Polls
+  "announcement-created": {
+    type: "success",
+    title: "Announcement Published",
+    message: "The announcement is now visible to active members.",
+  },
+  "announcement-updated": {
+    type: "success",
+    title: "Announcement Updated",
+    message: "The announcement edit and its reason were saved.",
+  },
+  "announcement-read": {
+    type: "info",
+    title: "Marked as Read",
+    message: "The announcement was marked as read.",
+  },
   "poll-created": {
     type: "success",
     title: "Poll Created",
@@ -256,7 +271,97 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     message: "Your notification preferences were saved.",
   },
 
+  // Member Administration
+  "member-approved": {
+    type: "success",
+    title: "Member Approved",
+    message:
+      "The membership request was approved and member access is now enabled.",
+  },
+  "member-rejected": {
+    type: "info",
+    title: "Request Declined",
+    message: "The membership request was declined and the decision was logged.",
+  },
+  "member-deactivated": {
+    type: "warning",
+    title: "Member Deactivated",
+    message: "The member's access was deactivated. Their history is retained.",
+  },
+  "member-reactivated": {
+    type: "success",
+    title: "Member Reactivated",
+    message: "The member's access was restored.",
+  },
+  "role-updated": {
+    type: "success",
+    title: "Club Role Updated",
+    message: "The club role change was saved and logged.",
+  },
+  "event-role-assigned": {
+    type: "success",
+    title: "Event Role Assigned",
+    message: "The event role was assigned and logged.",
+  },
+  "event-role-revoked": {
+    type: "info",
+    title: "Event Role Revoked",
+    message: "The event role was revoked and logged.",
+  },
+  "self-action-denied": {
+    type: "error",
+    title: "Not Allowed on Your Own Account",
+    message:
+      "For accountability, another authorized officer must perform this action on your account.",
+  },
+
   // Common Rejections & Errors
+  "already-checked-in": {
+    type: "info",
+    title: "Already Checked In",
+    message: "Your attendance for this event was already recorded.",
+  },
+  "event-read-only": {
+    type: "error",
+    title: "Event Is Read-Only",
+    message:
+      "Archived events and their records are retained as read-only history.",
+  },
+  "closed-or-locked": {
+    type: "error",
+    title: "No Longer Open",
+    message:
+      "This session or poll is closed or locked, so it can no longer be changed.",
+  },
+  "budget-exceeded": {
+    type: "error",
+    title: "Budget Limit Reached",
+    message:
+      "The amounts don't fit the event budget. Check that allocations add up to the budget total and stay within limits.",
+  },
+  "budget-required": {
+    type: "error",
+    title: "Budget Required",
+    message: "Set the event budget total before adding allocation categories.",
+  },
+  "already-processed": {
+    type: "info",
+    title: "Already Processed",
+    message:
+      "This item was already reviewed or refunded. Refresh to see its current status.",
+  },
+  "duplicate-record": {
+    type: "error",
+    title: "Already Exists",
+    message:
+      "A matching record already exists. Use a different name or review the existing entry.",
+  },
+  "invalid-state": {
+    type: "error",
+    title: "Not Available Right Now",
+    message:
+      "This action isn't allowed for the record's current status (for example, a completed or cancelled event).",
+  },
   denied: {
     type: "error",
     title: "Access Denied",

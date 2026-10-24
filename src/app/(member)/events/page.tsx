@@ -3,30 +3,8 @@ import type { EventRow } from "@/components/events/event-types";
 import { EventsPageView } from "@/components/events/events-page-view";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const noticeText: Record<string, string> = {
-  created: "The event was created.",
-  updated: "The event details were updated.",
-  completed: "The event was marked completed.",
-  cancelled: "The event was cancelled.",
-  reopened: "The event was reopened.",
-  archived: "The event was moved to retained archive.",
-  denied: "You are not allowed to make that change.",
-  "invalid-request": "Check the event details and try again.",
-  "operation-failed": "The event change could not be saved.",
-};
-
-export default async function EventsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ notice?: string }>;
-}) {
-  const params = await searchParams;
-  const notice =
-    typeof params.notice === "string" &&
-    Object.hasOwn(noticeText, params.notice)
-      ? noticeText[params.notice]
-      : undefined;
-
+// Action outcomes (?notice=) are presented by the global flash toast.
+export default async function EventsPage() {
   let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
   try {
     supabase = await createSupabaseServerClient();
@@ -197,11 +175,9 @@ export default async function EventsPage({
   const userName = profile?.full_name || profile?.username || "Club Member";
 
   const eventReadError = eventsError || rolesError || clubRolesError;
-  const noticeTextValue =
-    notice ??
-    (eventReadError
-      ? "Event information could not be loaded. No event actions are available."
-      : undefined);
+  const loadError = eventReadError
+    ? "Event information could not be loaded. No event actions are available."
+    : undefined;
 
   return (
     <div className="min-h-full p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
@@ -209,7 +185,7 @@ export default async function EventsPage({
         eventRolesByEvent={eventRolesByEvent}
         events={events}
         isManager={isManager && !eventReadError}
-        notice={noticeTextValue}
+        loadError={loadError}
         roles={rolesList}
         userName={userName}
         userRoleTitle={userRoleTitle}
