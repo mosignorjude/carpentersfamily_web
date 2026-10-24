@@ -520,7 +520,6 @@ test("navigation progress: component intercepts internal links and manages progr
   assert.ok(progressContent.includes("Suspense"));
 });
 
-
 // ============================================================================
 // 8. AUTH BRAND & USER PROFILE BADGE VERIFICATION
 // ============================================================================

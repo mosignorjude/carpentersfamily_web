@@ -2,8 +2,8 @@
 
 import { BarChart3, Tags } from "lucide-react";
 import { useState } from "react";
+import { formatNaira, formatPercent } from "@/lib/format";
 import { percentWidthClass } from "@/lib/percent-width-class";
-import { formatNaira, formatPercent } from "./dashboard-mock-data";
 import type {
   DashboardCostCenter,
   DashboardRevenueStream,

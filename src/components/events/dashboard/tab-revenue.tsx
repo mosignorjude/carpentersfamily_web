@@ -13,8 +13,8 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
+import { formatNaira, formatPercent } from "@/lib/format";
 import { percentWidthClass } from "@/lib/percent-width-class";
-import { formatNaira, formatPercent } from "./dashboard-mock-data";
 import type {
   DashboardRevenueStream,
   RevenueCategory,

@@ -1,11 +1,7 @@
 "use client";
 
 import { Download, Printer } from "lucide-react";
-import {
-  downloadLedgerCSV,
-  formatNaira,
-  formatPercent,
-} from "./dashboard-mock-data";
+import { downloadLedgerCSV, formatNaira, formatPercent } from "@/lib/format";
 import type {
   DashboardCostCenter,
   DashboardEventInfo,

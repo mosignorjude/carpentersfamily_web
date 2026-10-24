@@ -3,7 +3,7 @@
 import { Download, FileText, Paperclip, Search, Shield } from "lucide-react";
 import { useState } from "react";
 import { EmptyStateCard } from "@/components/ui/state-screen";
-import { downloadLedgerCSV, formatNaira } from "./dashboard-mock-data";
+import { downloadLedgerCSV, formatNaira } from "@/lib/format";
 import type { ActivityLogItem, DashboardTransaction } from "./dashboard-types";
 
 interface TabAuditLogProps {

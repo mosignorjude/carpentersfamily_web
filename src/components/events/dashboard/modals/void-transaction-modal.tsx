@@ -3,8 +3,8 @@
 import { ShieldAlert, X } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
+import { formatNaira } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
-import { formatNaira } from "../dashboard-mock-data";
 import type { DashboardTransaction } from "../dashboard-types";
 
 interface VoidTransactionModalProps {

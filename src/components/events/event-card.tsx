@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import React, { useState } from "react";
 import { getEventCardAccess } from "@/lib/event-card-access.mjs";
+import { formatNaira } from "@/lib/format";
 import type { EventLifecycleAction } from "./event-lifecycle-modal";
 import type { EventRow } from "./event-types";
 
@@ -43,14 +44,6 @@ const timeFormatter = new Intl.DateTimeFormat("en-NG", {
   minute: "2-digit",
   hour12: false,
 });
-
-function formatNaira(value: number) {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 export function EventCard({
   event,

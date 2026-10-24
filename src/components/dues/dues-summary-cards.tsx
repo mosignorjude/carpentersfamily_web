@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   TrendingUp,
 } from "lucide-react";
+import { formatNaira } from "@/lib/format";
 import { percentWidthClass } from "@/lib/percent-width-class";
 
 interface DuesSummaryCardsProps {
@@ -21,14 +22,6 @@ interface DuesSummaryCardsProps {
   } | null;
   clubTotalIncome?: number | null;
   isOfficer: boolean;
-}
-
-function formatNaira(amount: number) {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(amount);
 }
 
 export function DuesSummaryCards({

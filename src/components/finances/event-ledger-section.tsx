@@ -2,6 +2,7 @@
 
 import { Calendar, ChevronRight, Layers, RotateCcw } from "lucide-react";
 import Link from "next/link";
+import { formatNaira } from "@/lib/format";
 
 export type EventLedgerEntry = {
   id: string;
@@ -17,17 +18,6 @@ interface EventLedgerSectionProps {
   entries: EventLedgerEntry[];
   eventTitles: Map<string, string>;
   isUnavailable?: boolean;
-}
-
-function formatNaira(value: number | string | null | undefined) {
-  if (value === null || value === undefined) return "₦—";
-  const num =
-    typeof value === "number" ? BigInt(Math.round(value)) : BigInt(value);
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(num);
 }
 
 function formatTimestamp(value: string) {

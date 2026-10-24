@@ -26,7 +26,7 @@ import {
   refundEventTicketSaleAction,
   voidEventFinancialTransactionAction,
 } from "@/app/actions";
-import { downloadLedgerCSV } from "./dashboard-mock-data";
+import { downloadLedgerCSV } from "@/lib/format";
 import type {
   ActivityLogItem,
   DashboardCostCenter,

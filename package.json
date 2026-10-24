@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check next.config.ts src",
+    "test": "node --test",
     "test:security-regression": "node --test",
     "test:receipts": "node --test tests/finance-receipt-validation.test.mjs",
     "test:reports": "node --test tests/report-export-security.test.mjs",
@@ -25,7 +26,7 @@
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.2",
     "lucide-react": "^1.56.0",
-    "next": "16.3.8",
+    "next": "16.4.3",
     "qrcode": "1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8"

@@ -1,5 +1,6 @@
 import { Calendar, DollarSign, History, ShieldCheck } from "lucide-react";
 import { DuesRateForm } from "@/app/(member)/dues/dues-forms";
+import { formatNaira } from "@/lib/format";
 
 export type RateRow = {
   id: string;
@@ -23,14 +24,6 @@ function formatMonth(month: string) {
     year: "numeric",
     timeZone: "UTC",
   }).format(value);
-}
-
-function formatNaira(value: string | number) {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(Number(value));
 }
 
 export function DuesRateScheduleCard({
