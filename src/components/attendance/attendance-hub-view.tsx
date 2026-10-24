@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AttendanceAuditHistory } from "@/components/events/attendance/attendance-audit-history";
 import { AttendanceRosterTable } from "@/components/events/attendance/attendance-roster-table";
 import type {
@@ -30,6 +30,10 @@ import type {
 import { CheckinCard } from "@/components/events/attendance/checkin-card";
 import { MinutesCard } from "@/components/events/attendance/minutes-card";
 import { OfficerSessionControls } from "@/components/events/attendance/officer-session-controls";
+import {
+  getScrollBehavior,
+  parseAttendanceTab,
+} from "@/lib/tab-navigation.mjs";
 
 export interface MemberAttendanceHistoryItem {
   eventId: string;
@@ -103,10 +107,34 @@ export function AttendanceHubView({
 }: AttendanceHubViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab = (searchParams.get("tab") as HubTab) || "session";
-  const [activeTab, setActiveTab] = useState<HubTab>(initialTab);
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<HubTab>(() =>
+    parseAttendanceTab(tabParam),
+  );
+  const [scrollRequest, setScrollRequest] = useState(0);
   const [typeFilter, setTypeFilter] = useState<EventTypeFilter>("all");
   const [copiedMinutes, setCopiedMinutes] = useState(false);
+
+  // Keep the active tab in sync when soft navigation changes only the query string.
+  useEffect(() => {
+    if (!tabParam) return;
+    setActiveTab(parseAttendanceTab(tabParam));
+    setScrollRequest((request) => request + 1);
+  }, [tabParam]);
+
+  // Scroll after the tab panel has committed to the DOM.
+  useEffect(() => {
+    if (scrollRequest === 0) return;
+    const target = document.getElementById(`attendance-${activeTab}`);
+    if (!target) return;
+    target.scrollIntoView({
+      behavior: getScrollBehavior(
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+      ),
+      block: "start",
+    });
+    target.focus({ preventScroll: true });
+  }, [activeTab, scrollRequest]);
 
   const filteredEvents = events.filter((evt) => {
     if (selectedEvent && evt.id === selectedEvent.id) return true;
@@ -120,7 +148,12 @@ export function AttendanceHubView({
     setActiveTab(tab);
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
-    router.replace(`/attendance?${params.toString()}`);
+    router.replace(`/attendance?${params.toString()}#attendance-${tab}`, {
+      scroll: false,
+    });
+    if (tabParam === tab) {
+      setScrollRequest((request) => request + 1);
+    }
   };
 
   // Switch selected event
@@ -428,7 +461,11 @@ export function AttendanceHubView({
 
       {/* TAB 1: Check-in & Live Roll Call */}
       {activeTab === "session" && selectedEvent && (
-        <div className="space-y-6 animate-in fade-in duration-150">
+        <div
+          id="attendance-session"
+          className="scroll-target tab-panel-focus space-y-6 animate-in fade-in duration-150"
+          tabIndex={-1}
+        >
           {selectedEvent.attendance_enabled ? (
             <>
               {/* Member Self Check-in */}
@@ -481,7 +518,11 @@ export function AttendanceHubView({
 
       {/* TAB 2: Meeting Minutes & Secretariat Archive */}
       {activeTab === "minutes" && selectedEvent && (
-        <div className="space-y-6 animate-in fade-in duration-150">
+        <div
+          id="attendance-minutes"
+          className="scroll-target tab-panel-focus space-y-6 animate-in fade-in duration-150"
+          tabIndex={-1}
+        >
           {selectedEvent.minutes_enabled ? (
             <>
               {/* Official Secretariat Letterhead Header */}
@@ -561,7 +602,11 @@ export function AttendanceHubView({
 
       {/* TAB 3: My Attendance Standing */}
       {activeTab === "history" && (
-        <div className="space-y-6 animate-in fade-in duration-150">
+        <div
+          id="attendance-history"
+          className="scroll-target tab-panel-focus space-y-6 animate-in fade-in duration-150"
+          tabIndex={-1}
+        >
           <div className="bg-white rounded-2xl border border-[#E5DDD3] p-6 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
               <div>
@@ -669,7 +714,11 @@ export function AttendanceHubView({
 
       {/* TAB 4: Officer Audit Trail */}
       {activeTab === "audit" && isOfficer && (
-        <div className="space-y-6 animate-in fade-in duration-150">
+        <div
+          id="attendance-audit"
+          className="scroll-target tab-panel-focus space-y-6 animate-in fade-in duration-150"
+          tabIndex={-1}
+        >
           {audits.length > 0 ? (
             <AttendanceAuditHistory audits={audits} />
           ) : (

@@ -5,6 +5,20 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import QRCode from "qrcode";
 import { parseClubRoleRequest } from "@/lib/club-role-request.mjs";
+import {
+  notifyAnnouncementPublished,
+  notifyClubRoleChanged,
+  notifyDuesPaymentConfirmed,
+  notifyDuesPaymentRequestRejected,
+  notifyDuesPaymentRequestSubmitted,
+  notifyEventAttendanceOpened,
+  notifyEventRoleAssigned,
+  notifyMemberLifecycleChanged,
+  notifyNewEventScheduled,
+  notifyNewMemberSignUp,
+  notifyPasswordUpdated,
+  notifyPollCreated,
+} from "@/lib/email/notifications";
 import { parseExecutiveRoleRequest } from "@/lib/executive-role-request.mjs";
 import { rpcErrorNotice } from "@/lib/rpc-error-notice";
 import { getSiteOrigin, isGoogleAuthConfigured } from "@/lib/supabase/config";
@@ -463,6 +477,14 @@ export async function recordDuesPaymentAction(formData: FormData) {
   });
   if (error) redirect(duesNoticeUrl(rpcErrorNotice(error), memberId));
 
+  await notifyDuesPaymentConfirmed({
+    supabase: actor.supabase,
+    memberId,
+    amountNgn: amount,
+    coveredMonths: months,
+    paymentDate,
+  });
+
   revalidatePath("/dues");
   redirect(duesNoticeUrl("saved", memberId));
 }
@@ -616,6 +638,16 @@ export async function submitDuesPaymentRequestAction(formData: FormData) {
     redirect(duesNoticeUrl(rpcErrorNotice(error)));
   }
 
+  await notifyDuesPaymentRequestSubmitted({
+    supabase: actor.supabase,
+    actorId: actor.memberId,
+    amountNgn: amount,
+    coveredMonths: months,
+    paymentMethod,
+    paymentReference,
+    notes,
+  });
+
   revalidatePath("/dues");
   redirect(duesNoticeUrl("dues-request-submitted"));
 }
@@ -635,12 +667,28 @@ export async function approveDuesPaymentRequestAction(formData: FormData) {
     redirect(duesNoticeUrl("denied"));
   }
 
+  const { data: requestRow } = await actor.supabase
+    .from("dues_payment_requests")
+    .select("member_id, amount_ngn, covered_months, payment_reference")
+    .eq("id", requestId)
+    .maybeSingle();
+
   const { error } = await actor.supabase.rpc("approve_dues_payment_request", {
     p_request_id: requestId,
   });
 
   if (error) {
     redirect(duesNoticeUrl(rpcErrorNotice(error)));
+  }
+
+  if (requestRow) {
+    await notifyDuesPaymentConfirmed({
+      supabase: actor.supabase,
+      memberId: requestRow.member_id,
+      amountNgn: Number(requestRow.amount_ngn),
+      coveredMonths: requestRow.covered_months ?? [],
+      paymentReference: requestRow.payment_reference,
+    });
   }
 
   revalidatePath("/dues");
@@ -669,6 +717,12 @@ export async function rejectDuesPaymentRequestAction(formData: FormData) {
     redirect(duesNoticeUrl("denied"));
   }
 
+  const { data: requestRow } = await actor.supabase
+    .from("dues_payment_requests")
+    .select("member_id, amount_ngn, covered_months, payment_reference")
+    .eq("id", requestId)
+    .maybeSingle();
+
   const { error } = await actor.supabase.rpc("reject_dues_payment_request", {
     p_request_id: requestId,
     p_reason: reason,
@@ -676,6 +730,17 @@ export async function rejectDuesPaymentRequestAction(formData: FormData) {
 
   if (error) {
     redirect(duesNoticeUrl(rpcErrorNotice(error)));
+  }
+
+  if (requestRow) {
+    await notifyDuesPaymentRequestRejected({
+      supabase: actor.supabase,
+      memberId: requestRow.member_id,
+      amountNgn: Number(requestRow.amount_ngn),
+      coveredMonths: requestRow.covered_months ?? [],
+      paymentReference: requestRow.payment_reference,
+      reason,
+    });
   }
 
   revalidatePath("/dues");
@@ -917,6 +982,7 @@ export async function signUpAction(formData: FormData) {
   // Keep the response indistinguishable for an existing address to reduce
   // account enumeration. Auth metadata is validated again by the DB trigger.
   if (error) redirect("/signup?notice=signup-unavailable");
+  await notifyNewMemberSignUp({ email, fullName, username });
   redirect("/signup?notice=check-email");
 }
 
@@ -971,6 +1037,7 @@ export async function updatePasswordAction(formData: FormData) {
 
   const { error } = await supabase.auth.updateUser({ password });
   if (error) redirect("/reset-password?notice=update-failed");
+  await notifyPasswordUpdated({ email: data.user.email });
   redirect("/?notice=password-updated");
 }
 
@@ -1073,6 +1140,13 @@ export async function memberLifecycleAction(formData: FormData) {
   });
   if (error) redirect(`/admin/members?notice=${rpcErrorNotice(error)}`);
 
+  await notifyMemberLifecycleChanged({
+    supabase,
+    memberId,
+    operation: operation as "approve" | "reject" | "deactivate" | "reactivate",
+    reason,
+  });
+
   revalidatePath("/admin/members");
   const lifecycleNotice = {
     approve: "member-approved",
@@ -1123,6 +1197,14 @@ export async function executiveRoleAction(formData: FormData) {
   });
   if (error) redirect(`/admin/members?notice=${rpcErrorNotice(error)}`);
 
+  await notifyClubRoleChanged({
+    supabase,
+    memberId: request.memberId,
+    role: "executive",
+    operation: request.operation,
+    reason: request.reason,
+  });
+
   revalidatePath("/admin/members");
   redirect("/admin/members?notice=role-updated");
 }
@@ -1168,6 +1250,14 @@ export async function clubRoleChangeAction(formData: FormData) {
     p_reason: request.reason,
   });
   if (error) redirect(`/admin/members?notice=${rpcErrorNotice(error)}`);
+
+  await notifyClubRoleChanged({
+    supabase,
+    memberId: request.memberId,
+    role: request.role,
+    operation: "set",
+    reason: request.reason,
+  });
 
   revalidatePath("/admin/members");
   redirect("/admin/members?notice=role-updated");
@@ -1246,6 +1336,17 @@ export async function createEventAction(formData: FormData) {
     p_ticketing_enabled: ticketingEnabled,
   });
   if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
+
+  await notifyNewEventScheduled({
+    supabase: actor.supabase,
+    actorId: actor.memberId,
+    title,
+    eventType: eventType as string,
+    startsAt,
+    location,
+    description,
+  });
+
   revalidatePath("/events");
   redirect(eventNoticeUrl("created"));
 }
@@ -1348,6 +1449,15 @@ export async function assignEventRoleAction(formData: FormData) {
     p_reason: reason,
   });
   if (error) redirect(eventRoleNoticeUrl(rpcErrorNotice(error), returnTo));
+
+  await notifyEventRoleAssigned({
+    supabase: actor.supabase,
+    eventId,
+    memberId,
+    role: role as string,
+    reason,
+  });
+
   revalidatePath("/events");
   revalidatePath("/admin/members");
   redirect(eventRoleNoticeUrl("event-role-assigned", returnTo));
@@ -2170,6 +2280,14 @@ export async function openEventAttendanceAction(formData: FormData) {
     redirect(
       eventAttendanceNoticeUrl(eventId, rpcErrorNotice(error), returnTo),
     );
+
+  await notifyEventAttendanceOpened({
+    supabase: actor.supabase,
+    actorId: actor.memberId,
+    eventId,
+    cutoffMinutes: cutoff,
+  });
+
   revalidatePath(`/events/${eventId}/attendance`);
   revalidatePath("/attendance");
   redirect(eventAttendanceNoticeUrl(eventId, "attendance-opened", returnTo));
@@ -2535,6 +2653,14 @@ export async function createAnnouncementAction(formData: FormData) {
           p_expires_at: expiresAt,
         });
   if (error) redirect(communicationNotice(rpcErrorNotice(error)));
+
+  await notifyAnnouncementPublished({
+    supabase,
+    title,
+    message,
+    priority,
+  });
+
   revalidateCommunications();
   redirect(communicationNotice("announcement-created"));
 }
@@ -2647,6 +2773,15 @@ export async function createAnnouncementPollAction(formData: FormData) {
     p_options: options,
   });
   if (error) redirect(pollNotice(rpcErrorNotice(error)));
+
+  await notifyPollCreated({
+    supabase,
+    question,
+    pollType,
+    options,
+    durationMinutes: duration,
+  });
+
   revalidateCommunications();
   redirect(pollNotice("poll-created"));
 }
@@ -2844,6 +2979,35 @@ export async function markNotificationUnreadAsyncAction(
     const { error } = await supabase.rpc("mark_notification_unread", {
       p_notification_id: notificationId,
     });
+    if (error) return { ok: false, error: "operation-failed" };
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "unauthorized" };
+  }
+}
+
+export async function deleteNotificationAsyncAction(notificationId: string) {
+  if (!uuidPattern.test(notificationId)) {
+    return { ok: false, error: "invalid-request" };
+  }
+  try {
+    const supabase = await getActiveCommunicationActor();
+    const { error } = await supabase.rpc("delete_notification", {
+      p_notification_id: notificationId,
+    });
+    if (error) return { ok: false, error: "operation-failed" };
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "unauthorized" };
+  }
+}
+
+export async function deleteAllNotificationsAsyncAction() {
+  try {
+    const supabase = await getActiveCommunicationActor();
+    const { error } = await supabase.rpc("delete_all_notifications");
     if (error) return { ok: false, error: "operation-failed" };
     revalidatePath("/", "layout");
     return { ok: true };

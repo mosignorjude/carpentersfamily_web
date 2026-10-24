@@ -52,40 +52,162 @@ export function getNotificationTimestamp(timestamp) {
   };
 }
 
-const SAFE_EVENT_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+const SAFE_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+
+function sanitizeId(id) {
+  return typeof id === "string" && SAFE_ID_PATTERN.test(id) ? id : null;
+}
 
 /**
- * Route target for a notification record.
- * @param {{ category: string, event_id?: string | null }} notification
+ * Route target for a notification record with section deep-linking.
+ * @param {{
+ *   category?: string | null,
+ *   event_id?: string | null,
+ *   source_id?: string | null,
+ *   title?: string | null,
+ *   body?: string | null
+ * }} notification
  * @returns {string}
  */
 export function getNotificationHref(notification) {
-  const validEventId =
-    typeof notification.event_id === "string" &&
-    SAFE_EVENT_ID_PATTERN.test(notification.event_id)
-      ? notification.event_id
-      : null;
+  if (!notification || typeof notification !== "object") {
+    return "/";
+  }
+
+  const validEventId = sanitizeId(notification.event_id);
+  const validSourceId = sanitizeId(notification.source_id);
+  const title =
+    typeof notification.title === "string" ? notification.title : "";
+  const body = typeof notification.body === "string" ? notification.body : "";
+  const titleLower = title.toLowerCase();
+  const bodyLower = body.toLowerCase();
 
   switch (notification.category) {
-    case "dues_reminder":
-      return "/dues";
-    case "officer_money":
-      return validEventId ? `/events/${validEventId}/finance` : "/finances";
-    case "officer_member":
-      return "/admin/members";
-    case "officer_event":
-      return "/events";
-    case "attendance_open":
-      return validEventId
-        ? `/attendance?event=${encodeURIComponent(validEventId)}`
-        : "/attendance";
-    case "event_activity":
-      return "/events";
     case "announcement":
-      return "/announcements";
+      return validSourceId
+        ? `/announcements#announcement-${validSourceId}`
+        : "/announcements";
+
     case "new_poll":
     case "poll_closing":
-      return "/polls";
+      return validSourceId ? `/polls#poll-${validSourceId}` : "/polls";
+
+    case "event_activity":
+    case "officer_event":
+      return validEventId ? `/events#event-${validEventId}` : "/events";
+
+    case "attendance_open":
+      return validEventId
+        ? `/attendance?event=${encodeURIComponent(validEventId)}&tab=session#attendance-session`
+        : "/attendance";
+
+    case "dues_reminder":
+      if (
+        titleLower.includes("approved") ||
+        titleLower.includes("declined") ||
+        titleLower.includes("request") ||
+        bodyLower.includes("was approved") ||
+        bodyLower.includes("was declined")
+      ) {
+        return "/dues#dues-requests";
+      }
+      if (
+        titleLower.includes("recorded") ||
+        titleLower.includes("updated") ||
+        bodyLower.includes("was recorded") ||
+        bodyLower.includes("was updated")
+      ) {
+        return "/dues#dues-payments";
+      }
+      if (titleLower.includes("rate") || bodyLower.includes("rate")) {
+        return "/dues#dues-rates";
+      }
+      return "/dues#dues-schedule";
+
+    case "officer_money":
+      if (body.startsWith("Your dues")) {
+        if (
+          bodyLower.includes("was recorded") ||
+          titleLower.includes("recorded")
+        ) {
+          return "/dues#dues-payments";
+        }
+        return "/dues#dues-requests";
+      }
+      if (
+        titleLower.includes("rate") ||
+        bodyLower.includes("monthly dues rate")
+      ) {
+        return "/dues#dues-rates";
+      }
+      if (
+        titleLower.includes("dues payment request") ||
+        titleLower.includes("dues request") ||
+        bodyLower.includes("submitted a dues request") ||
+        bodyLower.includes("dues payment request")
+      ) {
+        return "/dues#dues-approvals";
+      }
+      if (
+        titleLower.includes("written off") ||
+        bodyLower.includes("written off")
+      ) {
+        return "/dues#dues-audit";
+      }
+      if (
+        bodyLower.includes("paid dues of") ||
+        titleLower.includes("dues payment recorded") ||
+        titleLower.includes("dues payment updated") ||
+        bodyLower.includes("dues payment was updated")
+      ) {
+        return "/dues#dues-payments";
+      }
+
+      if (validEventId) {
+        let tab = "overview";
+        if (titleLower.includes("budget") || bodyLower.includes("budget")) {
+          tab = "budget";
+        } else if (
+          titleLower.includes("expense") ||
+          bodyLower.includes("expense")
+        ) {
+          tab = "expenses";
+        } else if (
+          titleLower.includes("revenue") ||
+          titleLower.includes("income") ||
+          bodyLower.includes("revenue") ||
+          bodyLower.includes("income")
+        ) {
+          tab = "revenue";
+        } else if (
+          titleLower.includes("ticket") ||
+          bodyLower.includes("ticket")
+        ) {
+          tab = "tickets";
+        }
+        return `/events/${validEventId}/dashboard?tab=${tab}#event-finance-${tab}`;
+      }
+
+      return "/finances#finance-ledger";
+
+    case "officer_member":
+      if (
+        body.startsWith("Your ") &&
+        !body.startsWith("Your role changed to Executive") &&
+        !body.startsWith("Your role changed to Admin") &&
+        !body.startsWith("Your role changed to Backup Admin")
+      ) {
+        return "/";
+      }
+      if (
+        titleLower.includes("request") ||
+        bodyLower.includes("membership request") ||
+        bodyLower.includes("applicant")
+      ) {
+        return "/admin/members#pending-requests";
+      }
+      return "/admin/members#member-roster";
+
     default:
       return "/announcements";
   }

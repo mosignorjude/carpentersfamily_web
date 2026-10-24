@@ -66,7 +66,8 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
 
   return (
     <article
-      className={`bg-white rounded-xl border p-5 transition-all shadow-xs space-y-4 ${
+      id={`announcement-${announcement.id}`}
+      className={`scroll-target bg-white rounded-xl border p-5 transition-all shadow-xs space-y-4 ${
         isUnread
           ? "border-[#174C37] ring-1 ring-[#174C37]/20"
           : "border-[#E5DDD3]"

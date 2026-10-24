@@ -40,7 +40,9 @@ export default async function MemberLayout({
       .is("revoked_at", null),
     supabase
       .from("notifications")
-      .select("id,category,title,body,event_id,created_at,read_at")
+      .select(
+        "id,category,title,body,event_id,source_type,source_id,created_at,read_at",
+      )
       .eq("recipient_id", authData.user.id)
       .order("created_at", { ascending: false })
       .limit(30),

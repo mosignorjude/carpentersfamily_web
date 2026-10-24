@@ -283,7 +283,7 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
       </div>
 
       {/* 4. SECTION 1: MEMBERSHIP REQUESTS */}
-      <div id="pending-requests">
+      <div id="pending-requests" className="scroll-target">
         <MembershipRequestsSection
           pendingRequests={pendingRequests}
           onOpenApproveModal={(member) => {
@@ -298,47 +298,53 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
       </div>
 
       {/* 5. SECTION 2: MEMBER ROSTER */}
-      <MemberRosterSection
-        members={members}
-        currentOfficerId={resolvedOfficerId}
-        isAdminOrBackup={isAdminOrBackup}
-        roleLookupFailed={roleLookupFailed}
-        onOpenDeactivateModal={(member) => {
-          setSelectedMember(member);
-          setActiveModal("deactivate");
-        }}
-        onOpenReactivateModal={(member) => {
-          setSelectedMember(member);
-          setActiveModal("reactivate");
-        }}
-        onOpenChangeClubRoleModal={(member, targetRole) => {
-          setSelectedMember(member);
-          setTargetClubRole(targetRole);
-          setActiveModal("change_club_role");
-        }}
-        onScrollToPending={() => {
-          const el = document.getElementById("pending-requests");
-          if (el) el.scrollIntoView({ behavior: "smooth" });
-        }}
-      />
+      <div id="member-roster" className="scroll-target">
+        <MemberRosterSection
+          members={members}
+          currentOfficerId={resolvedOfficerId}
+          isAdminOrBackup={isAdminOrBackup}
+          roleLookupFailed={roleLookupFailed}
+          onOpenDeactivateModal={(member) => {
+            setSelectedMember(member);
+            setActiveModal("deactivate");
+          }}
+          onOpenReactivateModal={(member) => {
+            setSelectedMember(member);
+            setActiveModal("reactivate");
+          }}
+          onOpenChangeClubRoleModal={(member, targetRole) => {
+            setSelectedMember(member);
+            setTargetClubRole(targetRole);
+            setActiveModal("change_club_role");
+          }}
+          onScrollToPending={() => {
+            const el = document.getElementById("pending-requests");
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+          }}
+        />
+      </div>
 
       {/* 6. SECTION 3: EVENT STAFFING */}
-      <EventStaffingSection
-        events={events}
-        selectedEventId={selectedEventId}
-        onSelectEventId={setSelectedEventId}
-        assignments={eventAssignments}
-        onOpenAssignModal={() => {
-          setActiveModal("assign_event_role");
-        }}
-        onOpenRemoveModal={(assignment) => {
-          setSelectedAssignment(assignment);
-          setActiveModal("remove_event_role");
-        }}
-      />
+      <div id="event-staffing" className="scroll-target">
+        <EventStaffingSection
+          events={events}
+          selectedEventId={selectedEventId}
+          onSelectEventId={setSelectedEventId}
+          assignments={eventAssignments}
+          onOpenAssignModal={() => {
+            setActiveModal("assign_event_role");
+          }}
+          onOpenRemoveModal={(assignment) => {
+            setSelectedAssignment(assignment);
+            setActiveModal("remove_event_role");
+          }}
+        />
+      </div>
 
       {/* 7. SECTION 4: AUDIT HISTORY */}
-      <MemberAdminAuditSection auditLog={auditLog} />
+      <div id="member-audit" className="scroll-target">
+        <MemberAdminAuditSection auditLog={auditLog} />
+      </div>
 
       {/* 8. MODAL DIALOGS */}
       <MemberAdminModals

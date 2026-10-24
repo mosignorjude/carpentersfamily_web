@@ -43,18 +43,20 @@ function manifest() {
     bucketIds: ["club-finance-receipts"],
     objectCount: 1,
     totalBytes: pdf.length,
-    objects: [{
-      archiveEntry: "objects/00000001",
-      bucketId: object.bucketId,
-      path: object.path,
-      receiptKind: object.receiptKind,
-      receiptId: object.receiptId,
-      transactionId: object.transactionId,
-      contentType: object.contentType,
-      sizeBytes: object.sizeBytes,
-      sha256: object.sha256,
-      cacheControl: object.cacheControl,
-    }],
+    objects: [
+      {
+        archiveEntry: "objects/00000001",
+        bucketId: object.bucketId,
+        path: object.path,
+        receiptKind: object.receiptKind,
+        receiptId: object.receiptId,
+        transactionId: object.transactionId,
+        contentType: object.contentType,
+        sizeBytes: object.sizeBytes,
+        sha256: object.sha256,
+        cacheControl: object.cacheControl,
+      },
+    ],
     storageReadRole: "admin",
   };
 }
@@ -67,11 +69,9 @@ async function createTar(manifestObject, objectBytes = pdf) {
       callback();
     },
   });
-  await writeStorageTar(
-    sink,
-    manifestObject,
-    [{ name: "objects/00000001", bytes: objectBytes }],
-  );
+  await writeStorageTar(sink, manifestObject, [
+    { name: "objects/00000001", bytes: objectBytes },
+  ]);
   sink.end();
   return Buffer.concat(chunks);
 }
@@ -85,14 +85,45 @@ test("receipt backup metadata accepts only an available object with matching pat
 });
 
 test("receipt backup rejects orphan, pending, unsupported, tampered, and oversized records", () => {
-  assert.throws(() => validateReceiptObject(record({ receipt_kind: null })), /not attached/);
-  assert.throws(() => validateReceiptObject(record({ status: "pending" })), /not attached/);
-  assert.throws(() => validateReceiptObject(record({ bucket_id: "other-bucket" })), /Unsupported/);
-  assert.throws(() => validateReceiptObject(record({ name: "../unsafe.pdf" })), /path is invalid/);
-  assert.throws(() => validateReceiptObject(record({ storage_size_bytes: pdf.length + 1 })), /size does not match/);
-  assert.throws(() => validateReceiptObject(record({ storage_content_type: "image/png" })), /content type does not match/);
-  assert.throws(() => validateReceiptObject(record({ size_bytes: 4_194_305, storage_size_bytes: 4_194_305 })), /size does not match/);
-  assert.throws(() => validateReceiptBytes(validateReceiptObject(record()), Buffer.from("tampered")), /byte length/);
+  assert.throws(
+    () => validateReceiptObject(record({ receipt_kind: null })),
+    /not attached/,
+  );
+  assert.throws(
+    () => validateReceiptObject(record({ status: "pending" })),
+    /not attached/,
+  );
+  assert.throws(
+    () => validateReceiptObject(record({ bucket_id: "other-bucket" })),
+    /Unsupported/,
+  );
+  assert.throws(
+    () => validateReceiptObject(record({ name: "../unsafe.pdf" })),
+    /path is invalid/,
+  );
+  assert.throws(
+    () => validateReceiptObject(record({ storage_size_bytes: pdf.length + 1 })),
+    /size does not match/,
+  );
+  assert.throws(
+    () => validateReceiptObject(record({ storage_content_type: "image/png" })),
+    /content type does not match/,
+  );
+  assert.throws(
+    () =>
+      validateReceiptObject(
+        record({ size_bytes: 4_194_305, storage_size_bytes: 4_194_305 }),
+      ),
+    /size does not match/,
+  );
+  assert.throws(
+    () =>
+      validateReceiptBytes(
+        validateReceiptObject(record()),
+        Buffer.from("tampered"),
+      ),
+    /byte length/,
+  );
 });
 
 test("encrypted archive tar framing round-trips through bounded in-memory streams", async () => {
@@ -102,7 +133,8 @@ test("encrypted archive tar framing round-trips through bounded in-memory stream
     fragments.push(tar.subarray(offset, offset + 37));
   }
   const entries = [];
-  for await (const entry of readTarEntries(Readable.from(fragments))) entries.push(entry);
+  for await (const entry of readTarEntries(Readable.from(fragments)))
+    entries.push(entry);
   assert.equal(entries.length, 2);
   assert.equal(entries[0].name, "manifest.json");
   assert.deepEqual(JSON.parse(entries[0].content.toString("utf8")), manifest());
@@ -122,13 +154,31 @@ test("archive manifest rejects duplicate paths and impossible totals", () => {
   value.objects.push({ ...value.objects[0], archiveEntry: "objects/00000002" });
   value.objectCount = 2;
   value.totalBytes *= 2;
-  assert.throws(() => validateArchiveManifest(value), /repeats a Storage object/);
+  assert.throws(
+    () => validateArchiveManifest(value),
+    /repeats a Storage object/,
+  );
 });
 
 test("restore target permits only the local Supabase API endpoint", () => {
-  assert.equal(assertLoopbackSupabaseUrl("http://127.0.0.1:54321"), "http://127.0.0.1:54321");
-  assert.equal(assertLoopbackSupabaseUrl("http://localhost:54321/"), "http://localhost:54321");
-  assert.throws(() => assertLoopbackSupabaseUrl("https://example.supabase.co"), /only the local/);
-  assert.throws(() => assertLoopbackSupabaseUrl("http://127.0.0.1:54322"), /only the local/);
-  assert.throws(() => assertLoopbackSupabaseUrl("http://user:pass@127.0.0.1:54321"), /only the local/);
+  assert.equal(
+    assertLoopbackSupabaseUrl("http://127.0.0.1:54321"),
+    "http://127.0.0.1:54321",
+  );
+  assert.equal(
+    assertLoopbackSupabaseUrl("http://localhost:54321/"),
+    "http://localhost:54321",
+  );
+  assert.throws(
+    () => assertLoopbackSupabaseUrl("https://example.supabase.co"),
+    /only the local/,
+  );
+  assert.throws(
+    () => assertLoopbackSupabaseUrl("http://127.0.0.1:54322"),
+    /only the local/,
+  );
+  assert.throws(
+    () => assertLoopbackSupabaseUrl("http://user:pass@127.0.0.1:54321"),
+    /only the local/,
+  );
 });

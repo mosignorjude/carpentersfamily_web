@@ -76,3 +76,5 @@ next-env.d.ts
 /scripts/run-*-test.cmd
 /scripts/flash-test-batch.*
 /seed-communications.sql
+/tests/artifacts/
+/notification-deep-link-plan.txt

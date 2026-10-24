@@ -20,16 +20,19 @@
     "test:member-admin-ui": "node --test tests/member-administration-page.test.mjs",
     "test:executive-role-request": "node --test tests/executive-role-request.test.mjs",
     "test:workspace": "node --test tests/event-finance-workspace.test.mjs",
-    "test:categories": "node --test tests/event-category-permissions.test.mjs"
+    "test:categories": "node --test tests/event-category-permissions.test.mjs",
+    "email:test": "node --env-file=.env.local scripts/send-test-email.mjs"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.12",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.2",
     "lucide-react": "^1.56.0",
     "next": "16.4.3",
     "qrcode": "1.5.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "resend": "^6.34.1"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.5",

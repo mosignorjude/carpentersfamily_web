@@ -357,89 +357,105 @@ export function DuesPageView({
       )}
 
       {/* 4-Stat Metric Summary Strip */}
-      <DuesSummaryCards
-        clubTotalIncome={clubTotalIncome}
-        isOfficer={isOfficer}
-        monthlyRate={currentMonthlyRate}
-        nextMonthRate={
-          nextRateObj
-            ? {
-                effectiveMonth: nextRateObj.effective_month,
-                amount: Number(nextRateObj.monthly_amount_ngn),
-              }
-            : null
-        }
-        openTotal={openTotal}
-        paidMonthsCount={paidMonthsCount}
-        totalPaidAmount={totalPaidAmount}
-        unpaidMonthsCount={
-          duesRows.filter((r) => r.status === "unpaid" || r.is_overdue).length
-        }
-      />
+      <div id="dues-summary" className="scroll-target">
+        <DuesSummaryCards
+          clubTotalIncome={clubTotalIncome}
+          isOfficer={isOfficer}
+          monthlyRate={currentMonthlyRate}
+          nextMonthRate={
+            nextRateObj
+              ? {
+                  effectiveMonth: nextRateObj.effective_month,
+                  amount: Number(nextRateObj.monthly_amount_ngn),
+                }
+              : null
+          }
+          openTotal={openTotal}
+          paidMonthsCount={paidMonthsCount}
+          totalPaidAmount={totalPaidAmount}
+          unpaidMonthsCount={
+            duesRows.filter((r) => r.status === "unpaid" || r.is_overdue).length
+          }
+        />
+      </div>
 
       {/* Officer Approvals Queue (Phase 4 Governance) */}
       {isOfficer && viewerId && (
-        <OfficerDuesApprovalsCard
-          pendingMembersMap={pendingMembersMap}
-          pendingRequests={pendingRequests}
-          viewerId={viewerId}
-          viewerRoles={viewerRoles}
-        />
+        <div id="dues-approvals" className="scroll-target">
+          <OfficerDuesApprovalsCard
+            pendingMembersMap={pendingMembersMap}
+            pendingRequests={pendingRequests}
+            viewerId={viewerId}
+            viewerRoles={viewerRoles}
+          />
+        </div>
       )}
 
       {/* Member Submitted Dues Payment Requests */}
-      <MyDuesRequestsCard requests={ownRequests} />
+      <div id="dues-requests" className="scroll-target">
+        <MyDuesRequestsCard requests={ownRequests} />
+      </div>
 
       {/* Eligible Months Dues Schedule */}
-      <DuesScheduleCard
-        currentMonth={currentMonth}
-        duesRows={duesRows}
-        memberName={member.full_name}
-        onOpenPayDuesModal={() => setIsPayModalOpen(true)}
-      />
+      <div id="dues-schedule" className="scroll-target">
+        <DuesScheduleCard
+          currentMonth={currentMonth}
+          duesRows={duesRows}
+          memberName={member.full_name}
+          onOpenPayDuesModal={() => setIsPayModalOpen(true)}
+        />
+      </div>
 
       {/* Recorded Payment History */}
-      <DuesPaymentsHistoryCard
-        canCorrect={canCorrect}
-        coverageByPayment={coverageByPayment}
-        members={members}
-        pageSize={pageSize}
-        paymentPage={paymentPage}
-        payments={payments}
-        targetMemberId={targetMemberId}
-        totalPaymentsCount={totalPaymentsCount}
-      />
+      <div id="dues-payments" className="scroll-target">
+        <DuesPaymentsHistoryCard
+          canCorrect={canCorrect}
+          coverageByPayment={coverageByPayment}
+          members={members}
+          pageSize={pageSize}
+          paymentPage={paymentPage}
+          payments={payments}
+          targetMemberId={targetMemberId}
+          totalPaymentsCount={totalPaymentsCount}
+        />
+      </div>
 
       {/* Officer Treasury Controls (Mutations: Record Payment, Write-off) */}
       {isOfficer && (
-        <OfficerDuesControlsCard
-          availableMonths={availableMonths}
-          canRecord={canRecord}
-          canWriteOff={canWriteOff}
-          memberId={targetMemberId}
-          memberName={member.full_name}
-          pastUnpaidMonths={pastUnpaidMonths}
-          today={today}
-        />
+        <div id="dues-controls" className="scroll-target">
+          <OfficerDuesControlsCard
+            availableMonths={availableMonths}
+            canRecord={canRecord}
+            canWriteOff={canWriteOff}
+            memberId={targetMemberId}
+            memberName={member.full_name}
+            pastUnpaidMonths={pastUnpaidMonths}
+            today={today}
+          />
+        </div>
       )}
 
       {/* Rate History & Admin Scheduling */}
-      <DuesRateScheduleCard
-        canChangeRate={canChangeRate}
-        nextMonth={nextMonth}
-        rates={rates}
-      />
+      <div id="dues-rates" className="scroll-target">
+        <DuesRateScheduleCard
+          canChangeRate={canChangeRate}
+          nextMonth={nextMonth}
+          rates={rates}
+        />
+      </div>
 
       {/* Officer Audit Trail */}
       {isOfficer && (
-        <DuesAuditHistoryCard
-          actorNames={actorNames}
-          auditEntries={combinedAudit}
-          auditPage={auditPage}
-          pageSize={pageSize}
-          targetMemberId={targetMemberId}
-          totalAuditCount={totalAuditCount}
-        />
+        <div id="dues-audit" className="scroll-target">
+          <DuesAuditHistoryCard
+            actorNames={actorNames}
+            auditEntries={combinedAudit}
+            auditPage={auditPage}
+            pageSize={pageSize}
+            targetMemberId={targetMemberId}
+            totalAuditCount={totalAuditCount}
+          />
+        </div>
       )}
 
       {/* Dignified Club Footer */}

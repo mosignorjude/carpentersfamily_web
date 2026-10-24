@@ -1,3 +1,5 @@
+import { getNotificationHref } from "./notification-page-presentation.mjs";
+
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 const EVENT_LIMIT = 3;
@@ -375,27 +377,6 @@ function makePriorityUpdates(
     .slice(0, PRIORITY_UPDATE_LIMIT);
 }
 
-function notificationHref(row) {
-  if (row.category === "dues_reminder") return "/dues";
-  if (row.category === "officer_money") {
-    return UUID_PATTERN.test(row.event_id ?? "")
-      ? `/events/${row.event_id}/finance`
-      : "/finances";
-  }
-  if (row.category === "officer_member") return "/admin/members";
-  if (row.category === "officer_event") return "/events";
-  if (row.category === "attendance_open") {
-    return UUID_PATTERN.test(row.event_id ?? "")
-      ? `/attendance?event=${row.event_id}`
-      : "/attendance";
-  }
-  if (row.category === "event_activity") return "/events";
-  if (row.category === "new_poll" || row.category === "poll_closing") {
-    return "/polls";
-  }
-  return "/announcements";
-}
-
 function mapNotificationRow(row) {
   if (
     !row ||
@@ -416,7 +397,7 @@ function mapNotificationRow(row) {
     body: row.body,
     createdAt: row.created_at,
     readAt: row.read_at,
-    href: notificationHref(row),
+    href: getNotificationHref(row),
   };
 }
 
@@ -755,7 +736,9 @@ async function getMemberActivity(supabase, memberId) {
     safeQuery(
       supabase
         .from("notifications")
-        .select("id,category,title,body,event_id,created_at,read_at")
+        .select(
+          "id,category,title,body,event_id,source_type,source_id,created_at,read_at",
+        )
         .eq("recipient_id", memberId)
         .order("created_at", { ascending: false })
         .order("id", { ascending: false })

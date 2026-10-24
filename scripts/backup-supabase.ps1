@@ -9,6 +9,7 @@ $ErrorActionPreference = 'Stop'
 $script:DatabasePassword = $null
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$script:RepoRoot = $repoRoot
 $nodePath = (Get-Command node.exe -ErrorAction Stop).Source
 $cliPath = Join-Path $repoRoot 'node_modules\supabase\dist\supabase.js'
 $dockerDirectory = Join-Path $env:LOCALAPPDATA 'Programs\DockerDesktop\resources\bin'
@@ -25,6 +26,8 @@ foreach ($requiredPath in @($nodePath, $cliPath, $dockerPath, $gpgPath, $project
 
 $env:PATH = "$dockerDirectory;$env:PATH"
 $env:SUPABASE_TELEMETRY_DISABLED = '1'
+$script:PsqlImage = 'public.ecr.aws/supabase/postgres:17.11.0.002'
+$script:DatabaseHost = 'aws-0-eu-west-1.pooler.supabase.com'
 
 function Read-SecretText {
   param([Parameter(Mandatory)][string]$Prompt)
@@ -40,8 +43,31 @@ function Read-SecretText {
 }
 
 function Invoke-SupabaseCapture {
-  param([Parameter(Mandatory)][string[]]$Arguments)
-  $info = New-ProcessInfo -FileName $script:NodePath -Arguments (@($script:CliPath) + $Arguments) -RedirectOutput -RedirectError -IncludeDatabasePassword
+  param([Parameter(Mandatory)][string]$Query)
+  $arguments = @(
+    'run', '--rm', '--pull=never',
+    '--env', 'PGPASSWORD',
+    '--env', 'PGSSLMODE',
+    '--entrypoint', 'psql',
+    $script:PsqlImage,
+    '--host', $script:DatabaseHost,
+    '--port', '5432',
+    '--username', "postgres.$($script:ProjectRef)",
+    '--dbname', 'postgres',
+    '--no-psqlrc',
+    '--quiet',
+    '--tuples-only',
+    '--no-align',
+    '--no-password',
+    '--set=ON_ERROR_STOP=1',
+    '--command', "BEGIN TRANSACTION READ ONLY;`n$Query`nCOMMIT;"
+  )
+  $info = New-ProcessInfo -FileName $script:DockerPath -Arguments $arguments -RedirectOutput -RedirectError
+  if ([string]::IsNullOrWhiteSpace($script:DatabasePassword)) {
+    throw 'The database password is unavailable for the read-only preflight.'
+  }
+  $info.EnvironmentVariables['PGPASSWORD'] = $script:DatabasePassword
+  $info.EnvironmentVariables['PGSSLMODE'] = 'require'
   $process = [Diagnostics.Process]::new()
   $process.StartInfo = $info
   $null = $process.Start()
@@ -51,7 +77,8 @@ function Invoke-SupabaseCapture {
   $stdout = $stdoutTask.GetAwaiter().GetResult()
   $diagnostic = $stderrTask.GetAwaiter().GetResult()
   if ($process.ExitCode -ne 0) {
-    if ([string]::IsNullOrWhiteSpace($diagnostic)) { $diagnostic = $stdout }
+    $diagnosticParts = @($stdout, $diagnostic) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $diagnostic = $diagnosticParts -join [Environment]::NewLine
     if (-not [string]::IsNullOrEmpty($script:DatabasePassword)) {
       $diagnostic = $diagnostic.Replace($script:DatabasePassword, '[database password redacted]')
     }
@@ -59,12 +86,30 @@ function Invoke-SupabaseCapture {
       $diagnostic = $diagnostic.Replace($script:DatabaseUrl, '[database connection redacted]')
     }
     $diagnostic = [Regex]::Replace($diagnostic, 'postgres(ql)?://[^\s]+', '[database connection redacted]')
-    $diagnostic = [Regex]::Replace($diagnostic, 'sbp_[A-Za-z0-9_-]+', '[Supabase access token redacted]')
+    $diagnostic = [Regex]::Replace($diagnostic, 'sb_(publishable|secret)_[A-Za-z0-9_-]+', '[Supabase key redacted]')
+    $diagnostic = [Regex]::Replace($diagnostic, 'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+', '[session token redacted]')
     $lines = @($diagnostic -split '\r?\n' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     $diagnostic = ($lines | Select-Object -Last 12) -join [Environment]::NewLine
     throw "Supabase read-only preflight failed (exit $($process.ExitCode)): $($diagnostic.Trim())"
   }
-  return $stdout
+  return $stdout.Trim()
+}
+
+function Stop-ProcessTree {
+  param([Parameter(Mandatory)][Diagnostics.Process]$Process)
+  if ($Process.HasExited) { return }
+  $treeKill = [Diagnostics.Process].GetMethod('Kill', [type[]]@([bool]))
+  if ($null -ne $treeKill) {
+    $Process.Kill($true)
+    return
+  }
+  $taskkillPath = Join-Path $env:SystemRoot 'System32\taskkill.exe'
+  if (Test-Path -LiteralPath $taskkillPath -PathType Leaf) {
+    & $taskkillPath /PID $Process.Id /T /F | Out-Null
+  }
+  else {
+    $Process.Kill()
+  }
 }
 
 function ConvertTo-WindowsCommandLineArgument {
@@ -136,12 +181,48 @@ function New-ProcessInfo {
   return $info
 }
 
+function Invoke-SupabaseCredentialLink {
+  # Validate and store the password using Supabase's supported environment variable.
+  # Each linked dump also receives it through its own child process environment
+  # to avoid creating a temporary login role.
+  $arguments = @($script:CliPath, '--yes', 'link', '--project-ref', $script:ProjectRef)
+  $info = New-ProcessInfo -FileName $script:NodePath -Arguments $arguments -RedirectOutput -RedirectError -IncludeDatabasePassword
+  $process = [Diagnostics.Process]::new()
+  $process.StartInfo = $info
+  $null = $process.Start()
+  $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+  $stderrTask = $process.StandardError.ReadToEndAsync()
+  $process.WaitForExit()
+  $stdout = $stdoutTask.GetAwaiter().GetResult()
+  $diagnostic = $stderrTask.GetAwaiter().GetResult()
+  if ($process.ExitCode -ne 0) {
+    $diagnosticParts = @($stdout, $diagnostic) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $diagnostic = $diagnosticParts -join [Environment]::NewLine
+    if (-not [string]::IsNullOrEmpty($script:DatabasePassword)) {
+      $diagnostic = $diagnostic.Replace($script:DatabasePassword, '[database password redacted]')
+    }
+    if (-not [string]::IsNullOrEmpty($script:DatabaseUrl)) {
+      $diagnostic = $diagnostic.Replace($script:DatabaseUrl, '[database connection redacted]')
+    }
+    $diagnostic = [Regex]::Replace($diagnostic, 'postgres(ql)?://[^\s]+', '[database connection redacted]')
+    $diagnostic = [Regex]::Replace($diagnostic, 'sbp_[A-Za-z0-9_-]+', '[Supabase access token redacted]')
+    $diagnostic = [Regex]::Replace($diagnostic, 'sb_(publishable|secret)_[A-Za-z0-9_-]+', '[Supabase key redacted]')
+    $diagnostic = [Regex]::Replace($diagnostic, 'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+', '[session token redacted]')
+    $lines = @($diagnostic -split '\r?\n' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $diagnostic = ($lines | Select-Object -Last 12) -join [Environment]::NewLine
+    throw "Supabase CLI could not validate and store the database credential before export (exit $($process.ExitCode)). Confirm the CLI is logged in, then retry. No backup archive was started. $($diagnostic.Trim())"
+  }
+  Write-Host 'Supabase CLI linked-project credential setup passed.'
+}
+
 function Invoke-SupabaseStream {
   param(
     [Parameter(Mandatory)][string]$Stage,
     [Parameter(Mandatory)][string[]]$Arguments,
     [Parameter(Mandatory)][Diagnostics.Process]$Encryptor
   )
+  # Avoid the CLI temporary login-role path, which writes to WAL and trips the consistency guard.
+  # The password is supplied only through this child process environment, never argv.
   $info = New-ProcessInfo -FileName $script:NodePath -Arguments (@($script:CliPath) + $Arguments) -RedirectOutput -RedirectError -IncludeDatabasePassword
   $process = [Diagnostics.Process]::new()
   $process.StartInfo = $info
@@ -151,7 +232,7 @@ function Invoke-SupabaseStream {
     $process.StandardOutput.BaseStream.CopyTo($Encryptor.StandardInput.BaseStream)
   }
   catch {
-    if (-not $process.HasExited) { $process.Kill($true) }
+    Stop-ProcessTree -Process $process
     throw "Encrypted backup stream stopped during the $Stage export."
   }
   $process.WaitForExit()
@@ -191,12 +272,16 @@ function Get-DbQueryRow {
 
 function Convert-DbJsonArray {
   param([AllowNull()][object]$Value)
-  if ($null -eq $Value) { return ,@() }
+  if ($null -eq $Value) { return }
   if ($Value -is [string]) {
-    try { $parsed = ConvertFrom-Json -InputObject $Value -ErrorAction Stop; return ,@($parsed) }
+    try { $parsed = ConvertFrom-Json -InputObject $Value -ErrorAction Stop }
     catch { throw 'Supabase returned a malformed JSON array in the backup query.' }
+    if ($null -eq $parsed) { return }
+    if ($parsed -is [System.Array]) { return $parsed }
+    return ,$parsed
   }
-  return ,@($Value)
+  if ($Value -is [System.Array]) { return $Value }
+  return ,$Value
 }
 
 function Get-StorageObjectManifest {
@@ -228,15 +313,8 @@ from storage.objects as o
 left join public.club_financial_receipts as c on c.object_path = o.name
 left join public.event_financial_receipts as e on e.object_path = o.name;
 '@
-  $output = Invoke-SupabaseCapture -Arguments @(
-    'db', 'query', '--db-url', $script:DatabaseUrl,
-    '--output-format', 'json', $query
-  )
-  $row = Get-DbQueryRow -Output $output
-  if ($null -eq $row.PSObject.Properties['storage_object_manifest']) {
-    throw 'Supabase backup query did not return Storage object metadata.'
-  }
-  return Convert-DbJsonArray -Value $row.storage_object_manifest
+  $output = Invoke-SupabaseCapture -Query $query
+  return @(Convert-DbJsonArray -Value $output)
 }
 
 function Invoke-StorageArchive {
@@ -297,6 +375,7 @@ function Test-GpgStream {
 }
 
 $projectRef = (Get-Content -LiteralPath $projectRefPath -Raw).Trim()
+$script:ProjectRef = $projectRef
 if ($projectRef -notmatch '^[a-z0-9]{20}$') { throw 'Linked Supabase project reference is invalid.' }
 $refSuffix = $projectRef.Substring($projectRef.Length - 4)
 Write-Host "Linked project reference ends in: $refSuffix"
@@ -309,7 +388,7 @@ if ([string]::IsNullOrWhiteSpace($operatorLabel)) { throw 'An operator label is 
 try {
 $script:DatabasePassword = Read-SecretText 'Supabase database password'
 if ([string]::IsNullOrWhiteSpace($script:DatabasePassword)) { throw 'The Supabase database password is required.' }
-$script:DatabaseUrl = "postgresql://postgres.$($projectRef)@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
+$script:DatabaseUrl = "postgresql://postgres.$($projectRef)@$($script:DatabaseHost):5432/postgres"
 
 $cliVersion = (& $nodePath $cliPath --version).Trim()
 if ($LASTEXITCODE -ne 0 -or $cliVersion -ne '2.119.0') {
@@ -319,36 +398,47 @@ $dockerVersion = (& $dockerPath info --format '{{.ServerVersion}}' 2>$null).Trim
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($dockerVersion)) {
   throw 'Docker Desktop engine is unavailable; no export was started.'
 }
+$psqlImageId = (& $dockerPath image inspect $script:PsqlImage --format '{{.Id}}' 2>$null).Trim()
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($psqlImageId)) {
+  throw "The pinned read-only psql image is not cached. In PowerShell run 'docker pull $($script:PsqlImage)' once, then rerun this backup. No export was started."
+}
 $gpgVersion = ((& $gpgPath --version | Select-Object -First 1).Trim())
 
+# Save the password natively before opening the encrypted archive. Linked dumps
+# retrieve it from the CLI credential store and do not receive it in arguments.
+Invoke-SupabaseCredentialLink
+
 $countQuery = @'
-select
-  (select count(*) from auth.users) as auth_users,
-  (select count(*) from storage.buckets) as storage_buckets,
-  (select coalesce(jsonb_agg(jsonb_build_object(
+select jsonb_build_object(
+  'auth_users', (select count(*) from auth.users),
+  'migration_count', (select count(*) from supabase_migrations.schema_migrations),
+  'storage_buckets', (select count(*) from storage.buckets),
+  'storage_bucket_manifest', (select coalesce(jsonb_agg(jsonb_build_object(
     'id', id,
     'public', public,
     'file_size_limit', file_size_limit,
     'allowed_mime_types', allowed_mime_types
-  ) order by id), '[]'::jsonb) from storage.buckets) as storage_bucket_manifest,
-  (select count(*) from storage.objects) as storage_objects,
-  (select coalesce(sum((metadata ->> 'size')::bigint), 0) from storage.objects) as storage_object_bytes,
-  pg_database_size(current_database()) as database_bytes;
+  ) order by id), '[]'::jsonb) from storage.buckets),
+  'storage_objects', (select count(*) from storage.objects),
+  'storage_object_bytes', (select coalesce(sum((metadata ->> 'size')::bigint), 0) from storage.objects),
+  'database_bytes', pg_database_size(current_database())
+);
 '@
-$countOutput = Invoke-SupabaseCapture -Arguments @('db', 'query', '--db-url', $script:DatabaseUrl, '--output-format', 'json', $countQuery)
+$countOutput = Invoke-SupabaseCapture -Query $countQuery
 $counts = Get-DbQueryRow -Output $countOutput
-foreach ($field in @('auth_users', 'storage_buckets', 'storage_bucket_manifest', 'storage_objects', 'storage_object_bytes', 'database_bytes')) {
+foreach ($field in @('auth_users', 'migration_count', 'storage_buckets', 'storage_bucket_manifest', 'storage_objects', 'storage_object_bytes', 'database_bytes')) {
   if ($null -eq $counts.PSObject.Properties[$field]) {
     throw 'Supabase aggregate backup-count result was missing a required field. No archive was created.'
   }
 }
 $authUsers = [int64]$counts.auth_users
+$migrationCount = [int64]$counts.migration_count
 $storageBuckets = [int64]$counts.storage_buckets
 $storageObjects = [int64]$counts.storage_objects
 $storageObjectBytes = [int64]$counts.storage_object_bytes
 if ($storageObjects -gt 10000 -or $storageObjectBytes -gt 1073741824) { throw 'Storage objects exceed the reviewed backup limits. No archive was created.' }
 $databaseBytes = [int64]$counts.database_bytes
-$bucketRows = Convert-DbJsonArray -Value $counts.storage_bucket_manifest
+$bucketRows = @(Convert-DbJsonArray -Value $counts.storage_bucket_manifest)
 if ($bucketRows.Count -ne $storageBuckets) {
   throw 'Supabase bucket count did not match its bucket manifest. No archive was created.'
 }
@@ -360,7 +450,7 @@ if ($bucketRows.Count -gt 1) {
 }
 if ($bucketRows.Count -eq 1) {
   $bucket = $bucketRows[0]
-  $allowedTypes = Convert-DbJsonArray -Value $bucket.allowed_mime_types
+  $allowedTypes = @(Convert-DbJsonArray -Value $bucket.allowed_mime_types)
   $actualTypes = (@($allowedTypes | Sort-Object) -join ',')
   if (
     $bucket.id -ne 'club-finance-receipts' -or
@@ -377,7 +467,7 @@ if ($storageObjects -gt 0 -and $bucketRows.Count -ne 1) {
 
 $objectManifest = @()
 if ($storageObjects -gt 0) {
-  $objectManifest = Get-StorageObjectManifest
+  $objectManifest = @(Get-StorageObjectManifest)
   if ($objectManifest.Count -ne $storageObjects) {
     throw 'Storage object rows did not match the metadata manifest. No archive was created.'
   }
@@ -397,6 +487,10 @@ if ($LASTEXITCODE -ne 0 -or $migrationChanges.Count -gt 0) {
 }
 $sourceCommit = (& git -C $repoRoot rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0) { throw 'Could not record the source commit for the backup manifest.' }
+$databaseStartLsn = Invoke-SupabaseCapture -Query 'select pg_current_wal_lsn()::text;'
+if ($databaseStartLsn -notmatch '^[0-9A-F]+/[0-9A-F]+$') {
+  throw 'The database did not return a valid WAL position; no archive was created.'
+}
 
 New-Item -ItemType Directory -Force -Path $LocalBackupDirectory, $DriveBackupDirectory | Out-Null
 $timestamp = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ')
@@ -414,10 +508,12 @@ $manifestPartialPath = Join-Path $LocalBackupDirectory "$baseName.manifest.json.
 $driveManifestPath = Join-Path $DriveBackupDirectory "$baseName.manifest.json"
 $driveManifestPartialPath = Join-Path $DriveBackupDirectory "$baseName.manifest.json.partial"
 $existingBackupPaths = @(
-  $partialPath, $archivePath, $drivePartialPath, $driveArchivePath,
-  $storagePartialPath, $storageArchivePath, $driveStoragePartialPath, $driveStorageArchivePath,
-  $manifestPath, $manifestPartialPath, $driveManifestPath, $driveManifestPartialPath
-) | Where-Object { Test-Path -LiteralPath $_ }
+  @(
+    $partialPath, $archivePath, $drivePartialPath, $driveArchivePath,
+    $storagePartialPath, $storageArchivePath, $driveStoragePartialPath, $driveStorageArchivePath,
+    $manifestPath, $manifestPartialPath, $driveManifestPath, $driveManifestPartialPath
+  ) | Where-Object { Test-Path -LiteralPath $_ }
+)
 if ($existingBackupPaths.Count -gt 0) {
   throw 'A backup with this timestamp already exists; no existing files will be overwritten.'
 }
@@ -438,16 +534,25 @@ try {
   $null = $encryptor.Start()
   $encryptorStarted = $true
   Write-SqlMarker -Encryptor $encryptor -Text 'roles'
-  Invoke-SupabaseStream -Stage 'role' -Arguments @('db', 'dump', '--db-url', $script:DatabaseUrl, '--role-only') -Encryptor $encryptor
+  Invoke-SupabaseStream -Stage 'role' -Arguments @('db', 'dump', '--linked', '--role-only') -Encryptor $encryptor
 
   Write-SqlMarker -Encryptor $encryptor -Text 'application schema'
-  Invoke-SupabaseStream -Stage 'schema' -Arguments @('db', 'dump', '--db-url', $script:DatabaseUrl) -Encryptor $encryptor
+  Invoke-SupabaseStream -Stage 'schema' -Arguments @('db', 'dump', '--linked') -Encryptor $encryptor
+
+  Write-SqlMarker -Encryptor $encryptor -Text 'migration history schema'
+  Invoke-SupabaseStream -Stage 'migration history schema' -Arguments @('db', 'dump', '--linked', '--schema', 'supabase_migrations') -Encryptor $encryptor
 
   Write-SqlMarker -Encryptor $encryptor -Text 'data begins; triggers disabled for restore'
   $triggerOff = [Text.Encoding]::UTF8.GetBytes("SET session_replication_role = replica;`n")
   $encryptor.StandardInput.BaseStream.Write($triggerOff, 0, $triggerOff.Length)
   $encryptor.StandardInput.BaseStream.Flush()
-  Invoke-SupabaseStream -Stage 'data' -Arguments @('db', 'dump', '--db-url', $script:DatabaseUrl, '--data-only', '--use-copy') -Encryptor $encryptor
+  Invoke-SupabaseStream -Stage 'data' -Arguments @('db', 'dump', '--linked', '--data-only', '--use-copy') -Encryptor $encryptor
+  Write-SqlMarker -Encryptor $encryptor -Text 'migration history data'
+  Invoke-SupabaseStream -Stage 'migration history data' -Arguments @('db', 'dump', '--linked', '--data-only', '--use-copy', '--schema', 'supabase_migrations') -Encryptor $encryptor
+  $databaseEndLsn = Invoke-SupabaseCapture -Query 'select pg_current_wal_lsn()::text;'
+  if ($databaseEndLsn -notmatch '^[0-9A-F]+/[0-9A-F]+$' -or $databaseEndLsn -ne $databaseStartLsn) {
+    throw "The hosted database WAL position moved during separate dump sections (start $databaseStartLsn; end $databaseEndLsn). This archive was not marked complete. Pause application writes and retry."
+  }
   $triggerOn = [Text.Encoding]::UTF8.GetBytes("`nRESET session_replication_role;`n")
   $encryptor.StandardInput.BaseStream.Write($triggerOn, 0, $triggerOn.Length)
   $encryptor.StandardInput.BaseStream.Flush()
@@ -498,24 +603,22 @@ try {
   Test-GpgStream -Path $storagePartialPath
   Move-Item -LiteralPath $storagePartialPath -Destination $storageArchivePath
 
-  $postCountOutput = Invoke-SupabaseCapture -Arguments @(
-    'db', 'query', '--db-url', $script:DatabaseUrl,
-    '--output-format', 'json', $countQuery
-  )
+  $postCountOutput = Invoke-SupabaseCapture -Query $countQuery
   $postCounts = Get-DbQueryRow -Output $postCountOutput
-  $postBuckets = Convert-DbJsonArray -Value $postCounts.storage_bucket_manifest
+  $postBuckets = @(Convert-DbJsonArray -Value $postCounts.storage_bucket_manifest)
   if (
     [int64]$postCounts.storage_objects -ne $storageObjects -or
     [int64]$postCounts.storage_object_bytes -ne $storageObjectBytes -or
     [int64]$postCounts.storage_buckets -ne $storageBuckets -or
     [int64]$postCounts.auth_users -ne $authUsers -or
+    [int64]$postCounts.migration_count -ne $migrationCount -or
     (ConvertTo-Json -InputObject $postBuckets -Depth 10 -Compress) -ne
       (ConvertTo-Json -InputObject $bucketRows -Depth 10 -Compress)
   ) {
     throw 'Storage objects or bucket configuration changed during the backup. This pair was not marked complete.'
   }
   $postObjectManifest = @()
-  if ($storageBuckets -eq 1) { $postObjectManifest = Get-StorageObjectManifest }
+  if ($storageBuckets -eq 1) { $postObjectManifest = @(Get-StorageObjectManifest) }
   if (
     $postObjectManifest.Count -ne $objectManifest.Count -or
     (ConvertTo-Json -InputObject $postObjectManifest -Depth 20 -Compress) -ne
@@ -552,7 +655,9 @@ try {
     gpg = $gpgVersion
     databaseBytes = $databaseBytes
     authUserCount = $authUsers
+    migrationCount = $migrationCount
     storageBucketCount = $storageBuckets
+    storageBucketManifest = $bucketRows
     storageObjectCount = [int64]$storageResult.objectCount
     storageObjectBytes = [int64]$storageResult.totalBytes
     storageReadRole = $storageRole
@@ -583,7 +688,7 @@ try {
 }
 finally {
   if ($encryptorStarted -and -not $encryptor.HasExited) {
-    try { $encryptor.Kill($true) } catch {}
+    try { Stop-ProcessTree -Process $encryptor } catch {}
   }
   foreach ($temporaryPath in @($partialPath, $storagePartialPath, $drivePartialPath, $driveStoragePartialPath, $manifestPartialPath, $driveManifestPartialPath)) {
     if (Test-Path -LiteralPath $temporaryPath) {

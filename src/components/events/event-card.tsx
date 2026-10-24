@@ -127,8 +127,9 @@ export function EventCard({
 
   return (
     <article
+      id={`event-${event.id}`}
       aria-labelledby={`event-title-${event.id}`}
-      className={`bg-white rounded-2xl border p-5 sm:p-6 transition-all shadow-xs space-y-4 ${
+      className={`scroll-target bg-white rounded-2xl border p-5 sm:p-6 transition-all shadow-xs space-y-4 ${
         statusConfig.border
       } ${isLocked ? "bg-[#FAF6F0]/25" : "hover:border-[#174C37]/50"}`}
     >
