@@ -25,6 +25,10 @@ import {
 } from "@/lib/event-finance-tab.mjs";
 import { parseExecutiveRoleRequest } from "@/lib/executive-role-request.mjs";
 import { validateFinanceReceiptUpload } from "@/lib/finance-receipt-validation";
+import {
+  validateBackfillMonths,
+  validateClubPaymentSettingsInput,
+} from "@/lib/pre-launch-reconciliation.mjs";
 import { runReceiptEntry } from "@/lib/receipt-entry.mjs";
 import { getR2StorageAdapter } from "@/lib/receipt-storage";
 import { rpcErrorNotice } from "@/lib/rpc-error-notice";
@@ -212,6 +216,7 @@ async function getActiveFinanceActor() {
 
   return {
     supabase,
+    user: authData.user,
     roles: new Set((assignments ?? []).map((assignment) => assignment.role)),
   };
 }
@@ -451,6 +456,7 @@ async function getActiveDuesActor() {
 
   return {
     supabase,
+    user: authData.user,
     memberId: authData.user.id,
     roles: new Set((assignments ?? []).map((assignment) => assignment.role)),
   };
@@ -838,6 +844,206 @@ export async function rejectDuesPaymentRequestAction(formData: FormData) {
 
   revalidatePath("/dues");
   redirect(duesNoticeUrl("dues-request-rejected"));
+}
+
+export async function updateClubPaymentSettingsAction(
+  formData: FormData,
+): Promise<void> {
+  const returnTo = formString(formData, "return_to", 100);
+  const noticeUrl = (notice: string) => {
+    if (returnTo === "dues" || returnTo === "/dues") {
+      return duesNoticeUrl(notice);
+    }
+    if (returnTo === "admin-members" || returnTo === "/admin/members") {
+      return `/admin/members?${new URLSearchParams({ notice }).toString()}`;
+    }
+    return financeNoticeUrl(notice);
+  };
+
+  const rawBankName = formData.get("bank_name");
+  const rawAccountNumber = formData.get("account_number");
+  const rawAccountName = formData.get("account_name");
+  const rawInstructions = formData.get("instructions");
+
+  const bankName = typeof rawBankName === "string" ? rawBankName.trim() : "";
+  const accountNumber =
+    typeof rawAccountNumber === "string" ? rawAccountNumber.trim() : "";
+  const accountName =
+    typeof rawAccountName === "string" ? rawAccountName.trim() : "";
+  const instructions =
+    typeof rawInstructions === "string" ? rawInstructions.trim() : undefined;
+
+  const validation = validateClubPaymentSettingsInput({
+    bankName,
+    accountNumber,
+    accountName,
+    instructions: instructions || undefined,
+  });
+
+  if (
+    !validation.valid ||
+    containsControlCharacters(bankName) ||
+    containsControlCharacters(accountName) ||
+    (instructions &&
+      Array.from(instructions).some((char) => {
+        const cp = char.codePointAt(0) ?? 0;
+        return (cp < 32 && cp !== 9 && cp !== 10 && cp !== 13) || cp === 127;
+      }))
+  ) {
+    redirect(noticeUrl("invalid-payment-settings"));
+  }
+
+  const actor = await getActiveFinanceActor();
+  const allowed = actor.roles.has("admin") || actor.roles.has("backup_admin");
+  if (!allowed) {
+    redirect(noticeUrl("denied"));
+  }
+
+  const { error } = await actor.supabase.from("club_payment_settings").upsert({
+    id: "singleton",
+    bank_name: bankName,
+    account_number: accountNumber,
+    account_name: accountName,
+    instructions: instructions || null,
+    updated_at: new Date().toISOString(),
+    updated_by: actor.user.id,
+  });
+
+  if (error) {
+    redirect(noticeUrl(rpcErrorNotice(error)));
+  }
+
+  revalidatePath("/dues");
+  revalidatePath("/finances");
+  revalidatePath("/admin/members");
+  redirect(noticeUrl("payment-settings-saved"));
+}
+
+export async function recordOpeningBalanceAction(
+  formData: FormData,
+): Promise<void> {
+  const amount = parseFinanceAmount(formData.get("amount_ngn"));
+
+  const rawDate = formData.get("transaction_date");
+  const dateStr =
+    typeof rawDate === "string" && rawDate.trim() !== ""
+      ? rawDate.trim()
+      : "2026-10-01";
+  const parsedDate = parseFinanceDate(dateStr);
+
+  const rawNote = formData.get("source_note");
+  const sourceNote =
+    typeof rawNote === "string" && rawNote.trim() !== ""
+      ? rawNote.trim()
+      : "Verified pre-launch opening treasury balance as of go-live";
+
+  if (
+    amount === null ||
+    !parsedDate ||
+    sourceNote.length > 500 ||
+    containsControlCharacters(sourceNote)
+  ) {
+    redirect(financeNoticeUrl("invalid-request"));
+  }
+
+  const actor = await getActiveFinanceActor();
+  const allowed = actor.roles.has("admin") || actor.roles.has("backup_admin");
+  if (!allowed) {
+    redirect(financeNoticeUrl("denied"));
+  }
+
+  const targetId = randomUUID();
+  const rawIdempotencyKey = formString(formData, "idempotency_key", 36);
+  const idempotencyKey =
+    rawIdempotencyKey && uuidPattern.test(rawIdempotencyKey)
+      ? rawIdempotencyKey
+      : createHash("md5")
+          .update(`opening-balance-${parsedDate.date}`)
+          .digest("hex")
+          .replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
+
+  const { error } = await actor.supabase.rpc(
+    "record_club_financial_transaction",
+    {
+      p_kind: "income",
+      p_amount_ngn: amount,
+      p_transaction_date: parsedDate.date,
+      p_description: null,
+      p_category_id: null,
+      p_payer_payee: null,
+      p_source_note: sourceNote,
+      p_idempotency_key: idempotencyKey,
+      p_payment_method: "cash",
+      p_transaction_id: targetId,
+    },
+  );
+
+  if (error) {
+    redirect(financeNoticeUrl(rpcErrorNotice(error)));
+  }
+
+  revalidatePath("/finances");
+  redirect(financeNoticeUrl("opening-balance-recorded"));
+}
+
+export async function backfillMemberHistoricalDuesAction(
+  formData: FormData,
+): Promise<void> {
+  const memberId = formString(formData, "member_id", 36);
+  if (!memberId || !uuidPattern.test(memberId)) {
+    redirect(duesNoticeUrl("invalid-request"));
+  }
+
+  const rawMonths = formData.getAll("covered_months");
+  const monthsList: string[] = [];
+  if (rawMonths.length > 0) {
+    for (const item of rawMonths) {
+      if (typeof item === "string") {
+        if (item.includes(",")) {
+          monthsList.push(...item.split(",").map((s) => s.trim()));
+        } else {
+          monthsList.push(item.trim());
+        }
+      }
+    }
+  }
+
+  const validation = validateBackfillMonths(monthsList);
+  if (!validation.valid) {
+    redirect(duesNoticeUrl("invalid-reconciliation-months", memberId));
+  }
+
+  const rawNotes = formData.get("notes");
+  const notes =
+    typeof rawNotes === "string" && rawNotes.trim() !== ""
+      ? rawNotes.trim()
+      : null;
+
+  if (notes && (notes.length > 500 || containsControlCharacters(notes))) {
+    redirect(duesNoticeUrl("invalid-request", memberId));
+  }
+
+  const actor = await getActiveDuesActor();
+  const allowed = actor.roles.has("admin") || actor.roles.has("backup_admin");
+  if (!allowed) {
+    redirect(duesNoticeUrl("denied", memberId));
+  }
+
+  const { error } = await actor.supabase.rpc(
+    "backfill_member_historical_dues",
+    {
+      p_member_id: memberId,
+      p_covered_months: validation.normalizedMonths,
+      p_notes: notes,
+    },
+  );
+
+  if (error) {
+    redirect(duesNoticeUrl(rpcErrorNotice(error), memberId));
+  }
+
+  revalidatePath("/dues");
+  redirect(duesNoticeUrl("historical-dues-reconciled", memberId));
 }
 
 export async function recordClubFinanceAction(formData: FormData) {

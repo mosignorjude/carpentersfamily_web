@@ -78,7 +78,10 @@ export function validateClubPaymentSettingsInput(input) {
     return nubanResult;
   }
 
-  if (typeof input.accountName !== "string" || input.accountName.trim() === "") {
+  if (
+    typeof input.accountName !== "string" ||
+    input.accountName.trim() === ""
+  ) {
     return {
       valid: false,
       error: "Account name is required and cannot be empty",
