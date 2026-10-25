@@ -19,6 +19,10 @@ import {
   notifyPasswordUpdated,
   notifyPollCreated,
 } from "@/lib/email/notifications";
+import {
+  buildEventFinanceNoticeUrl,
+  normalizeEventFinanceTab,
+} from "@/lib/event-finance-tab.mjs";
 import { parseExecutiveRoleRequest } from "@/lib/executive-role-request.mjs";
 import { rpcErrorNotice } from "@/lib/rpc-error-notice";
 import { getSiteOrigin, isGoogleAuthConfigured } from "@/lib/supabase/config";
@@ -223,8 +227,12 @@ function eventNoticeUrl(notice: string) {
   return `/events?${new URLSearchParams({ notice }).toString()}`;
 }
 
-function eventFinanceNoticeUrl(eventId: string, notice: string) {
-  return `/events/${encodeURIComponent(eventId)}/dashboard?${new URLSearchParams({ notice }).toString()}`;
+function eventFinanceNoticeUrl(
+  eventId: string,
+  notice: string,
+  returnTab?: string | null,
+) {
+  return buildEventFinanceNoticeUrl(eventId, notice, returnTab);
 }
 
 function eventAttendanceNoticeUrl(
@@ -1788,6 +1796,7 @@ export async function recordEventFinancialTransactionAction(
   if (!eventId || !uuidPattern.test(eventId)) {
     redirect(eventNoticeUrl("invalid-request"));
   }
+  const returnTab = normalizeEventFinanceTab(formData.get("return_tab"));
   const kind = eventText(formData, "kind", 8);
   const amount = eventAmount(formData.get("amount_ngn"));
   const transactionDate = parseFinanceDate(formData.get("transaction_date"));
@@ -1828,6 +1837,7 @@ export async function recordEventFinancialTransactionAction(
       "budget_allocation_category_id",
       "payment_status",
       "idempotency_key",
+      "return_tab",
     ]) ||
     !["income", "expense"].includes(kind ?? "") ||
     amount === null ||
@@ -1845,17 +1855,17 @@ export async function recordEventFinancialTransactionAction(
     (kind === "expense" &&
       (!description || !payerPayee || sourceNote || paymentMethod))
   ) {
-    redirect(eventFinanceNoticeUrl(eventId, "invalid-request"));
+    redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
   }
   const actor = await getActiveEventActor(eventId);
   if (!eventFinanceManagerAllowed(actor)) {
-    redirect(eventFinanceNoticeUrl(eventId, "denied"));
+    redirect(eventFinanceNoticeUrl(eventId, "denied", returnTab));
   }
   if (
     transactionDate.date !== transactionDate.today &&
     !eventCorrectionAllowed(actor.roles)
   ) {
-    redirect(eventFinanceNoticeUrl(eventId, "denied"));
+    redirect(eventFinanceNoticeUrl(eventId, "denied", returnTab));
   }
 
   const targetCategoryType = kind === "income" ? "revenue" : "expense";
@@ -1899,7 +1909,7 @@ export async function recordEventFinancialTransactionAction(
   }
 
   if (!resolvedCategoryId) {
-    redirect(eventFinanceNoticeUrl(eventId, "operation-failed"));
+    redirect(eventFinanceNoticeUrl(eventId, "operation-failed", returnTab));
   }
 
   const budgetAllocationCategoryId =
@@ -1924,11 +1934,13 @@ export async function recordEventFinancialTransactionAction(
       p_idempotency_key: idempotencyKey,
     },
   );
-  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
+  if (error) {
+    redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error), returnTab));
+  }
   revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
-  redirect(eventFinanceNoticeUrl(eventId, "transaction-recorded"));
+  redirect(eventFinanceNoticeUrl(eventId, "transaction-recorded", returnTab));
 }
 
 export async function correctEventFinancialTransactionAction(
@@ -2019,24 +2031,29 @@ export async function correctEventFinancialTransactionAction(
 export async function voidEventFinancialTransactionAction(formData: FormData) {
   const { eventId, recordId: transactionId } = eventFinanceInput(
     formData,
-    ["event_id", "transaction_id", "reason"],
+    ["event_id", "transaction_id", "reason", "return_tab"],
     "transaction_id",
   );
+  const returnTab = normalizeEventFinanceTab(formData.get("return_tab"));
   const reason = eventText(formData, "reason", 500);
-  if (!reason) redirect(eventFinanceNoticeUrl(eventId, "invalid-request"));
+  if (!reason) {
+    redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
+  }
   const actor = await getActiveEventActor(eventId);
   if (!eventCorrectionAllowed(actor.roles)) {
-    redirect(eventFinanceNoticeUrl(eventId, "denied"));
+    redirect(eventFinanceNoticeUrl(eventId, "denied", returnTab));
   }
   const { error } = await actor.supabase.rpc(
     "void_event_financial_transaction",
     { p_transaction_id: transactionId, p_reason: reason },
   );
-  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
+  if (error) {
+    redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error), returnTab));
+  }
   revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
-  redirect(eventFinanceNoticeUrl(eventId, "transaction-voided"));
+  redirect(eventFinanceNoticeUrl(eventId, "transaction-voided", returnTab));
 }
 
 export async function recordEventTicketSaleAction(formData: FormData) {
@@ -2044,6 +2061,7 @@ export async function recordEventTicketSaleAction(formData: FormData) {
   if (!eventId || !uuidPattern.test(eventId)) {
     redirect(eventNoticeUrl("invalid-request"));
   }
+  const returnTab = normalizeEventFinanceTab(formData.get("return_tab"));
   const tierId = eventText(formData, "tier_id", 36);
   const quantity = eventCapacity(formData, "quantity", 1000);
   const buyerName = eventFinanceOptionalText(formData, "buyer_name", 160);
@@ -2069,6 +2087,7 @@ export async function recordEventTicketSaleAction(formData: FormData) {
       "buyer_name",
       "payment_method",
       "idempotency_key",
+      "return_tab",
     ]) ||
     !tierId ||
     !uuidPattern.test(tierId) ||
@@ -2079,11 +2098,11 @@ export async function recordEventTicketSaleAction(formData: FormData) {
     !idempotencyKey ||
     !uuidPattern.test(idempotencyKey)
   ) {
-    redirect(eventFinanceNoticeUrl(eventId, "invalid-request"));
+    redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
   }
   const actor = await getActiveEventActor(eventId);
   if (!eventFinanceManagerAllowed(actor)) {
-    redirect(eventFinanceNoticeUrl(eventId, "denied"));
+    redirect(eventFinanceNoticeUrl(eventId, "denied", returnTab));
   }
   const { error } = await actor.supabase.rpc("record_event_ticket_sale", {
     p_event_id: eventId,
@@ -2093,11 +2112,13 @@ export async function recordEventTicketSaleAction(formData: FormData) {
     p_payment_method: paymentMethod,
     p_idempotency_key: idempotencyKey,
   });
-  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
+  if (error) {
+    redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error), returnTab));
+  }
   revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
-  redirect(eventFinanceNoticeUrl(eventId, "ticket-recorded"));
+  redirect(eventFinanceNoticeUrl(eventId, "ticket-recorded", returnTab));
 }
 
 export async function editEventTicketSaleAction(formData: FormData) {
@@ -2159,24 +2180,29 @@ export async function editEventTicketSaleAction(formData: FormData) {
 export async function refundEventTicketSaleAction(formData: FormData) {
   const { eventId, recordId: saleId } = eventFinanceInput(
     formData,
-    ["event_id", "sale_id", "reason"],
+    ["event_id", "sale_id", "reason", "return_tab"],
     "sale_id",
   );
+  const returnTab = normalizeEventFinanceTab(formData.get("return_tab"));
   const reason = eventText(formData, "reason", 500);
-  if (!reason) redirect(eventFinanceNoticeUrl(eventId, "invalid-request"));
+  if (!reason) {
+    redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
+  }
   const actor = await getActiveEventActor(eventId);
   if (!eventCorrectionAllowed(actor.roles)) {
-    redirect(eventFinanceNoticeUrl(eventId, "denied"));
+    redirect(eventFinanceNoticeUrl(eventId, "denied", returnTab));
   }
   const { error } = await actor.supabase.rpc("refund_event_ticket_sale", {
     p_sale_id: saleId,
     p_reason: reason,
   });
-  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
+  if (error) {
+    redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error), returnTab));
+  }
   revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
-  redirect(eventFinanceNoticeUrl(eventId, "ticket-refunded"));
+  redirect(eventFinanceNoticeUrl(eventId, "ticket-refunded", returnTab));
 }
 
 export async function saveEventMinutesAction(formData: FormData) {

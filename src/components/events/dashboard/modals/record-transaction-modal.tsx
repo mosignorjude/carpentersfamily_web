@@ -6,6 +6,11 @@ import { useEffect, useState } from "react";
 import { FormattedAmountInput } from "@/components/formatted-amount-input";
 import { FormAlertBanner } from "@/components/ui";
 import { formatNaira, formatPercent } from "@/lib/format";
+import {
+  buildDisbursementFields,
+  getActiveExpenseCategories,
+  matchExpenseCategoryByName,
+} from "@/lib/record-disbursement.mjs";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 import type {
   DashboardCostCenter,
@@ -63,7 +68,11 @@ export function RecordTransactionModal({
     .filter((c) => c.category_type === "revenue" && !c.retired_at)
     .map((c) => ({ id: c.id, label: c.name }));
 
-  const expenseCategories = costCenters
+  const expenseCategoryOptions = getActiveExpenseCategories(categories).map(
+    (c) => ({ id: c.id, name: c.name }),
+  );
+
+  const allocationOptions = costCenters
     .filter((c) => !c.name.toLowerCase().includes("unallocated"))
     .map((c) => {
       const percent =
@@ -98,7 +107,7 @@ export function RecordTransactionModal({
       return revenueCategories[0]?.id || "";
     }
     if (preferred) {
-      const match = expenseCategories.find(
+      const match = allocationOptions.find(
         (c) =>
           c.id === preferred ||
           c.costCenterId === preferred ||
@@ -107,7 +116,12 @@ export function RecordTransactionModal({
       );
       if (match) return match.id;
     }
-    return expenseCategories[0]?.id || "";
+    return allocationOptions[0]?.id || "";
+  };
+
+  const resolveExpenseCategory = (allocationId: string): string => {
+    const allocation = allocationOptions.find((c) => c.id === allocationId);
+    return matchExpenseCategoryByName(allocation?.name, categories)?.id || "";
   };
 
   const [mode, setMode] = useState<TransactionMode>(determineInitialMode());
@@ -126,6 +140,9 @@ export function RecordTransactionModal({
       : resolveCategoryForMode(
           initialType === "expense" ? "expense" : "revenue",
         ),
+  );
+  const [expenseCategory, setExpenseCategory] = useState<string>(() =>
+    resolveExpenseCategory(resolveCategoryForMode("expense")),
   );
   const [description, setDescription] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
@@ -148,7 +165,9 @@ export function RecordTransactionModal({
         setPaymentRef(`PSTK-TKT-${Date.now().toString().slice(-6)}`);
       } else if (initialType === "expense") {
         setMode("expense");
-        setCategory(resolveCategoryForMode("expense", initialCategory));
+        const allocationId = resolveCategoryForMode("expense", initialCategory);
+        setCategory(allocationId);
+        setExpenseCategory(resolveExpenseCategory(allocationId));
         setPaymentMethod("Bank Transfer (NIBSS)");
         setPaymentRef(`NIBSS-EXP-${Date.now().toString().slice(-6)}`);
       } else {
@@ -260,31 +279,60 @@ export function RecordTransactionModal({
       setError("Payment reference or bank voucher number is required.");
       return;
     }
-    if (!category) {
+    if (mode === "revenue" && !category) {
       setError(
-        mode === "revenue"
-          ? "Please select an active revenue category (or create one in Categories)."
-          : "Please configure budget allocations for this event before recording disbursements.",
+        "Please select an active revenue category (or create one in Categories).",
+      );
+      return;
+    }
+    if (mode === "expense" && !category) {
+      setError(
+        "Please configure budget allocations for this event before recording disbursements.",
+      );
+      return;
+    }
+    if (mode === "expense" && expenseCategoryOptions.length === 0) {
+      setError(
+        "No active expense categories are configured. Ask an Admin to add one before recording disbursements.",
+      );
+      return;
+    }
+    if (mode === "expense" && !expenseCategory) {
+      setError(
+        "Please select an active expense category for this disbursement.",
       );
       return;
     }
 
-    const matchedExpenseCategory =
-      mode === "expense"
-        ? expenseCategories.find((c) => c.id === category)
-        : undefined;
-
-    const catLabel =
+    let submissionCategory = category;
+    let submissionCategoryLabel =
       mode === "revenue"
         ? revenueCategories.find((c) => c.id === category)?.label || "Revenue"
-        : matchedExpenseCategory?.name || "Expense";
+        : "";
+    let budgetAllocationCategoryId: string | undefined;
+
+    if (mode === "expense") {
+      const fields = buildDisbursementFields(
+        allocationOptions.find((c) => c.id === category),
+        expenseCategoryOptions.find((c) => c.id === expenseCategory),
+      );
+      if (!fields) {
+        setError(
+          "Please select both a budget allocation and an expense category.",
+        );
+        return;
+      }
+      submissionCategory = fields.category;
+      submissionCategoryLabel = fields.categoryLabel;
+      budgetAllocationCategoryId = fields.budgetAllocationCategoryId;
+    }
 
     onSave({
       date: watTime,
       type: mode === "revenue" ? "revenue" : "expense",
-      category,
-      categoryLabel: catLabel,
-      budgetAllocationCategoryId: matchedExpenseCategory?.id,
+      category: submissionCategory,
+      categoryLabel: submissionCategoryLabel,
+      budgetAllocationCategoryId,
       description: description.trim(),
       amount: numAmount,
       payerPayee: payerPayee.trim(),
@@ -385,7 +433,9 @@ export function RecordTransactionModal({
             id="btn-mode-disbursement"
             onClick={() => {
               setMode("expense");
-              setCategory(resolveCategoryForMode("expense"));
+              const allocationId = resolveCategoryForMode("expense");
+              setCategory(allocationId);
+              setExpenseCategory(resolveExpenseCategory(allocationId));
               setError("");
             }}
             type="button"
@@ -546,19 +596,26 @@ export function RecordTransactionModal({
                 >
                   {mode === "revenue"
                     ? "Revenue Stream Category"
-                    : "Budget Allocation Cost Center"}
+                    : "Budget Allocation (Cost Center)"}
                 </label>
                 <select
                   className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
                   disabled={
-                    (mode === "revenue" ? revenueCategories : expenseCategories)
+                    (mode === "revenue" ? revenueCategories : allocationOptions)
                       .length === 0
                   }
                   id="category-select"
-                  onChange={(e) => setCategory(e.target.value)}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    if (mode === "expense") {
+                      setExpenseCategory(
+                        resolveExpenseCategory(e.target.value),
+                      );
+                    }
+                  }}
                   value={category}
                 >
-                  {(mode === "revenue" ? revenueCategories : expenseCategories)
+                  {(mode === "revenue" ? revenueCategories : allocationOptions)
                     .length === 0 ? (
                     <option disabled value="">
                       {mode === "revenue"
@@ -572,20 +629,53 @@ export function RecordTransactionModal({
                       </option>
                     ))
                   ) : (
-                    expenseCategories.map((c) => (
+                    allocationOptions.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.label}
                       </option>
                     ))
                   )}
                 </select>
-                {mode === "expense" && expenseCategories.length > 0 && (
-                  <p className="text-[11px] text-[#7A685D] mt-1">
-                    Expenses are strictly recorded against an approved budget
-                    allocation.
-                  </p>
-                )}
               </div>
+
+              {mode === "expense" && (
+                <div className="space-y-1.5">
+                  <label
+                    className="font-bold text-[#3D291F] block"
+                    htmlFor="expense-category-select"
+                  >
+                    Expense Category
+                  </label>
+                  <select
+                    className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+                    disabled={expenseCategoryOptions.length === 0}
+                    id="expense-category-select"
+                    onChange={(e) => setExpenseCategory(e.target.value)}
+                    value={expenseCategory}
+                  >
+                    {expenseCategoryOptions.length === 0 ? (
+                      <option disabled value="">
+                        No active expense categories configured
+                      </option>
+                    ) : (
+                      <>
+                        <option disabled value="">
+                          Select an expense category
+                        </option>
+                        {expenseCategoryOptions.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </>
+                    )}
+                  </select>
+                  <p className="text-[11px] text-[#7A685D] mt-1">
+                    Every disbursement posts against an Admin-managed expense
+                    category and an approved budget allocation.
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <label

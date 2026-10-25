@@ -5,6 +5,7 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Link,
   Preview,
   Section,
@@ -12,7 +13,7 @@ import {
 } from "@react-email/components";
 import type { ReactNode } from "react";
 import { clubBrand } from "@/lib/brand";
-import { DEFAULT_REPLY_TO_EMAIL } from "@/lib/email/config";
+import { DEFAULT_REPLY_TO_EMAIL, getEmailLogoUrl } from "@/lib/email/config";
 
 export interface BaseEmailLayoutProps {
   previewText: string;
@@ -36,6 +37,13 @@ export function BaseEmailLayout({
       <Body style={styles.body}>
         <Container style={styles.container}>
           <Section style={styles.headerBanner}>
+            <Img
+              alt={clubBrand.name}
+              height="60"
+              src={getEmailLogoUrl()}
+              style={styles.logoImage}
+              width="60"
+            />
             <Text style={styles.eyebrow}>{eyebrow}</Text>
             <Heading as="h1" style={styles.headerTitle}>
               {clubBrand.name}
@@ -97,6 +105,15 @@ const styles = {
   headerBanner: {
     backgroundColor: "#0C3325",
     padding: "28px 32px 24px",
+  },
+  logoImage: {
+    display: "block",
+    width: "60px",
+    height: "60px",
+    borderRadius: "50%",
+    backgroundColor: "#FFFFFF",
+    margin: "0 0 14px",
+    border: "0",
   },
   eyebrow: {
     color: "#D6A23A",

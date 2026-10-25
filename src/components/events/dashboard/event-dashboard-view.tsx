@@ -262,6 +262,7 @@ export function EventDashboardView({
     if (txnData.category === "ticket_sales" && txnData.tierId) {
       const fd = new FormData();
       fd.set("event_id", event.id);
+      fd.set("return_tab", activeTab);
       fd.set("tier_id", txnData.tierId);
       fd.set("quantity", String(txnData.ticketQuantity ?? 1));
       fd.set("buyer_name", txnData.payerPayee.slice(0, 160));
@@ -286,6 +287,7 @@ export function EventDashboardView({
 
     const fd = new FormData();
     fd.set("event_id", event.id);
+    fd.set("return_tab", activeTab);
     fd.set("kind", txnData.type === "revenue" ? "income" : "expense");
     fd.set("amount_ngn", String(Math.round(txnData.amount)));
     fd.set("transaction_date", lagosToday);
@@ -344,6 +346,7 @@ export function EventDashboardView({
     ) {
       const fd = new FormData();
       fd.set("event_id", event.id);
+      fd.set("return_tab", activeTab);
       fd.set("reason", reason.slice(0, 500));
       if (targetTxn?.category === "ticket_sales") {
         fd.set("sale_id", txnId);
