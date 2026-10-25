@@ -45,6 +45,7 @@ yarn-error.log*
 /AGENTS.md
 /requirements-brief.md
 /DESIGN.md
+.superpowers/
 # Local scripts & user data exports
 scripts/*firebase_users*
 scripts/*.local.*
