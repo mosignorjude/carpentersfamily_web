@@ -140,7 +140,7 @@ Server action receives FormData (transaction fields + optional file)
 - Object metadata: `ContentType` from the validator; `CacheControl: "private, no-store"`.
 - The RPC receives pre-generated IDs so the object key and DB row agree.
 - If the RPC fails, the uploaded object is deleted. If deletion also fails, the error is logged and the orphan cleanup script reconciles later.
-- Idempotency: club/event transactions keep their existing unique `(actor, idempotency_key)` constraint. **A same-value replay returns the existing row without raising an error**, so the orchestrator must use the RPC's `deduplicated` flag (and the returned ID) rather than waiting for `23505`. A different-value replay still raises `23505` and is treated as a failure.
+- Idempotency: club, event, and ticket-sale records keep their existing unique `(actor, idempotency_key)` constraints. **A same-value replay returns the existing row without raising an error**, so the orchestrator must use the RPC's `deduplicated` flag (and the returned ID) rather than waiting for `23505`. A different-value replay still raises `23505` and is treated as a failure.
 - The cleanup sweep needs `ListBucket` permission (or an upload ledger) because object read/write alone cannot list a prefix.
 
 ### 6.5 Extra-receipt flow
@@ -183,7 +183,7 @@ GET /api/receipts/[receiptId]
 
 - Allowed values for new writes everywhere: `bank_transfer`, `cash`.
 - Historical rows may hold retired values (`mobile_money`, `card`, `cheque`, `paystack`, `pos`, `other`). The tightened checks are installed `NOT VALID` so the migration does not fail on them; those rows display the recorded value and are not rewritten.
-- Receipt invariant: a new or transitioned row with `payment_method = 'bank_transfer' AND payment_status = 'paid'` must have at least one `finance_receipts` row. Bank transfers in `pending`, `unpaid`, or `deposit` need none. When a correction moves a bank transfer to `paid`, the correction must provide a receipt through the upload-first path if the row has none.
+- Receipt invariant: a new row, or a row transitioned into `paid`, with `payment_method = 'bank_transfer'` must have at least one `finance_receipts` row. Bank transfers in `pending`, `unpaid`, or `deposit` need none. When a correction moves a bank transfer into `paid`, the correction must provide a receipt through the upload-first path if the row has none.
 - Legacy exception: event transactions recorded before the migration may already be `bank_transfer` and paid with no receipt. They are grandfathered, display "Receipt not recorded (legacy)", and can be repaired through the extra-receipt flow.
 - `event_financial_transactions`: add nullable `payment_method`; drop the check that forces expenses to `null`; new RPC calls require a value for both income and expenses. Legacy rows may be `null` and display "Not recorded".
 - `club_financial_transactions`: add nullable `payment_method` and its column-level `select` grant; new RPC calls require a value. Legacy rows may be `null`.
@@ -301,10 +301,10 @@ The club, event, and ticket entry RPCs return `(transaction_id uuid, deduplicate
 
 - Drop `p_payment_method`; the stored method is immutable.
 - Add receipt metadata for the status transition only.
-- If the stored method is `bank_transfer`, the new status is `paid`, and the row has no receipt, all six receipt parameters are required and a receipt is inserted with `scope = 'event'`.
-- If the row already has a receipt, or the new status is not `paid`, receipt parameters must be null.
+- If the stored method is `bank_transfer` and the correction **moves the row into `paid`** while it has no receipt, all six receipt parameters are required and a receipt is inserted with `scope = 'event'`.
+- If the row already has a receipt, or the correction does not move it into `paid`, receipt parameters must be null.
 - Moving away from `paid` keeps the existing receipt.
-- Reject any correction that would leave a paid bank transfer without a receipt.
+- A legacy paid bank transfer with no receipt may still be edited without attaching one; it keeps the legacy label. The transition rule applies only when entering `paid`, not to edits of an already-paid legacy row.
 
 `edit_event_ticket_sale`
 
@@ -336,7 +336,7 @@ All functions are security-definer with `search_path = ''`, validate every param
 
 A single new migration:
 
-1. Drop the old receipt Storage policies, then `private.can_read_finance_receipt_storage_object`, then the `club-finance-receipts` bucket after verifying it is empty. Abort if the bucket contains objects.
+1. Drop the old receipt Storage policies (`club_finance_receipts_deny_direct_select`, `club_finance_receipts_deny_direct_select_anon`, `club_finance_receipts_backup_admin_read`), then `private.can_read_finance_receipt_storage_object`, then the `club-finance-receipts` bucket after verifying it is empty. Abort if the bucket contains objects.
 2. Drop `club_financial_receipts`, `event_financial_receipts`, their indexes/policies/grants, and all `reserve_*` / `finalize_*` / `fail_*` receipt functions.
 3. Add/tighten payment data:
    - `club_financial_transactions`: add nullable `payment_method`, add its column-level `select` grant, and add a two-value check as `NOT VALID`.
@@ -401,6 +401,8 @@ No receipt backfill is required. Legacy rows keep their existing method/status a
   - legacy paid bank transfer without a receipt: "Receipt not recorded (legacy)"
 - Replace the Reference column in the event CSV with Payment Method, and include Payment Method in club exports.
 - Correction and edit forms remove the payment-method control; method changes require void/reversal and re-entry.
+- Rename `FinanceReceipt.uploaded_at` to `created_at` in the type, queries, and display.
+- Point every receipt link and upload form at `/api/receipts` and `/api/receipts/[receiptId]`; remove `/api/finance-receipts` references.
 
 ### 8.6 Emails and notifications
 
