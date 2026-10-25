@@ -1130,3 +1130,41 @@ test("home recent activity card is read-only and caps at the latest five entries
     "Home activity card must not import notification mutation actions",
   );
 });
+
+// ============================================================================
+// 15. EVENTS PAGE SECTION HEADINGS RESPONSIVE STACKING
+// ============================================================================
+
+test("events page: section headers stack vertically on mobile (flex-col sm:flex-row)", async () => {
+  const fs = await import("node:fs");
+  const eventsViewSource = fs.readFileSync(
+    "src/components/events/events-page-view.tsx",
+    "utf8",
+  );
+
+  // The 3 section header containers for Upcoming Events, Recent History, and Retained Archive
+  // must use flex-col on mobile so descriptive text sits under the heading, and sm:flex-row on desktop.
+  const headerContainerMatches = [
+    ...eventsViewSource.matchAll(
+      /<div className="([^"]*flex[^"]*pb-2\.5 border-b border-\[#E5DDD3\][^"]*)">/g,
+    ),
+  ];
+
+  assert.equal(
+    headerContainerMatches.length,
+    3,
+    "Expected exactly 3 section header containers in EventsPageView",
+  );
+
+  for (const match of headerContainerMatches) {
+    const classList = match[1];
+    assert.ok(
+      classList.includes("flex-col") && classList.includes("sm:flex-row"),
+      `Section header container must include 'flex-col sm:flex-row' for mobile stacking: ${classList}`,
+    );
+    assert.ok(
+      classList.includes("justify-between"),
+      `Section header container must retain 'justify-between': ${classList}`,
+    );
+  }
+});

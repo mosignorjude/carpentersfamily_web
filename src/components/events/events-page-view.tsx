@@ -197,7 +197,7 @@ export function EventsPageView({
           SECTION: UPCOMING EVENTS
           ======================================================== */}
       <section aria-labelledby="upcoming-heading" className="space-y-4">
-        <div className="flex items-center justify-between pb-2.5 border-b border-[#E5DDD3]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 pb-2.5 border-b border-[#E5DDD3]">
           <div className="flex items-center gap-2">
             <CalendarCheck className="w-5 h-5 text-[#174C37]" />
             <h2
@@ -207,7 +207,7 @@ export function EventsPageView({
               Upcoming Events
             </h2>
           </div>
-          <span className="text-xs text-[#7A685D] font-medium">
+          <span className="text-xs text-[#7A685D] font-medium sm:text-right">
             {scheduledUpcoming.length} Scheduled Gathering
             {scheduledUpcoming.length === 1 ? "" : "s"} · Soonest First
           </span>
@@ -244,7 +244,7 @@ export function EventsPageView({
           SECTION: RECENT HISTORY
           ======================================================== */}
       <section aria-labelledby="history-heading" className="space-y-4">
-        <div className="flex items-center justify-between pb-2.5 border-b border-[#E5DDD3]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 pb-2.5 border-b border-[#E5DDD3]">
           <div className="flex items-center gap-2">
             <History className="w-5 h-5 text-[#174C37]" />
             <h2
@@ -254,7 +254,7 @@ export function EventsPageView({
               Recent History
             </h2>
           </div>
-          <span className="text-xs text-[#7A685D] font-medium">
+          <span className="text-xs text-[#7A685D] font-medium sm:text-right">
             Past Gatherings, Concluded Sessions, & Overdue Schedules
           </span>
         </div>
@@ -289,7 +289,7 @@ export function EventsPageView({
           SECTION: RETAINED ARCHIVE
           ======================================================== */}
       <section aria-labelledby="archive-heading" className="space-y-4">
-        <div className="flex items-center justify-between pb-2.5 border-b border-[#E5DDD3]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 pb-2.5 border-b border-[#E5DDD3]">
           <div className="flex items-center gap-2">
             <Archive className="w-5 h-5 text-[#174C37]" />
             <h2
@@ -299,7 +299,7 @@ export function EventsPageView({
               Retained Archive
             </h2>
           </div>
-          <span className="text-xs text-[#7A685D] font-medium">
+          <span className="text-xs text-[#7A685D] font-medium sm:text-right">
             Permanent Reporting Repository · Club Governance Active
           </span>
         </div>
