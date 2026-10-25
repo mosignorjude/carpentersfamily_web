@@ -435,7 +435,7 @@ export async function notifyDuesPaymentRequestSubmitted(params: {
   amountNgn: number;
   coveredMonths: string[];
   paymentMethod: string;
-  paymentReference: string;
+  paymentReference?: string;
   notes?: string | null;
 }): Promise<void> {
   try {
@@ -463,7 +463,9 @@ export async function notifyDuesPaymentRequestSubmitted(params: {
             label: "Payment Method",
             value: formatPaymentMethod(params.paymentMethod),
           },
-          { label: "Reference", value: params.paymentReference },
+          ...(params.paymentReference
+            ? [{ label: "Reference", value: params.paymentReference }]
+            : []),
         ],
         bodyLabel: params.notes ? "Member Notes" : undefined,
         bodyText: params.notes ?? null,

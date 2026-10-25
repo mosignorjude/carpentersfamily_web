@@ -1,6 +1,6 @@
 "use server";
 
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import QRCode from "qrcode";
@@ -24,6 +24,9 @@ import {
   normalizeEventFinanceTab,
 } from "@/lib/event-finance-tab.mjs";
 import { parseExecutiveRoleRequest } from "@/lib/executive-role-request.mjs";
+import { validateFinanceReceiptUpload } from "@/lib/finance-receipt-validation";
+import { runReceiptEntry } from "@/lib/receipt-entry.mjs";
+import { getR2StorageAdapter } from "@/lib/receipt-storage";
 import { rpcErrorNotice } from "@/lib/rpc-error-notice";
 import { getSiteOrigin, isGoogleAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -458,12 +461,20 @@ export async function recordDuesPaymentAction(formData: FormData) {
   const amount = parseDuesAmount(formData);
   const paymentDate = parsePaymentDate(formData);
   const months = parseDuesMonths(formData, "covered_month", "prepay_months");
+  const rawMethod = formString(formData, "payment_method", 24) || "cash";
+  const paymentMethod = ["bank_transfer", "cash"].includes(rawMethod)
+    ? rawMethod
+    : null;
+  const rawFile = formData.get("receipt_file");
+  const file = rawFile instanceof File && rawFile.size > 0 ? rawFile : null;
+
   if (
     !memberId ||
     !uuidPattern.test(memberId) ||
     amount === null ||
     !paymentDate ||
-    !months
+    !months ||
+    !paymentMethod
   ) {
     redirect(duesNoticeUrl("invalid-request", memberId ?? undefined));
   }
@@ -477,13 +488,49 @@ export async function recordDuesPaymentAction(formData: FormData) {
     redirect(duesNoticeUrl("denied", memberId));
   }
 
-  const { error } = await actor.supabase.rpc("record_dues_payment", {
-    p_member_id: memberId,
-    p_amount_ngn: amount,
-    p_payment_date: paymentDate,
-    p_covered_months: months,
-  });
-  if (error) redirect(duesNoticeUrl(rpcErrorNotice(error), memberId));
+  const paymentId = randomUUID();
+  const entryResult = await runReceiptEntry(
+    {
+      scope: "dues",
+      targetId: paymentId,
+      paymentMethod,
+      paymentStatus: "paid",
+      file,
+    },
+    {
+      storage: getR2StorageAdapter(),
+      validateReceipt: validateFinanceReceiptUpload,
+    },
+    async (receipt) => {
+      const { error } = await actor.supabase.rpc("record_dues_payment", {
+        p_member_id: memberId,
+        p_amount_ngn: amount,
+        p_payment_date: paymentDate,
+        p_covered_months: months,
+        p_payment_method: paymentMethod,
+        p_payment_id: paymentId,
+        p_receipt_id: receipt?.receiptId ?? null,
+        p_receipt_object_key: receipt?.objectKey ?? null,
+        p_receipt_filename: receipt?.originalFilename ?? null,
+        p_receipt_content_type: receipt?.contentType ?? null,
+        p_receipt_size_bytes: receipt?.sizeBytes ?? null,
+        p_receipt_sha256: receipt?.sha256 ?? null,
+      });
+      if (error) return { kind: "error", error };
+      return { kind: "ok", id: paymentId, deduplicated: false };
+    },
+  );
+
+  if (entryResult.kind === "error") {
+    redirect(
+      duesNoticeUrl(
+        entryResult.notice === "operation-failed"
+          ? rpcErrorNotice(entryResult.error)
+          : entryResult.notice,
+        memberId,
+      ),
+    );
+  }
 
   await notifyDuesPaymentConfirmed({
     supabase: actor.supabase,
@@ -608,20 +655,19 @@ export async function setDuesRateAction(formData: FormData) {
 export async function submitDuesPaymentRequestAction(formData: FormData) {
   const amount = parseDuesAmount(formData);
   const months = parseDuesMonths(formData, "covered_months");
-  const paymentMethod = formString(formData, "payment_method", 32);
-  const paymentReference = formString(formData, "payment_reference", 160);
+  const rawMethod = formString(formData, "payment_method", 32);
+  const paymentMethod = ["bank_transfer", "cash"].includes(rawMethod || "")
+    ? rawMethod
+    : null;
   const notes = optionalFormString(formData, "notes", 500);
+  const rawFile = formData.get("receipt_file");
+  const file = rawFile instanceof File && rawFile.size > 0 ? rawFile : null;
 
   if (
     amount === null ||
     !months ||
     months.length === 0 ||
     !paymentMethod ||
-    !["bank_transfer", "paystack", "pos", "cash", "other"].includes(
-      paymentMethod,
-    ) ||
-    !paymentReference ||
-    paymentReference.length < 2 ||
     notes === undefined ||
     (notes !== null && containsControlCharacters(notes))
   ) {
@@ -634,16 +680,49 @@ export async function submitDuesPaymentRequestAction(formData: FormData) {
     redirect(duesNoticeUrl("denied"));
   }
 
-  const { error } = await actor.supabase.rpc("submit_dues_payment_request", {
-    p_amount_ngn: amount,
-    p_covered_months: months,
-    p_payment_method: paymentMethod,
-    p_payment_reference: paymentReference,
-    p_notes: notes,
-  });
+  const requestId = randomUUID();
+  const entryResult = await runReceiptEntry(
+    {
+      scope: "dues",
+      targetId: requestId,
+      paymentMethod,
+      paymentStatus: "paid",
+      file,
+    },
+    {
+      storage: getR2StorageAdapter(),
+      validateReceipt: validateFinanceReceiptUpload,
+    },
+    async (receipt) => {
+      const { data, error } = await actor.supabase.rpc(
+        "submit_dues_payment_request",
+        {
+          p_amount_ngn: amount,
+          p_covered_months: months,
+          p_payment_method: paymentMethod,
+          p_notes: notes,
+          p_request_id: requestId,
+          p_receipt_id: receipt?.receiptId ?? null,
+          p_receipt_object_key: receipt?.objectKey ?? null,
+          p_receipt_filename: receipt?.originalFilename ?? null,
+          p_receipt_content_type: receipt?.contentType ?? null,
+          p_receipt_size_bytes: receipt?.sizeBytes ?? null,
+          p_receipt_sha256: receipt?.sha256 ?? null,
+        },
+      );
+      if (error) return { kind: "error", error };
+      return { kind: "ok", id: data || requestId, deduplicated: false };
+    },
+  );
 
-  if (error) {
-    redirect(duesNoticeUrl(rpcErrorNotice(error)));
+  if (entryResult.kind === "error") {
+    redirect(
+      duesNoticeUrl(
+        entryResult.notice === "operation-failed"
+          ? rpcErrorNotice(entryResult.error)
+          : entryResult.notice,
+      ),
+    );
   }
 
   await notifyDuesPaymentRequestSubmitted({
@@ -652,7 +731,6 @@ export async function submitDuesPaymentRequestAction(formData: FormData) {
     amountNgn: amount,
     coveredMonths: months,
     paymentMethod,
-    paymentReference,
     notes,
   });
 
@@ -764,6 +842,13 @@ export async function recordClubFinanceAction(formData: FormData) {
   const payerPayee = optionalFormString(formData, "payer_payee", 160);
   const sourceNote = optionalFormString(formData, "source_note", 500);
   const idempotencyKey = formString(formData, "idempotency_key", 36);
+  const rawMethod = formString(formData, "payment_method", 24) || "cash";
+  const paymentMethod = ["bank_transfer", "cash"].includes(rawMethod)
+    ? rawMethod
+    : null;
+  const rawFile = formData.get("receipt_file");
+  const file = rawFile instanceof File && rawFile.size > 0 ? rawFile : null;
+
   if (
     !kind ||
     !["income", "expense"].includes(kind) ||
@@ -771,6 +856,7 @@ export async function recordClubFinanceAction(formData: FormData) {
     !parsedDate ||
     !idempotencyKey ||
     !uuidPattern.test(idempotencyKey) ||
+    !paymentMethod ||
     description === undefined ||
     categoryId === undefined ||
     payerPayee === undefined ||
@@ -792,20 +878,68 @@ export async function recordClubFinanceAction(formData: FormData) {
     redirect(financeNoticeUrl("denied"));
   }
 
-  const { error } = await actor.supabase.rpc(
-    "record_club_financial_transaction",
+  const { data: existingId } = await actor.supabase.rpc(
+    "find_finance_entry_id",
     {
-      p_kind: kind,
-      p_amount_ngn: amount,
-      p_transaction_date: parsedDate.date,
-      p_description: description,
-      p_category_id: categoryId,
-      p_payer_payee: payerPayee,
-      p_source_note: sourceNote,
+      p_scope: "club",
       p_idempotency_key: idempotencyKey,
     },
   );
-  if (error) redirect(financeNoticeUrl(rpcErrorNotice(error)));
+  const targetId = existingId || randomUUID();
+
+  const entryResult = await runReceiptEntry(
+    {
+      scope: "club",
+      targetId,
+      paymentMethod,
+      paymentStatus: "paid",
+      file,
+    },
+    {
+      storage: getR2StorageAdapter(),
+      validateReceipt: validateFinanceReceiptUpload,
+    },
+    async (receipt) => {
+      const { data, error } = await actor.supabase.rpc(
+        "record_club_financial_transaction",
+        {
+          p_kind: kind,
+          p_amount_ngn: amount,
+          p_transaction_date: parsedDate.date,
+          p_description: description,
+          p_category_id: categoryId,
+          p_payer_payee: payerPayee,
+          p_source_note: sourceNote,
+          p_idempotency_key: idempotencyKey,
+          p_payment_method: paymentMethod,
+          p_transaction_id: targetId,
+          p_receipt_id: receipt?.receiptId ?? null,
+          p_receipt_object_key: receipt?.objectKey ?? null,
+          p_receipt_filename: receipt?.originalFilename ?? null,
+          p_receipt_content_type: receipt?.contentType ?? null,
+          p_receipt_size_bytes: receipt?.sizeBytes ?? null,
+          p_receipt_sha256: receipt?.sha256 ?? null,
+        },
+      );
+      if (error) return { kind: "error", error };
+      const txRow = Array.isArray(data) ? data[0] : data;
+      return {
+        kind: "ok",
+        id: txRow?.transaction_id || targetId,
+        deduplicated: txRow?.deduplicated || false,
+      };
+    },
+  );
+
+  if (entryResult.kind === "error") {
+    redirect(
+      financeNoticeUrl(
+        entryResult.notice === "operation-failed"
+          ? rpcErrorNotice(entryResult.error)
+          : entryResult.notice,
+      ),
+    );
+  }
 
   revalidatePath("/finances");
   redirect(financeNoticeUrl("saved"));
@@ -1803,11 +1937,11 @@ export async function recordEventFinancialTransactionAction(
   const description = eventFinanceOptionalText(formData, "description", 500);
   const payerPayee = eventFinanceOptionalText(formData, "payer_payee", 160);
   const sourceNote = eventFinanceOptionalText(formData, "source_note", 500);
-  const paymentMethod = eventFinanceOptionalText(
-    formData,
-    "payment_method",
-    24,
-  );
+  const rawPaymentMethod =
+    eventFinanceOptionalText(formData, "payment_method", 24) || "cash";
+  const paymentMethod = ["bank_transfer", "cash"].includes(rawPaymentMethod)
+    ? rawPaymentMethod
+    : null;
   const rawCategoryId = eventFinanceOptionalText(formData, "category_id", 80);
   const rawCategoryName = eventFinanceOptionalText(
     formData,
@@ -1822,6 +1956,10 @@ export async function recordEventFinancialTransactionAction(
   const rawPaymentStatus =
     eventFinanceOptionalText(formData, "payment_status", 16) ?? "paid";
   const idempotencyKey = eventText(formData, "idempotency_key", 36);
+  const rawFile = formData.get("receipt_file");
+  const receiptFile =
+    rawFile instanceof File && rawFile.size > 0 ? rawFile : null;
+
   if (
     !eventFieldsOnly(formData, [
       "event_id",
@@ -1838,22 +1976,22 @@ export async function recordEventFinancialTransactionAction(
       "payment_status",
       "idempotency_key",
       "return_tab",
+      "receipt_file",
     ]) ||
     !["income", "expense"].includes(kind ?? "") ||
     amount === null ||
     !transactionDate ||
+    !paymentMethod ||
     description === undefined ||
     payerPayee === undefined ||
     sourceNote === undefined ||
-    paymentMethod === undefined ||
     rawCategoryId === undefined ||
     rawCategoryName === undefined ||
     rawBudgetAllocId === undefined ||
     !idempotencyKey ||
     !uuidPattern.test(idempotencyKey) ||
-    (kind === "income" && (!sourceNote || !paymentMethod)) ||
-    (kind === "expense" &&
-      (!description || !payerPayee || sourceNote || paymentMethod))
+    (kind === "income" && !sourceNote) ||
+    (kind === "expense" && (!description || !payerPayee || sourceNote))
   ) {
     redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
   }
@@ -1917,26 +2055,70 @@ export async function recordEventFinancialTransactionAction(
       ? rawBudgetAllocId
       : null;
 
-  const { error } = await actor.supabase.rpc(
-    "record_event_financial_transaction",
+  const { data: existingId } = await actor.supabase.rpc(
+    "find_finance_entry_id",
     {
-      p_event_id: eventId,
-      p_kind: kind,
-      p_amount_ngn: amount,
-      p_transaction_date: transactionDate.date,
-      p_description: kind === "expense" ? description : null,
-      p_payer_payee: payerPayee ?? null,
-      p_source_note: kind === "income" ? sourceNote : null,
-      p_payment_method: kind === "income" ? paymentMethod : null,
-      p_category_id: resolvedCategoryId,
-      p_budget_allocation_category_id: budgetAllocationCategoryId,
-      p_payment_status: rawPaymentStatus,
+      p_scope: "event",
       p_idempotency_key: idempotencyKey,
     },
   );
-  if (error) {
-    redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error), returnTab));
+  const targetId = existingId || randomUUID();
+
+  const entryResult = await runReceiptEntry(
+    {
+      scope: "event",
+      targetId,
+      paymentMethod,
+      paymentStatus: rawPaymentStatus,
+      file: receiptFile,
+    },
+    {
+      storage: getR2StorageAdapter(),
+      validateReceipt: validateFinanceReceiptUpload,
+    },
+    async (receipt) => {
+      const { data, error } = await actor.supabase.rpc(
+        "record_event_financial_transaction",
+        {
+          p_event_id: eventId,
+          p_kind: kind,
+          p_amount_ngn: amount,
+          p_transaction_date: transactionDate.date,
+          p_description: kind === "expense" ? description : null,
+          p_payer_payee: payerPayee ?? null,
+          p_source_note: kind === "income" ? sourceNote : null,
+          p_payment_method: paymentMethod,
+          p_category_id: resolvedCategoryId,
+          p_budget_allocation_category_id: budgetAllocationCategoryId,
+          p_payment_status: rawPaymentStatus,
+          p_idempotency_key: idempotencyKey,
+          p_transaction_id: targetId,
+          p_receipt_id: receipt?.receiptId ?? null,
+          p_receipt_object_key: receipt?.objectKey ?? null,
+          p_receipt_filename: receipt?.originalFilename ?? null,
+          p_receipt_content_type: receipt?.contentType ?? null,
+          p_receipt_size_bytes: receipt?.sizeBytes ?? null,
+          p_receipt_sha256: receipt?.sha256 ?? null,
+        },
+      );
+      if (error) return { kind: "error", error };
+      const txRow = Array.isArray(data) ? data[0] : data;
+      return {
+        kind: "ok",
+        id: txRow?.transaction_id || targetId,
+        deduplicated: txRow?.deduplicated || false,
+      };
+    },
+  );
+
+  if (entryResult.kind === "error") {
+    const notice =
+      entryResult.notice === "operation-failed"
+        ? rpcErrorNotice(entryResult.error)
+        : entryResult.notice;
+    redirect(eventFinanceNoticeUrl(eventId, notice, returnTab));
   }
+
   revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
@@ -1957,6 +2139,8 @@ export async function correctEventFinancialTransactionAction(
       "payer_payee",
       "source_note",
       "payment_method",
+      "payment_status",
+      "receipt_file",
       "reason",
     ],
     "transaction_id",
@@ -1971,7 +2155,12 @@ export async function correctEventFinancialTransactionAction(
     "payment_method",
     24,
   );
+  const rawStatus = eventFinanceOptionalText(formData, "payment_status", 16);
   const reason = eventText(formData, "reason", 500);
+  const rawFile = formData.get("receipt_file");
+  const receiptFile =
+    rawFile instanceof File && rawFile.size > 0 ? rawFile : null;
+
   if (
     amount === null ||
     !transactionDate ||
@@ -1990,38 +2179,86 @@ export async function correctEventFinancialTransactionAction(
   const { data: current, error: currentError } = await actor.supabase
     .from("event_financial_transactions")
     .select(
-      "id, event_id, kind, category_id, budget_allocation_category_id, payment_status",
+      "id, event_id, kind, category_id, budget_allocation_category_id, payment_status, payment_method",
     )
     .eq("id", transactionId)
     .maybeSingle();
   if (currentError || !current || current.event_id !== eventId) {
     redirect(eventFinanceNoticeUrl(eventId, "denied"));
   }
+
+  if (paymentMethod && paymentMethod !== current.payment_method) {
+    redirect(eventFinanceNoticeUrl(eventId, "invalid-request"));
+  }
+
+  const paymentStatus = rawStatus || current.payment_status || "paid";
+
   if (
-    (current.kind === "income" &&
-      (!sourceNote || !paymentMethod || description)) ||
-    (current.kind === "expense" &&
-      (!description || !payerPayee || sourceNote || paymentMethod))
+    (current.kind === "income" && !sourceNote) ||
+    (current.kind === "expense" && (!description || !payerPayee || sourceNote))
   ) {
     redirect(eventFinanceNoticeUrl(eventId, "invalid-request"));
   }
-  const { error } = await actor.supabase.rpc(
-    "correct_event_financial_transaction",
+
+  const { count } = await actor.supabase
+    .from("finance_receipts")
+    .select("id", { count: "exact", head: true })
+    .eq("event_transaction_id", transactionId);
+  const hasReceipt = (count ?? 0) > 0;
+
+  const entryResult = await runReceiptEntry(
     {
-      p_transaction_id: transactionId,
-      p_amount_ngn: amount,
-      p_transaction_date: transactionDate.date,
-      p_description: description,
-      p_payer_payee: payerPayee,
-      p_source_note: sourceNote,
-      p_payment_method: paymentMethod,
-      p_category_id: current.category_id,
-      p_budget_allocation_category_id: current.budget_allocation_category_id,
-      p_payment_status: current.payment_status ?? "paid",
-      p_reason: reason,
+      scope: "event",
+      targetId: transactionId,
+      paymentMethod: current.payment_method || "cash",
+      paymentStatus,
+      hasReceipt,
+      file: receiptFile,
+    },
+    {
+      storage: getR2StorageAdapter(),
+      validateReceipt: validateFinanceReceiptUpload,
+    },
+    async (receipt) => {
+      const { error } = await actor.supabase.rpc(
+        "correct_event_financial_transaction",
+        {
+          p_transaction_id: transactionId,
+          p_amount_ngn: amount,
+          p_transaction_date: transactionDate.date,
+          p_description: description,
+          p_payer_payee: payerPayee,
+          p_source_note: sourceNote,
+          p_payment_method: current.payment_method || "cash",
+          p_category_id: current.category_id,
+          p_budget_allocation_category_id:
+            current.budget_allocation_category_id,
+          p_payment_status: paymentStatus,
+          p_reason: reason,
+          p_receipt_id: receipt?.receiptId ?? null,
+          p_receipt_object_key: receipt?.objectKey ?? null,
+          p_receipt_filename: receipt?.originalFilename ?? null,
+          p_receipt_content_type: receipt?.contentType ?? null,
+          p_receipt_size_bytes: receipt?.sizeBytes ?? null,
+          p_receipt_sha256: receipt?.sha256 ?? null,
+        },
+      );
+      if (error) return { kind: "error", error };
+      return { kind: "ok", id: transactionId, deduplicated: false };
     },
   );
-  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
+
+  if (entryResult.kind === "error") {
+    redirect(
+      eventFinanceNoticeUrl(
+        eventId,
+        entryResult.notice === "operation-failed"
+          ? rpcErrorNotice(entryResult.error)
+          : entryResult.notice,
+      ),
+    );
+  }
+
   revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
@@ -2071,14 +2308,11 @@ export async function recordEventTicketSaleAction(formData: FormData) {
     24,
   );
   const idempotencyKey = eventText(formData, "idempotency_key", 36);
-  const methods = [
-    "cash",
-    "bank_transfer",
-    "mobile_money",
-    "card",
-    "cheque",
-    "other",
-  ];
+  const methods = ["cash", "bank_transfer"];
+  const rawReceipt = formData.get("receipt_file");
+  const receiptFile =
+    rawReceipt instanceof File && rawReceipt.size > 0 ? rawReceipt : null;
+
   if (
     !eventFieldsOnly(formData, [
       "event_id",
@@ -2088,6 +2322,7 @@ export async function recordEventTicketSaleAction(formData: FormData) {
       "payment_method",
       "idempotency_key",
       "return_tab",
+      "receipt_file",
     ]) ||
     !tierId ||
     !uuidPattern.test(tierId) ||
@@ -2104,17 +2339,65 @@ export async function recordEventTicketSaleAction(formData: FormData) {
   if (!eventFinanceManagerAllowed(actor)) {
     redirect(eventFinanceNoticeUrl(eventId, "denied", returnTab));
   }
-  const { error } = await actor.supabase.rpc("record_event_ticket_sale", {
-    p_event_id: eventId,
-    p_tier_id: tierId,
-    p_quantity: quantity,
-    p_buyer_name: buyerName,
-    p_payment_method: paymentMethod,
-    p_idempotency_key: idempotencyKey,
-  });
-  if (error) {
-    redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error), returnTab));
+
+  const { data: existingSaleId } = await actor.supabase.rpc(
+    "find_finance_entry_id",
+    {
+      p_scope: "event_ticket",
+      p_idempotency_key: idempotencyKey,
+    },
+  );
+  const targetId = existingSaleId || randomUUID();
+
+  const entryResult = await runReceiptEntry(
+    {
+      scope: "event_ticket",
+      targetId,
+      paymentMethod: paymentMethod || "cash",
+      paymentStatus: "paid",
+      file: receiptFile,
+    },
+    {
+      storage: getR2StorageAdapter(),
+      validateReceipt: validateFinanceReceiptUpload,
+    },
+    async (receipt) => {
+      const { data, error } = await actor.supabase.rpc(
+        "record_event_ticket_sale",
+        {
+          p_event_id: eventId,
+          p_tier_id: tierId,
+          p_quantity: quantity,
+          p_buyer_name: buyerName,
+          p_payment_method: paymentMethod || "cash",
+          p_idempotency_key: idempotencyKey,
+          p_sale_id: targetId,
+          p_receipt_id: receipt?.receiptId ?? null,
+          p_receipt_object_key: receipt?.objectKey ?? null,
+          p_receipt_filename: receipt?.originalFilename ?? null,
+          p_receipt_content_type: receipt?.contentType ?? null,
+          p_receipt_size_bytes: receipt?.sizeBytes ?? null,
+          p_receipt_sha256: receipt?.sha256 ?? null,
+        },
+      );
+      if (error) return { kind: "error", error };
+      const row = Array.isArray(data) ? data[0] : data;
+      return {
+        kind: "ok",
+        id: row?.sale_id ?? targetId,
+        deduplicated: Boolean(row?.deduplicated),
+      };
+    },
+  );
+
+  if (entryResult.kind === "error") {
+    const notice =
+      entryResult.notice === "operation-failed"
+        ? rpcErrorNotice(entryResult.error)
+        : entryResult.notice;
+    redirect(eventFinanceNoticeUrl(eventId, notice, returnTab));
   }
+
   revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
@@ -2142,14 +2425,7 @@ export async function editEventTicketSaleAction(formData: FormData) {
     24,
   );
   const reason = eventText(formData, "reason", 500);
-  const methods = [
-    "cash",
-    "bank_transfer",
-    "mobile_money",
-    "card",
-    "cheque",
-    "other",
-  ];
+  const methods = ["cash", "bank_transfer"];
   if (
     quantity === null ||
     buyerName === undefined ||
