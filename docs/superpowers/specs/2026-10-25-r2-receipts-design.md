@@ -52,7 +52,7 @@ Receipts are stored in R2, metadata lives in one unified `finance_receipts` tabl
 | Trigger for receipt | `payment_method = 'bank_transfer' AND payment_status = 'paid'` |
 | Receipt timing | `pending`, `unpaid`, and `deposit` bank transfers need no receipt; one is required when the row becomes `paid` |
 | Reference numbers | Removed entirely |
-| Stored payment methods | `bank_transfer`, `cash` only |
+| Stored payment methods | `bank_transfer`, `cash` only for new writes; historical retired values are preserved read-only |
 | Payment method on corrections | Immutable; a correction or edit cannot change it. Void/reverse and re-enter instead |
 | Dues channels | Bank Transfer, Card (visible but unavailable), Secretariat POS (stored as `cash`) |
 | Direct officer dues entry | Same channel and receipt rules as member dues requests |
@@ -362,7 +362,7 @@ No receipt backfill is required. Legacy rows keep their existing method/status a
 - Cash reveals nothing.
 - Remove the reference input, auto-generated reference strings, and mock receipt filename/size.
 - Ticket-sale branch includes the file when bank transfer (ticket sales are always paid).
-- Expense submissions now persist the selected method.
+- Expense submissions now persist the selected method; the server-action validation must stop rejecting a method on expenses.
 - Corrections cannot change the payment method. When a correction changes the status to `paid` on a bank transfer with no receipt, the correction modal requires a receipt and submits it through the upload-first action.
 - The modal holds the selected `File` in React state, threads it through `RecordedTransactionSubmission`, and sets it on the action's `FormData`. The idempotency key is generated once per open modal and rotated only after a success notice.
 
