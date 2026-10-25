@@ -1,12 +1,12 @@
 # Cloudflare R2 Receipt Uploads — Design
 
 Date: 2026-10-25
-Status: Approved for implementation planning
+Status: Amended with the four open decisions; awaiting final approval
 Scope: All financial entry flows in the club app
 
 ## 1. Summary
 
-Replace typed payment reference numbers with required receipt screenshots (PDF/JPEG/PNG) stored in a private Cloudflare R2 bucket. Payment methods collapse to `bank_transfer` and `cash`. A paid bank transfer cannot be recorded unless its receipt is stored first. Cash and bank-transfer commitments in `pending`, `unpaid`, or `deposit` require no receipt until they become paid.
+Replace typed payment reference numbers with required receipt screenshots (PDF/JPEG/PNG) stored in a private Cloudflare R2 bucket. Payment methods for new writes collapse to `bank_transfer` and `cash`; historical retired values remain read-only. A paid bank transfer cannot be recorded unless its receipt is stored first. Cash and bank-transfer commitments in `pending`, `unpaid`, or `deposit` require no receipt until they become paid.
 
 Receipts are stored in R2, metadata lives in one unified `finance_receipts` table, and every read goes through an authenticated Next.js proxy route that verifies access and the SHA-256 digest.
 
@@ -140,12 +140,13 @@ Server action receives FormData (transaction fields + optional file)
 - Object metadata: `ContentType` from the validator; `CacheControl: "private, no-store"`.
 - The RPC receives pre-generated IDs so the object key and DB row agree.
 - If the RPC fails, the uploaded object is deleted. If deletion also fails, the error is logged and the orphan cleanup script reconciles later.
+- The RPC resolves idempotency before inserting any receipt row, so a replay returns early and never records metadata for an object the orchestrator skipped uploading.
 - Idempotency: club, event, and ticket-sale records keep their existing unique `(actor, idempotency_key)` constraints. **A same-value replay returns the existing row without raising an error**, so the orchestrator must use the RPC's `deduplicated` flag (and the returned ID) rather than waiting for `23505`. A different-value replay still raises `23505` and is treated as a failure.
 - The cleanup sweep needs `ListBucket` permission (or an upload ledger) because object read/write alone cannot list a prefix.
 
 ### 6.5 Extra-receipt flow
 
-`POST /api/receipts` accepts `scope`, `transactionId`, and one file for an existing non-voided club/event/event-ticket record.
+`POST /api/receipts` accepts `scope`, `targetId` (transaction ID for club/event, sale ID for ticket), and one file for an existing non-voided club/event/event-ticket record.
 
 ```
 authenticate -> authorize uploader -> validate file -> upload to R2
@@ -184,7 +185,7 @@ GET /api/receipts/[receiptId]
 - Allowed values for new writes everywhere: `bank_transfer`, `cash`.
 - Historical rows may hold retired values (`mobile_money`, `card`, `cheque`, `paystack`, `pos`, `other`). The tightened checks are installed `NOT VALID` so the migration does not fail on them; those rows display the recorded value and are not rewritten.
 - Receipt invariant: a new row, or a row transitioned into `paid`, with `payment_method = 'bank_transfer'` must have at least one `finance_receipts` row. Bank transfers in `pending`, `unpaid`, or `deposit` need none. When a correction moves a bank transfer into `paid`, the correction must provide a receipt through the upload-first path if the row has none.
-- Legacy exception: event transactions recorded before the migration may already be `bank_transfer` and paid with no receipt. They are grandfathered, display "Receipt not recorded (legacy)", and can be repaired through the extra-receipt flow.
+- Legacy exception: event transactions and ticket sales recorded before the migration may already be `bank_transfer` and paid with no receipt. They are grandfathered, display "Receipt not recorded (legacy)", and can be repaired through the extra-receipt flow. Club rows have no historical method, so they cannot be legacy bank transfers.
 - `event_financial_transactions`: add nullable `payment_method`; drop the check that forces expenses to `null`; new RPC calls require a value for both income and expenses. Legacy rows may be `null` and display "Not recorded".
 - `club_financial_transactions`: add nullable `payment_method` and its column-level `select` grant; new RPC calls require a value. Legacy rows may be `null`.
 - `event_ticket_sales`: tighten the allowed values to the two methods. Ticket sales are always paid.
@@ -388,7 +389,7 @@ No receipt backfill is required. Legacy rows keep their existing method/status a
 - Replace the reference field with payment method and receipt actions.
 - Bank transfer rows show View and Download. View opens the receipt viewer (images inline, PDFs via PDF.js); Download fetches the attachment.
 - Cash rows show "Cash — no receipt required".
-- Legacy bank-transfer rows without a receipt show "Receipt not recorded (legacy)" and allow an officer to attach one.
+- Legacy rows without a receipt show "Receipt not recorded (legacy)"; dues receipts cannot be attached after submission.
 
 ### 8.5 Ledgers, detail views, search, exports
 
@@ -510,7 +511,7 @@ Static checks: `npm run lint`, `npm test`, `next build`.
 
 - No reference-number input exists in any financial flow.
 - No reference is stored, exported, searched, or emailed for new transactions.
-- Every new or transitioned **paid** bank-transfer transaction across all five flows has at least one stored receipt and a DB row created atomically with the transaction; additional receipts remain possible later where allowed.
+- Every new or transitioned **paid** bank-transfer transaction across every entry flow has at least one stored receipt and a DB row created atomically with the transaction; additional receipts remain possible later where allowed.
 - `pending`, `unpaid`, and `deposit` bank transfers store no receipt; the receipt is required when they become paid.
 - Correction and edit RPCs cannot change the payment method.
 - Direct officer dues entry follows the same method and receipt rules as member requests.
@@ -519,7 +520,7 @@ Static checks: `npm run lint`, `npm test`, `next build`.
 - A same-value idempotent replay leaves no second object and no second row.
 - Dues receipts are visible only to the payer and finance officers; club/event receipts remain member-visible.
 - Officers can view and download dues receipts; PDFs render in the modal through PDF.js.
-- Legacy rows are clearly labelled and repairable through the extra-receipt flow.
+- Legacy paid bank-transfer club/event/ticket rows are clearly labelled and repairable through the extra-receipt flow.
 - Card shows as unavailable for dues.
 - Missing R2 config blocks paid bank transfers only; pending/unpaid/deposit commitments and cash still work.
 - Lint, tests, build, and browser verification pass.
@@ -535,4 +536,4 @@ Static checks: `npm run lint`, `npm test`, `next build`.
 - The migration drops local dues reference data. Production has none.
 - `bodySizeLimit` applies to all server actions, not just uploads; 5 MiB is acceptable.
 - Adding parameters to Postgres functions requires dropping the old signatures to avoid overload ambiguity.
-- When online dues payments ship, add the online method to the allowed enum and replace the unavailable Card state; the paid-only receipt rule must be revisited at that point.
+- When online dues payments ship, add the online method to the allowed set and replace the unavailable Card state; the paid-only receipt rule must be revisited at that point.
