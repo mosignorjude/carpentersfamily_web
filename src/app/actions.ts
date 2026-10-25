@@ -23,6 +23,13 @@ import {
   buildEventFinanceNoticeUrl,
   normalizeEventFinanceTab,
 } from "@/lib/event-finance-tab.mjs";
+import {
+  communicationFieldsOnly,
+  containsControlCharacters,
+  eventDateTimeToISOString,
+  eventFieldsOnly,
+  optionalEventText,
+} from "@/lib/event-validation.mjs";
 import { parseExecutiveRoleRequest } from "@/lib/executive-role-request.mjs";
 import { validateFinanceReceiptUpload } from "@/lib/finance-receipt-validation";
 import {
@@ -39,13 +46,6 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const usernamePattern = /^[A-Za-z0-9_]{3,30}$/;
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function containsControlCharacters(value: string) {
-  return Array.from(value).some((character) => {
-    const codePoint = character.codePointAt(0) ?? 0;
-    return codePoint < 32 || codePoint === 127;
-  });
-}
 
 function formString(formData: FormData, key: string, maxLength: number) {
   const value = formData.get(key);
@@ -279,25 +279,6 @@ function eventCorrectionAllowed(roles: Set<string>) {
   return roles.has("admin") || roles.has("backup_admin");
 }
 
-function eventDateTimeToISOString(value: FormDataEntryValue | null) {
-  if (
-    typeof value !== "string" ||
-    !/^(19|20|21)\d{2}-(0[1-9]|1[0-2])-([0-2]\d|3[01])T([01]\d|2[0-3]):[0-5]\d$/.test(
-      value,
-    )
-  ) {
-    return null;
-  }
-  const localWallClock = new Date(`${value}:00.000Z`);
-  if (
-    Number.isNaN(localWallClock.getTime()) ||
-    localWallClock.toISOString().slice(0, 16) !== value
-  ) {
-    return null;
-  }
-  return new Date(`${value}:00+01:00`).toISOString();
-}
-
 function eventCheckbox(formData: FormData, key: string) {
   const values = formData.getAll(key);
   if (values.length === 0) return false;
@@ -324,23 +305,6 @@ function eventText(formData: FormData, key: string, maxLength: number) {
     !containsControlCharacters(value)
     ? value
     : null;
-}
-
-function optionalEventText(formData: FormData, key: string, maxLength: number) {
-  const values = formData.getAll(key);
-  if (values.length === 0) return null;
-  if (values.length !== 1 || typeof values[0] !== "string") return undefined;
-  if (containsControlCharacters(values[0])) return undefined;
-  const value = values[0].trim();
-  if (!value) return null;
-  return value.length <= maxLength && !containsControlCharacters(value)
-    ? value
-    : undefined;
-}
-
-function eventFieldsOnly(formData: FormData, allowed: string[]) {
-  const allowedSet = new Set(allowed);
-  return Array.from(formData.keys()).every((key) => allowedSet.has(key));
 }
 
 function eventMinutesContent(formData: FormData) {
@@ -3011,11 +2975,6 @@ async function getActiveCommunicationActor() {
   if (profileError || profile?.status !== "active")
     redirect("/?notice=sign-in");
   return supabase;
-}
-
-function communicationFieldsOnly(formData: FormData, allowed: string[]) {
-  const allowedSet = new Set(allowed);
-  return Array.from(formData.keys()).every((key) => allowedSet.has(key));
 }
 
 function communicationSingleText(
