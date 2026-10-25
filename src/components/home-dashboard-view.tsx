@@ -10,6 +10,7 @@ import PersonalNotificationsCard from "@/components/home/personal-notifications-
 import QuickLinksSection from "@/components/home/quick-links-section";
 import RecentAnnouncementsCard from "@/components/home/recent-announcements-card";
 import { clubBrand } from "@/lib/brand";
+import { formatGreetingUsername, getTimeOfDayGreeting } from "@/lib/greeting";
 import type {
   HomeDashboardAnnouncement,
   HomeDashboardData,
@@ -18,6 +19,8 @@ import type {
 type HomeDashboardViewProps = {
   dashboard: HomeDashboardData;
   memberName: string;
+  username?: string;
+  greeting?: string;
   roles: string[];
   notice?: string;
 };
@@ -25,11 +28,16 @@ type HomeDashboardViewProps = {
 export default function HomeDashboardView({
   dashboard,
   memberName,
+  username,
+  greeting,
   roles,
   notice: _notice,
 }: HomeDashboardViewProps) {
   const [selectedAnnouncement, setSelectedAnnouncement] =
     useState<HomeDashboardAnnouncement | null>(null);
+
+  const effectiveGreeting = greeting ?? getTimeOfDayGreeting();
+  const greetingName = formatGreetingUsername(username, memberName);
 
   return (
     <div className="home-dashboard min-h-full p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full font-sans antialiased text-[#3D291F]">
@@ -50,13 +58,12 @@ export default function HomeDashboardView({
                 className="font-bold text-[#3D291F] tracking-tight"
                 id="welcome-heading"
               >
-                Welcome, {memberName}
+                {effectiveGreeting}, {greetingName}
               </h1>
 
               <p className="home-dashboard-intro-copy mt-2 max-w-2xl text-xs leading-relaxed font-normal sm:text-sm">
-                Peace and goodwill to you and your household. Here is your
-                private overview of upcoming gatherings, club circulars, and
-                personal dues status.
+                Welcome back. Here is an overview of what is happening in the
+                family today.
               </p>
             </div>
           </div>

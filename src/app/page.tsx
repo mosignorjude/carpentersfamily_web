@@ -18,6 +18,7 @@ import HomeDashboardView from "@/components/home-dashboard-view";
 import type { AppNotification } from "@/components/notifications/notifications-drawer";
 import { getNavigationItems } from "@/lib/app-navigation.mjs";
 import { clubBrand } from "@/lib/brand";
+import { getTimeOfDayGreeting } from "@/lib/greeting";
 import { getHomeDashboardData } from "@/lib/home-dashboard.server";
 import { isGoogleAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -376,6 +377,8 @@ export default async function HomePage({
     role: formatPrimaryRole(roles),
   };
 
+  const greeting = getTimeOfDayGreeting();
+
   return (
     <AppShell
       currentUserId={authData.user.id}
@@ -388,9 +391,11 @@ export default async function HomePage({
     >
       <HomeDashboardView
         dashboard={dashboard}
+        greeting={greeting}
         memberName={profile.full_name}
-        roles={roles}
         notice={notice}
+        roles={roles}
+        username={profile.username || userProfile.username}
       />
     </AppShell>
   );
