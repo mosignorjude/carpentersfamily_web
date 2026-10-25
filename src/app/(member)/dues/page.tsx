@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { signOutAction } from "@/app/actions";
 import { DuesPageView } from "@/components/dues/dues-page-view";
 import type { DuesPaymentRequestItem } from "@/components/dues/officer-dues-approvals-card";
+import type { ReconciliationMember } from "@/components/dues/pre-launch-dues-reconciliation-card";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { DuesMemberOption, DuesMonthOption } from "./dues-forms";
 
@@ -60,6 +61,10 @@ const notices: Record<string, string> = {
   "dues-request-approved":
     "The dues payment submission was verified and approved into the club ledger.",
   "dues-request-rejected": "The dues payment submission was rejected.",
+  "historical-dues-reconciled":
+    "Historical pre-launch dues were successfully reconciled and marked cleared.",
+  "invalid-reconciliation-months":
+    "Selected months are invalid or outside the pre-launch window (Feb-Sep 2026).",
 };
 
 function todayInWAT() {
@@ -419,6 +424,52 @@ export default async function DuesPage({
     );
   }
 
+  let reconciliationMembers: ReconciliationMember[] = [];
+  if (isOfficer) {
+    const [activeProfilesRes, adminRolesRes, preLaunchDispositionsRes] =
+      await Promise.all([
+        supabase
+          .from("member_profiles")
+          .select("id, full_name, username")
+          .eq("status", "active")
+          .order("full_name", { ascending: true })
+          .limit(1000),
+        supabase
+          .from("member_role_assignments")
+          .select("member_id")
+          .in("role", ["admin", "backup_admin"])
+          .is("revoked_at", null),
+        supabase
+          .from("dues_month_dispositions")
+          .select("member_id, covered_month")
+          .gte("covered_month", "2026-02-01")
+          .lte("covered_month", "2026-09-01")
+          .eq("is_current", true),
+      ]);
+
+    const adminIds = new Set(
+      (adminRolesRes.data ?? []).map((r) => r.member_id),
+    );
+    const clearedMonthsByMember = new Map<string, string[]>();
+    for (const row of preLaunchDispositionsRes.data ?? []) {
+      const list = clearedMonthsByMember.get(row.member_id) ?? [];
+      list.push(row.covered_month);
+      clearedMonthsByMember.set(row.member_id, list);
+    }
+
+    const nonAdminActive = (activeProfilesRes.data ?? []).filter(
+      (profile) => !adminIds.has(profile.id),
+    );
+
+    reconciliationMembers = nonAdminActive.map((profile) => ({
+      id: profile.id,
+      fullName: profile.full_name,
+      username: profile.username,
+      avatarUrl: null,
+      clearedMonths: clearedMonthsByMember.get(profile.id) ?? [],
+    }));
+  }
+
   const notice = params.notice ? notices[params.notice] : undefined;
   const today = todayInWAT();
   const currentMonth = `${today.slice(0, 7)}-01`;
@@ -444,7 +495,8 @@ export default async function DuesPage({
     statusResult.error || paymentResult.error || coverageError,
   );
 
-  const isAdmin = roles.has("admin");
+  const isAdmin =
+    !roleError && (roles.has("admin") || roles.has("backup_admin"));
 
   return (
     <DuesPageView
@@ -480,6 +532,7 @@ export default async function DuesPage({
       pendingMembersMap={pendingMembersMap}
       pendingRequests={pendingRequests}
       rates={rates}
+      reconciliationMembers={reconciliationMembers}
       roleError={Boolean(roleError)}
       targetMemberId={targetMemberId}
       today={today}

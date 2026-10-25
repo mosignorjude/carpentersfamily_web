@@ -31,6 +31,10 @@ import {
 } from "./officer-dues-approvals-card";
 import { OfficerDuesControlsCard } from "./officer-dues-controls-card";
 import { type DuesPaymentSettings, PayDuesModal } from "./pay-dues-modal";
+import {
+  PreLaunchDuesReconciliationCard,
+  type ReconciliationMember,
+} from "./pre-launch-dues-reconciliation-card";
 
 interface DuesPageViewProps {
   member: DuesMemberOption;
@@ -75,6 +79,7 @@ interface DuesPageViewProps {
   >;
   ownRequests?: DuesPaymentRequestItem[];
   paymentSettings?: DuesPaymentSettings | null;
+  reconciliationMembers?: ReconciliationMember[];
 }
 
 export function DuesPageView({
@@ -117,6 +122,7 @@ export function DuesPageView({
   pendingMembersMap = {},
   ownRequests = [],
   paymentSettings,
+  reconciliationMembers = [],
 }: DuesPageViewProps) {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
 
@@ -433,6 +439,16 @@ export function DuesPageView({
             memberName={member.full_name}
             pastUnpaidMonths={pastUnpaidMonths}
             today={today}
+          />
+        </div>
+      )}
+
+      {/* Pre-Launch Dues Reconciliation Workspace (Feb-Sep 2026) */}
+      {isOfficer && (
+        <div id="dues-reconciliation" className="scroll-target">
+          <PreLaunchDuesReconciliationCard
+            isAdmin={Boolean(isAdmin)}
+            members={reconciliationMembers}
           />
         </div>
       )}

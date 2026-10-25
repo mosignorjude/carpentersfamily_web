@@ -273,3 +273,76 @@ export function formatClubBankPresentation(paymentSettings) {
     pendingNotice: "",
   };
 }
+
+/**
+ * Short month labels for the 8 pre-launch months (Feb–Sep 2026).
+ */
+export const PRE_LAUNCH_MONTH_SHORT_LABELS = Object.freeze({
+  "2026-02-01": "Feb",
+  "2026-03-01": "Mar",
+  "2026-04-01": "Apr",
+  "2026-05-01": "May",
+  "2026-06-01": "Jun",
+  "2026-07-01": "Jul",
+  "2026-08-01": "Aug",
+  "2026-09-01": "Sep",
+});
+
+/**
+ * Toggles a month selection for pre-launch historical dues reconciliation.
+ * Already-cleared months cannot be selected or toggled.
+ * Maintains chronological ordering of selected months.
+ *
+ * @param {string[]} currentSelected
+ * @param {string} month
+ * @param {string[]} [clearedMonths]
+ * @returns {string[]}
+ */
+export function toggleReconciliationMonth(
+  currentSelected,
+  month,
+  clearedMonths = [],
+) {
+  const clearedSet = new Set(clearedMonths || []);
+  if (clearedSet.has(month)) {
+    return Array.isArray(currentSelected) ? [...currentSelected] : [];
+  }
+
+  const selectedSet = new Set(currentSelected || []);
+  if (selectedSet.has(month)) {
+    selectedSet.delete(month);
+  } else {
+    selectedSet.add(month);
+  }
+
+  return VALID_PRE_LAUNCH_MONTHS.filter((m) => selectedSet.has(m));
+}
+
+/**
+ * Returns all pre-launch months that have not yet been cleared for a given member.
+ *
+ * @param {string[]} [clearedMonths]
+ * @returns {string[]}
+ */
+export function selectAllUnclearedMonths(clearedMonths = []) {
+  const clearedSet = new Set(clearedMonths || []);
+  return VALID_PRE_LAUNCH_MONTHS.filter((m) => !clearedSet.has(m));
+}
+
+/**
+ * Formats reconciliation tally details including count, calculated amount in NGN,
+ * and live presentation label.
+ *
+ * @param {unknown} monthCount
+ * @returns {{ count: number; amount: number; label: string }}
+ */
+export function formatReconciliationTally(monthCount) {
+  const count = Math.max(0, Math.floor(Number(monthCount) || 0));
+  const amount = calculateBackfillAmount(count);
+  const monthWord = count === 1 ? "month" : "months";
+  return {
+    count,
+    amount,
+    label: `${count} ${monthWord} selected · ₦${amount.toLocaleString()}`,
+  };
+}
