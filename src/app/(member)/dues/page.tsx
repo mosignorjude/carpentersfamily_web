@@ -437,7 +437,7 @@ export default async function DuesPage({
         supabase
           .from("member_role_assignments")
           .select("member_id")
-          .in("role", ["admin", "backup_admin"])
+          .eq("role", "admin")
           .is("revoked_at", null),
         supabase
           .from("dues_month_dispositions")

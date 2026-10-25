@@ -970,7 +970,7 @@ export async function recordOpeningBalanceAction(
       p_transaction_date: parsedDate.date,
       p_description: null,
       p_category_id: null,
-      p_payer_payee: null,
+      p_payer_payee: "Club Treasury Opening Reserve",
       p_source_note: sourceNote,
       p_idempotency_key: idempotencyKey,
       p_payment_method: "cash",

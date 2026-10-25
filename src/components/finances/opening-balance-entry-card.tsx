@@ -185,11 +185,11 @@ export function OpeningBalanceEntryCard({
             <input
               className="w-full h-10 px-3 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] text-xs font-bold text-[#174C37] focus:outline-none focus:border-[#174C37] focus:bg-white transition-colors"
               id="amount_ngn"
-              min="0.01"
+              min="1"
               name="amount_ngn"
               placeholder="e.g. 1500000"
               required
-              step="0.01"
+              step="1"
               type="number"
             />
           </div>

@@ -146,10 +146,15 @@ export default async function FinancesPage({
       .maybeSingle(),
     supabase
       .from("club_financial_transactions")
-      .select("id, amount_ngn, transaction_date, source_note, created_at")
+      .select(
+        "id, amount_ngn, transaction_date, source_note, payer_payee, created_at",
+      )
       .eq("kind", "income")
-      .ilike("source_note", "%opening%treasury%balance%")
       .is("voided_at", null)
+      .or(
+        "source_note.ilike.%opening%balance%,payer_payee.eq.Club Treasury Opening Reserve",
+      ) // matches opening%treasury%balance or reserve payer_payee
+      .order("transaction_date", { ascending: false })
       .limit(1)
       .maybeSingle(),
   ]);

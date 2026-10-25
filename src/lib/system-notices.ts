@@ -4,6 +4,8 @@ export interface SystemNoticeDefinition {
   type: FlashCardType;
   title: string;
   message: string;
+  code?: string;
+  variant?: FlashCardType;
 }
 
 export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
@@ -189,6 +191,43 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     type: "error",
     title: "Dues Rejected",
     message: "The dues payment submission was rejected.",
+  },
+  "payment-settings-saved": {
+    code: "payment-settings-saved",
+    type: "success",
+    variant: "success",
+    title: "Payment Settings Saved",
+    message: "Club bank payment settings updated successfully.",
+  },
+  "invalid-payment-settings": {
+    code: "invalid-payment-settings",
+    type: "error",
+    variant: "error",
+    title: "Invalid Payment Settings",
+    message:
+      "Invalid club bank details provided. Verify bank name, 10-digit NUBAN, and account name.",
+  },
+  "opening-balance-recorded": {
+    code: "opening-balance-recorded",
+    type: "success",
+    variant: "success",
+    title: "Opening Balance Recorded",
+    message: "Verified opening treasury reserve balance recorded successfully.",
+  },
+  "historical-dues-reconciled": {
+    code: "historical-dues-reconciled",
+    type: "success",
+    variant: "success",
+    title: "Historical Dues Reconciled",
+    message: "Historical member dues reconciled and cleared.",
+  },
+  "invalid-reconciliation-months": {
+    code: "invalid-reconciliation-months",
+    type: "error",
+    variant: "error",
+    title: "Invalid Reconciliation Months",
+    message:
+      "Invalid reconciliation months provided. Only Feb–Sep 2026 are permitted.",
   },
 
   // Secretariat Attendance & Minutes
