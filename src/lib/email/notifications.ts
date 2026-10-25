@@ -435,7 +435,6 @@ export async function notifyDuesPaymentRequestSubmitted(params: {
   amountNgn: number;
   coveredMonths: string[];
   paymentMethod: string;
-  paymentReference?: string;
   notes?: string | null;
 }): Promise<void> {
   try {
@@ -460,11 +459,11 @@ export async function notifyDuesPaymentRequestSubmitted(params: {
             value: formatCoveredMonthsDisplay(params.coveredMonths),
           },
           {
-            label: "Payment Method",
+            label: "Payment Channel",
             value: formatPaymentMethod(params.paymentMethod),
           },
-          ...(params.paymentReference
-            ? [{ label: "Reference", value: params.paymentReference }]
+          ...(params.paymentMethod === "bank_transfer"
+            ? [{ label: "Receipt Evidence", value: "Attached & Stored" }]
             : []),
         ],
         bodyLabel: params.notes ? "Member Notes" : undefined,
@@ -485,6 +484,7 @@ export async function notifyDuesPaymentConfirmed(params: {
   amountNgn: number;
   coveredMonths: string[];
   paymentDate?: string;
+  paymentMethod?: string;
   paymentReference?: string;
 }): Promise<void> {
   try {
@@ -503,6 +503,18 @@ export async function notifyDuesPaymentConfirmed(params: {
     ];
     if (params.paymentDate) {
       details.push({ label: "Payment Date", value: params.paymentDate });
+    }
+    if (params.paymentMethod) {
+      details.push({
+        label: "Payment Channel",
+        value: formatPaymentMethod(params.paymentMethod),
+      });
+      if (params.paymentMethod === "bank_transfer") {
+        details.push({
+          label: "Receipt Evidence",
+          value: "Attached & Verified",
+        });
+      }
     }
     if (params.paymentReference) {
       details.push({ label: "Reference", value: params.paymentReference });
@@ -535,7 +547,8 @@ export async function notifyDuesPaymentRequestRejected(params: {
   memberId: string;
   amountNgn: number;
   coveredMonths: string[];
-  paymentReference: string;
+  paymentMethod?: string;
+  paymentReference?: string | null;
   reason: string;
 }): Promise<void> {
   try {
@@ -563,7 +576,17 @@ export async function notifyDuesPaymentRequestRejected(params: {
             label: "Covered Months",
             value: formatCoveredMonthsDisplay(params.coveredMonths),
           },
-          { label: "Reference", value: params.paymentReference },
+          ...(params.paymentMethod
+            ? [
+                {
+                  label: "Payment Channel",
+                  value: formatPaymentMethod(params.paymentMethod),
+                },
+              ]
+            : []),
+          ...(params.paymentReference
+            ? [{ label: "Reference", value: params.paymentReference }]
+            : []),
         ],
         bodyLabel: "Reason from Finance Officer",
         bodyText: params.reason,
