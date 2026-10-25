@@ -273,9 +273,30 @@ describe("PreLaunchDuesReconciliationCard component requirements", () => {
     );
     assert.match(
       source,
-      /disabled=\{[^{}]*selectedMonths\.length === 0[^{}]*\}/,
+      /disabled=\{[^{}]*(?:activeS|s)electedMonths\.length === 0[^{}]*\}/,
       "Submit button must be disabled when 0 months are selected",
     );
+  });
+
+  it("derives activeSelectedMonths excluding newly cleared months and keys rows by member id and clearedMonths", () => {
+    const source = readFileSync(reconciliationCardPath, "utf8");
+    assert.match(
+      source,
+      /const\s+activeSelectedMonths\s*=\s*selectedMonths\.filter\([\s\S]*?!member\.clearedMonths\.includes/,
+      "Must derive activeSelectedMonths by filtering out clearedMonths",
+    );
+    assert.match(
+      source,
+      /key=\{`\$\{member\.id\}-\$\{member\.clearedMonths\.join\(["'],["']\)\}`\}/,
+      "Must key MemberReconciliationRow by member.id and clearedMonths",
+    );
+
+    const staleSelection = ["2026-02-01", "2026-03-01", "2026-04-01"];
+    const updatedClearedMonths = ["2026-02-01", "2026-03-01"];
+    const active = staleSelection.filter(
+      (m) => !updatedClearedMonths.includes(m),
+    );
+    assert.deepEqual(active, ["2026-04-01"]);
   });
 
   it("uses Warm Editorial styling tokens", () => {

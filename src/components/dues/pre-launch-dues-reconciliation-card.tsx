@@ -43,12 +43,15 @@ interface MemberRowProps {
 function MemberReconciliationRow({ member }: MemberRowProps) {
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   const unclearedMonths = selectAllUnclearedMonths(member.clearedMonths);
+  const activeSelectedMonths = selectedMonths.filter(
+    (m) => !member.clearedMonths.includes(m),
+  );
   const isAllUnclearedSelected =
     unclearedMonths.length > 0 &&
-    unclearedMonths.every((m) => selectedMonths.includes(m));
+    unclearedMonths.every((m) => activeSelectedMonths.includes(m));
   const isFullyReconciled = unclearedMonths.length === 0;
 
-  const tally = formatReconciliationTally(selectedMonths.length);
+  const tally = formatReconciliationTally(activeSelectedMonths.length);
 
   const initial = (member.fullName || member.username || "M")
     .trim()
@@ -148,7 +151,7 @@ function MemberReconciliationRow({ member }: MemberRowProps) {
             </span>
             <button
               className="text-[11px] font-bold text-[#7A685D] hover:text-[#BA3C2A] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed flex items-center gap-1"
-              disabled={selectedMonths.length === 0}
+              disabled={activeSelectedMonths.length === 0}
               onClick={handleClear}
               type="button"
             >
@@ -161,7 +164,7 @@ function MemberReconciliationRow({ member }: MemberRowProps) {
         <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
           {VALID_PRE_LAUNCH_MONTHS.map((month) => {
             const isCleared = member.clearedMonths.includes(month);
-            const isSelected = selectedMonths.includes(month);
+            const isSelected = activeSelectedMonths.includes(month);
             const label = PRE_LAUNCH_MONTH_SHORT_LABELS[month] ?? month;
 
             if (isCleared) {
@@ -225,7 +228,7 @@ function MemberReconciliationRow({ member }: MemberRowProps) {
 
         <form action={backfillMemberHistoricalDuesAction} method="post">
           <input name="member_id" type="hidden" value={member.id} />
-          {selectedMonths.map((m) => (
+          {activeSelectedMonths.map((m) => (
             <input key={m} name="covered_months" type="hidden" value={m} />
           ))}
           <input
@@ -235,7 +238,7 @@ function MemberReconciliationRow({ member }: MemberRowProps) {
           />
           <FormSubmitButton
             className="w-full sm:w-auto min-h-[38px] px-4 py-2 text-xs font-bold"
-            disabled={selectedMonths.length === 0}
+            disabled={activeSelectedMonths.length === 0}
             loadingText="Reconciling..."
           >
             Reconcile Dues
@@ -348,7 +351,10 @@ export function PreLaunchDuesReconciliationCard({
           ) : (
             <div className="space-y-4">
               {members.map((member) => (
-                <MemberReconciliationRow key={member.id} member={member} />
+                <MemberReconciliationRow
+                  key={`${member.id}-${member.clearedMonths.join(",")}`}
+                  member={member}
+                />
               ))}
             </div>
           )}
