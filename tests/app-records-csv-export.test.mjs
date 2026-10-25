@@ -37,7 +37,7 @@ describe("encrypted app records CSV export", () => {
     const allowlistedTables = APP_RECORDS_TABLES.map(
       ([schema, table]) => schema + "." + table,
     );
-    assert.equal(allowlistedTables.length, 38);
+    assert.equal(allowlistedTables.length, 39);
     assert.equal(new Set(allowlistedTables).size, allowlistedTables.length);
     assert.deepEqual(
       [...allowlistedTables].sort(),
@@ -60,7 +60,7 @@ describe("encrypted app records CSV export", () => {
     );
     assert.equal(
       (query.match(/to_jsonb\(app_row\)::text AS record_json/gu) ?? []).length,
-      38,
+      APP_RECORDS_TABLES.length,
     );
     assert.doesNotMatch(
       query,

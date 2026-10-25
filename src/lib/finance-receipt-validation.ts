@@ -69,3 +69,5 @@ export function validateReceiptBytes(
 
   return { contentType: type.contentType, filename, extension: type.extension };
 }
+
+export const validateFinanceReceiptUpload = validateReceiptBytes;
