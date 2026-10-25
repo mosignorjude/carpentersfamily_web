@@ -4,9 +4,9 @@ import {
   Bell,
   Calendar,
   CheckCheck,
-  ChevronRight,
   Megaphone,
   RotateCcw,
+  Trash2,
   Users,
   Wallet,
   X,
@@ -14,6 +14,8 @@ import {
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import {
+  deleteAllNotificationsAsyncAction,
+  deleteNotificationAsyncAction,
   markAllNotificationsReadAsyncAction,
   markNotificationReadAsyncAction,
   markNotificationUnreadAsyncAction,
@@ -37,6 +39,8 @@ export interface AppNotification {
   title: string;
   body: string;
   event_id: string | null;
+  source_type?: string | null;
+  source_id?: string | null;
   created_at: string;
   read_at: string | null;
 }
@@ -100,6 +104,10 @@ export function NotificationsDrawer({
         setItems((prev) =>
           prev.map((n) => (n.id === detail.id ? { ...n, read_at: null } : n)),
         );
+      } else if (detail.kind === "delete") {
+        setItems((prev) => prev.filter((n) => n.id !== detail.id));
+      } else if (detail.kind === "delete-all") {
+        setItems([]);
       }
     };
     window.addEventListener(NOTIFICATION_SYNC_EVENT, handleSync);
@@ -182,6 +190,68 @@ export function NotificationsDrawer({
     setIsPending(false);
   }
 
+  async function handleDeleteSingle(id: string) {
+    if (isPending) return;
+    setIsPending(true);
+    const prevItems = items;
+    const prevUnread = unreadCount;
+
+    dispatchNotificationSync({ kind: "delete", id });
+
+    const result = await deleteNotificationAsyncAction(id);
+    if (!result?.ok) {
+      setItems(prevItems);
+      onUnreadCountChange?.(prevUnread);
+      dispatchFlashCard({
+        type: "error",
+        title: "Delete Failed",
+        message: "The notification could not be deleted. Try again.",
+      });
+    }
+    setIsPending(false);
+  }
+
+  async function handleDeleteAll() {
+    if (isPending || items.length === 0) return;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm("Clear all notifications? This action cannot be undone.")
+    ) {
+      return;
+    }
+
+    setIsPending(true);
+    const prevItems = items;
+    const prevUnread = unreadCount;
+
+    dispatchNotificationSync({ kind: "delete-all" });
+
+    const result = await deleteAllNotificationsAsyncAction();
+    if (!result?.ok) {
+      setItems(prevItems);
+      onUnreadCountChange?.(prevUnread);
+      dispatchFlashCard({
+        type: "error",
+        title: "Clear All Failed",
+        message: "Notifications could not be cleared. Try again.",
+      });
+    }
+    setIsPending(false);
+  }
+
+  function handleAlertClick(notification: AppNotification) {
+    if (notification.read_at === null) {
+      const nowIso = new Date().toISOString();
+      dispatchNotificationSync({
+        kind: "mark-read",
+        id: notification.id,
+        readAt: nowIso,
+      });
+      void markNotificationReadAsyncAction(notification.id);
+    }
+    onClose();
+  }
+
   return (
     <div
       aria-labelledby={titleId}
@@ -224,7 +294,7 @@ export function NotificationsDrawer({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {unreadCount > 0 && (
               <button
                 className="text-xs text-[#174C37] hover:text-[#0E3325] hover:underline flex items-center gap-1 font-bold px-2 py-1 rounded-md transition-colors cursor-pointer disabled:opacity-50"
@@ -234,6 +304,18 @@ export function NotificationsDrawer({
               >
                 <CheckCheck className="w-3.5 h-3.5" />
                 <span>Mark all read</span>
+              </button>
+            )}
+            {items.length > 0 && (
+              <button
+                aria-label="Clear all notifications"
+                className="text-xs text-[#BA3C2A] hover:text-[#962D1E] hover:underline flex items-center gap-1 font-bold px-2 py-1 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                disabled={isPending}
+                onClick={handleDeleteAll}
+                type="button"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear all</span>
               </button>
             )}
             <button
@@ -290,12 +372,21 @@ export function NotificationsDrawer({
                       <span className="font-bold text-[11px] uppercase tracking-wider text-[#174C37] truncate">
                         {categoryLabel}
                       </span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${
+                          isUnread
+                            ? "bg-[#174C37]/15 text-[#174C37]"
+                            : "bg-[#E5DDD3]/80 text-[#7A685D]"
+                        }`}
+                      >
+                        {isUnread ? "Unread" : "Read"}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
                       {isUnread ? (
                         <button
-                          className="text-[11px] text-[#174C37] hover:underline font-bold disabled:opacity-50"
+                          className="text-[11px] text-[#174C37] hover:underline font-bold cursor-pointer disabled:opacity-50"
                           disabled={isPending}
                           onClick={() => handleMarkSingleRead(notification.id)}
                           type="button"
@@ -304,7 +395,7 @@ export function NotificationsDrawer({
                         </button>
                       ) : (
                         <button
-                          className="inline-flex items-center gap-1 text-[11px] text-[#5C4638] hover:text-[#174C37] hover:underline font-semibold disabled:opacity-50"
+                          className="inline-flex items-center gap-1 text-[11px] text-[#5C4638] hover:text-[#174C37] hover:underline font-semibold cursor-pointer disabled:opacity-50"
                           disabled={isPending}
                           onClick={() =>
                             handleMarkSingleUnread(notification.id)
@@ -318,37 +409,32 @@ export function NotificationsDrawer({
                       <span className="text-[10px] text-[#8C7D73] font-mono">
                         {timestamp.label}
                       </span>
+                      <button
+                        aria-label={`Delete "${notification.title}" notification`}
+                        className="p-1 text-[#8C7D73] hover:text-[#BA3C2A] hover:bg-[#FAF6F0] rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                        disabled={isPending}
+                        onClick={() => handleDeleteSingle(notification.id)}
+                        title="Delete alert"
+                        type="button"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
 
-                  <h3 className="font-bold text-[#3D291F] text-xs leading-snug">
-                    {notification.title}
-                  </h3>
+                  <Link
+                    className="block space-y-1 rounded-lg -mx-1 px-1 py-0.5 hover:bg-[#FAF6F0]/80 transition-colors focus-visible:outline-2 focus-visible:outline-[#174C37] group"
+                    href={href}
+                    onClick={() => handleAlertClick(notification)}
+                  >
+                    <h3 className="font-bold text-[#3D291F] group-hover:text-[#174C37] transition-colors text-xs leading-snug">
+                      {notification.title}
+                    </h3>
 
-                  <p className="text-[#5C4638] text-xs leading-relaxed">
-                    {notification.body}
-                  </p>
-
-                  <div className="pt-1.5 flex items-center justify-between border-t border-[#E5DDD3]/60 text-[11px]">
-                    <Link
-                      className="inline-flex items-center gap-1 font-bold text-[#174C37] hover:underline"
-                      href={href}
-                      onClick={onClose}
-                    >
-                      <span>Open related page</span>
-                      <ChevronRight className="w-3 h-3" />
-                    </Link>
-
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        isUnread
-                          ? "bg-[#174C37]/15 text-[#174C37]"
-                          : "bg-[#E5DDD3]/80 text-[#7A685D]"
-                      }`}
-                    >
-                      {isUnread ? "Unread" : "Read"}
-                    </span>
-                  </div>
+                    <p className="text-[#5C4638] text-xs leading-relaxed">
+                      {notification.body}
+                    </p>
+                  </Link>
                 </div>
               );
             })

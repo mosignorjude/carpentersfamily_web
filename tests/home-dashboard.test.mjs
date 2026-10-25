@@ -417,7 +417,7 @@ test("announcements are bounded and private notifications are recipient-scoped",
     { method: "eq", column: "recipient_id", value: memberId },
   ]);
   assert.equal(dashboard.activity.unreadCount, 3);
-  assert.equal(dashboard.activity.rows[0].href, "/dues");
+  assert.equal(dashboard.activity.rows[0].href, "/dues#dues-schedule");
   assert.equal(announcementPreview(`${"A ".repeat(130)}club note`).length, 240);
 });
 

@@ -233,59 +233,69 @@ export function FinancesPageView({
       )}
 
       {/* 1. Consolidated Financial Summary Strip */}
-      <ClubFinancialSummary
-        currentBalance={summary?.balance}
-        duesIncome={summary?.dues_income}
-        isUnavailable={financeUnavailable}
-        otherIncome={summary?.other_income}
-        totalExpenses={summary?.expenses}
-      />
+      <div id="finance-summary" className="scroll-target">
+        <ClubFinancialSummary
+          currentBalance={summary?.balance}
+          duesIncome={summary?.dues_income}
+          isUnavailable={financeUnavailable}
+          otherIncome={summary?.other_income}
+          totalExpenses={summary?.expenses}
+        />
+      </div>
 
       {/* 2. Officer-Only Treasury Controls */}
       {isOfficer && !financeUnavailable && (
-        <OfficerFinanceControls
-          canCorrect={canCorrect}
-          isOfficer={isOfficer}
-          onOpenCategoryManagement={() => setIsCategoryModalOpen(true)}
-          onOpenRecordExpense={() => setIsRecordExpenseOpen(true)}
-          onOpenRecordIncome={() => setIsRecordIncomeOpen(true)}
-        />
+        <div id="finance-controls" className="scroll-target">
+          <OfficerFinanceControls
+            canCorrect={canCorrect}
+            isOfficer={isOfficer}
+            onOpenCategoryManagement={() => setIsCategoryModalOpen(true)}
+            onOpenRecordExpense={() => setIsRecordExpenseOpen(true)}
+            onOpenRecordIncome={() => setIsRecordIncomeOpen(true)}
+          />
+        </div>
       )}
 
       {/* 3. Member-Visible Transaction Ledger */}
-      <ClubTransactionLedger
-        canCorrect={canCorrect}
-        financeUnavailable={financeUnavailable}
-        isOfficer={isOfficer}
-        onInitiateCorrect={(txn) => setCorrectingTransaction(txn)}
-        onInitiateVoid={(txn) => setVoidingTransaction(txn)}
-        onViewReceipt={(txn) => setReceiptViewingTransaction(txn)}
-        page={page}
-        pageCount={pageCount}
-        pageSize={pageSize}
-        receiptsByTransaction={receiptsByTransaction}
-        transactionCount={transactionCount}
-        transactions={transactions}
-      />
+      <div id="finance-ledger" className="scroll-target">
+        <ClubTransactionLedger
+          canCorrect={canCorrect}
+          financeUnavailable={financeUnavailable}
+          isOfficer={isOfficer}
+          onInitiateCorrect={(txn) => setCorrectingTransaction(txn)}
+          onInitiateVoid={(txn) => setVoidingTransaction(txn)}
+          onViewReceipt={(txn) => setReceiptViewingTransaction(txn)}
+          page={page}
+          pageCount={pageCount}
+          pageSize={pageSize}
+          receiptsByTransaction={receiptsByTransaction}
+          transactionCount={transactionCount}
+          transactions={transactions}
+        />
+      </div>
 
       {/* 4. Event Ledger Posts & Reversals */}
-      <EventLedgerSection
-        entries={eventLedgerEntries}
-        eventTitles={eventTitles}
-        isUnavailable={financeUnavailable}
-      />
+      <div id="finance-event-ledger" className="scroll-target">
+        <EventLedgerSection
+          entries={eventLedgerEntries}
+          eventTitles={eventTitles}
+          isUnavailable={financeUnavailable}
+        />
+      </div>
 
       {/* 5. Officer-Only Financial Audit Trail */}
       {isOfficer && (
-        <OfficerAuditHistory
-          actorNames={actorNames}
-          auditCount={auditCount}
-          auditError={auditError}
-          auditPage={auditPage}
-          auditPageCount={auditPageCount}
-          auditRows={auditRows}
-          pageSize={pageSize}
-        />
+        <div id="finance-audit" className="scroll-target">
+          <OfficerAuditHistory
+            actorNames={actorNames}
+            auditCount={auditCount}
+            auditError={auditError}
+            auditPage={auditPage}
+            auditPageCount={auditPageCount}
+            auditRows={auditRows}
+            pageSize={pageSize}
+          />
+        </div>
       )}
 
       {/* Footer */}

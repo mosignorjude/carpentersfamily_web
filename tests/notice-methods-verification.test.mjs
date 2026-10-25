@@ -985,7 +985,7 @@ test("mobile auth centering and self-hosted font parity across dev and prod", as
 // 12. NOTIFICATION SYNC PURITY (NO STRICT-MODE DOUBLE-INCREMENT)
 // ============================================================================
 
-test("notification sync: AppHeader, NotificationsDrawer, and PersonalNotificationsCard never double-increment unreadCount", async () => {
+test("notification sync: AppHeader and NotificationsDrawer never double-increment unreadCount and the home card stays isolated", async () => {
   const fs = await import("node:fs");
   const headerSource = fs.readFileSync("src/components/app-header.tsx", "utf8");
   const drawerSource = fs.readFileSync(
@@ -1003,17 +1003,11 @@ test("notification sync: AppHeader, NotificationsDrawer, and PersonalNotificatio
     "AppHeader must not nest setUnreadCount inside a setNotifications((prev) => ...) updater (causes StrictMode double-invocation)",
   );
 
-  // 2. PersonalNotificationsCard handleMarkUnread/handleMarkRead must delegate count updates to NOTIFICATION_SYNC_EVENT
-  const markUnreadMatch = homeCardSource.match(
-    /async function handleMarkUnread[\s\S]*?setIsPending\(false\);/,
-  );
+  // 2. The home activity card is a read-only feed and must not join the sync system
   assert.ok(
-    markUnreadMatch,
-    "Expected handleMarkUnread in PersonalNotificationsCard",
-  );
-  assert.ok(
-    !markUnreadMatch[0].includes("setUnreadCount("),
-    "handleMarkUnread in PersonalNotificationsCard must not call setUnreadCount directly alongside dispatchNotificationSync",
+    !homeCardSource.includes("NOTIFICATION_SYNC_EVENT") &&
+      !homeCardSource.includes("dispatchNotificationSync"),
+    "PersonalNotificationsCard must not listen to or dispatch notification sync events",
   );
 
   // 3. NotificationsDrawer handleMarkSingleUnread/Read must delegate count updates to NOTIFICATION_SYNC_EVENT
@@ -1027,5 +1021,112 @@ test("notification sync: AppHeader, NotificationsDrawer, and PersonalNotificatio
   assert.ok(
     !drawerUnreadMatch[0].includes("onUnreadCountChange"),
     "handleMarkSingleUnread in NotificationsDrawer must not call onUnreadCountChange alongside dispatchNotificationSync",
+  );
+});
+
+// ============================================================================
+// 13. DETAILED NOTIFICATIONS, CLICK-TO-NAVIGATE, AND DELETION VERIFICATION
+// ============================================================================
+
+test("detailed notifications: SQL migration, click-to-navigate alert cards, and single/bulk deletion", async () => {
+  const fs = await import("node:fs");
+  const migrationSource = fs.readFileSync(
+    "supabase/migrations/20261024210000_detailed_notifications_and_deletion.sql",
+    "utf8",
+  );
+  const drawerSource = fs.readFileSync(
+    "src/components/notifications/notifications-drawer.tsx",
+    "utf8",
+  );
+  const homeCardSource = fs.readFileSync(
+    "src/components/home/personal-notifications-card.tsx",
+    "utf8",
+  );
+
+  // 1. SQL migration defines delete_notification, delete_all_notifications, and rich copy builder
+  assert.ok(
+    migrationSource.includes(
+      "create or replace function public.delete_notification",
+    ) &&
+      migrationSource.includes(
+        "create or replace function public.delete_all_notifications",
+      ) &&
+      migrationSource.includes(
+        "create or replace function private.build_audit_notification_copy",
+      ),
+    "Migration must define delete_notification, delete_all_notifications, and build_audit_notification_copy",
+  );
+
+  // 2. Drawer and Home card make the alert content clickable; only the drawer marks it read
+  assert.ok(
+    !drawerSource.includes("Open related page") &&
+      !homeCardSource.includes("Open Details"),
+    "NotificationsDrawer and PersonalNotificationsCard must not render separate 'Open related page' / 'Open Details' footer links",
+  );
+  assert.ok(
+    drawerSource.includes("handleAlertClick"),
+    "Clicking an alert in the drawer must trigger handleAlertClick",
+  );
+  assert.ok(
+    !homeCardSource.includes("handleAlertClick") &&
+      !homeCardSource.includes("markNotificationReadAsyncAction"),
+    "PersonalNotificationsCard must link to the destination without marking notifications read",
+  );
+
+  // 3. Single and bulk deletion stay in the drawer only
+  assert.ok(
+    drawerSource.includes("handleDeleteSingle") &&
+      drawerSource.includes("handleDeleteAll") &&
+      drawerSource.includes("window.confirm"),
+    "NotificationsDrawer must support single-alert deletion and confirmed Clear All deletion",
+  );
+  assert.ok(
+    !homeCardSource.includes("handleDeleteSingle") &&
+      !homeCardSource.includes("handleDeleteAll") &&
+      !homeCardSource.includes("window.confirm"),
+    "PersonalNotificationsCard must not offer delete or clear-all actions",
+  );
+});
+
+// ============================================================================
+// 14. HOME RECENT ACTIVITY IS A READ-ONLY FEED
+// ============================================================================
+
+test("home recent activity card is read-only and caps at the latest five entries", async () => {
+  const fs = await import("node:fs");
+  const homeCardSource = fs.readFileSync(
+    "src/components/home/personal-notifications-card.tsx",
+    "utf8",
+  );
+
+  assert.match(
+    homeCardSource,
+    /RECENT_ACTIVITY_LIMIT\s*=\s*5/,
+    "Home activity card must fetch/render a maximum of five entries",
+  );
+  assert.match(
+    homeCardSource,
+    /slice\(0,\s*RECENT_ACTIVITY_LIMIT\)/,
+    "Home activity card must cap the rendered rows at RECENT_ACTIVITY_LIMIT",
+  );
+  assert.ok(
+    !homeCardSource.includes("Mark all as read") &&
+      !homeCardSource.includes("Mark as read") &&
+      !homeCardSource.includes("Mark as unread") &&
+      !homeCardSource.includes("Clear all"),
+    "Home activity card must not render notification action controls",
+  );
+  assert.ok(
+    !homeCardSource.includes(">Unread<") &&
+      !homeCardSource.includes(">Read<") &&
+      !homeCardSource.includes("unreadCount"),
+    "Home activity card must not render read/unread state",
+  );
+  assert.ok(
+    !homeCardSource.includes("deleteNotificationAsyncAction") &&
+      !homeCardSource.includes("deleteAllNotificationsAsyncAction") &&
+      !homeCardSource.includes("markAllNotificationsReadAsyncAction") &&
+      !homeCardSource.includes("markNotificationUnreadAsyncAction"),
+    "Home activity card must not import notification mutation actions",
   );
 });

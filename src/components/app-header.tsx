@@ -105,6 +105,26 @@ export default function AppHeader({
         if (shouldIncrement) {
           setUnreadCount((c) => c + 1);
         }
+        return;
+      }
+
+      if (detail.kind === "delete") {
+        const current = notificationsRef.current;
+        const target = current.find((n) => n.id === detail.id);
+        const shouldDecrement = Boolean(target && target.read_at === null);
+        const next = current.filter((n) => n.id !== detail.id);
+        notificationsRef.current = next;
+        setNotifications(next);
+        if (shouldDecrement) {
+          setUnreadCount((c) => Math.max(0, c - 1));
+        }
+        return;
+      }
+
+      if (detail.kind === "delete-all") {
+        notificationsRef.current = [];
+        setNotifications([]);
+        setUnreadCount(0);
       }
     };
 
@@ -174,6 +194,27 @@ export default function AppHeader({
           );
           notificationsRef.current = next;
           setNotifications(next);
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "notifications",
+        },
+        (payload: { old: Record<string, unknown> }) => {
+          const deletedId = payload.old?.id;
+          if (typeof deletedId !== "string") return;
+          const current = notificationsRef.current;
+          const existing = current.find((n) => n.id === deletedId);
+          if (!existing) return;
+          const next = current.filter((n) => n.id !== deletedId);
+          notificationsRef.current = next;
+          setNotifications(next);
+          if (existing.read_at === null) {
+            setUnreadCount((c) => Math.max(0, c - 1));
+          }
         },
       )
       .subscribe();

@@ -53,7 +53,10 @@ export function PollCard({ poll }: PollCardProps) {
   const totalVotesCount = poll.totalVotes ?? 0;
 
   return (
-    <article className="bg-white rounded-xl border border-[#E5DDD3] p-5 shadow-xs space-y-4">
+    <article
+      id={`poll-${poll.id}`}
+      className="scroll-target bg-white rounded-xl border border-[#E5DDD3] p-5 shadow-xs space-y-4"
+    >
       {/* Header Metadata */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div className="space-y-1.5 flex-1 min-w-0">

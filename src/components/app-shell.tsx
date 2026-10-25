@@ -4,6 +4,7 @@ import { signOutAction } from "@/app/actions";
 import AppHeader from "@/components/app-header";
 import AppNavigationLinks from "@/components/app-navigation-links";
 import type { AppNotification } from "@/components/notifications/notifications-drawer";
+import { HashScrollHandler } from "@/components/ui/hash-scroll-handler";
 import UserProfileBadge, {
   type UserProfileData,
 } from "@/components/user-profile-badge";
@@ -82,6 +83,7 @@ export default function AppShell({
         </footer>
       </aside>
       <div className="app-shell-main">
+        <HashScrollHandler />
         <AppHeader
           currentUserId={currentUserId}
           dashboard={dashboard}

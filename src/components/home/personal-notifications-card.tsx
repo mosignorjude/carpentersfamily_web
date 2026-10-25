@@ -1,28 +1,10 @@
 "use client";
 
-import {
-  Bell,
-  Calendar,
-  Check,
-  CheckCheck,
-  ChevronRight,
-  RotateCcw,
-  Wallet,
-} from "lucide-react";
+import { Bell, Calendar, Wallet } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import {
-  markAllNotificationsReadAsyncAction,
-  markNotificationReadAsyncAction,
-  markNotificationUnreadAsyncAction,
-} from "@/app/actions";
-import { dispatchFlashCard } from "@/components/ui/flash-card";
 import type { HomeDashboardActivity } from "@/lib/home-dashboard.server";
-import {
-  dispatchNotificationSync,
-  NOTIFICATION_SYNC_EVENT,
-  type NotificationSyncPayload,
-} from "@/lib/notification-sync";
+
+const RECENT_ACTIVITY_LIMIT = 5;
 
 function formatActivityDate(timestamp: string) {
   return new Intl.DateTimeFormat("en-NG", {
@@ -50,70 +32,12 @@ interface PersonalNotificationsCardProps {
   activity: {
     unavailable: boolean;
     rows: HomeDashboardActivity[];
-    unreadCount: number | null;
-    unreadCountUnavailable: boolean;
   };
 }
 
 export function PersonalNotificationsCard({
   activity,
 }: PersonalNotificationsCardProps) {
-  const [items, setItems] = useState<HomeDashboardActivity[]>(
-    activity.rows ?? [],
-  );
-  const initialVisibleUnread = (activity.rows ?? []).filter(
-    (item) => item.readAt === null,
-  ).length;
-  const [unreadCount, setUnreadCount] = useState<number>(
-    typeof activity.unreadCount === "number"
-      ? activity.unreadCount
-      : initialVisibleUnread,
-  );
-  const [isPending, setIsPending] = useState(false);
-
-  useEffect(() => {
-    const nextRows = activity.rows ?? [];
-    setItems(nextRows);
-    const visibleUnread = nextRows.filter(
-      (item) => item.readAt === null,
-    ).length;
-    setUnreadCount(
-      typeof activity.unreadCount === "number"
-        ? activity.unreadCount
-        : visibleUnread,
-    );
-  }, [activity.rows, activity.unreadCount]);
-
-  useEffect(() => {
-    const handleSync = (event: Event) => {
-      const detail = (event as CustomEvent<NotificationSyncPayload>).detail;
-      if (!detail) return;
-      if (detail.kind === "mark-all-read") {
-        setItems((prev) =>
-          prev.map((n) =>
-            n.readAt === null ? { ...n, readAt: detail.readAt } : n,
-          ),
-        );
-        setUnreadCount(0);
-      } else if (detail.kind === "mark-read") {
-        setItems((prev) =>
-          prev.map((n) =>
-            n.id === detail.id ? { ...n, readAt: detail.readAt } : n,
-          ),
-        );
-        setUnreadCount((c) => Math.max(0, c - 1));
-      } else if (detail.kind === "mark-unread") {
-        setItems((prev) =>
-          prev.map((n) => (n.id === detail.id ? { ...n, readAt: null } : n)),
-        );
-        setUnreadCount((c) => c + 1);
-      }
-    };
-    window.addEventListener(NOTIFICATION_SYNC_EVENT, handleSync);
-    return () =>
-      window.removeEventListener(NOTIFICATION_SYNC_EVENT, handleSync);
-  }, []);
-
   if (activity.unavailable) {
     return (
       <section
@@ -126,7 +50,7 @@ export function PersonalNotificationsCard({
             className="text-lg font-bold text-[#3D291F]"
             id="notifications-heading"
           >
-            Recent Member Activity
+            Recent Member Activity & Notices
           </h3>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
@@ -135,14 +59,14 @@ export function PersonalNotificationsCard({
             Activity History Unavailable
           </h4>
           <p className="text-xs font-medium text-[#5C4638] max-w-sm mx-auto leading-relaxed">
-            Your notifications could not be retrieved at this time.
+            Recent club activity could not be retrieved at this time.
           </p>
         </div>
       </section>
     );
   }
 
-  const rows = items;
+  const rows = (activity.rows ?? []).slice(0, RECENT_ACTIVITY_LIMIT);
 
   if (rows.length === 0) {
     return (
@@ -156,86 +80,20 @@ export function PersonalNotificationsCard({
             className="text-lg font-bold text-[#3D291F]"
             id="notifications-heading"
           >
-            Recent Member Activity
+            Recent Member Activity & Notices
           </h3>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
           <Bell className="w-6 h-6 text-[#174C37] mx-auto" />
           <h4 className="text-sm font-bold text-[#3D291F]">
-            No Personal Notifications
+            No Recent Activity
           </h4>
           <p className="text-xs font-medium text-[#5C4638] max-w-sm mx-auto leading-relaxed">
-            You are fully caught up. When announcements or updates are issued,
-            your personal notices will appear here.
+            New activity and club notices will appear here as they happen.
           </p>
         </div>
       </section>
     );
-  }
-
-  async function handleMarkRead(id: string) {
-    if (isPending) return;
-    setIsPending(true);
-    const nowIso = new Date().toISOString();
-
-    dispatchNotificationSync({ kind: "mark-read", id, readAt: nowIso });
-
-    const result = await markNotificationReadAsyncAction(id);
-    if (!result?.ok) {
-      dispatchNotificationSync({ kind: "mark-unread", id });
-      dispatchFlashCard({
-        type: "error",
-        title: "Update Failed",
-        message: "The notification could not be marked as read. Try again.",
-      });
-    }
-    setIsPending(false);
-  }
-
-  async function handleMarkUnread(id: string) {
-    if (isPending) return;
-    setIsPending(true);
-    const targetPrevReadAt =
-      items.find((n) => n.id === id)?.readAt ?? new Date().toISOString();
-
-    dispatchNotificationSync({ kind: "mark-unread", id });
-
-    const result = await markNotificationUnreadAsyncAction(id);
-    if (!result?.ok) {
-      dispatchNotificationSync({
-        kind: "mark-read",
-        id,
-        readAt: targetPrevReadAt,
-      });
-      dispatchFlashCard({
-        type: "error",
-        title: "Update Failed",
-        message: "The notification could not be marked as unread. Try again.",
-      });
-    }
-    setIsPending(false);
-  }
-
-  async function handleMarkAllRead() {
-    if (isPending || unreadCount === 0) return;
-    setIsPending(true);
-    const prevItems = items;
-    const prevUnread = unreadCount;
-    const nowIso = new Date().toISOString();
-
-    dispatchNotificationSync({ kind: "mark-all-read", readAt: nowIso });
-
-    const result = await markAllNotificationsReadAsyncAction();
-    if (!result?.ok) {
-      setItems(prevItems);
-      setUnreadCount(prevUnread);
-      dispatchFlashCard({
-        type: "error",
-        title: "Update Failed",
-        message: "Notifications could not be marked as read. Try again.",
-      });
-    }
-    setIsPending(false);
   }
 
   return (
@@ -243,133 +101,57 @@ export function PersonalNotificationsCard({
       aria-labelledby="notifications-heading"
       className="bg-white rounded-xl border border-[#E5DDD3] p-6 sm:p-7 shadow-xs space-y-5"
     >
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#E5DDD3]">
-        <div className="flex items-center gap-2">
-          <Bell className="w-5 h-5 text-[#174C37]" />
-          <h3
-            className="text-lg font-bold text-[#3D291F]"
-            id="notifications-heading"
-          >
-            Recent Member Activity & Notices
-          </h3>
-        </div>
-
-        <div className="flex items-center gap-3 text-xs">
-          {activity.unreadCountUnavailable ? (
-            <span className="text-xs font-semibold text-[#7A685D]">
-              Unread count unavailable
-            </span>
-          ) : unreadCount > 0 ? (
-            <div className="flex items-center gap-2.5">
-              <span className="font-semibold text-[#174C37]">
-                {unreadCount} unread update{unreadCount > 1 ? "s" : ""}
-              </span>
-              <button
-                className="text-xs font-semibold text-[#174C37] hover:underline cursor-pointer inline-flex items-center gap-1 min-h-[44px] px-2.5 py-1 rounded-lg border border-[#E5DDD3] bg-white hover:bg-[#FAF6F0] transition-colors"
-                disabled={isPending}
-                onClick={handleMarkAllRead}
-                type="button"
-              >
-                <CheckCheck className="w-3.5 h-3.5 text-[#174C37]" />
-                <span>Mark all as read</span>
-              </button>
-            </div>
-          ) : (
-            <span className="text-xs font-semibold text-[#7A685D]">
-              All caught up
-            </span>
-          )}
-        </div>
+      <div className="flex items-center gap-2 pb-3 border-b border-[#E5DDD3]">
+        <Bell className="w-5 h-5 text-[#174C37]" />
+        <h3
+          className="text-lg font-bold text-[#3D291F]"
+          id="notifications-heading"
+        >
+          Recent Member Activity & Notices
+        </h3>
       </div>
 
-      {/* Notifications List */}
       <div className="space-y-3">
-        {rows.slice(0, 4).map((item) => {
-          const isUnread = item.readAt === null;
-
-          return (
-            <div
-              className={`p-4 sm:p-5 rounded-xl border transition-colors space-y-3 ${
-                isUnread
-                  ? "bg-[#FAF6F0] border-[#174C37]/40 shadow-xs"
-                  : "bg-white border-[#E5DDD3] shadow-2xs"
-              }`}
-              key={item.id}
-            >
-              {/* Top Row: Category, Read/Unread Tag, Date & Mark Read/Unread action */}
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                <div className="flex items-center gap-2 truncate">
-                  <span className="shrink-0 p-1.5 rounded-lg bg-white border border-[#E5DDD3]">
-                    {getCategoryIcon(item.category)}
-                  </span>
-                  <span
-                    className={`text-[11px] font-bold uppercase tracking-wide ${
-                      isUnread ? "text-[#174C37]" : "text-[#7A685D]"
-                    }`}
-                  >
-                    {isUnread ? "Unread" : "Read"}
-                  </span>
-                  <span aria-hidden="true" className="text-[#B8ACA0]">
-                    ·
-                  </span>
-                  <span className="text-xs font-bold font-mono text-[#7A685D] shrink-0">
-                    {formatActivityDate(item.createdAt)}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {isUnread ? (
-                    <button
-                      aria-label={`Mark "${item.title}" as read`}
-                      className="text-xs font-bold text-[#174C37] hover:underline cursor-pointer inline-flex items-center gap-1 min-h-[44px] px-2.5 py-1 rounded-lg border border-[#174C37]/30 bg-white hover:bg-[#FAF6F0] transition-colors"
-                      disabled={isPending}
-                      onClick={() => handleMarkRead(item.id)}
-                      type="button"
-                    >
-                      <Check className="w-3.5 h-3.5 text-[#174C37]" />
-                      <span>Mark as read</span>
-                    </button>
-                  ) : (
-                    <button
-                      aria-label={`Mark "${item.title}" as unread`}
-                      className="text-xs font-semibold text-[#7A685D] hover:underline cursor-pointer inline-flex items-center gap-1 min-h-[44px] px-2.5 py-1 rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] hover:bg-white transition-colors"
-                      disabled={isPending}
-                      onClick={() => handleMarkUnread(item.id)}
-                      type="button"
-                    >
-                      <RotateCcw className="w-3 h-3 text-[#7A685D]" />
-                      <span>Mark as unread</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Title */}
-              <h4 className="font-bold text-[#3D291F] text-sm leading-snug">
-                {item.title}
-              </h4>
-
-              {/* Body */}
-              <p className="text-xs font-normal text-[#5C4638] leading-relaxed">
-                {item.body}
-              </p>
-
-              {/* Bottom: Action link if href exists */}
-              {item.href ? (
-                <div className="pt-2 border-t border-[#E5DDD3] flex items-center justify-end">
-                  <Link
-                    className="text-xs font-bold text-[#174C37] hover:underline inline-flex items-center gap-1 min-h-[44px] px-2.5 py-1 rounded-lg hover:bg-[#FAF6F0] transition-colors"
-                    href={item.href}
-                  >
-                    <span>Open Details</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              ) : null}
+        {rows.map((item) => (
+          <div
+            className="p-4 sm:p-5 rounded-xl border border-[#E5DDD3] bg-white shadow-2xs space-y-3"
+            key={item.id}
+          >
+            <div className="flex items-center gap-2 text-xs">
+              <span className="shrink-0 p-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3]">
+                {getCategoryIcon(item.category)}
+              </span>
+              <span className="text-xs font-bold font-mono text-[#7A685D]">
+                {formatActivityDate(item.createdAt)}
+              </span>
             </div>
-          );
-        })}
+
+            {item.href ? (
+              <Link
+                className="block space-y-1.5 rounded-lg -mx-1.5 px-1.5 py-1 hover:bg-[#FAF6F0] transition-colors focus-visible:outline-2 focus-visible:outline-[#174C37] group"
+                href={item.href}
+              >
+                <h4 className="font-bold text-[#3D291F] group-hover:text-[#174C37] transition-colors text-sm leading-snug">
+                  {item.title}
+                </h4>
+
+                <p className="text-xs font-normal text-[#5C4638] leading-relaxed">
+                  {item.body}
+                </p>
+              </Link>
+            ) : (
+              <div className="space-y-1.5">
+                <h4 className="font-bold text-[#3D291F] text-sm leading-snug">
+                  {item.title}
+                </h4>
+
+                <p className="text-xs font-normal text-[#5C4638] leading-relaxed">
+                  {item.body}
+                </p>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </section>
   );

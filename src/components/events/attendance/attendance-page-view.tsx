@@ -166,15 +166,17 @@ export function AttendancePageView({
 
       {/* Attendance Workspace Section */}
       {event.attendance_enabled && (
-        <div className="space-y-6">
+        <div id="attendance-session" className="scroll-target space-y-6">
           {/* Member Check-in */}
-          <CheckinCard
-            canReviewAttendance={canReviewAttendance}
-            eventId={event.id}
-            isMutable={mutableForSession}
-            ownAttendance={ownAttendance}
-            sessionOpen={sessionOpen}
-          />
+          <div id="checkin" className="scroll-target">
+            <CheckinCard
+              canReviewAttendance={canReviewAttendance}
+              eventId={event.id}
+              isMutable={mutableForSession}
+              ownAttendance={ownAttendance}
+              sessionOpen={sessionOpen}
+            />
+          </div>
 
           {/* Officer Session Controls (Admin/Executive) */}
           {canControl && (

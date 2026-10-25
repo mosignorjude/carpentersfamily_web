@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type React from "react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   recordEventFinancialTransactionAction,
   recordEventTicketSaleAction,
@@ -29,6 +29,7 @@ import {
 import { dispatchActionStatusToast } from "@/components/ui/flash-card";
 import { useSuccessNotice } from "@/components/ui/use-success-notice";
 import { downloadLedgerCSV } from "@/lib/format";
+import { getScrollBehavior } from "@/lib/tab-navigation.mjs";
 import type {
   ActivityLogItem,
   DashboardCostCenter,
@@ -111,6 +112,8 @@ export function EventDashboardView({
   notice: _notice,
 }: EventDashboardViewProps) {
   const [activeTab, setActiveTab] = useState<DashboardTab>(initialTab);
+  const [scrollRequest, setScrollRequest] = useState(0);
+  const lastInitialTab = useRef(initialTab);
   const [isPending, startTransition] = useTransition();
 
   // Authoritative state from server props (updated via revalidatePath on success)
@@ -148,10 +151,21 @@ export function EventDashboardView({
     setTransactionToVoid(null);
   });
 
+  // Keep the active tab in sync when soft navigation changes only the query string.
+  useEffect(() => {
+    if (initialTab === lastInitialTab.current) return;
+    lastInitialTab.current = initialTab;
+    setActiveTab(initialTab);
+    setScrollRequest((request) => request + 1);
+  }, [initialTab]);
+
   // Synchronize hash with tab
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace("#", "").toLowerCase();
+      const rawHash = window.location.hash.replace("#", "").toLowerCase();
+      const tabName = rawHash.startsWith("event-finance-")
+        ? rawHash.replace("event-finance-", "")
+        : rawHash;
       if (
         [
           "overview",
@@ -162,9 +176,10 @@ export function EventDashboardView({
           "reports",
           "team_roles",
           "audit_log",
-        ].includes(hash)
+        ].includes(tabName)
       ) {
-        setActiveTab(hash as DashboardTab);
+        setActiveTab(tabName as DashboardTab);
+        setScrollRequest((request) => request + 1);
       }
     };
 
@@ -178,8 +193,28 @@ export function EventDashboardView({
 
   const selectTab = (tabId: DashboardTab) => {
     setActiveTab(tabId);
-    window.history.replaceState(null, "", `#${tabId}`);
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.set("tab", tabId);
+    const newRelativePathQuery = `${window.location.pathname}?${searchParams.toString()}#event-finance-${tabId}`;
+    window.history.replaceState(null, "", newRelativePathQuery);
+    setScrollRequest((request) => request + 1);
   };
+
+  // Scroll after the selected panel has committed to the DOM.
+  useEffect(() => {
+    if (scrollRequest === 0) return;
+    const target =
+      document.getElementById(`event-finance-${activeTab}`) ||
+      document.getElementById("event-finance-panel");
+    if (!target) return;
+    target.scrollIntoView({
+      behavior: getScrollBehavior(
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+      ),
+      block: "start",
+    });
+    target.focus({ preventScroll: true });
+  }, [activeTab, scrollRequest]);
 
   const isLocked =
     event.status.toLowerCase() === "completed" ||
@@ -227,6 +262,7 @@ export function EventDashboardView({
     if (txnData.category === "ticket_sales" && txnData.tierId) {
       const fd = new FormData();
       fd.set("event_id", event.id);
+      fd.set("return_tab", activeTab);
       fd.set("tier_id", txnData.tierId);
       fd.set("quantity", String(txnData.ticketQuantity ?? 1));
       fd.set("buyer_name", txnData.payerPayee.slice(0, 160));
@@ -251,6 +287,7 @@ export function EventDashboardView({
 
     const fd = new FormData();
     fd.set("event_id", event.id);
+    fd.set("return_tab", activeTab);
     fd.set("kind", txnData.type === "revenue" ? "income" : "expense");
     fd.set("amount_ngn", String(Math.round(txnData.amount)));
     fd.set("transaction_date", lagosToday);
@@ -309,6 +346,7 @@ export function EventDashboardView({
     ) {
       const fd = new FormData();
       fd.set("event_id", event.id);
+      fd.set("return_tab", activeTab);
       fd.set("reason", reason.slice(0, 500));
       if (targetTxn?.category === "ticket_sales") {
         fd.set("sale_id", txnId);
@@ -525,126 +563,132 @@ export function EventDashboardView({
       </section>
 
       {/* Render Active Tab Component */}
-      {activeTab === "overview" && (
-        <TabOverview
-          budgetCeiling={event.budgetCeiling}
-          canRecord={canRecord}
-          committedExpenses={committedExpenses}
-          costCenters={costCenters}
-          event={event}
-          onNavigateTab={(tab) => selectTab(tab as DashboardTab)}
-          onOpenRecordModal={(type) => {
-            if (type === "ticket") {
-              setRecordInitialType("revenue");
-              setRecordInitialCategory("ticket_sales");
-            } else if (type === "expense") {
-              setRecordInitialType("expense");
-              setRecordInitialCategory(undefined);
-            } else {
-              setRecordInitialType("revenue");
-              setRecordInitialCategory(undefined);
+      <div
+        id={`event-finance-${activeTab}`}
+        className="scroll-target tab-panel-focus event-finance-panel space-y-6"
+        tabIndex={-1}
+      >
+        {activeTab === "overview" && (
+          <TabOverview
+            budgetCeiling={event.budgetCeiling}
+            canRecord={canRecord}
+            committedExpenses={committedExpenses}
+            costCenters={costCenters}
+            event={event}
+            onNavigateTab={(tab) => selectTab(tab as DashboardTab)}
+            onOpenRecordModal={(type) => {
+              if (type === "ticket") {
+                setRecordInitialType("revenue");
+                setRecordInitialCategory("ticket_sales");
+              } else if (type === "expense") {
+                setRecordInitialType("expense");
+                setRecordInitialCategory(undefined);
+              } else {
+                setRecordInitialType("revenue");
+                setRecordInitialCategory(undefined);
+              }
+              setIsRecordModalOpen(true);
+            }}
+            ticketTiers={ticketTiers}
+            totalExpenses={totalExpenses}
+            totalRevenue={totalRevenue}
+            totalTicketRevenue={totalTicketRevenue}
+            totalTicketsCapacity={totalTicketsCapacity}
+            totalTicketsSold={totalTicketsSold}
+            transactions={transactions}
+          />
+        )}
+
+        {activeTab === "tickets" && (
+          <TabTickets
+            onOpenRecordTicketModal={
+              canRecord
+                ? (_tierId) => {
+                    setRecordInitialType("revenue");
+                    setRecordInitialCategory("ticket_sales");
+                    setIsRecordModalOpen(true);
+                  }
+                : undefined
             }
-            setIsRecordModalOpen(true);
-          }}
-          ticketTiers={ticketTiers}
-          totalExpenses={totalExpenses}
-          totalRevenue={totalRevenue}
-          totalTicketRevenue={totalTicketRevenue}
-          totalTicketsCapacity={totalTicketsCapacity}
-          totalTicketsSold={totalTicketsSold}
-          transactions={transactions}
-        />
-      )}
+            tiers={ticketTiers}
+          />
+        )}
 
-      {activeTab === "tickets" && (
-        <TabTickets
-          onOpenRecordTicketModal={
-            canRecord
-              ? (_tierId) => {
-                  setRecordInitialType("revenue");
-                  setRecordInitialCategory("ticket_sales");
-                  setIsRecordModalOpen(true);
-                }
-              : undefined
-          }
-          tiers={ticketTiers}
-        />
-      )}
+        {activeTab === "expenses" && (
+          <TabExpenses
+            budgetCeiling={event.budgetCeiling}
+            canRecord={canRecord}
+            costCenters={costCenters}
+            onRecordExpense={(cat) => {
+              setRecordInitialType("expense");
+              setRecordInitialCategory(cat);
+              setIsRecordModalOpen(true);
+            }}
+          />
+        )}
 
-      {activeTab === "expenses" && (
-        <TabExpenses
-          budgetCeiling={event.budgetCeiling}
-          canRecord={canRecord}
-          costCenters={costCenters}
-          onRecordExpense={(cat) => {
-            setRecordInitialType("expense");
-            setRecordInitialCategory(cat);
-            setIsRecordModalOpen(true);
-          }}
-        />
-      )}
+        {activeTab === "budget" && (
+          <TabBudgetAllocations
+            budgetCeiling={event.budgetCeiling}
+            canManageCategories={canManageCategories}
+            costCenters={costCenters}
+            onManageCategories={() => {
+              setCategoryModalType("budget_allocation");
+              setIsCategoryModalOpen(true);
+            }}
+            revenueStreams={revenueStreams}
+          />
+        )}
 
-      {activeTab === "budget" && (
-        <TabBudgetAllocations
-          budgetCeiling={event.budgetCeiling}
-          canManageCategories={canManageCategories}
-          costCenters={costCenters}
-          onManageCategories={() => {
-            setCategoryModalType("budget_allocation");
-            setIsCategoryModalOpen(true);
-          }}
-          revenueStreams={revenueStreams}
-        />
-      )}
+        {activeTab === "revenue" && (
+          <TabRevenue
+            canManageCategories={canManageCategories}
+            canRecord={canRecord}
+            onManageCategories={() => {
+              setCategoryModalType("revenue");
+              setIsCategoryModalOpen(true);
+            }}
+            onRecordRevenue={(cat) => {
+              setRecordInitialType("revenue");
+              setRecordInitialCategory(cat);
+              setIsRecordModalOpen(true);
+            }}
+            streams={revenueStreams}
+          />
+        )}
 
-      {activeTab === "revenue" && (
-        <TabRevenue
-          canManageCategories={canManageCategories}
-          canRecord={canRecord}
-          onManageCategories={() => {
-            setCategoryModalType("revenue");
-            setIsCategoryModalOpen(true);
-          }}
-          onRecordRevenue={(cat) => {
-            setRecordInitialType("revenue");
-            setRecordInitialCategory(cat);
-            setIsRecordModalOpen(true);
-          }}
-          streams={revenueStreams}
-        />
-      )}
+        {activeTab === "reports" && (
+          <TabReports
+            budgetCeiling={event.budgetCeiling}
+            costCenters={costCenters}
+            event={event}
+            revenueStreams={revenueStreams}
+            totalExpenses={totalExpenses}
+            totalRevenue={totalRevenue}
+            transactions={transactions}
+          />
+        )}
 
-      {activeTab === "reports" && (
-        <TabReports
-          budgetCeiling={event.budgetCeiling}
-          costCenters={costCenters}
-          event={event}
-          revenueStreams={revenueStreams}
-          totalExpenses={totalExpenses}
-          totalRevenue={totalRevenue}
-          transactions={transactions}
-        />
-      )}
+        {activeTab === "team_roles" && (
+          <TabTeamRoles event={event} team={teamMembers} />
+        )}
 
-      {activeTab === "team_roles" && (
-        <TabTeamRoles event={event} team={teamMembers} />
-      )}
-
-      {activeTab === "audit_log" && (
-        <TabAuditLog
-          activityLogs={activityLogs}
-          onInitiateVoid={(txn) => {
-            setTransactionToVoid(txn);
-            setIsVoidModalOpen(true);
-          }}
-          onViewTransaction={(txn) => {
-            setSelectedTransaction(txn);
-            setIsDetailModalOpen(true);
-          }}
-          transactions={transactions}
-          userRole={userRole}
-        />
-      )}
+        {activeTab === "audit_log" && (
+          <TabAuditLog
+            activityLogs={activityLogs}
+            onInitiateVoid={(txn) => {
+              setTransactionToVoid(txn);
+              setIsVoidModalOpen(true);
+            }}
+            onViewTransaction={(txn) => {
+              setSelectedTransaction(txn);
+              setIsDetailModalOpen(true);
+            }}
+            transactions={transactions}
+            userRole={userRole}
+          />
+        )}
+      </div>
 
       {/* Global Modals */}
       <RecordTransactionModal
