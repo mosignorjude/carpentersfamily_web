@@ -5,7 +5,7 @@ import { formatCoveredMonthsDisplay } from "@/lib/dues-governance.mjs";
 import { sendEmail, sendEmailBatch } from "@/lib/email/client";
 import { getEmailConfig } from "@/lib/email/config";
 import { ClubNotificationEmail } from "@/lib/email/templates/club-notification-email";
-import { createReceiptStorageClient } from "@/lib/finance-receipts";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const nairaFormatter = new Intl.NumberFormat("en-NG", {
   style: "currency",
@@ -95,7 +95,7 @@ async function resolveMemberContact(
     // Fallback to auth metadata or generic greeting
   }
 
-  const adminClient = createReceiptStorageClient();
+  const adminClient = createSupabaseAdminClient();
   if (!adminClient) return { email: null, fullName };
 
   try {
@@ -141,7 +141,7 @@ async function resolveActiveMemberEmails(
     );
     if (activeIds.size === 0) return Array.from(recipients);
 
-    const adminClient = createReceiptStorageClient();
+    const adminClient = createSupabaseAdminClient();
     if (!adminClient) return Array.from(recipients);
 
     const { data, error } = await adminClient.auth.admin.listUsers({
@@ -188,7 +188,7 @@ async function resolveOfficerAlertEmails(
     );
 
     if (officerIds.size > 0) {
-      const adminClient = createReceiptStorageClient();
+      const adminClient = createSupabaseAdminClient();
       if (adminClient) {
         const { data } = await adminClient.auth.admin.listUsers({
           perPage: 1000,
