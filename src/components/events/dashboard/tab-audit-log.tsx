@@ -53,7 +53,7 @@ export function TabAuditLog({
       const q = searchQuery.toLowerCase();
       const matchDesc = txn.description.toLowerCase().includes(q);
       const matchParty = txn.payerPayee.toLowerCase().includes(q);
-      const matchRef = txn.paymentRef.toLowerCase().includes(q);
+      const matchRef = txn.paymentRef?.toLowerCase().includes(q) ?? false;
       const matchId = txn.id.toLowerCase().includes(q);
       return matchDesc || matchParty || matchRef || matchId;
     }

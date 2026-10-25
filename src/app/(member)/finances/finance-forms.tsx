@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertCircle, AlertTriangle, Plus, Tag } from "lucide-react";
+import { useState } from "react";
 import {
   correctClubFinanceAction,
   createFinanceCategoryAction,
@@ -27,6 +28,7 @@ export type FinanceTransaction = {
   category_name_snapshot: string | null;
   payer_payee: string | null;
   source_note: string | null;
+  payment_method?: string | null;
   created_at: string;
   updated_at: string;
   voided_at: string | null;
@@ -52,10 +54,15 @@ export function ClubIncomeForm({
   onCancel?: () => void;
 }) {
   const yearStart = `${today.slice(0, 4)}-01-01`;
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "cash">(
+    "bank_transfer",
+  );
+
   return (
     <form
       action={recordClubFinanceAction}
       className="space-y-4 text-xs text-[#3D291F]"
+      encType="multipart/form-data"
     >
       <input name="kind" type="hidden" value="income" />
       <input name="idempotency_key" type="hidden" value={idempotencyKey} />
@@ -100,6 +107,57 @@ export function ClubIncomeForm({
             type="date"
           />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label
+            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+            htmlFor="income-payment-method"
+          >
+            Payment Method <span className="text-[#BA3C2A]">*</span>
+          </label>
+          <select
+            id="income-payment-method"
+            name="payment_method"
+            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+            value={paymentMethod}
+            onChange={(e) =>
+              setPaymentMethod(e.target.value as "bank_transfer" | "cash")
+            }
+            required
+          >
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="cash">Cash</option>
+          </select>
+        </div>
+
+        {paymentMethod === "bank_transfer" ? (
+          <div>
+            <label
+              className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+              htmlFor="income-receipt-file"
+            >
+              Payment Receipt / Voucher{" "}
+              <span className="text-[#BA3C2A]">*</span>
+            </label>
+            <input
+              id="income-receipt-file"
+              type="file"
+              name="receipt_file"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              required
+              className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
+            />
+            <p className="mt-1 text-[11px] text-[#7A685D]">
+              PDF, JPG, or PNG up to 4 MiB
+            </p>
+          </div>
+        ) : (
+          <div className="flex items-center text-xs text-[#7A685D] pt-6">
+            <span>No receipt attachment required for cash transaction.</span>
+          </div>
+        )}
       </div>
 
       <div>
@@ -171,11 +229,15 @@ export function ClubExpenseForm({
 }) {
   const yearStart = `${today.slice(0, 4)}-01-01`;
   const activeCategories = categories.filter((c) => !c.retired_at);
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "cash">(
+    "bank_transfer",
+  );
 
   return (
     <form
       action={recordClubFinanceAction}
       className="space-y-4 text-xs text-[#3D291F]"
+      encType="multipart/form-data"
     >
       <input name="kind" type="hidden" value="expense" />
       <input name="idempotency_key" type="hidden" value={idempotencyKey} />
@@ -221,6 +283,57 @@ export function ClubExpenseForm({
             type="date"
           />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label
+            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+            htmlFor="expense-payment-method"
+          >
+            Payment Method <span className="text-[#BA3C2A]">*</span>
+          </label>
+          <select
+            id="expense-payment-method"
+            name="payment_method"
+            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
+            value={paymentMethod}
+            onChange={(e) =>
+              setPaymentMethod(e.target.value as "bank_transfer" | "cash")
+            }
+            required
+          >
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="cash">Cash</option>
+          </select>
+        </div>
+
+        {paymentMethod === "bank_transfer" ? (
+          <div>
+            <label
+              className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+              htmlFor="expense-receipt-file"
+            >
+              Payment Receipt / Voucher{" "}
+              <span className="text-[#BA3C2A]">*</span>
+            </label>
+            <input
+              id="expense-receipt-file"
+              type="file"
+              name="receipt_file"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              required
+              className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
+            />
+            <p className="mt-1 text-[11px] text-[#7A685D]">
+              PDF, JPG, or PNG up to 4 MiB
+            </p>
+          </div>
+        ) : (
+          <div className="flex items-center text-xs text-[#7A685D] pt-6">
+            <span>No receipt attachment required for cash transaction.</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

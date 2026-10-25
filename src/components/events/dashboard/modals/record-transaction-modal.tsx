@@ -29,6 +29,8 @@ export type RecordedTransactionSubmission = Omit<
   tierId?: string;
   ticketQuantity?: number;
   budgetAllocationCategoryId?: string;
+  receiptFile?: File | null;
+  paymentStatus?: string;
 };
 
 interface RecordTransactionModalProps {
@@ -147,10 +149,13 @@ export function RecordTransactionModal({
   const [description, setDescription] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
   const [payerPayee, setPayerPayee] = useState<string>("");
-  const [paymentMethod, setPaymentMethod] = useState<string>(
-    "Bank Transfer (NIBSS)",
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "cash">(
+    "bank_transfer",
   );
-  const [paymentRef, setPaymentRef] = useState<string>("");
+  const [paymentStatus, setPaymentStatus] = useState<
+    "paid" | "pending" | "unpaid" | "deposit"
+  >("paid");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [notes, setNotes] = useState<string>("");
   const [error, setError] = useState<string>("");
 
@@ -161,21 +166,20 @@ export function RecordTransactionModal({
     if (isOpen) {
       if (initialCategory === "ticket_sales") {
         setMode("ticket");
-        setPaymentMethod("Online Paystack Gateway");
-        setPaymentRef(`PSTK-TKT-${Date.now().toString().slice(-6)}`);
+        setPaymentMethod("bank_transfer");
       } else if (initialType === "expense") {
         setMode("expense");
         const allocationId = resolveCategoryForMode("expense", initialCategory);
         setCategory(allocationId);
         setExpenseCategory(resolveExpenseCategory(allocationId));
-        setPaymentMethod("Bank Transfer (NIBSS)");
-        setPaymentRef(`NIBSS-EXP-${Date.now().toString().slice(-6)}`);
+        setPaymentMethod("bank_transfer");
       } else {
         setMode("revenue");
         setCategory(resolveCategoryForMode("revenue", initialCategory));
-        setPaymentMethod("Bank Transfer (NIBSS)");
-        setPaymentRef(`NIBSS-REV-${Date.now().toString().slice(-6)}`);
+        setPaymentMethod("bank_transfer");
       }
+      setPaymentStatus("paid");
+      setReceiptFile(null);
       setError("");
     } else {
       setDescription("");
@@ -183,6 +187,7 @@ export function RecordTransactionModal({
       setPayerPayee("");
       setAttendeePhone("");
       setNotes("");
+      setReceiptFile(null);
       setTicketQuantity(1);
       setError("");
     }
@@ -234,6 +239,13 @@ export function RecordTransactionModal({
         return;
       }
 
+      if (paymentMethod === "bank_transfer" && !receiptFile) {
+        setError(
+          "Payment receipt file is required for bank transfer ticket sales.",
+        );
+        return;
+      }
+
       onSave({
         date: watTime,
         type: "revenue",
@@ -245,17 +257,14 @@ export function RecordTransactionModal({
           ? `${payerPayee.trim()} (${attendeePhone.trim()})`
           : payerPayee.trim(),
         paymentMethod,
-        paymentRef:
-          paymentRef.trim() || `TKT-${Date.now().toString().slice(-6)}`,
         authorizedBy: authorizerName,
         authorizerRole,
-        receiptFileName: `Ticket_Pass_${currentTier.id.toUpperCase()}_${Date.now().toString().slice(-4)}.pdf`,
-        receiptSize: "185 KB",
         notes:
           notes.trim() ||
           `Direct box office issuance for ${ticketQuantity} admission pass(es).`,
         tierId: currentTier.id,
         ticketQuantity,
+        receiptFile,
       });
 
       return;
@@ -275,8 +284,14 @@ export function RecordTransactionModal({
       setError("Payer or Payee name is required.");
       return;
     }
-    if (!paymentRef.trim()) {
-      setError("Payment reference or bank voucher number is required.");
+    if (
+      paymentStatus === "paid" &&
+      paymentMethod === "bank_transfer" &&
+      !receiptFile
+    ) {
+      setError(
+        "Payment receipt voucher file is required for settled bank transfer transactions.",
+      );
       return;
     }
     if (mode === "revenue" && !category) {
@@ -337,11 +352,10 @@ export function RecordTransactionModal({
       amount: numAmount,
       payerPayee: payerPayee.trim(),
       paymentMethod,
-      paymentRef: paymentRef.trim(),
+      paymentStatus,
+      receiptFile,
       authorizedBy: authorizerName,
       authorizerRole,
-      receiptFileName: `Voucher_${paymentRef.trim().replace(/[^a-zA-Z0-9]/g, "_")}.pdf`,
-      receiptSize: "320 KB",
       notes: notes.trim() || undefined,
     });
   };
@@ -568,21 +582,40 @@ export function RecordTransactionModal({
                 <select
                   className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
                   id="ticket-payment-method"
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  onChange={(e) =>
+                    setPaymentMethod(e.target.value as "bank_transfer" | "cash")
+                  }
                   value={paymentMethod}
                 >
-                  <option value="Online Paystack Gateway">
-                    Online Paystack Gateway
-                  </option>
-                  <option value="Bank Transfer (NIBSS)">
-                    Bank Transfer (NIBSS)
-                  </option>
-                  <option value="Point of Sale (POS Terminal)">
-                    Point of Sale (POS Terminal)
-                  </option>
-                  <option value="Cash at Box Office">Cash at Box Office</option>
+                  <option value="bank_transfer">Direct Bank Transfer</option>
+                  <option value="cash">Cash at Box Office</option>
                 </select>
               </div>
+
+              {paymentMethod === "bank_transfer" && (
+                <div className="space-y-1.5">
+                  <label
+                    className="font-bold text-[#3D291F] block"
+                    htmlFor="ticket-receipt-file"
+                  >
+                    Transfer Receipt / Screenshot{" "}
+                    <span className="text-[#BA3C2A]">*</span>
+                  </label>
+                  <input
+                    id="ticket-receipt-file"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                    required
+                    onChange={(e) =>
+                      setReceiptFile(e.target.files?.[0] || null)
+                    }
+                    className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
+                  />
+                  <p className="text-[11px] text-[#7A685D]">
+                    PDF, JPG, or PNG up to 4 MiB
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -727,17 +760,15 @@ export function RecordTransactionModal({
                   <select
                     className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
                     id="txn-payment-method"
-                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    onChange={(e) =>
+                      setPaymentMethod(
+                        e.target.value as "bank_transfer" | "cash",
+                      )
+                    }
                     value={paymentMethod}
                   >
-                    <option value="Bank Transfer (NIBSS)">
-                      Bank Transfer (NIBSS)
-                    </option>
-                    <option value="Online Paystack Gateway">
-                      Online Paystack Gateway
-                    </option>
-                    <option value="Cheque / Draft">Cheque / Draft</option>
-                    <option value="Cash Voucher">Cash Voucher</option>
+                    <option value="bank_transfer">Direct Bank Transfer</option>
+                    <option value="cash">Cash Voucher / Petty Cash</option>
                   </select>
                 </div>
               </div>
@@ -766,21 +797,58 @@ export function RecordTransactionModal({
                 <div className="space-y-1.5">
                   <label
                     className="font-bold text-[#3D291F] block"
-                    htmlFor="txn-ref"
+                    htmlFor="txn-payment-status"
                   >
-                    Reference / Voucher #
+                    Payment Status
                   </label>
-                  <input
+                  <select
                     className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
-                    id="txn-ref"
-                    onChange={(e) => setPaymentRef(e.target.value)}
-                    placeholder="e.g. NIBSS/TX/09912"
-                    required
-                    type="text"
-                    value={paymentRef}
-                  />
+                    id="txn-payment-status"
+                    onChange={(e) =>
+                      setPaymentStatus(
+                        e.target.value as
+                          | "paid"
+                          | "pending"
+                          | "unpaid"
+                          | "deposit",
+                      )
+                    }
+                    value={paymentStatus}
+                  >
+                    <option value="paid">Settled / Paid</option>
+                    <option value="pending">Pending Payment</option>
+                    <option value="unpaid">Unpaid Commitment</option>
+                    <option value="deposit">Deposit Paid</option>
+                  </select>
                 </div>
               </div>
+
+              {paymentMethod === "bank_transfer" &&
+                paymentStatus === "paid" && (
+                  <div className="space-y-1.5">
+                    <label
+                      className="font-bold text-[#3D291F] block"
+                      htmlFor="txn-receipt-file"
+                    >
+                      Payment Receipt / Voucher{" "}
+                      <span className="text-[#BA3C2A]">*</span>
+                    </label>
+                    <input
+                      id="txn-receipt-file"
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                      required
+                      onChange={(e) =>
+                        setReceiptFile(e.target.files?.[0] || null)
+                      }
+                      className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
+                    />
+                    <p className="text-[11px] text-[#7A685D]">
+                      PDF, JPG, or PNG up to 4 MiB (Required for settled bank
+                      transfers)
+                    </p>
+                  </div>
+                )}
             </div>
           )}
 

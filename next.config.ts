@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   poweredByHeader: false,
   reactStrictMode: true,
+  experimental: {
+    serverActions: { bodySizeLimit: "5mb" },
+  },
   async headers() {
     return [
       {

@@ -28,6 +28,7 @@ type FinanceTransaction = {
   source_note: string | null;
   voided_at: string | null;
   void_reason: string | null;
+  payment_method?: string | null;
 };
 
 type DuesStatus = {
@@ -105,6 +106,7 @@ function financeRowsToCsv(
     "Transaction date",
     "Type",
     "Amount (NGN)",
+    "Payment method",
     "Description",
     "Category",
     "Payer/payee",
@@ -135,6 +137,7 @@ function financeRowsToCsv(
       transaction.transaction_date,
       transaction.kind,
       String(transaction.amount_ngn),
+      transaction.payment_method ?? "",
       transaction.description ?? "",
       transaction.category_name_snapshot ?? "",
       transaction.payer_payee ?? "",
@@ -345,21 +348,23 @@ async function createFinanceExport(
   const receiptsByTransaction = new Map<string, string[]>();
   if (transactions.length > 0) {
     const receiptResult = await supabase
-      .from("club_financial_receipts")
-      .select("transaction_id, original_filename", { count: "exact" })
+      .from("finance_receipts")
+      .select("club_transaction_id, original_filename", { count: "exact" })
       .in(
-        "transaction_id",
+        "club_transaction_id",
         transactions.map((transaction) => transaction.id),
       )
-      .order("uploaded_at", { ascending: true })
+      .order("created_at", { ascending: true })
       .limit(MAX_REPORT_ROWS);
     if (receiptResult.error) return { kind: "unavailable" as const };
     if ((receiptResult.count ?? 0) > MAX_REPORT_ROWS)
       return { kind: "too-large" as const };
     for (const receipt of receiptResult.data ?? []) {
-      const current = receiptsByTransaction.get(receipt.transaction_id) ?? [];
+      if (!receipt.club_transaction_id) continue;
+      const current =
+        receiptsByTransaction.get(receipt.club_transaction_id) ?? [];
       current.push(receipt.original_filename);
-      receiptsByTransaction.set(receipt.transaction_id, current);
+      receiptsByTransaction.set(receipt.club_transaction_id, current);
     }
   }
 

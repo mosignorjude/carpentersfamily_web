@@ -3,14 +3,7 @@ import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 
-export const FINANCE_RECEIPTS_BUCKET = "club-finance-receipts";
-export {
-  MAX_RECEIPT_BYTES,
-  MAX_RECEIPT_REQUEST_BYTES,
-  validateReceiptBytes,
-} from "@/lib/finance-receipt-validation";
-
-export function createReceiptStorageClient() {
+export function createSupabaseAdminClient() {
   const config = getSupabasePublicConfig();
   const secretKey =
     process.env.SUPABASE_SECRET_KEY?.trim() ||

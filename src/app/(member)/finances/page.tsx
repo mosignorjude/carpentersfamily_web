@@ -115,24 +115,51 @@ export default async function FinancesPage({
     ["executive", "admin", "backup_admin"].some((role) => roles.has(role));
   const canCorrect =
     !roleError && (roles.has("admin") || roles.has("backup_admin"));
+  const isAdmin =
+    !roleError && (roles.has("admin") || roles.has("backup_admin"));
 
   const requestedPage = pageNumber(params.page);
   const requestedAuditPage = pageNumber(params.audit_page);
-  const [transactionCountResult, categoryResult, summaryResult] =
-    await Promise.all([
-      supabase
-        .from("club_financial_transactions")
-        .select(
-          "id, kind, amount_ngn, transaction_date, description, category_id, category_name_snapshot, payer_payee, source_note, created_at, updated_at, voided_at, void_reason",
-          { count: "exact", head: true },
-        ),
-      supabase
-        .from("finance_categories")
-        .select("id, name, retired_at")
-        .order("name", { ascending: true })
-        .limit(200),
-      supabase.rpc("club_finance_summary"),
-    ]);
+  const [
+    transactionCountResult,
+    categoryResult,
+    summaryResult,
+    paymentSettingsResult,
+    openingBalanceResult,
+  ] = await Promise.all([
+    supabase
+      .from("club_financial_transactions")
+      .select(
+        "id, kind, amount_ngn, transaction_date, description, category_id, category_name_snapshot, payer_payee, source_note, created_at, updated_at, voided_at, void_reason",
+        { count: "exact", head: true },
+      ),
+    supabase
+      .from("finance_categories")
+      .select("id, name, retired_at")
+      .order("name", { ascending: true })
+      .limit(200),
+    supabase.rpc("club_finance_summary"),
+    supabase
+      .from("club_payment_settings")
+      .select("bank_name, account_number, account_name, instructions")
+      .eq("id", "singleton")
+      .maybeSingle(),
+    supabase
+      .from("club_financial_transactions")
+      .select(
+        "id, amount_ngn, transaction_date, source_note, payer_payee, created_at",
+      )
+      .eq("kind", "income")
+      .is("voided_at", null)
+      .or(
+        "source_note.ilike.%opening%balance%,payer_payee.eq.Club Treasury Opening Reserve",
+      ) // matches opening%treasury%balance or reserve payer_payee
+      .order("transaction_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  const paymentSettings = paymentSettingsResult?.data ?? null;
+  const existingOpeningBalance = openingBalanceResult?.data ?? null;
   const transactionCount = transactionCountResult.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(transactionCount / PAGE_SIZE));
   const page = Math.min(requestedPage, pageCount - 1);
@@ -190,18 +217,34 @@ export default async function FinancesPage({
   const transactions = (transactionResult.data ?? []) as FinanceTransaction[];
   const receiptResult = transactions.length
     ? await supabase
-        .from("club_financial_receipts")
+        .from("finance_receipts")
         .select(
-          "id, transaction_id, original_filename, content_type, size_bytes, uploaded_at",
+          "id, club_transaction_id, original_filename, content_type, size_bytes, created_at",
         )
         .in(
-          "transaction_id",
+          "club_transaction_id",
           transactions.map((transaction) => transaction.id),
         )
-        .order("uploaded_at", { ascending: true })
+        .order("created_at", { ascending: true })
         .limit(1000)
     : null;
-  const receipts = (receiptResult?.data ?? []) as FinanceReceipt[];
+  const receipts: FinanceReceipt[] = (
+    (receiptResult?.data ?? []) as Array<{
+      id: string;
+      club_transaction_id: string;
+      original_filename: string;
+      content_type: string;
+      size_bytes: number;
+      created_at: string;
+    }>
+  ).map((r) => ({
+    id: r.id,
+    transaction_id: r.club_transaction_id,
+    original_filename: r.original_filename,
+    content_type: r.content_type,
+    size_bytes: r.size_bytes,
+    uploaded_at: r.created_at,
+  }));
   const receiptsByTransaction = new Map<string, FinanceReceipt[]>();
   for (const receipt of receipts) {
     const linkedReceipts = receiptsByTransaction.get(receipt.transaction_id);
@@ -268,12 +311,15 @@ export default async function FinancesPage({
       categoryUnavailable={categoryUnavailable}
       eventLedgerEntries={eventLedgerEntries}
       eventTitles={eventTitles}
+      existingOpeningBalance={existingOpeningBalance}
       financeUnavailable={financeUnavailable}
+      isAdmin={isAdmin}
       isOfficer={isOfficer}
       notice={params.notice}
       page={page}
       pageCount={pageCount}
       pageSize={PAGE_SIZE}
+      paymentSettings={paymentSettings}
       receiptUnavailable={receiptUnavailable}
       receiptsByTransaction={receiptsByTransaction}
       roleError={Boolean(roleError)}

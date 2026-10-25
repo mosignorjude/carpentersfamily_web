@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { signOutAction } from "@/app/actions";
 import { DuesPageView } from "@/components/dues/dues-page-view";
 import type { DuesPaymentRequestItem } from "@/components/dues/officer-dues-approvals-card";
+import type { ReconciliationMember } from "@/components/dues/pre-launch-dues-reconciliation-card";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { DuesMemberOption, DuesMonthOption } from "./dues-forms";
 
@@ -60,6 +61,10 @@ const notices: Record<string, string> = {
   "dues-request-approved":
     "The dues payment submission was verified and approved into the club ledger.",
   "dues-request-rejected": "The dues payment submission was rejected.",
+  "historical-dues-reconciled":
+    "Historical pre-launch dues were successfully reconciled and marked cleared.",
+  "invalid-reconciliation-months":
+    "Selected months are invalid or outside the pre-launch window (Feb-Sep 2026).",
 };
 
 function todayInWAT() {
@@ -211,38 +216,58 @@ export default async function DuesPage({
   const paymentPage = pageNumber(params.payment_page);
   const auditPage = pageNumber(params.audit_page);
 
-  const [statusResult, paymentResult, rateResult, incomeResult] =
-    await Promise.all([
-      supabase
-        .from("dues_month_status")
-        .select(
-          "member_id, covered_month, amount_ngn, status, due_date, is_overdue",
-        )
-        .eq("member_id", targetMemberId)
-        .order("covered_month", { ascending: true })
-        .limit(1200),
-      supabase
-        .from("dues_payments")
-        .select(
-          "id, member_id, amount_ngn, payment_date, recorded_by, recorded_at, corrected_at",
-          { count: "exact" },
-        )
-        .eq("member_id", targetMemberId)
-        .order("payment_date", { ascending: false })
-        .order("recorded_at", { ascending: false })
-        .range(
-          paymentPage * HISTORY_PAGE_SIZE,
-          (paymentPage + 1) * HISTORY_PAGE_SIZE - 1,
-        ),
-      supabase
-        .from("dues_rates")
-        .select(
-          "id, effective_month, monthly_amount_ngn, changed_by, changed_at, reason",
-        )
-        .order("effective_month", { ascending: true })
-        .limit(1200),
-      supabase.rpc("club_dues_income_total"),
-    ]);
+  const [
+    statusResult,
+    paymentResult,
+    rateResult,
+    incomeResult,
+    paymentSettingsResult,
+  ] = await Promise.all([
+    supabase
+      .from("dues_month_status")
+      .select(
+        "member_id, covered_month, amount_ngn, status, due_date, is_overdue",
+      )
+      .eq("member_id", targetMemberId)
+      .order("covered_month", { ascending: true })
+      .limit(1200),
+    supabase
+      .from("dues_payments")
+      .select(
+        "id, member_id, amount_ngn, payment_date, recorded_by, recorded_at, corrected_at",
+        { count: "exact" },
+      )
+      .eq("member_id", targetMemberId)
+      .order("payment_date", { ascending: false })
+      .order("recorded_at", { ascending: false })
+      .range(
+        paymentPage * HISTORY_PAGE_SIZE,
+        (paymentPage + 1) * HISTORY_PAGE_SIZE - 1,
+      ),
+    supabase
+      .from("dues_rates")
+      .select(
+        "id, effective_month, monthly_amount_ngn, changed_by, changed_at, reason",
+      )
+      .order("effective_month", { ascending: true })
+      .limit(1200),
+    supabase.rpc("club_dues_income_total"),
+    supabase
+      .from("club_payment_settings")
+      .select("bank_name, account_number, account_name, instructions")
+      .eq("id", "singleton")
+      .maybeSingle(),
+  ]);
+
+  const paymentSettingsData = paymentSettingsResult.data;
+  const paymentSettings = paymentSettingsData
+    ? {
+        bankName: paymentSettingsData.bank_name,
+        accountNumber: paymentSettingsData.account_number,
+        accountName: paymentSettingsData.account_name,
+        instructions: paymentSettingsData.instructions ?? undefined,
+      }
+    : null;
 
   const duesRows = (statusResult.data ?? []) as DuesStatusRow[];
   const payments = (paymentResult.data ?? []) as PaymentRow[];
@@ -325,6 +350,38 @@ export default async function DuesPage({
     ownRequests = ownRequestsData as DuesPaymentRequestItem[];
   }
 
+  const allReqIds = [
+    ...pendingRequests.map((r) => r.id),
+    ...ownRequests.map((r) => r.id),
+  ];
+  if (allReqIds.length > 0) {
+    const { data: receipts } = await supabase
+      .from("finance_receipts")
+      .select(
+        "id, dues_request_id, original_filename, content_type, size_bytes",
+      )
+      .in("dues_request_id", allReqIds);
+    if (receipts) {
+      const receiptsByReq = new Map(
+        receipts.map((r) => [
+          r.dues_request_id,
+          {
+            id: r.id,
+            filename: r.original_filename,
+            contentType: r.content_type,
+            sizeBytes: r.size_bytes,
+          },
+        ]),
+      );
+      for (const req of pendingRequests) {
+        req.receipt = receiptsByReq.get(req.id) ?? null;
+      }
+      for (const req of ownRequests) {
+        req.receipt = receiptsByReq.get(req.id) ?? null;
+      }
+    }
+  }
+
   let duesAudit: AuditRow[] = [];
   let auditError = false;
   let auditCount = 0;
@@ -367,6 +424,52 @@ export default async function DuesPage({
     );
   }
 
+  let reconciliationMembers: ReconciliationMember[] = [];
+  if (isOfficer) {
+    const [activeProfilesRes, adminRolesRes, preLaunchDispositionsRes] =
+      await Promise.all([
+        supabase
+          .from("member_profiles")
+          .select("id, full_name, username")
+          .eq("status", "active")
+          .order("full_name", { ascending: true })
+          .limit(1000),
+        supabase
+          .from("member_role_assignments")
+          .select("member_id")
+          .eq("role", "admin")
+          .is("revoked_at", null),
+        supabase
+          .from("dues_month_dispositions")
+          .select("member_id, covered_month")
+          .gte("covered_month", "2026-02-01")
+          .lte("covered_month", "2026-09-01")
+          .eq("is_current", true),
+      ]);
+
+    const adminIds = new Set(
+      (adminRolesRes.data ?? []).map((r) => r.member_id),
+    );
+    const clearedMonthsByMember = new Map<string, string[]>();
+    for (const row of preLaunchDispositionsRes.data ?? []) {
+      const list = clearedMonthsByMember.get(row.member_id) ?? [];
+      list.push(row.covered_month);
+      clearedMonthsByMember.set(row.member_id, list);
+    }
+
+    const nonAdminActive = (activeProfilesRes.data ?? []).filter(
+      (profile) => !adminIds.has(profile.id),
+    );
+
+    reconciliationMembers = nonAdminActive.map((profile) => ({
+      id: profile.id,
+      fullName: profile.full_name,
+      username: profile.username,
+      avatarUrl: null,
+      clearedMonths: clearedMonthsByMember.get(profile.id) ?? [],
+    }));
+  }
+
   const notice = params.notice ? notices[params.notice] : undefined;
   const today = todayInWAT();
   const currentMonth = `${today.slice(0, 7)}-01`;
@@ -392,7 +495,8 @@ export default async function DuesPage({
     statusResult.error || paymentResult.error || coverageError,
   );
 
-  const isAdmin = roles.has("admin");
+  const isAdmin =
+    !roleError && (roles.has("admin") || roles.has("backup_admin"));
 
   return (
     <DuesPageView
@@ -423,10 +527,12 @@ export default async function DuesPage({
       pageSize={HISTORY_PAGE_SIZE}
       pastUnpaidMonths={pastUnpaidMonths}
       paymentPage={paymentPage}
+      paymentSettings={paymentSettings}
       payments={payments}
       pendingMembersMap={pendingMembersMap}
       pendingRequests={pendingRequests}
       rates={rates}
+      reconciliationMembers={reconciliationMembers}
       roleError={Boolean(roleError)}
       targetMemberId={targetMemberId}
       today={today}

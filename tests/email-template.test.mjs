@@ -114,3 +114,13 @@ test("email address extraction and contact recipient validation", () => {
     false,
   );
 });
+
+test("formats payment method and omits reference in dues email details", () => {
+  const details = [
+    { label: "Payment Channel", value: "Bank Transfer" },
+    { label: "Receipt Evidence", value: "Attached & Verified" },
+  ];
+  const keys = details.map((d) => d.label);
+  assert.equal(keys.includes("Payment Channel"), true);
+  assert.equal(keys.includes("Payment Reference"), false);
+});

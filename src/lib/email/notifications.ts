@@ -5,7 +5,7 @@ import { formatCoveredMonthsDisplay } from "@/lib/dues-governance.mjs";
 import { sendEmail, sendEmailBatch } from "@/lib/email/client";
 import { getEmailConfig } from "@/lib/email/config";
 import { ClubNotificationEmail } from "@/lib/email/templates/club-notification-email";
-import { createReceiptStorageClient } from "@/lib/finance-receipts";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const nairaFormatter = new Intl.NumberFormat("en-NG", {
   style: "currency",
@@ -95,7 +95,7 @@ async function resolveMemberContact(
     // Fallback to auth metadata or generic greeting
   }
 
-  const adminClient = createReceiptStorageClient();
+  const adminClient = createSupabaseAdminClient();
   if (!adminClient) return { email: null, fullName };
 
   try {
@@ -141,7 +141,7 @@ async function resolveActiveMemberEmails(
     );
     if (activeIds.size === 0) return Array.from(recipients);
 
-    const adminClient = createReceiptStorageClient();
+    const adminClient = createSupabaseAdminClient();
     if (!adminClient) return Array.from(recipients);
 
     const { data, error } = await adminClient.auth.admin.listUsers({
@@ -188,7 +188,7 @@ async function resolveOfficerAlertEmails(
     );
 
     if (officerIds.size > 0) {
-      const adminClient = createReceiptStorageClient();
+      const adminClient = createSupabaseAdminClient();
       if (adminClient) {
         const { data } = await adminClient.auth.admin.listUsers({
           perPage: 1000,
@@ -435,7 +435,6 @@ export async function notifyDuesPaymentRequestSubmitted(params: {
   amountNgn: number;
   coveredMonths: string[];
   paymentMethod: string;
-  paymentReference: string;
   notes?: string | null;
 }): Promise<void> {
   try {
@@ -460,10 +459,12 @@ export async function notifyDuesPaymentRequestSubmitted(params: {
             value: formatCoveredMonthsDisplay(params.coveredMonths),
           },
           {
-            label: "Payment Method",
+            label: "Payment Channel",
             value: formatPaymentMethod(params.paymentMethod),
           },
-          { label: "Reference", value: params.paymentReference },
+          ...(params.paymentMethod === "bank_transfer"
+            ? [{ label: "Receipt Evidence", value: "Attached & Stored" }]
+            : []),
         ],
         bodyLabel: params.notes ? "Member Notes" : undefined,
         bodyText: params.notes ?? null,
@@ -483,6 +484,7 @@ export async function notifyDuesPaymentConfirmed(params: {
   amountNgn: number;
   coveredMonths: string[];
   paymentDate?: string;
+  paymentMethod?: string;
   paymentReference?: string;
 }): Promise<void> {
   try {
@@ -501,6 +503,18 @@ export async function notifyDuesPaymentConfirmed(params: {
     ];
     if (params.paymentDate) {
       details.push({ label: "Payment Date", value: params.paymentDate });
+    }
+    if (params.paymentMethod) {
+      details.push({
+        label: "Payment Channel",
+        value: formatPaymentMethod(params.paymentMethod),
+      });
+      if (params.paymentMethod === "bank_transfer") {
+        details.push({
+          label: "Receipt Evidence",
+          value: "Attached & Verified",
+        });
+      }
     }
     if (params.paymentReference) {
       details.push({ label: "Reference", value: params.paymentReference });
@@ -533,7 +547,8 @@ export async function notifyDuesPaymentRequestRejected(params: {
   memberId: string;
   amountNgn: number;
   coveredMonths: string[];
-  paymentReference: string;
+  paymentMethod?: string;
+  paymentReference?: string | null;
   reason: string;
 }): Promise<void> {
   try {
@@ -561,7 +576,17 @@ export async function notifyDuesPaymentRequestRejected(params: {
             label: "Covered Months",
             value: formatCoveredMonthsDisplay(params.coveredMonths),
           },
-          { label: "Reference", value: params.paymentReference },
+          ...(params.paymentMethod
+            ? [
+                {
+                  label: "Payment Channel",
+                  value: formatPaymentMethod(params.paymentMethod),
+                },
+              ]
+            : []),
+          ...(params.paymentReference
+            ? [{ label: "Reference", value: params.paymentReference }]
+            : []),
         ],
         bodyLabel: "Reason from Finance Officer",
         bodyText: params.reason,

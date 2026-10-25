@@ -30,7 +30,11 @@ import {
   OfficerDuesApprovalsCard,
 } from "./officer-dues-approvals-card";
 import { OfficerDuesControlsCard } from "./officer-dues-controls-card";
-import { PayDuesModal } from "./pay-dues-modal";
+import { type DuesPaymentSettings, PayDuesModal } from "./pay-dues-modal";
+import {
+  PreLaunchDuesReconciliationCard,
+  type ReconciliationMember,
+} from "./pre-launch-dues-reconciliation-card";
 
 interface DuesPageViewProps {
   member: DuesMemberOption;
@@ -74,6 +78,8 @@ interface DuesPageViewProps {
     { full_name: string; username: string; roles: string[] }
   >;
   ownRequests?: DuesPaymentRequestItem[];
+  paymentSettings?: DuesPaymentSettings | null;
+  reconciliationMembers?: ReconciliationMember[];
 }
 
 export function DuesPageView({
@@ -115,6 +121,8 @@ export function DuesPageView({
   pendingRequests = [],
   pendingMembersMap = {},
   ownRequests = [],
+  paymentSettings,
+  reconciliationMembers = [],
 }: DuesPageViewProps) {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
 
@@ -435,6 +443,16 @@ export function DuesPageView({
         </div>
       )}
 
+      {/* Pre-Launch Dues Reconciliation Workspace (Feb-Sep 2026) */}
+      {isOfficer && (
+        <div id="dues-reconciliation" className="scroll-target">
+          <PreLaunchDuesReconciliationCard
+            isAdmin={Boolean(isAdmin)}
+            members={reconciliationMembers}
+          />
+        </div>
+      )}
+
       {/* Rate History & Admin Scheduling */}
       <div id="dues-rates" className="scroll-target">
         <DuesRateScheduleCard
@@ -487,6 +505,7 @@ export function DuesPageView({
         memberName={member.full_name}
         monthlyRateNgn={currentMonthlyRate}
         onClose={() => setIsPayModalOpen(false)}
+        paymentSettings={paymentSettings}
         unpaidTotalNgn={openTotal}
       />
     </div>
