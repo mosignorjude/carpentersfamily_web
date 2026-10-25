@@ -47,7 +47,11 @@ describe("receipt file validation", () => {
     );
     assert.equal(
       validateReceiptBytes("receipt.jpeg", "image/jpeg", jpegBytes)?.extension,
-      "jpeg",
+      "jpg",
+    );
+    assert.equal(
+      validateReceiptBytes("receipt.jpeg", "image/jpeg", jpegBytes)?.filename,
+      "receipt.jpg",
     );
     assert.equal(
       validateReceiptBytes("receipt.png", "image/png", pngBytes)?.extension,

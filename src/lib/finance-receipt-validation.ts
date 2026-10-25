@@ -4,14 +4,14 @@ export const MAX_RECEIPT_REQUEST_BYTES = 4_500_000;
 const RECEIPT_TYPES = {
   pdf: { contentType: "application/pdf", extension: "pdf" },
   jpg: { contentType: "image/jpeg", extension: "jpg" },
-  jpeg: { contentType: "image/jpeg", extension: "jpeg" },
+  jpeg: { contentType: "image/jpeg", extension: "jpg" },
   png: { contentType: "image/png", extension: "png" },
 } as const;
 
 export type ValidatedReceipt = {
   contentType: string;
   filename: string;
-  extension: "pdf" | "jpg" | "jpeg" | "png";
+  extension: "pdf" | "jpg" | "png";
 };
 
 export function validateReceiptBytes(
