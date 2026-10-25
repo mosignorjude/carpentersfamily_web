@@ -18,6 +18,7 @@ export const APP_RECORDS_TABLES = Object.freeze([
   ["public", "finance_receipts"],
   ["public", "club_financial_transactions"],
   ["public", "club_financial_receipts"],
+  ["public", "club_payment_settings"],
   ["public", "events"],
   ["public", "event_role_assignments"],
   ["public", "event_budgets"],

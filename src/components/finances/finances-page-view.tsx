@@ -7,6 +7,10 @@ import type {
   FinanceCategory,
   FinanceTransaction,
 } from "@/app/(member)/finances/finance-forms";
+import {
+  ClubBankSettingsCard,
+  type ClubPaymentSettings,
+} from "@/components/admin/club-bank-settings-card";
 import { useSuccessNotice } from "@/components/ui/use-success-notice";
 import { CategoryManagementModal } from "./category-management-modal";
 import { ClubFinancialSummary } from "./club-financial-summary";
@@ -21,12 +25,19 @@ import {
   OfficerAuditHistory,
 } from "./officer-audit-history";
 import { OfficerFinanceControls } from "./officer-finance-controls";
+import {
+  OpeningBalanceEntryCard,
+  type OpeningBalanceTransaction,
+} from "./opening-balance-entry-card";
 import { type FinanceReceipt, ReceiptModal } from "./receipt-modal";
 import { RecordExpenseModal } from "./record-expense-modal";
 import { RecordIncomeModal } from "./record-income-modal";
 import { VoidTransactionModal } from "./void-transaction-modal";
 
 interface FinancesPageViewProps {
+  isAdmin?: boolean;
+  paymentSettings?: ClubPaymentSettings | null;
+  existingOpeningBalance?: OpeningBalanceTransaction | null;
   isOfficer: boolean;
   canCorrect: boolean;
   today: string;
@@ -59,6 +70,9 @@ interface FinancesPageViewProps {
 }
 
 export function FinancesPageView({
+  isAdmin = false,
+  paymentSettings,
+  existingOpeningBalance,
   isOfficer,
   canCorrect,
   today,
@@ -243,17 +257,30 @@ export function FinancesPageView({
         />
       </div>
 
-      {/* 2. Officer-Only Treasury Controls */}
+      {/* 2. Officer-Only Treasury Controls & Settlement Governance */}
       {isOfficer && !financeUnavailable && (
-        <div id="finance-controls" className="scroll-target">
-          <OfficerFinanceControls
-            canCorrect={canCorrect}
-            isOfficer={isOfficer}
-            onOpenCategoryManagement={() => setIsCategoryModalOpen(true)}
-            onOpenRecordExpense={() => setIsRecordExpenseOpen(true)}
-            onOpenRecordIncome={() => setIsRecordIncomeOpen(true)}
-          />
-        </div>
+        <section aria-label="Officer Treasury Governance" className="space-y-6">
+          <div id="finance-controls" className="scroll-target">
+            <OfficerFinanceControls
+              canCorrect={canCorrect}
+              isOfficer={isOfficer}
+              onOpenCategoryManagement={() => setIsCategoryModalOpen(true)}
+              onOpenRecordExpense={() => setIsRecordExpenseOpen(true)}
+              onOpenRecordIncome={() => setIsRecordIncomeOpen(true)}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ClubBankSettingsCard
+              isAdmin={isAdmin}
+              paymentSettings={paymentSettings}
+            />
+            <OpeningBalanceEntryCard
+              canRecord={isAdmin}
+              existingOpeningBalance={existingOpeningBalance}
+            />
+          </div>
+        </section>
       )}
 
       {/* 3. Member-Visible Transaction Ledger */}

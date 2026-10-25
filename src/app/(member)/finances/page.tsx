@@ -115,24 +115,46 @@ export default async function FinancesPage({
     ["executive", "admin", "backup_admin"].some((role) => roles.has(role));
   const canCorrect =
     !roleError && (roles.has("admin") || roles.has("backup_admin"));
+  const isAdmin =
+    !roleError && (roles.has("admin") || roles.has("backup_admin"));
 
   const requestedPage = pageNumber(params.page);
   const requestedAuditPage = pageNumber(params.audit_page);
-  const [transactionCountResult, categoryResult, summaryResult] =
-    await Promise.all([
-      supabase
-        .from("club_financial_transactions")
-        .select(
-          "id, kind, amount_ngn, transaction_date, description, category_id, category_name_snapshot, payer_payee, source_note, created_at, updated_at, voided_at, void_reason",
-          { count: "exact", head: true },
-        ),
-      supabase
-        .from("finance_categories")
-        .select("id, name, retired_at")
-        .order("name", { ascending: true })
-        .limit(200),
-      supabase.rpc("club_finance_summary"),
-    ]);
+  const [
+    transactionCountResult,
+    categoryResult,
+    summaryResult,
+    paymentSettingsResult,
+    openingBalanceResult,
+  ] = await Promise.all([
+    supabase
+      .from("club_financial_transactions")
+      .select(
+        "id, kind, amount_ngn, transaction_date, description, category_id, category_name_snapshot, payer_payee, source_note, created_at, updated_at, voided_at, void_reason",
+        { count: "exact", head: true },
+      ),
+    supabase
+      .from("finance_categories")
+      .select("id, name, retired_at")
+      .order("name", { ascending: true })
+      .limit(200),
+    supabase.rpc("club_finance_summary"),
+    supabase
+      .from("club_payment_settings")
+      .select("bank_name, account_number, account_name, instructions")
+      .eq("id", "singleton")
+      .maybeSingle(),
+    supabase
+      .from("club_financial_transactions")
+      .select("id, amount_ngn, transaction_date, source_note, created_at")
+      .eq("kind", "income")
+      .ilike("source_note", "%opening%treasury%balance%")
+      .is("voided_at", null)
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  const paymentSettings = paymentSettingsResult?.data ?? null;
+  const existingOpeningBalance = openingBalanceResult?.data ?? null;
   const transactionCount = transactionCountResult.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(transactionCount / PAGE_SIZE));
   const page = Math.min(requestedPage, pageCount - 1);
@@ -284,12 +306,15 @@ export default async function FinancesPage({
       categoryUnavailable={categoryUnavailable}
       eventLedgerEntries={eventLedgerEntries}
       eventTitles={eventTitles}
+      existingOpeningBalance={existingOpeningBalance}
       financeUnavailable={financeUnavailable}
+      isAdmin={isAdmin}
       isOfficer={isOfficer}
       notice={params.notice}
       page={page}
       pageCount={pageCount}
       pageSize={PAGE_SIZE}
+      paymentSettings={paymentSettings}
       receiptUnavailable={receiptUnavailable}
       receiptsByTransaction={receiptsByTransaction}
       roleError={Boolean(roleError)}
