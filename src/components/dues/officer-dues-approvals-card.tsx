@@ -16,6 +16,10 @@ import {
   approveDuesPaymentRequestAction,
   rejectDuesPaymentRequestAction,
 } from "@/app/actions";
+import {
+  ReceiptCell,
+  type ReceiptInfo,
+} from "@/components/finances/receipt-cell";
 import { FormSubmitButton } from "@/components/ui/cf-button";
 import { EmptyStateCard } from "@/components/ui/state-screen";
 import {
@@ -29,7 +33,8 @@ export type DuesPaymentRequestItem = {
   amount_ngn: number | string;
   covered_months: string[];
   payment_method: string;
-  payment_reference: string;
+  payment_reference?: string | null;
+  receipt?: ReceiptInfo | null;
   notes: string | null;
   status: "pending" | "approved" | "rejected";
   created_at: string;
@@ -226,11 +231,21 @@ export function OfficerDuesApprovalsCard({
                     </div>
                     <div className="border-l border-[#E5DDD3] pl-3">
                       <span className="text-[10px] font-bold text-[#7A685D] uppercase block">
-                        Reference / Session ID
+                        Receipt Evidence
                       </span>
-                      <strong className="font-mono text-xs text-[#3D291F] tracking-wide">
-                        {req.payment_reference}
-                      </strong>
+                      <ReceiptCell
+                        paymentMethod={req.payment_method}
+                        paymentStatus="paid"
+                        receipt={req.receipt}
+                        isLegacy={
+                          !req.receipt && Boolean(req.payment_reference)
+                        }
+                      />
+                      {req.payment_reference && (
+                        <span className="font-mono text-[10px] text-[#7A685D] block">
+                          Ref: {req.payment_reference}
+                        </span>
+                      )}
                     </div>
                   </div>
 

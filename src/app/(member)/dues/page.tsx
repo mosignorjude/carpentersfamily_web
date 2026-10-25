@@ -325,6 +325,38 @@ export default async function DuesPage({
     ownRequests = ownRequestsData as DuesPaymentRequestItem[];
   }
 
+  const allReqIds = [
+    ...pendingRequests.map((r) => r.id),
+    ...ownRequests.map((r) => r.id),
+  ];
+  if (allReqIds.length > 0) {
+    const { data: receipts } = await supabase
+      .from("finance_receipts")
+      .select(
+        "id, dues_request_id, original_filename, content_type, size_bytes",
+      )
+      .in("dues_request_id", allReqIds);
+    if (receipts) {
+      const receiptsByReq = new Map(
+        receipts.map((r) => [
+          r.dues_request_id,
+          {
+            id: r.id,
+            filename: r.original_filename,
+            contentType: r.content_type,
+            sizeBytes: r.size_bytes,
+          },
+        ]),
+      );
+      for (const req of pendingRequests) {
+        req.receipt = receiptsByReq.get(req.id) ?? null;
+      }
+      for (const req of ownRequests) {
+        req.receipt = receiptsByReq.get(req.id) ?? null;
+      }
+    }
+  }
+
   let duesAudit: AuditRow[] = [];
   let auditError = false;
   let auditCount = 0;

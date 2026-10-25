@@ -190,18 +190,34 @@ export default async function FinancesPage({
   const transactions = (transactionResult.data ?? []) as FinanceTransaction[];
   const receiptResult = transactions.length
     ? await supabase
-        .from("club_financial_receipts")
+        .from("finance_receipts")
         .select(
-          "id, transaction_id, original_filename, content_type, size_bytes, uploaded_at",
+          "id, club_transaction_id, original_filename, content_type, size_bytes, created_at",
         )
         .in(
-          "transaction_id",
+          "club_transaction_id",
           transactions.map((transaction) => transaction.id),
         )
-        .order("uploaded_at", { ascending: true })
+        .order("created_at", { ascending: true })
         .limit(1000)
     : null;
-  const receipts = (receiptResult?.data ?? []) as FinanceReceipt[];
+  const receipts: FinanceReceipt[] = (
+    (receiptResult?.data ?? []) as Array<{
+      id: string;
+      club_transaction_id: string;
+      original_filename: string;
+      content_type: string;
+      size_bytes: number;
+      created_at: string;
+    }>
+  ).map((r) => ({
+    id: r.id,
+    transaction_id: r.club_transaction_id,
+    original_filename: r.original_filename,
+    content_type: r.content_type,
+    size_bytes: r.size_bytes,
+    uploaded_at: r.created_at,
+  }));
   const receiptsByTransaction = new Map<string, FinanceReceipt[]>();
   for (const receipt of receipts) {
     const linkedReceipts = receiptsByTransaction.get(receipt.transaction_id);

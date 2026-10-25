@@ -120,7 +120,10 @@ export function VoidTransactionModal({
               {transaction.description}
             </p>
             <p className="text-[11px] text-[#7A685D]">
-              Party: {transaction.payerPayee} · Ref: {transaction.paymentRef}
+              Party: {transaction.payerPayee} · Channel:{" "}
+              {transaction.paymentMethod === "bank_transfer"
+                ? "Bank Transfer"
+                : "Cash"}
             </p>
           </div>
 

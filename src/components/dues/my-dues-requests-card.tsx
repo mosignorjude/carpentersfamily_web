@@ -8,6 +8,7 @@ import {
   Receipt,
   XCircle,
 } from "lucide-react";
+import { ReceiptCell } from "@/components/finances/receipt-cell";
 import { formatCoveredMonthsDisplay } from "@/lib/dues-governance.mjs";
 import type { DuesPaymentRequestItem } from "./officer-dues-approvals-card";
 
@@ -134,9 +135,20 @@ export function MyDuesRequestsCard({ requests = [] }: MyDuesRequestsCardProps) {
                 <span className="text-[#B8ACA0]">·</span>
                 {getMethodBadge(req.payment_method)}
                 <span className="text-[#B8ACA0]">·</span>
-                <span className="font-mono text-[#7A685D]">
-                  Ref: {req.payment_reference}
-                </span>
+                <ReceiptCell
+                  paymentMethod={req.payment_method}
+                  paymentStatus={req.status === "approved" ? "paid" : "pending"}
+                  receipt={req.receipt}
+                  isLegacy={!req.receipt && Boolean(req.payment_reference)}
+                />
+                {req.payment_reference && (
+                  <>
+                    <span className="text-[#B8ACA0]">·</span>
+                    <span className="font-mono text-[#7A685D]">
+                      Ref: {req.payment_reference}
+                    </span>
+                  </>
+                )}
               </div>
               <p className="text-[11px] text-[#7A685D]">
                 Submitted {formatDateTime(req.created_at)}

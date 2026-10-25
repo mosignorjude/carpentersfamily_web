@@ -161,7 +161,7 @@ export function ReceiptModal({
                     <a
                       className="px-3 py-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] text-[#174C37] hover:bg-[#174C37] hover:text-white font-bold text-xs transition-colors flex items-center gap-1.5 shrink-0"
                       download
-                      href={`/api/finance-receipts/${receipt.id}`}
+                      href={`/api/receipts/${receipt.id}`}
                     >
                       <Download className="w-3.5 h-3.5" />
                       <span>Download</span>
@@ -175,16 +175,14 @@ export function ReceiptModal({
           {/* Upload New Receipt (Officers Only on Non-Voided) */}
           {isOfficer && !transaction.voided_at && !receiptUnavailable && (
             <form
-              action="/api/finance-receipts"
+              action="/api/receipts"
               className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-3"
               encType="multipart/form-data"
               method="post"
             >
-              <input
-                name="transactionId"
-                type="hidden"
-                value={transaction.id}
-              />
+              <input name="scope" type="hidden" value="club" />
+              <input name="target_id" type="hidden" value={transaction.id} />
+              <input name="return_url" type="hidden" value="/finances" />
               <div className="flex items-center gap-2">
                 <Upload className="w-4 h-4 text-[#174C37]" />
                 <h4 className="text-xs font-bold text-[#3D291F] uppercase tracking-wider">
@@ -200,7 +198,7 @@ export function ReceiptModal({
                 <input
                   accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
                   className="w-full text-xs text-[#54433A] file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border file:border-[#E5DDD3] file:text-xs file:font-bold file:bg-white file:text-[#3D291F] hover:file:bg-[#FAF6F0] cursor-pointer"
-                  name="receipt"
+                  name="file"
                   required
                   type="file"
                 />

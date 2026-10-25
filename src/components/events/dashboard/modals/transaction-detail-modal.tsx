@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, FileText, Printer, X } from "lucide-react";
+import { ReceiptCell } from "@/components/finances/receipt-cell";
 import { formatNaira } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 import type { DashboardTransaction } from "../dashboard-types";
@@ -151,12 +152,15 @@ export function TransactionDetailModal({
             </div>
 
             <div>
-              <span className="text-[#7A685D] block text-[10px] uppercase font-bold">
-                Payment Reference #
+              <span className="text-[#7A685D] block text-[10px] uppercase font-bold mb-1">
+                Receipt / Voucher
               </span>
-              <span className="font-mono text-[#174C37] font-bold mt-0.5 block">
-                {transaction.paymentRef}
-              </span>
+              <ReceiptCell
+                isLegacy={transaction.isLegacy}
+                paymentMethod={transaction.paymentMethod}
+                paymentStatus={transaction.paymentStatus}
+                receipt={transaction.receipt}
+              />
             </div>
 
             <div>
