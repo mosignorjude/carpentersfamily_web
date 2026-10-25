@@ -345,7 +345,7 @@ begin
       from public.notifications as n_member
       where n_member.recipient_id = n_officer.recipient_id
         and n_member.category = 'event_activity'
-        and n_member.dedupe_key = 'event-activity:' || pg_catalog.substring(n_officer.dedupe_key from 15)
+        and n_member.dedupe_key = 'event-activity:' || pg_catalog.substring(n_officer.dedupe_key, 15)
     );
   perform pg_catalog.set_config('app.notification_delete_write', 'off', true);
 end
@@ -370,7 +370,7 @@ begin
     v_copy.resolved_event_id,
     v_copy.resolved_event_id,
     'event-activity:' || al.id::text,
-    al.created_at
+    al.occurred_at
   from public.audit_log as al
   cross join lateral private.build_audit_notification_copy(al) as v_copy
   join public.member_profiles as mp on mp.id = al.actor_id
