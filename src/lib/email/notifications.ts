@@ -129,25 +129,49 @@ async function resolveActiveMemberEmails(
   }
 
   try {
-    const { data: activeProfiles } = await supabase
+    const { data: activeProfiles, error: profilesError } = await supabase
       .from("member_profiles")
       .select("id")
       .eq("status", "active");
+
+    if (profilesError) {
+      console.error(
+        "[Email Service] Failed to query active member profiles:",
+        profilesError.message,
+      );
+      return Array.from(recipients);
+    }
 
     const activeIds = new Set(
       (activeProfiles ?? [])
         .map((row) => row.id)
         .filter((id) => id !== excludeMemberId),
     );
-    if (activeIds.size === 0) return Array.from(recipients);
+    if (activeIds.size === 0) {
+      console.warn(
+        "[Email Service] No active member profile IDs found to notify.",
+      );
+      return Array.from(recipients);
+    }
 
     const adminClient = createSupabaseAdminClient();
-    if (!adminClient) return Array.from(recipients);
+    if (!adminClient) {
+      console.warn(
+        "[Email Service] SUPABASE_SECRET_KEY / SUPABASE_SERVICE_ROLE_KEY is not configured. Unable to query auth.users for member emails.",
+      );
+      return Array.from(recipients);
+    }
 
     const { data, error } = await adminClient.auth.admin.listUsers({
       perPage: 1000,
     });
-    if (error || !data?.users) return Array.from(recipients);
+    if (error || !data?.users) {
+      console.error(
+        "[Email Service] Failed to list users from Supabase Auth admin:",
+        error?.message || "No users returned",
+      );
+      return Array.from(recipients);
+    }
 
     for (const user of data.users) {
       if (activeIds.has(user.id) && isDeliverableEmail(user.email)) {
@@ -155,7 +179,11 @@ async function resolveActiveMemberEmails(
       }
     }
     return Array.from(recipients);
-  } catch {
+  } catch (err) {
+    console.error(
+      "[Email Service] Unexpected error in resolveActiveMemberEmails:",
+      err,
+    );
     return Array.from(recipients);
   }
 }
@@ -606,7 +634,7 @@ export async function notifyDuesPaymentRequestRejected(params: {
 
 export async function notifyNewEventScheduled(params: {
   supabase: SupabaseClient;
-  actorId: string;
+  actorId?: string;
   title: string;
   eventType: string;
   startsAt: string;
@@ -614,16 +642,19 @@ export async function notifyNewEventScheduled(params: {
   description?: string | null;
 }): Promise<void> {
   try {
-    const memberEmails = await resolveActiveMemberEmails(
-      params.supabase,
-      params.actorId,
-    );
-    if (memberEmails.length === 0) return;
+    // Club-wide broadcasts include all active members (including event creator)
+    const memberEmails = await resolveActiveMemberEmails(params.supabase);
+    if (memberEmails.length === 0) {
+      console.warn(
+        `[Email Service] No recipient emails found for new event "${params.title}". Broadcast skipped.`,
+      );
+      return;
+    }
 
     const typeLabel =
       params.eventType.charAt(0).toUpperCase() + params.eventType.slice(1);
 
-    await sendEmailBatch(memberEmails, {
+    const result = await sendEmailBatch(memberEmails, {
       subject: `New Club Event: ${params.title}`,
       react: ClubNotificationEmail({
         previewText: `${params.title} has been scheduled for ${formatWatDateTime(params.startsAt)}.`,
@@ -644,8 +675,18 @@ export async function notifyNewEventScheduled(params: {
       }),
       tags: [{ name: "category", value: "event_scheduled" }],
     });
-  } catch {
-    // Non-blocking notification
+
+    if (!result.ok) {
+      console.error(
+        `[Email Service] Failed to send new event email batch for "${params.title}":`,
+        result.error,
+      );
+    }
+  } catch (err) {
+    console.error(
+      `[Email Service] Unexpected error in notifyNewEventScheduled for "${params.title}":`,
+      err,
+    );
   }
 }
 
@@ -685,7 +726,7 @@ export async function notifyEventRoleAssigned(params: {
       details.push({ label: "Location", value: eventRow.location });
     }
 
-    await sendEmail({
+    const result = await sendEmail({
       to: email,
       subject: `Event Role Assigned: ${roleLabel} — ${eventTitle}`,
       react: ClubNotificationEmail({
@@ -703,20 +744,30 @@ export async function notifyEventRoleAssigned(params: {
       }),
       tags: [{ name: "category", value: "event_role_assigned" }],
     });
-  } catch {
-    // Non-blocking notification
+
+    if (!result.ok) {
+      console.error(
+        `[Email Service] Failed to send event role assignment email to ${email}:`,
+        result.error,
+      );
+    }
+  } catch (err) {
+    console.error(
+      `[Email Service] Unexpected error in notifyEventRoleAssigned for member ${params.memberId}:`,
+      err,
+    );
   }
 }
 
 export async function notifyEventAttendanceOpened(params: {
   supabase: SupabaseClient;
-  actorId: string;
+  actorId?: string;
   eventId: string;
   cutoffMinutes?: number | null;
 }): Promise<void> {
   try {
     const [memberEmails, { data: eventRow }] = await Promise.all([
-      resolveActiveMemberEmails(params.supabase, params.actorId),
+      resolveActiveMemberEmails(params.supabase),
       params.supabase
         .from("events")
         .select("title, starts_at, location")
@@ -724,7 +775,12 @@ export async function notifyEventAttendanceOpened(params: {
         .maybeSingle(),
     ]);
 
-    if (memberEmails.length === 0) return;
+    if (memberEmails.length === 0) {
+      console.warn(
+        `[Email Service] No recipient emails found for attendance opened on event ${params.eventId}. Broadcast skipped.`,
+      );
+      return;
+    }
 
     const eventTitle = eventRow?.title ?? "Club Event";
     const details = [{ label: "Event", value: eventTitle }];
@@ -738,7 +794,7 @@ export async function notifyEventAttendanceOpened(params: {
       });
     }
 
-    await sendEmailBatch(memberEmails, {
+    const result = await sendEmailBatch(memberEmails, {
       subject: `Attendance Is Open — ${eventTitle}`,
       react: ClubNotificationEmail({
         previewText: `Check in now for ${eventTitle}.`,
@@ -755,8 +811,18 @@ export async function notifyEventAttendanceOpened(params: {
       }),
       tags: [{ name: "category", value: "attendance_opened" }],
     });
-  } catch {
-    // Non-blocking notification
+
+    if (!result.ok) {
+      console.error(
+        `[Email Service] Failed to send attendance opened email batch for "${eventTitle}":`,
+        result.error,
+      );
+    }
+  } catch (err) {
+    console.error(
+      `[Email Service] Unexpected error in notifyEventAttendanceOpened for event ${params.eventId}:`,
+      err,
+    );
   }
 }
 
@@ -772,11 +838,13 @@ export async function notifyAnnouncementPublished(params: {
   priority: "standard" | "important" | "urgent";
 }): Promise<void> {
   try {
-    const memberEmails = await resolveActiveMemberEmails(
-      params.supabase,
-      params.actorId,
-    );
-    if (memberEmails.length === 0) return;
+    const memberEmails = await resolveActiveMemberEmails(params.supabase);
+    if (memberEmails.length === 0) {
+      console.warn(
+        `[Email Service] No recipient emails found for announcement "${params.title}". Broadcast skipped.`,
+      );
+      return;
+    }
 
     const priorityLabel =
       params.priority.charAt(0).toUpperCase() + params.priority.slice(1);
@@ -787,7 +855,7 @@ export async function notifyAnnouncementPublished(params: {
           ? "[Important] "
           : "";
 
-    await sendEmailBatch(memberEmails, {
+    const result = await sendEmailBatch(memberEmails, {
       subject: `${subjectPrefix}Club Announcement: ${params.title}`,
       react: ClubNotificationEmail({
         previewText: params.title,
@@ -804,8 +872,18 @@ export async function notifyAnnouncementPublished(params: {
       }),
       tags: [{ name: "category", value: "announcement_published" }],
     });
-  } catch {
-    // Non-blocking notification
+
+    if (!result.ok) {
+      console.error(
+        `[Email Service] Failed to send announcement email batch for "${params.title}":`,
+        result.error,
+      );
+    }
+  } catch (err) {
+    console.error(
+      `[Email Service] Unexpected error in notifyAnnouncementPublished for "${params.title}":`,
+      err,
+    );
   }
 }
 
@@ -818,17 +896,19 @@ export async function notifyPollCreated(params: {
   durationMinutes: number;
 }): Promise<void> {
   try {
-    const memberEmails = await resolveActiveMemberEmails(
-      params.supabase,
-      params.actorId,
-    );
-    if (memberEmails.length === 0) return;
+    const memberEmails = await resolveActiveMemberEmails(params.supabase);
+    if (memberEmails.length === 0) {
+      console.warn(
+        `[Email Service] No recipient emails found for poll "${params.question}". Broadcast skipped.`,
+      );
+      return;
+    }
 
     const closesAtIso = new Date(
       Date.now() + params.durationMinutes * 60_000,
     ).toISOString();
 
-    await sendEmailBatch(memberEmails, {
+    const result = await sendEmailBatch(memberEmails, {
       subject: `New Club Poll: ${params.question}`,
       react: ClubNotificationEmail({
         previewText: `Cast your vote: ${params.question}`,
@@ -851,7 +931,17 @@ export async function notifyPollCreated(params: {
       }),
       tags: [{ name: "category", value: "poll_created" }],
     });
-  } catch {
-    // Non-blocking notification
+
+    if (!result.ok) {
+      console.error(
+        `[Email Service] Failed to send poll email batch for "${params.question}":`,
+        result.error,
+      );
+    }
+  } catch (err) {
+    console.error(
+      `[Email Service] Unexpected error in notifyPollCreated for "${params.question}":`,
+      err,
+    );
   }
 }
