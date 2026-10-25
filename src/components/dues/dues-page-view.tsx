@@ -30,7 +30,7 @@ import {
   OfficerDuesApprovalsCard,
 } from "./officer-dues-approvals-card";
 import { OfficerDuesControlsCard } from "./officer-dues-controls-card";
-import { PayDuesModal } from "./pay-dues-modal";
+import { type DuesPaymentSettings, PayDuesModal } from "./pay-dues-modal";
 
 interface DuesPageViewProps {
   member: DuesMemberOption;
@@ -74,6 +74,7 @@ interface DuesPageViewProps {
     { full_name: string; username: string; roles: string[] }
   >;
   ownRequests?: DuesPaymentRequestItem[];
+  paymentSettings?: DuesPaymentSettings | null;
 }
 
 export function DuesPageView({
@@ -115,6 +116,7 @@ export function DuesPageView({
   pendingRequests = [],
   pendingMembersMap = {},
   ownRequests = [],
+  paymentSettings,
 }: DuesPageViewProps) {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
 
@@ -487,6 +489,7 @@ export function DuesPageView({
         memberName={member.full_name}
         monthlyRateNgn={currentMonthlyRate}
         onClose={() => setIsPayModalOpen(false)}
+        paymentSettings={paymentSettings}
         unpaidTotalNgn={openTotal}
       />
     </div>

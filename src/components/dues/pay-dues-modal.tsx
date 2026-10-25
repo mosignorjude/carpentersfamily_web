@@ -20,6 +20,13 @@ import {
 } from "@/components/ui";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 
+export interface DuesPaymentSettings {
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  instructions?: string;
+}
+
 interface PayDuesModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -28,6 +35,12 @@ interface PayDuesModalProps {
   monthlyRateNgn: number;
   availableMonths: DuesMonthOption[];
   isAdmin?: boolean;
+  paymentSettings?: {
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+    instructions?: string;
+  } | null;
 }
 
 export function PayDuesModal({
@@ -38,6 +51,7 @@ export function PayDuesModal({
   monthlyRateNgn,
   availableMonths = [],
   isAdmin = false,
+  paymentSettings,
 }: PayDuesModalProps) {
   const [copied, setCopied] = useState(false);
   const [channel, setChannel] = useState<"transfer" | "gateway" | "pos">(
@@ -55,14 +69,25 @@ export function PayDuesModal({
 
   if (!isOpen) return null;
 
-  const accountNumber = "1234567890";
-  const bankName = "Nigerian Bank";
-  const accountName = "Carpenters Family Social Club";
+  const isBankConfigured = Boolean(
+    paymentSettings?.bankName &&
+      paymentSettings?.accountNumber &&
+      paymentSettings?.accountName,
+  );
+  const displayBankTitle = isBankConfigured
+    ? `${paymentSettings?.bankName} · ${paymentSettings?.accountName}`
+    : "Club bank details verification pending";
+  const displayAccountNumber = isBankConfigured
+    ? (paymentSettings?.accountNumber ?? "—")
+    : "Pending verification";
 
   const handleCopy = () => {
+    if (!isBankConfigured || !paymentSettings?.accountNumber) return;
     try {
       if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(accountNumber).catch(() => {});
+        navigator.clipboard
+          .writeText(paymentSettings.accountNumber)
+          .catch(() => {});
       }
     } catch {
       // Fallback for restricted clipboard contexts
@@ -343,7 +368,7 @@ export function PayDuesModal({
                             Bank / Account:
                           </span>
                           <strong className="text-[#3D291F]">
-                            {bankName} · {accountName}
+                            {displayBankTitle}
                           </strong>
                         </div>
                         <div className="flex items-center justify-between bg-[#FAF6F0] px-3 py-1.5 rounded-lg border border-[#E5DDD3]">
@@ -352,18 +377,26 @@ export function PayDuesModal({
                               Account Number
                             </span>
                             <strong className="font-mono text-base font-black text-[#174C37] tracking-wider">
-                              {accountNumber}
+                              {displayAccountNumber}
                             </strong>
                           </div>
                           <button
                             id="btn-copy-account-number"
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
-                              copied
-                                ? "bg-emerald-700 text-white scale-105 shadow-xs"
-                                : "bg-[#174C37] text-white hover:bg-[#103D2B]"
+                            disabled={!isBankConfigured}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
+                              !isBankConfigured
+                                ? "opacity-50 cursor-not-allowed bg-neutral-200 text-neutral-500"
+                                : copied
+                                  ? "bg-emerald-700 text-white scale-105 shadow-xs cursor-pointer"
+                                  : "bg-[#174C37] text-white hover:bg-[#103D2B] cursor-pointer"
                             }`}
                             onClick={handleCopy}
                             type="button"
+                            title={
+                              !isBankConfigured
+                                ? "Account details pending verification"
+                                : "Copy Account Number"
+                            }
                           >
                             {copied ? (
                               <>
@@ -378,6 +411,22 @@ export function PayDuesModal({
                             )}
                           </button>
                         </div>
+
+                        {paymentSettings?.instructions && (
+                          <p className="text-[11px] text-[#54433A] bg-[#FAF6F0] p-2 rounded-lg border border-[#E5DDD3]">
+                            <span className="font-semibold text-[#3D291F]">
+                              Note:{" "}
+                            </span>
+                            {paymentSettings.instructions}
+                          </p>
+                        )}
+
+                        {!isBankConfigured && (
+                          <p className="text-[11px] text-[#8C6D23] bg-[#FDF8EE] p-2 rounded-lg border border-[#EED7A1]">
+                            Official bank account details are currently being
+                            verified by club administration.
+                          </p>
+                        )}
                       </div>
                     )}
 

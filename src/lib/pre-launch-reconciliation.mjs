@@ -207,3 +207,69 @@ export function calculateBackfillAmount(monthCount) {
   }
   return Math.floor(count) * STATUTORY_MONTHLY_DUES_NGN;
 }
+
+/**
+ * @typedef {Object} ClubPaymentSettings
+ * @property {string} bankName
+ * @property {string} accountNumber
+ * @property {string} accountName
+ * @property {string} [instructions]
+ */
+
+/**
+ * Formats club bank account details for member dues payment modal presentation,
+ * handling missing configuration gracefully with pending verification state.
+ *
+ * @param {ClubPaymentSettings | null | undefined} paymentSettings
+ * @returns {{
+ *   isConfigured: boolean;
+ *   bankName: string;
+ *   accountName: string;
+ *   accountNumber: string;
+ *   instructions?: string;
+ *   displayBankTitle: string;
+ *   displayAccountNumber: string;
+ *   copyDisabled: boolean;
+ *   pendingNotice: string;
+ * }}
+ */
+export function formatClubBankPresentation(paymentSettings) {
+  if (
+    !paymentSettings ||
+    typeof paymentSettings !== "object" ||
+    !paymentSettings.bankName ||
+    !paymentSettings.accountNumber ||
+    !paymentSettings.accountName
+  ) {
+    return {
+      isConfigured: false,
+      bankName: "",
+      accountName: "",
+      accountNumber: "",
+      instructions: undefined,
+      displayBankTitle: "Club bank details verification pending",
+      displayAccountNumber: "Pending verification",
+      copyDisabled: true,
+      pendingNotice:
+        "Official bank account details are currently being verified by club administration.",
+    };
+  }
+
+  const instructions =
+    typeof paymentSettings.instructions === "string" &&
+    paymentSettings.instructions.trim().length > 0
+      ? paymentSettings.instructions.trim()
+      : undefined;
+
+  return {
+    isConfigured: true,
+    bankName: paymentSettings.bankName,
+    accountName: paymentSettings.accountName,
+    accountNumber: paymentSettings.accountNumber,
+    instructions,
+    displayBankTitle: `${paymentSettings.bankName} · ${paymentSettings.accountName}`,
+    displayAccountNumber: paymentSettings.accountNumber,
+    copyDisabled: false,
+    pendingNotice: "",
+  };
+}

@@ -211,38 +211,58 @@ export default async function DuesPage({
   const paymentPage = pageNumber(params.payment_page);
   const auditPage = pageNumber(params.audit_page);
 
-  const [statusResult, paymentResult, rateResult, incomeResult] =
-    await Promise.all([
-      supabase
-        .from("dues_month_status")
-        .select(
-          "member_id, covered_month, amount_ngn, status, due_date, is_overdue",
-        )
-        .eq("member_id", targetMemberId)
-        .order("covered_month", { ascending: true })
-        .limit(1200),
-      supabase
-        .from("dues_payments")
-        .select(
-          "id, member_id, amount_ngn, payment_date, recorded_by, recorded_at, corrected_at",
-          { count: "exact" },
-        )
-        .eq("member_id", targetMemberId)
-        .order("payment_date", { ascending: false })
-        .order("recorded_at", { ascending: false })
-        .range(
-          paymentPage * HISTORY_PAGE_SIZE,
-          (paymentPage + 1) * HISTORY_PAGE_SIZE - 1,
-        ),
-      supabase
-        .from("dues_rates")
-        .select(
-          "id, effective_month, monthly_amount_ngn, changed_by, changed_at, reason",
-        )
-        .order("effective_month", { ascending: true })
-        .limit(1200),
-      supabase.rpc("club_dues_income_total"),
-    ]);
+  const [
+    statusResult,
+    paymentResult,
+    rateResult,
+    incomeResult,
+    paymentSettingsResult,
+  ] = await Promise.all([
+    supabase
+      .from("dues_month_status")
+      .select(
+        "member_id, covered_month, amount_ngn, status, due_date, is_overdue",
+      )
+      .eq("member_id", targetMemberId)
+      .order("covered_month", { ascending: true })
+      .limit(1200),
+    supabase
+      .from("dues_payments")
+      .select(
+        "id, member_id, amount_ngn, payment_date, recorded_by, recorded_at, corrected_at",
+        { count: "exact" },
+      )
+      .eq("member_id", targetMemberId)
+      .order("payment_date", { ascending: false })
+      .order("recorded_at", { ascending: false })
+      .range(
+        paymentPage * HISTORY_PAGE_SIZE,
+        (paymentPage + 1) * HISTORY_PAGE_SIZE - 1,
+      ),
+    supabase
+      .from("dues_rates")
+      .select(
+        "id, effective_month, monthly_amount_ngn, changed_by, changed_at, reason",
+      )
+      .order("effective_month", { ascending: true })
+      .limit(1200),
+    supabase.rpc("club_dues_income_total"),
+    supabase
+      .from("club_payment_settings")
+      .select("bank_name, account_number, account_name, instructions")
+      .eq("id", "singleton")
+      .maybeSingle(),
+  ]);
+
+  const paymentSettingsData = paymentSettingsResult.data;
+  const paymentSettings = paymentSettingsData
+    ? {
+        bankName: paymentSettingsData.bank_name,
+        accountNumber: paymentSettingsData.account_number,
+        accountName: paymentSettingsData.account_name,
+        instructions: paymentSettingsData.instructions ?? undefined,
+      }
+    : null;
 
   const duesRows = (statusResult.data ?? []) as DuesStatusRow[];
   const payments = (paymentResult.data ?? []) as PaymentRow[];
@@ -455,6 +475,7 @@ export default async function DuesPage({
       pageSize={HISTORY_PAGE_SIZE}
       pastUnpaidMonths={pastUnpaidMonths}
       paymentPage={paymentPage}
+      paymentSettings={paymentSettings}
       payments={payments}
       pendingMembersMap={pendingMembersMap}
       pendingRequests={pendingRequests}
