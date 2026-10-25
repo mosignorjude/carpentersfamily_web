@@ -15,7 +15,6 @@ import type { DuesMonthOption } from "@/app/(member)/dues/dues-forms";
 import { submitDuesPaymentRequestAction } from "@/app/actions";
 import {
   FormAlertBanner,
-  FormFieldError,
   FormFieldHint,
   FormSubmitButton,
 } from "@/components/ui";
@@ -47,12 +46,11 @@ export function PayDuesModal({
   const [selectedMonths, setSelectedMonths] = useState<string[]>(() =>
     availableMonths.map((m) => m.month),
   );
-  const [reference, setReference] = useState("");
+  const [hasReceiptFile, setHasReceiptFile] = useState(false);
   const [notes, setNotes] = useState("");
 
   useModalHygiene({ isOpen, onClose });
 
-  const referenceInputId = useId();
   const notesInputId = useId();
 
   if (!isOpen) return null;
@@ -145,6 +143,7 @@ export function PayDuesModal({
         <form
           action={submitDuesPaymentRequestAction}
           className="flex flex-col flex-1 overflow-hidden"
+          encType="multipart/form-data"
           id="dues-payment-form"
         >
           <div className="p-6 space-y-4 text-xs text-[#3D291F] max-h-[75vh] overflow-y-auto">
@@ -382,6 +381,37 @@ export function PayDuesModal({
                       </div>
                     )}
 
+                    {/* Channel specific content */}
+                    {channel === "gateway" && (
+                      <div className="p-4 rounded-xl border border-[#EED7A1] bg-[#FDF8EE] text-center space-y-2">
+                        <CreditCard className="w-6 h-6 text-[#D6A23A] mx-auto" />
+                        <h4 className="font-bold text-xs text-[#3D291F]">
+                          Online Card Payment Unavailable
+                        </h4>
+                        <p className="text-[11px] text-[#54433A]">
+                          Online card and payment gateway settlements are
+                          currently unavailable. Please choose Bank Transfer or
+                          Secretariat POS.
+                        </p>
+                      </div>
+                    )}
+
+                    {channel === "pos" && (
+                      <div className="p-3.5 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Receipt className="w-4 h-4 text-[#174C37]" />
+                          <h4 className="font-bold text-xs text-[#3D291F]">
+                            Secretariat Cash / POS Settlement
+                          </h4>
+                        </div>
+                        <p className="text-[11px] text-[#54433A]">
+                          Submit this request and present your cash or card at
+                          the Secretariat desk. The reviewing officer will
+                          verify and confirm receipt in the system.
+                        </p>
+                      </div>
+                    )}
+
                     {/* Payment Submission Fields */}
                     <div className="space-y-3 pt-2 border-t border-[#E5DDD3]">
                       {/* Hidden Form Fields */}
@@ -401,46 +431,37 @@ export function PayDuesModal({
                       <input
                         name="payment_method"
                         type="hidden"
-                        value={
-                          channel === "gateway"
-                            ? "paystack"
-                            : channel === "pos"
-                              ? "pos"
-                              : "bank_transfer"
-                        }
+                        value={channel === "pos" ? "cash" : "bank_transfer"}
                       />
 
-                      {/* Reference Input */}
-                      <div className="space-y-1">
-                        <label
-                          className="block text-[11px] font-bold text-[#3D291F] uppercase tracking-wider"
-                          htmlFor={referenceInputId}
-                        >
-                          Payment Reference / Bank Narration{" "}
-                          <span className="text-[#BA3C2A]">*</span>
-                        </label>
-                        <input
-                          className={`w-full rounded-lg border bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] font-mono font-bold focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden ${
-                            reference.length > 0 && reference.trim().length < 2
-                              ? "border-[#BA3C2A]"
-                              : "border-[#E5DDD3]"
-                          }`}
-                          id={referenceInputId}
-                          maxLength={160}
-                          minLength={2}
-                          name="payment_reference"
-                          onChange={(e) => setReference(e.target.value)}
-                          placeholder="e.g. GTB/TRF/92819201 or Bank Transfer Session ID"
-                          required
-                          type="text"
-                          value={reference}
-                        />
-                        {reference.length > 0 &&
-                          reference.trim().length < 2 && (
-                            <FormFieldError message="Payment reference must be at least 2 characters." />
-                          )}
-                        <FormFieldHint message="Enter the transaction session ID, teller reference, or transfer narration." />
-                      </div>
+                      {/* Receipt file input for Bank Transfer */}
+                      {channel === "transfer" && (
+                        <div className="space-y-1">
+                          <label
+                            className="block text-[11px] font-bold text-[#3D291F] uppercase tracking-wider"
+                            htmlFor="dues-receipt-file"
+                          >
+                            Payment Receipt / Screenshot{" "}
+                            <span className="text-[#BA3C2A]">*</span>
+                          </label>
+                          <input
+                            id="dues-receipt-file"
+                            name="receipt_file"
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                            required
+                            onChange={(e) =>
+                              setHasReceiptFile(
+                                Boolean(
+                                  e.target.files && e.target.files.length > 0,
+                                ),
+                              )
+                            }
+                            className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2 text-xs text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
+                          />
+                          <FormFieldHint message="Upload your bank transfer confirmation slip or mobile app screenshot (PDF, JPG, PNG up to 4 MiB)." />
+                        </div>
+                      )}
 
                       {/* Optional Notes */}
                       <div className="space-y-1">
@@ -491,8 +512,9 @@ export function PayDuesModal({
                 className="px-5 py-2.5 min-h-[40px]"
                 disabled={
                   selectedMonths.length === 0 ||
-                  reference.trim().length < 2 ||
-                  selectedAmountNgn <= 0
+                  selectedAmountNgn <= 0 ||
+                  channel === "gateway" ||
+                  (channel === "transfer" && !hasReceiptFile)
                 }
                 id="btn-submit-dues-payment"
                 leftIcon={ShieldCheck}

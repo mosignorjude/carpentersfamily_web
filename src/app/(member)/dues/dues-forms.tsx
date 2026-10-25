@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   correctDuesPaymentAction,
   recordDuesPaymentAction,
@@ -47,10 +48,15 @@ export function DuesPaymentForm({
   availableMonths: DuesMonthOption[];
   today: string;
 }) {
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "cash">(
+    "cash",
+  );
+
   return (
     <form
       action={recordDuesPaymentAction}
       className="space-y-4 bg-white p-5 rounded-xl border border-[#E5DDD3] shadow-2xs"
+      encType="multipart/form-data"
     >
       <input name="member_id" type="hidden" value={memberId} />
 
@@ -127,6 +133,40 @@ export function DuesPaymentForm({
             type="date"
           />
         </label>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <label className="block text-xs font-bold text-[#54433A] space-y-1.5">
+          <span>Payment Method</span>
+          <select
+            className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+            name="payment_method"
+            value={paymentMethod}
+            onChange={(e) =>
+              setPaymentMethod(e.target.value as "bank_transfer" | "cash")
+            }
+          >
+            <option value="cash">Cash / Secretariat POS</option>
+            <option value="bank_transfer">Direct Bank Transfer</option>
+          </select>
+        </label>
+
+        {paymentMethod === "bank_transfer" ? (
+          <label className="block text-xs font-bold text-[#54433A] space-y-1.5">
+            <span>Payment Receipt / Voucher (Required)</span>
+            <input
+              type="file"
+              name="receipt_file"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              required
+              className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2 text-xs text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
+            />
+          </label>
+        ) : (
+          <div className="flex items-center text-xs text-[#7A685D] pt-6">
+            <span>No receipt attachment required for cash transaction.</span>
+          </div>
+        )}
       </div>
 
       <div className="pt-2">

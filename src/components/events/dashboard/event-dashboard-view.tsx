@@ -268,6 +268,9 @@ export function EventDashboardView({
       fd.set("buyer_name", txnData.payerPayee.slice(0, 160));
       fd.set("payment_method", dbMethod);
       fd.set("idempotency_key", idempotencyKey);
+      if (txnData.receiptFile) {
+        fd.set("receipt_file", txnData.receiptFile);
+      }
       dispatchActionStatusToast({
         title: "Recording Ticket Sale…",
         message: `Issuing ${txnData.ticketQuantity ?? 1} pass(es) for ${txnData.payerPayee}.`,
@@ -293,19 +296,16 @@ export function EventDashboardView({
     fd.set("transaction_date", lagosToday);
     fd.set("category_id", txnData.category);
     fd.set("category_name", txnData.categoryLabel);
-    fd.set("payment_status", "paid");
+    fd.set("payment_status", txnData.paymentStatus || "paid");
+    fd.set("payment_method", dbMethod);
     fd.set("idempotency_key", idempotencyKey);
+    if (txnData.receiptFile) {
+      fd.set("receipt_file", txnData.receiptFile);
+    }
 
     if (txnData.type === "revenue") {
-      fd.set(
-        "source_note",
-        `${txnData.description}${txnData.paymentRef ? ` (Ref: ${txnData.paymentRef})` : ""}`.slice(
-          0,
-          500,
-        ),
-      );
+      fd.set("source_note", txnData.description.slice(0, 500));
       fd.set("payer_payee", txnData.payerPayee.slice(0, 160));
-      fd.set("payment_method", dbMethod);
     } else {
       if (txnData.budgetAllocationCategoryId) {
         fd.set(
@@ -313,13 +313,7 @@ export function EventDashboardView({
           txnData.budgetAllocationCategoryId,
         );
       }
-      fd.set(
-        "description",
-        `${txnData.description}${txnData.paymentRef ? ` (Ref: ${txnData.paymentRef})` : ""}`.slice(
-          0,
-          500,
-        ),
-      );
+      fd.set("description", txnData.description.slice(0, 500));
       fd.set("payer_payee", txnData.payerPayee.slice(0, 160));
     }
 

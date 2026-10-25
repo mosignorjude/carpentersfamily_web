@@ -82,7 +82,15 @@ export interface DashboardTransaction {
   amount: number;
   payerPayee: string;
   paymentMethod: string;
-  paymentRef: string;
+  paymentRef?: string;
+  paymentStatus?: string;
+  receipt?: {
+    id: string;
+    filename: string;
+    contentType: string;
+    sizeBytes?: number;
+  } | null;
+  isLegacy?: boolean;
   authorizedBy: string;
   authorizerRole: string;
   receiptFileName?: string;
