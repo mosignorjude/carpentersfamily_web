@@ -165,7 +165,10 @@ function MemberReconciliationRow({ member }: MemberRowProps) {
           {VALID_PRE_LAUNCH_MONTHS.map((month) => {
             const isCleared = member.clearedMonths.includes(month);
             const isSelected = activeSelectedMonths.includes(month);
-            const label = PRE_LAUNCH_MONTH_SHORT_LABELS[month] ?? month;
+            const label =
+              (PRE_LAUNCH_MONTH_SHORT_LABELS as Record<string, string>)[
+                month
+              ] ?? month;
 
             if (isCleared) {
               return (
