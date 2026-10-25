@@ -42,18 +42,27 @@ create policy club_payment_settings_update
     or (select private.has_club_role('backup_admin'))
   );
 
-create policy club_payment_settings_delete
-  on public.club_payment_settings
-  for delete
-  to authenticated
-  using (
-    (select private.has_club_role('admin'))
-    or (select private.has_club_role('backup_admin'))
-  );
-
 revoke all on table public.club_payment_settings from public, anon, authenticated, service_role;
-grant select, insert, update, delete on table public.club_payment_settings to authenticated;
-grant select, insert, update, delete on table public.club_payment_settings to service_role;
+grant select, insert, update on table public.club_payment_settings to authenticated;
+grant select, insert, update on table public.club_payment_settings to service_role;
+
+-- Prevent deletion of singleton settings
+create or replace function private.prevent_club_payment_settings_delete()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  raise exception using errcode = '42501', message = 'Club payment settings cannot be deleted.';
+end;
+$function$;
+
+create trigger club_payment_settings_delete_guard
+before delete on public.club_payment_settings
+for each row execute function private.prevent_club_payment_settings_delete();
+
+revoke all on function private.prevent_club_payment_settings_delete() from public, anon, authenticated, service_role;
 
 -- Set metadata before write
 create or replace function private.set_club_payment_settings_metadata()
@@ -243,6 +252,10 @@ begin
     raise exception using errcode = '23503', message = 'The selected member does not exist.';
   end if;
 
+  if v_member_status <> 'active' then
+    raise exception using errcode = '22023', message = 'Historical dues backfill is only permitted for active club members.';
+  end if;
+
   -- Admin dues exemption rule
   if exists (
     select 1
@@ -308,9 +321,9 @@ begin
   from pg_catalog.unnest(p_covered_months) as m(covered_month);
 
   -- Prepare reason for audit log (bounded and non-empty)
-  v_reason := coalesce(nullif(pg_catalog.btrim(p_notes), ''), 'Pre-launch historical dues reconciliation');
-  if pg_catalog.char_length(v_reason) > 500 then
-    v_reason := pg_catalog.substr(v_reason, 1, 500);
+  v_reason := pg_catalog.btrim(pg_catalog.substr(coalesce(nullif(pg_catalog.btrim(p_notes), ''), 'Pre-launch historical dues reconciliation'), 1, 500));
+  if v_reason = '' then
+    v_reason := 'Pre-launch historical dues reconciliation';
   end if;
 
   -- Insert audit log entry

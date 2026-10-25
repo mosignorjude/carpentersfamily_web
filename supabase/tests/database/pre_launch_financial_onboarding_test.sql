@@ -1,5 +1,5 @@
 begin;
-select plan(28);
+select plan(32);
 
 -- Fixtures: Create test users
 insert into auth.users (
@@ -130,6 +130,31 @@ select ok(
   'audit log records club_payment_settings_updated'
 );
 
+-- Backup admin can update club payment settings
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000962', true);
+
+select lives_ok(
+  $$
+    update public.club_payment_settings
+    set instructions = 'Updated instructions by backup admin'
+    where id = 'singleton';
+  $$,
+  'backup admin can update club payment settings'
+);
+
+-- Deletion guard on club_payment_settings
+select throws_ok(
+  $$
+    delete from public.club_payment_settings where id = 'singleton';
+  $$,
+  '42501',
+  null,
+  'cannot delete singleton club payment settings'
+);
+
+reset role;
+
 -- 9. Dues rate schedule and membership periods updated from 2026-01-01 to 2026-02-01
 select ok(
   not exists (
@@ -205,6 +230,20 @@ select throws_ok(
   '23514',
   null,
   'cannot backfill dues for admin'
+);
+
+-- Cannot backfill for non-active member
+select throws_ok(
+  $$
+    select public.backfill_member_historical_dues(
+      '00000000-0000-0000-0000-000000000964'::uuid,
+      array['2026-02-01'::date],
+      'Backfill for non-active member'
+    );
+  $$,
+  '22023',
+  'Historical dues backfill is only permitted for active club members.',
+  'cannot backfill dues for non-active member'
 );
 
 -- 14. Cannot backfill January 2026 (boundary check: Feb-Sep 2026 only)
@@ -326,6 +365,21 @@ select throws_ok(
   '23505',
   null,
   'rejects month that already has a disposition'
+);
+
+-- Backup admin can also backfill historical dues for an active member
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000962', true);
+
+select lives_ok(
+  $$
+    select public.backfill_member_historical_dues(
+      '00000000-0000-0000-0000-000000000963'::uuid,
+      array['2026-02-01'::date],
+      'Backup admin backfill for pl-member'
+    );
+  $$,
+  'backup admin can backfill historical dues'
 );
 
 reset role;
