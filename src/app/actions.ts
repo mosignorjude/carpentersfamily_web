@@ -12,6 +12,8 @@ import {
   notifyDuesPaymentRequestRejected,
   notifyDuesPaymentRequestSubmitted,
   notifyEventAttendanceOpened,
+  notifyEventCancelled,
+  notifyEventChanged,
   notifyEventRoleAssigned,
   notifyMemberLifecycleChanged,
   notifyNewEventScheduled,
@@ -33,6 +35,13 @@ import {
 import { parseExecutiveRoleRequest } from "@/lib/executive-role-request.mjs";
 import { validateFinanceReceiptUpload } from "@/lib/finance-receipt-validation";
 import {
+  createEventFingerprint,
+  createMeetingFingerprint,
+  describeEventChanges,
+  describeMeetingChanges,
+  meetingScheduleFromInstant,
+} from "@/lib/notifications/meaningful-change";
+import {
   validateBackfillMonths,
   validateClubPaymentSettingsInput,
 } from "@/lib/pre-launch-reconciliation.mjs";
@@ -46,6 +55,78 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const usernamePattern = /^[A-Za-z0-9_]{3,30}$/;
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const clubRoleRank: Record<string, number> = {
+  member: 0,
+  executive: 1,
+  backup_admin: 2,
+  admin: 3,
+};
+
+interface EventScheduleRow {
+  event_type: string;
+  title: string;
+  starts_at: string;
+  location: string;
+  description: string | null;
+  timezone: string | null;
+}
+
+function eventFingerprint(row: EventScheduleRow): string {
+  if (row.event_type === "meeting") {
+    return createMeetingFingerprint({
+      ...meetingScheduleFromInstant(row.starts_at),
+      endTime: "",
+      venue: row.location,
+      agenda: row.description ?? "",
+    });
+  }
+  return createEventFingerprint({
+    startsAt: row.starts_at,
+    endsAt: "",
+    timezone: row.timezone ?? "Africa/Lagos",
+    location: row.location,
+    title: row.title,
+  });
+}
+
+function eventChangeSummary(
+  before: EventScheduleRow,
+  after: EventScheduleRow,
+): string {
+  if (after.event_type === "meeting") {
+    return describeMeetingChanges(
+      {
+        ...meetingScheduleFromInstant(before.starts_at),
+        endTime: "",
+        venue: before.location,
+        agenda: before.description ?? "",
+      },
+      {
+        ...meetingScheduleFromInstant(after.starts_at),
+        endTime: "",
+        venue: after.location,
+        agenda: after.description ?? "",
+      },
+    );
+  }
+  return describeEventChanges(
+    {
+      startsAt: before.starts_at,
+      endsAt: "",
+      timezone: before.timezone ?? "Africa/Lagos",
+      location: before.location,
+      title: before.title,
+    },
+    {
+      startsAt: after.starts_at,
+      endsAt: "",
+      timezone: after.timezone ?? "Africa/Lagos",
+      location: after.location,
+      title: after.title,
+    },
+  );
+}
 
 function formString(formData: FormData, key: string, maxLength: number) {
   const value = formData.get(key);
@@ -505,6 +586,7 @@ export async function recordDuesPaymentAction(formData: FormData) {
   await notifyDuesPaymentConfirmed({
     supabase: actor.supabase,
     memberId,
+    requestId: paymentId,
     amountNgn: amount,
     coveredMonths: months,
     paymentDate,
@@ -699,6 +781,7 @@ export async function submitDuesPaymentRequestAction(formData: FormData) {
   await notifyDuesPaymentRequestSubmitted({
     supabase: actor.supabase,
     actorId: actor.memberId,
+    requestId: entryResult.id,
     amountNgn: amount,
     coveredMonths: months,
     paymentMethod,
@@ -744,6 +827,7 @@ export async function approveDuesPaymentRequestAction(formData: FormData) {
     await notifyDuesPaymentConfirmed({
       supabase: actor.supabase,
       memberId: requestRow.member_id,
+      requestId,
       amountNgn: Number(requestRow.amount_ngn),
       coveredMonths: requestRow.covered_months ?? [],
       paymentMethod: requestRow.payment_method,
@@ -798,6 +882,7 @@ export async function rejectDuesPaymentRequestAction(formData: FormData) {
     await notifyDuesPaymentRequestRejected({
       supabase: actor.supabase,
       memberId: requestRow.member_id,
+      requestId,
       amountNgn: Number(requestRow.amount_ngn),
       coveredMonths: requestRow.covered_months ?? [],
       paymentMethod: requestRow.payment_method,
@@ -1289,7 +1374,7 @@ export async function signUpAction(formData: FormData) {
   if (!emailRedirectTo) redirect("/signup?notice=configuration");
 
   const supabase = await clientOrRedirect("/signup?notice=configuration");
-  const { error } = await supabase.auth.signUp({
+  const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -1301,7 +1386,12 @@ export async function signUpAction(formData: FormData) {
   // Keep the response indistinguishable for an existing address to reduce
   // account enumeration. Auth metadata is validated again by the DB trigger.
   if (error) redirect("/signup?notice=signup-unavailable");
-  await notifyNewMemberSignUp({ email, fullName, username });
+  await notifyNewMemberSignUp({
+    email,
+    fullName,
+    username,
+    userId: signUpData.user?.id ?? null,
+  });
   redirect("/signup?notice=check-email");
 }
 
@@ -1356,7 +1446,10 @@ export async function updatePasswordAction(formData: FormData) {
 
   const { error } = await supabase.auth.updateUser({ password });
   if (error) redirect("/reset-password?notice=update-failed");
-  await notifyPasswordUpdated({ email: data.user.email });
+  await notifyPasswordUpdated({
+    email: data.user.email,
+    userId: data.user.id,
+  });
   redirect("/?notice=password-updated");
 }
 
@@ -1522,6 +1615,7 @@ export async function executiveRoleAction(formData: FormData) {
     role: "executive",
     operation: request.operation,
     reason: request.reason,
+    upgraded: request.operation === "grant",
   });
 
   revalidatePath("/admin/members");
@@ -1563,6 +1657,19 @@ export async function clubRoleChangeAction(formData: FormData) {
     redirect("/admin/members?notice=denied");
   }
 
+  const { data: targetAssignments } = await supabase
+    .from("member_role_assignments")
+    .select("role")
+    .eq("member_id", request.memberId)
+    .is("revoked_at", null);
+  const currentRank = Math.max(
+    0,
+    ...(targetAssignments ?? []).map(
+      (assignment) => clubRoleRank[assignment.role] ?? 0,
+    ),
+  );
+  const upgraded = (clubRoleRank[request.role] ?? 0) > currentRank;
+
   const { error } = await supabase.rpc("set_club_role", {
     p_member_id: request.memberId,
     p_role: request.role,
@@ -1576,6 +1683,7 @@ export async function clubRoleChangeAction(formData: FormData) {
     role: request.role,
     operation: "set",
     reason: request.reason,
+    upgraded,
   });
 
   revalidatePath("/admin/members");
@@ -1641,7 +1749,7 @@ export async function createEventAction(formData: FormData) {
     redirect(eventNoticeUrl("invalid-request"));
   }
 
-  const { error } = await actor.supabase.rpc("create_event", {
+  const { data: eventId, error } = await actor.supabase.rpc("create_event", {
     p_title: title,
     p_event_type: eventType,
     p_starts_at: startsAt,
@@ -1655,10 +1763,12 @@ export async function createEventAction(formData: FormData) {
     p_ticketing_enabled: ticketingEnabled,
   });
   if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
+  if (typeof eventId !== "string" || !uuidPattern.test(eventId)) {
+    redirect(eventNoticeUrl("operation-failed"));
+  }
 
   await notifyNewEventScheduled({
-    supabase: actor.supabase,
-    actorId: actor.memberId,
+    eventId,
     title,
     eventType: eventType as string,
     startsAt,
@@ -1711,6 +1821,15 @@ export async function updateEventDetailsAction(formData: FormData) {
   ) {
     redirect(eventNoticeUrl("invalid-request"));
   }
+
+  const { data: beforeRow } = await actor.supabase
+    .from("events")
+    .select(
+      "event_type, title, starts_at, location, description, timezone, status",
+    )
+    .eq("id", eventId)
+    .maybeSingle();
+
   const { error } = await actor.supabase.rpc("update_event_details", {
     p_event_id: eventId,
     p_title: title,
@@ -1720,6 +1839,43 @@ export async function updateEventDetailsAction(formData: FormData) {
     p_reason: reason,
   });
   if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
+
+  if (
+    beforeRow &&
+    beforeRow.status !== "cancelled" &&
+    beforeRow.status !== "completed"
+  ) {
+    const before: EventScheduleRow = {
+      event_type: beforeRow.event_type,
+      title: beforeRow.title,
+      starts_at: beforeRow.starts_at,
+      location: beforeRow.location,
+      description: beforeRow.description,
+      timezone: beforeRow.timezone,
+    };
+    const after: EventScheduleRow = {
+      ...before,
+      title,
+      starts_at: startsAt,
+      location,
+      description,
+    };
+    const beforeHash = eventFingerprint(before);
+    const afterHash = eventFingerprint(after);
+    if (beforeHash !== afterHash) {
+      await notifyEventChanged({
+        eventId,
+        title,
+        eventType: after.event_type,
+        startsAt,
+        location,
+        timezone: after.timezone ?? "Africa/Lagos",
+        changeHash: afterHash,
+        changeSummary: eventChangeSummary(before, after),
+      });
+    }
+  }
+
   revalidatePath("/events");
   redirect(eventNoticeUrl("updated"));
 }
@@ -1914,12 +2070,33 @@ export async function setEventStatusAction(formData: FormData) {
   ) {
     redirect(eventNoticeUrl("invalid-request"));
   }
+
+  const { data: beforeRow } = await actor.supabase
+    .from("events")
+    .select(
+      "event_type, title, starts_at, location, description, timezone, status",
+    )
+    .eq("id", eventId)
+    .maybeSingle();
+
   const { error } = await actor.supabase.rpc("set_event_status", {
     p_event_id: eventId,
     p_status: status,
     p_reason: reason,
   });
   if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
+
+  if (status === "cancelled" && beforeRow && beforeRow.status !== "cancelled") {
+    await notifyEventCancelled({
+      eventId,
+      title: beforeRow.title,
+      eventType: beforeRow.event_type,
+      startsAt: beforeRow.starts_at,
+      location: beforeRow.location,
+      reason,
+    });
+  }
+
   revalidatePath("/events");
   revalidatePath(`/events/${eventId}/finance`);
   revalidatePath("/finances");
@@ -2762,7 +2939,6 @@ export async function openEventAttendanceAction(formData: FormData) {
 
   await notifyEventAttendanceOpened({
     supabase: actor.supabase,
-    actorId: actor.memberId,
     eventId,
     cutoffMinutes: cutoff,
   });
@@ -3112,7 +3288,7 @@ export async function createAnnouncementAction(formData: FormData) {
   }
 
   const supabase = await getActiveCommunicationActor();
-  const { error } =
+  const { data: announcementId, error } =
     priority === "standard" && expiresAt === null
       ? await supabase.rpc("create_announcement", {
           p_event_id: eventId,
@@ -3127,9 +3303,12 @@ export async function createAnnouncementAction(formData: FormData) {
           p_expires_at: expiresAt,
         });
   if (error) redirect(communicationNotice(rpcErrorNotice(error)));
+  if (typeof announcementId !== "string" || !uuidPattern.test(announcementId)) {
+    redirect(communicationNotice("operation-failed"));
+  }
 
   await notifyAnnouncementPublished({
-    supabase,
+    announcementId,
     title,
     message,
     priority,
@@ -3239,17 +3418,23 @@ export async function createAnnouncementPollAction(formData: FormData) {
   }
 
   const supabase = await getActiveCommunicationActor();
-  const { error } = await supabase.rpc("create_announcement_poll", {
-    p_event_id: eventId,
-    p_question: question,
-    p_duration_minutes: duration,
-    p_poll_type: pollType,
-    p_options: options,
-  });
+  const { data: pollId, error } = await supabase.rpc(
+    "create_announcement_poll",
+    {
+      p_event_id: eventId,
+      p_question: question,
+      p_duration_minutes: duration,
+      p_poll_type: pollType,
+      p_options: options,
+    },
+  );
   if (error) redirect(pollNotice(rpcErrorNotice(error)));
+  if (typeof pollId !== "string" || !uuidPattern.test(pollId)) {
+    redirect(pollNotice("operation-failed"));
+  }
 
   await notifyPollCreated({
-    supabase,
+    pollId,
     question,
     pollType,
     options,

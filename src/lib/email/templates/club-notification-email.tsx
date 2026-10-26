@@ -6,9 +6,74 @@ export interface EmailDetailRow {
   value: string;
 }
 
+export type NotificationCategory =
+  | "membership"
+  | "account_security"
+  | "governance"
+  | "dues"
+  | "event"
+  | "meeting"
+  | "announcement"
+  | "poll"
+  | "attendance";
+
+interface CategoryCopy {
+  eyebrow: string;
+  footerNote: string;
+}
+
+export const NOTIFICATION_CATEGORY_COPY: Record<
+  NotificationCategory,
+  CategoryCopy
+> = {
+  membership: {
+    eyebrow: "Membership",
+    footerNote:
+      "Questions about your membership? Reply to this email and club leadership will help.",
+  },
+  account_security: {
+    eyebrow: "Account Security",
+    footerNote:
+      "If you did not expect this change, contact club leadership immediately.",
+  },
+  governance: {
+    eyebrow: "Governance & Roles",
+    footerNote: "Role changes are recorded in the club governance audit trail.",
+  },
+  dues: {
+    eyebrow: "Dues & Finance",
+    footerNote:
+      "Your dues ledger and receipts are always available in the member portal.",
+  },
+  event: {
+    eyebrow: "Club Events",
+    footerNote:
+      "Event details can change; the portal always shows the latest schedule.",
+  },
+  meeting: {
+    eyebrow: "Club Meetings",
+    footerNote:
+      "Meeting reminders are sent 24 hours and 2 hours before the start time.",
+  },
+  announcement: {
+    eyebrow: "Club Announcements",
+    footerNote:
+      "Announcements are published on the club board for every active member.",
+  },
+  poll: {
+    eyebrow: "Club Poll",
+    footerNote: "Each member may cast one final vote while the poll is open.",
+  },
+  attendance: {
+    eyebrow: "Event Attendance",
+    footerNote:
+      "Attendance can only be recorded while the check-in session is open.",
+  },
+};
+
 export interface ClubNotificationEmailProps {
   previewText: string;
-  eyebrow: string;
+  eyebrow?: string;
   heading: string;
   greeting?: string;
   intro: string;
@@ -19,6 +84,7 @@ export interface ClubNotificationEmailProps {
   ctaLabel?: string;
   ctaUrl?: string;
   footerNote?: string;
+  category?: NotificationCategory;
 }
 
 export function ClubNotificationEmail({
@@ -34,13 +100,16 @@ export function ClubNotificationEmail({
   ctaLabel,
   ctaUrl,
   footerNote,
+  category,
 }: ClubNotificationEmailProps) {
+  const categoryCopy = category ? NOTIFICATION_CATEGORY_COPY[category] : null;
+
   return (
     <BaseEmailLayout
       previewText={previewText}
-      eyebrow={eyebrow}
+      eyebrow={eyebrow ?? categoryCopy?.eyebrow ?? "Carpenters Family"}
       heading={heading}
-      footerNote={footerNote}
+      footerNote={footerNote ?? categoryCopy?.footerNote}
     >
       {greeting ? <Text style={styles.greeting}>{greeting}</Text> : null}
       <Text style={styles.paragraph}>{intro}</Text>

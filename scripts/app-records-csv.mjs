@@ -42,6 +42,8 @@ export const APP_RECORDS_TABLES = Object.freeze([
   ["public", "announcement_poll_revisions"],
   ["public", "notification_preferences"],
   ["public", "notifications"],
+  ["public", "notification_outbox"],
+  ["public", "notification_reminders"],
   ["private", "administration_guard"],
   ["private", "poll_voter_eligibility"],
   ["private", "poll_ballots"],

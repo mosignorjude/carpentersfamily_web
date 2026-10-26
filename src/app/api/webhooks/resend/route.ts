@@ -4,6 +4,8 @@ import {
   getResendClient,
 } from "@/lib/email/client";
 import { getEmailConfig, isContactRecipient } from "@/lib/email/config";
+import { applyResendWebhookEvent } from "@/lib/notifications/outbox-service";
+import { isOutboxSyncEvent } from "@/lib/notifications/resend-webhook-events";
 
 export async function POST(request: NextRequest) {
   const config = getEmailConfig();
@@ -48,6 +50,29 @@ export async function POST(request: NextRequest) {
       { error: "Invalid Resend webhook signature." },
       { status: 400 },
     );
+  }
+
+  if (isOutboxSyncEvent(event.type)) {
+    const data = event.data as { email_id: string; created_at: string };
+    try {
+      const updated = await applyResendWebhookEvent({
+        resendEmailId: data.email_id,
+        eventType: event.type,
+        eventCreatedAt: data.created_at,
+      });
+      return NextResponse.json({
+        received: true,
+        synced: true,
+        eventType: event.type,
+        updated,
+      });
+    } catch (error) {
+      console.error("[Resend Webhook] Outbox sync failed:", error);
+      return NextResponse.json(
+        { error: "Failed to sync delivery event." },
+        { status: 502 },
+      );
+    }
   }
 
   if (event.type !== "email.received") {
