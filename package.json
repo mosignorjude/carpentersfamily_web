@@ -37,7 +37,7 @@
     "resend": "^6.34.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.5",
+    "@biomejs/biome": "2.6.2",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20",
     "@types/qrcode": "1.5.6",
