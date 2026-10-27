@@ -8,7 +8,6 @@ import {
   Heading,
   Hr,
   Html,
-  Img,
   Link,
   Preview,
   render,
@@ -90,21 +89,6 @@ const emailElement = h(
             padding: "28px 32px 24px",
           },
         },
-        h(Img, {
-          src: `${siteUrl.includes("127.0.0.1") || siteUrl.includes("localhost") ? "https://carpentersfamily.com.ng" : siteUrl.replace(/\/+$/, "")}/brand/email-avatar.png`,
-          width: "60",
-          height: "60",
-          alt: "Carpenters Family Social Club",
-          style: {
-            display: "block",
-            width: "60px",
-            height: "60px",
-            borderRadius: "50%",
-            backgroundColor: "#FFFFFF",
-            margin: "0 0 14px",
-            border: "0",
-          },
-        }),
         h(
           Text,
           {

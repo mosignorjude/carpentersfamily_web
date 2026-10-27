@@ -66,7 +66,7 @@ An inspection of your uploaded `carpentersfamily_web-main` repository reveals th
 3. **`src/lib/email/notifications.ts`**:
    * Contains application-level helper functions called from Next.js Server Actions (`src/app/actions.ts`) to dispatch emails (primarily around event notifications and test emails).
 4. **`src/lib/email/templates/`**:
-   * `base-layout.tsx`: Shared Carpenters Family branded email wrapper (using `/public/brand/email-avatar.png` and club colors).
+   * `base-layout.tsx`: Shared Carpenters Family branded email wrapper with text branding and club colors.
    * `club-notification-email.tsx`: Generic notification email template with heading, body copy, and CTA button.
    * `test-verification-email.tsx`: Used by `scripts/send-test-email.mjs`.
 5. **`src/app/api/webhooks/resend/route.ts`**:

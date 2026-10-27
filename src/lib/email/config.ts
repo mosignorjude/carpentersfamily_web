@@ -2,7 +2,6 @@ export const DEFAULT_FROM_EMAIL =
   "Carpenters Family <info@mail.carpentersfamily.com.ng>";
 export const DEFAULT_REPLY_TO_EMAIL = "contact@mail.carpentersfamily.com.ng";
 export const DEFAULT_FORWARD_TO_EMAIL = "carpentersfamily001@gmail.com";
-export const DEFAULT_PRODUCTION_SITE_URL = "https://carpentersfamily.com.ng";
 
 export interface EmailConfig {
   apiKey: string | null;
@@ -39,18 +38,6 @@ export function getEmailConfig(): EmailConfig {
       "http://127.0.0.1:3000",
     ),
   };
-}
-
-export function getEmailLogoUrl(): string {
-  const { siteUrl } = getEmailConfig();
-  const isLocal =
-    siteUrl.includes("127.0.0.1") ||
-    siteUrl.includes("localhost") ||
-    !siteUrl.startsWith("http");
-  const baseUrl = isLocal
-    ? DEFAULT_PRODUCTION_SITE_URL
-    : siteUrl.replace(/\/+$/, "");
-  return `${baseUrl}/brand/email-avatar.png`;
 }
 
 export function extractEmailAddress(rawAddress: string): string {
