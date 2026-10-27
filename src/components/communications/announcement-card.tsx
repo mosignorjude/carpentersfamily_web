@@ -62,7 +62,10 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
   const priorityConfig =
     priorityBadges[announcement.priority] ?? priorityBadges.standard;
   const isUnread = !announcement.isRead && !announcement.readStatusUnavailable;
-  const hasRevisions = announcement.revisions.length > 0;
+  const editRevisionCount = announcement.revisions.filter(
+    (revision) => revision.revisionNumber > 1,
+  ).length;
+  const hasEditedRevisions = editRevisionCount > 0;
 
   return (
     <article
@@ -187,7 +190,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
           </span>
 
           {/* Revision History Link */}
-          {hasRevisions && (
+          {hasEditedRevisions && (
             <button
               type="button"
               onClick={() => setIsRevisionsOpen(!isRevisionsOpen)}
@@ -195,8 +198,8 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
             >
               <History className="w-3 h-3 text-[#D6A23A]" />
               <span>
-                {announcement.revisions.length} revision
-                {announcement.revisions.length > 1 ? "s" : ""}
+                {editRevisionCount} revision
+                {editRevisionCount > 1 ? "s" : ""}
               </span>
               {isRevisionsOpen ? (
                 <ChevronUp className="w-3 h-3 text-[#7A685D]" />
@@ -209,7 +212,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
       </div>
 
       {/* Revision History Details */}
-      {isRevisionsOpen && hasRevisions && (
+      {isRevisionsOpen && hasEditedRevisions && (
         <div className="mt-3 p-3.5 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] space-y-2.5 text-xs">
           <div className="flex items-center gap-1.5 font-bold text-[#3D291F]">
             <History className="w-3.5 h-3.5 text-[#174C37]" />

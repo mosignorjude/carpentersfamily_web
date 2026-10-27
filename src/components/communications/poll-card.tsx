@@ -49,7 +49,10 @@ export function PollCard({ poll }: PollCardProps) {
     setIsEditOpen(false);
   }, [poll.revisionNumber]);
 
-  const hasRevisions = poll.revisions.length > 0;
+  const editRevisionCount = poll.revisions.filter(
+    (revision) => revision.revisionNumber > 1,
+  ).length;
+  const hasEditedRevisions = editRevisionCount > 0;
   const totalVotesCount = poll.totalVotes ?? 0;
 
   return (
@@ -324,7 +327,7 @@ export function PollCard({ poll }: PollCardProps) {
             </strong>
           </span>
 
-          {hasRevisions && (
+          {hasEditedRevisions && (
             <button
               type="button"
               onClick={() => setIsRevisionsOpen(!isRevisionsOpen)}
@@ -332,8 +335,8 @@ export function PollCard({ poll }: PollCardProps) {
             >
               <History className="w-3 h-3 text-[#D6A23A]" />
               <span>
-                {poll.revisions.length} revision
-                {poll.revisions.length > 1 ? "s" : ""}
+                {editRevisionCount} revision
+                {editRevisionCount > 1 ? "s" : ""}
               </span>
               {isRevisionsOpen ? (
                 <ChevronUp className="w-3 h-3 text-[#7A685D]" />
@@ -346,7 +349,7 @@ export function PollCard({ poll }: PollCardProps) {
       </div>
 
       {/* Preserved Revisions Disclosure */}
-      {isRevisionsOpen && hasRevisions && (
+      {isRevisionsOpen && hasEditedRevisions && (
         <div className="p-3.5 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] space-y-2 text-xs">
           <div className="flex items-center gap-1.5 font-bold text-[#3D291F]">
             <History className="w-3.5 h-3.5 text-[#174C37]" />
