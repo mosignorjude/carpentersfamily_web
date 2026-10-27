@@ -33,8 +33,10 @@ interface TabOverviewProps {
   committedExpenses: number;
   budgetCeiling: number;
   canRecord?: boolean;
+  canManageCategories?: boolean;
   onNavigateTab: (tabId: string) => void;
   onOpenRecordModal: (type: "ticket" | "revenue" | "expense") => void;
+  onOpenBudgetCeilingModal?: () => void;
 }
 
 export function TabOverview({
@@ -50,8 +52,10 @@ export function TabOverview({
   committedExpenses,
   budgetCeiling,
   canRecord = false,
+  canManageCategories = false,
   onNavigateTab,
   onOpenRecordModal,
+  onOpenBudgetCeilingModal,
 }: TabOverviewProps) {
   const safeBudget = budgetCeiling || 1;
   const netSurplus = totalRevenue - totalExpenses;
@@ -96,9 +100,21 @@ export function TabOverview({
 
         {/* Budget Target Capsule */}
         <div className="bg-white border border-[#E5DDD3] rounded-2xl p-3.5 sm:text-right shrink-0">
-          <span className="text-xs text-[#7A685D] block">
-            Approved Club Budget Ceiling
-          </span>
+          <div className="flex items-center justify-between sm:justify-end gap-3">
+            <span className="text-xs text-[#7A685D] block">
+              Approved Club Budget Ceiling
+            </span>
+            {canManageCategories && onOpenBudgetCeilingModal && (
+              <button
+                className="text-[11px] font-semibold text-[#174C37] hover:underline cursor-pointer"
+                id="btn-overview-budget-ceiling"
+                onClick={onOpenBudgetCeilingModal}
+                type="button"
+              >
+                {budgetCeiling > 0 ? "Edit Ceiling" : "Set Ceiling"}
+              </button>
+            )}
+          </div>
           <span className="text-xl sm:text-2xl font-bold text-[#3D291F] tabular-nums font-mono">
             {formatNaira(budgetCeiling)}
           </span>

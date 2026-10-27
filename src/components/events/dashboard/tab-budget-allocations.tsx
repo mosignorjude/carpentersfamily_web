@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Tags } from "lucide-react";
+import { BarChart3, Pencil, Plus, Tags } from "lucide-react";
 import { useState } from "react";
 import { formatNaira, formatPercent } from "@/lib/format";
 import { percentWidthClass } from "@/lib/percent-width-class";
@@ -15,6 +15,7 @@ interface TabBudgetAllocationsProps {
   revenueStreams: DashboardRevenueStream[];
   canManageCategories?: boolean;
   onManageCategories?: () => void;
+  onOpenBudgetCeilingModal?: () => void;
 }
 
 export function TabBudgetAllocations({
@@ -23,6 +24,7 @@ export function TabBudgetAllocations({
   revenueStreams,
   canManageCategories,
   onManageCategories,
+  onOpenBudgetCeilingModal,
 }: TabBudgetAllocationsProps) {
   const [activeChartTab, setActiveChartTab] = useState<
     "allocation" | "revenue_mix" | "cash_velocity"
@@ -87,8 +89,29 @@ export function TabBudgetAllocations({
           </p>
         </div>
 
-        {/* Header Controls: Categories button and Chart Switcher */}
+        {/* Header Controls: Budget Total, Categories button and Chart Switcher */}
         <div className="flex flex-wrap items-center gap-3">
+          {canManageCategories && onOpenBudgetCeilingModal && (
+            <button
+              className="px-3.5 py-1.5 bg-[#174C37] text-white hover:bg-[#123B2B] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[36px] shadow-xs shrink-0 cursor-pointer"
+              id="btn-set-budget-total"
+              onClick={onOpenBudgetCeilingModal}
+              type="button"
+            >
+              {budgetCeiling > 0 ? (
+                <>
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>Edit Budget Total</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Set Budget Total</span>
+                </>
+              )}
+            </button>
+          )}
+
           {canManageCategories && onManageCategories && (
             <button
               className="px-3.5 py-1.5 bg-white text-[#174C37] border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[36px] shadow-xs shrink-0 cursor-pointer"
@@ -144,9 +167,28 @@ export function TabBudgetAllocations({
       {activeChartTab === "allocation" && (
         <div className="space-y-6">
           {costCenters.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#7A685D]">
-              No budget allocations or cost centers configured for this event
-              yet.
+            <div className="p-8 text-center rounded-2xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#7A685D] space-y-3">
+              <p>
+                No budget allocations or cost centers configured for this event
+                yet.
+              </p>
+              {canManageCategories && onOpenBudgetCeilingModal && (
+                <div>
+                  <button
+                    className="px-4 py-2 bg-[#174C37] text-white hover:bg-[#123B2B] rounded-xl text-xs font-semibold transition-colors inline-flex items-center gap-1.5 min-h-[36px] shadow-xs cursor-pointer"
+                    id="btn-open-budget-ceiling-empty"
+                    onClick={onOpenBudgetCeilingModal}
+                    type="button"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>
+                      {budgetCeiling > 0
+                        ? "Edit Budget Total"
+                        : "Set Budget Total"}
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

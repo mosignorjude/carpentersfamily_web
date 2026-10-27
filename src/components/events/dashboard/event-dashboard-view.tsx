@@ -43,6 +43,7 @@ import type {
   EventFinanceCategoryItem,
   TransactionType,
 } from "./dashboard-types";
+import { EventBudgetCeilingModal } from "./modals/event-budget-ceiling-modal";
 import { EventCategoryManagementModal } from "./modals/event-category-management-modal";
 import {
   type RecordedTransactionSubmission,
@@ -145,10 +146,15 @@ export function EventDashboardView({
     "expense" | "budget_allocation" | "revenue"
   >("expense");
 
+  // Budget ceiling modal state
+  const [isBudgetCeilingModalOpen, setIsBudgetCeilingModalOpen] =
+    useState(false);
+
   useSuccessNotice(() => {
     setIsRecordModalOpen(false);
     setIsVoidModalOpen(false);
     setTransactionToVoid(null);
+    setIsBudgetCeilingModalOpen(false);
   });
 
   // Keep the active tab in sync when soft navigation changes only the query string.
@@ -565,11 +571,13 @@ export function EventDashboardView({
         {activeTab === "overview" && (
           <TabOverview
             budgetCeiling={event.budgetCeiling}
+            canManageCategories={canManageCategories}
             canRecord={canRecord}
             committedExpenses={committedExpenses}
             costCenters={costCenters}
             event={event}
             onNavigateTab={(tab) => selectTab(tab as DashboardTab)}
+            onOpenBudgetCeilingModal={() => setIsBudgetCeilingModalOpen(true)}
             onOpenRecordModal={(type) => {
               if (type === "ticket") {
                 setRecordInitialType("revenue");
@@ -630,6 +638,7 @@ export function EventDashboardView({
               setCategoryModalType("budget_allocation");
               setIsCategoryModalOpen(true);
             }}
+            onOpenBudgetCeilingModal={() => setIsBudgetCeilingModalOpen(true)}
             revenueStreams={revenueStreams}
           />
         )}
@@ -733,6 +742,13 @@ export function EventDashboardView({
         eventId={event.id}
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
+      />
+
+      <EventBudgetCeilingModal
+        currentCeiling={event.budgetCeiling}
+        eventId={event.id}
+        isOpen={isBudgetCeilingModalOpen}
+        onClose={() => setIsBudgetCeilingModalOpen(false)}
       />
     </div>
   );
