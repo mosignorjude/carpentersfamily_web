@@ -277,7 +277,7 @@ export function EventTicketTierModal({
                   : "bg-[#174C37] hover:bg-[#123B2B]"
               }`}
               id="btn-submit-ticket-tier"
-              pendingText={
+              pendingLabel={
                 isRetire
                   ? "Retiring..."
                   : isEdit

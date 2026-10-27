@@ -111,7 +111,8 @@ export function EventBudgetCeilingModal({
               className="block font-semibold text-[#3D291F]"
               htmlFor="event-budget-total"
             >
-              Approved Budget Total (NGN) <span className="text-[#BA3C2A]">*</span>
+              Approved Budget Total (NGN){" "}
+              <span className="text-[#BA3C2A]">*</span>
             </label>
             <FormattedAmountInput
               className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] font-mono"
@@ -125,7 +126,8 @@ export function EventBudgetCeilingModal({
               <Info className="w-3.5 h-3.5 shrink-0 text-[#174C37] mt-0.5" />
               <span>
                 Enter the total amount in whole Naira. Any existing category
-                percentage allocations will be maintained against this new total.
+                percentage allocations will be maintained against this new
+                total.
               </span>
             </p>
           </div>
@@ -180,7 +182,7 @@ export function EventBudgetCeilingModal({
             <FormSubmitButton
               className="px-5 py-2 bg-[#174C37] text-white hover:bg-[#123B2B] rounded-xl text-xs font-semibold transition-colors cursor-pointer"
               id="btn-submit-budget-ceiling"
-              pendingText={isEditing ? "Updating..." : "Saving..."}
+              pendingLabel={isEditing ? "Updating..." : "Saving..."}
             >
               {isEditing ? "Update Budget Total" : "Save Budget Total"}
             </FormSubmitButton>
