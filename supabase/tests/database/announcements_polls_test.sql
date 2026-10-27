@@ -28,6 +28,8 @@ select ok(
 
 select ok(
   has_column_privilege('authenticated', 'public.announcements', 'title', 'SELECT')
+  and has_column_privilege('authenticated', 'public.announcement_revisions', 'id', 'SELECT')
+  and has_column_privilege('authenticated', 'public.announcement_poll_revisions', 'id', 'SELECT')
   and not has_column_privilege('authenticated', 'public.announcements', 'created_by', 'SELECT')
   and not has_table_privilege('authenticated', 'public.announcements', 'INSERT,UPDATE,DELETE')
   and not has_table_privilege('authenticated', 'public.announcement_reads', 'INSERT,UPDATE,DELETE')
