@@ -355,12 +355,17 @@ export default async function DuesPage({
     ...ownRequests.map((r) => r.id),
   ];
   if (allReqIds.length > 0) {
-    const { data: receipts } = await supabase
+    const { data: receipts, error: receiptQueryError } = await supabase
       .from("finance_receipts")
       .select(
         "id, dues_request_id, original_filename, content_type, size_bytes",
       )
       .in("dues_request_id", allReqIds);
+    if (receiptQueryError) {
+      console.error("Could not load dues receipt metadata", receiptQueryError);
+      for (const req of pendingRequests) req.receiptUnavailable = true;
+      for (const req of ownRequests) req.receiptUnavailable = true;
+    }
     if (receipts) {
       const receiptsByReq = new Map(
         receipts.map((r) => [

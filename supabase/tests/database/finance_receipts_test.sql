@@ -1,5 +1,5 @@
 begin;
-select plan(11);
+select plan(12);
 
 insert into auth.users (
   id, aud, role, email, encrypted_password,
@@ -33,6 +33,12 @@ select table_privs_are(
   'public', 'finance_receipts', 'authenticated',
   array['SELECT'],
   'authenticated has only SELECT privilege on finance_receipts'
+);
+select ok(
+  has_function_privilege(
+    'authenticated', 'private.can_read_finance_receipt(uuid)', 'EXECUTE'
+  ),
+  'authenticated can execute the receipt visibility helper used by the RLS policy'
 );
 
 -- 4. Scope constraint

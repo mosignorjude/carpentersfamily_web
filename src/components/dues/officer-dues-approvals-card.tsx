@@ -35,6 +35,7 @@ export type DuesPaymentRequestItem = {
   payment_method: string;
   payment_reference?: string | null;
   receipt?: ReceiptInfo | null;
+  receiptUnavailable?: boolean;
   notes: string | null;
   status: "pending" | "approved" | "rejected";
   created_at: string;
@@ -237,6 +238,7 @@ export function OfficerDuesApprovalsCard({
                         paymentMethod={req.payment_method}
                         paymentStatus="paid"
                         receipt={req.receipt}
+                        receiptUnavailable={req.receiptUnavailable}
                         isLegacy={
                           !req.receipt && Boolean(req.payment_reference)
                         }

@@ -3,6 +3,7 @@
 import { Download, Eye } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
+import { resolveReceiptCellState } from "@/lib/receipt-cell-state.mjs";
 import { ReceiptViewerModal } from "./receipt-viewer";
 
 export interface ReceiptInfo {
@@ -17,6 +18,7 @@ interface ReceiptCellProps {
   paymentStatus?: string | null;
   receipt?: ReceiptInfo | null;
   isLegacy?: boolean;
+  receiptUnavailable?: boolean;
 }
 
 export const ReceiptCell: React.FC<ReceiptCellProps> = ({
@@ -24,10 +26,18 @@ export const ReceiptCell: React.FC<ReceiptCellProps> = ({
   paymentStatus = "paid",
   receipt,
   isLegacy,
+  receiptUnavailable,
 }) => {
   const [viewerOpen, setViewerOpen] = useState(false);
+  const state = resolveReceiptCellState({
+    method: paymentMethod,
+    status: paymentStatus,
+    hasReceipt: Boolean(receipt),
+    isLegacy,
+    receiptUnavailable,
+  });
 
-  if (paymentMethod === "bank_transfer" && receipt) {
+  if (state === "view_download" && receipt) {
     return (
       <div className="flex items-center gap-2">
         <button
@@ -58,12 +68,18 @@ export const ReceiptCell: React.FC<ReceiptCellProps> = ({
     );
   }
 
-  if (
-    paymentMethod === "bank_transfer" &&
-    paymentStatus === "paid" &&
-    !receipt &&
-    isLegacy
-  ) {
+  if (state === "receipt_unavailable") {
+    return (
+      <span
+        className="text-xs font-medium text-amber-700"
+        title="Receipt metadata could not be loaded. Refresh and retry."
+      >
+        Receipt evidence unavailable
+      </span>
+    );
+  }
+
+  if (state === "legacy_missing") {
     return (
       <span className="text-xs italic text-stone-500">
         Receipt not recorded (legacy)
@@ -71,7 +87,7 @@ export const ReceiptCell: React.FC<ReceiptCellProps> = ({
     );
   }
 
-  if (paymentMethod === "bank_transfer" && paymentStatus !== "paid") {
+  if (state === "pending_commitment") {
     return (
       <span className="text-xs text-stone-500">
         Bank Transfer (awaiting payment)
@@ -79,7 +95,7 @@ export const ReceiptCell: React.FC<ReceiptCellProps> = ({
     );
   }
 
-  if (paymentMethod === "cash") {
+  if (state === "cash") {
     return <span className="text-xs text-stone-600 font-medium">Cash</span>;
   }
 

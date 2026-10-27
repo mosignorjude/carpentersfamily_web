@@ -139,6 +139,7 @@ export function MyDuesRequestsCard({ requests = [] }: MyDuesRequestsCardProps) {
                   paymentMethod={req.payment_method}
                   paymentStatus={req.status === "approved" ? "paid" : "pending"}
                   receipt={req.receipt}
+                  receiptUnavailable={req.receiptUnavailable}
                   isLegacy={!req.receipt && Boolean(req.payment_reference)}
                 />
                 {req.payment_reference && (
