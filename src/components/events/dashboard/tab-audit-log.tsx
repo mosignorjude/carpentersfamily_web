@@ -243,10 +243,14 @@ export function TabAuditLog({
                       >
                         {/* Ref & Date */}
                         <td className="py-3.5 px-3.5 whitespace-nowrap">
-                          <span className="font-mono font-bold text-[#3D291F] block">
-                            {txn.id}
+                          <span
+                            className="font-mono font-bold text-[#174C37] bg-[#FAF6F0] px-2 py-0.5 rounded border border-[#E5DDD3] inline-block text-xs hover:border-[#174C37] transition-colors cursor-default"
+                            title={`Full Transaction ID: ${txn.id}`}
+                          >
+                            #
+                            {txn.paymentRef || txn.id.slice(0, 8).toUpperCase()}
                           </span>
-                          <span className="text-[11px] text-[#7A685D]">
+                          <span className="text-[11px] text-[#7A685D] block mt-0.5">
                             {txn.date}
                           </span>
                         </td>
@@ -268,9 +272,7 @@ export function TabAuditLog({
                             Party:{" "}
                             <strong className="text-[#5C4638]">
                               {txn.payerPayee}
-                            </strong>{" "}
-                            · Ref:{" "}
-                            <span className="font-mono">{txn.paymentRef}</span>
+                            </strong>
                           </div>
 
                           {/* Visible Retained History wording if voided */}
