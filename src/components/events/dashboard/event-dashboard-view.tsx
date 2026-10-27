@@ -45,6 +45,7 @@ import type {
 } from "./dashboard-types";
 import { EventBudgetCeilingModal } from "./modals/event-budget-ceiling-modal";
 import { EventCategoryManagementModal } from "./modals/event-category-management-modal";
+import { EventTicketTierModal } from "./modals/event-ticket-tier-modal";
 import {
   type RecordedTransactionSubmission,
   RecordTransactionModal,
@@ -150,11 +151,21 @@ export function EventDashboardView({
   const [isBudgetCeilingModalOpen, setIsBudgetCeilingModalOpen] =
     useState(false);
 
+  // Ticket tier modal state
+  const [isTierModalOpen, setIsTierModalOpen] = useState(false);
+  const [tierModalMode, setTierModalMode] = useState<
+    "create" | "edit" | "retire"
+  >("create");
+  const [selectedTierForEdit, setSelectedTierForEdit] =
+    useState<DashboardTicketTier | null>(null);
+
   useSuccessNotice(() => {
     setIsRecordModalOpen(false);
     setIsVoidModalOpen(false);
     setTransactionToVoid(null);
     setIsBudgetCeilingModalOpen(false);
+    setIsTierModalOpen(false);
+    setSelectedTierForEdit(null);
   });
 
   // Keep the active tab in sync when soft navigation changes only the query string.
@@ -603,6 +614,17 @@ export function EventDashboardView({
 
         {activeTab === "tickets" && (
           <TabTickets
+            canManage={canManageCategories}
+            onOpenCreateTierModal={() => {
+              setSelectedTierForEdit(null);
+              setTierModalMode("create");
+              setIsTierModalOpen(true);
+            }}
+            onOpenEditTierModal={(tier) => {
+              setSelectedTierForEdit(tier);
+              setTierModalMode("edit");
+              setIsTierModalOpen(true);
+            }}
             onOpenRecordTicketModal={
               canRecord
                 ? (_tierId) => {
@@ -612,6 +634,11 @@ export function EventDashboardView({
                   }
                 : undefined
             }
+            onOpenRetireTierModal={(tier) => {
+              setSelectedTierForEdit(tier);
+              setTierModalMode("retire");
+              setIsTierModalOpen(true);
+            }}
             tiers={ticketTiers}
           />
         )}
@@ -749,6 +776,17 @@ export function EventDashboardView({
         eventId={event.id}
         isOpen={isBudgetCeilingModalOpen}
         onClose={() => setIsBudgetCeilingModalOpen(false)}
+      />
+
+      <EventTicketTierModal
+        eventId={event.id}
+        isOpen={isTierModalOpen}
+        mode={tierModalMode}
+        onClose={() => {
+          setIsTierModalOpen(false);
+          setSelectedTierForEdit(null);
+        }}
+        tier={selectedTierForEdit}
       />
     </div>
   );

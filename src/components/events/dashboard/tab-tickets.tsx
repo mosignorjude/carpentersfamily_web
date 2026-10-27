@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, Ticket } from "lucide-react";
+import { Check, ChevronDown, Pencil, Plus, Ticket, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { EmptyStateCard } from "@/components/ui/state-screen";
 import { formatNaira, formatPercent } from "@/lib/format";
@@ -9,14 +9,22 @@ import type { DashboardTicketTier } from "./dashboard-types";
 
 interface TabTicketsProps {
   tiers: DashboardTicketTier[];
+  canManage?: boolean;
   onSimulateTicketSale?: (tierId: string) => void;
   onOpenRecordTicketModal?: (tierId?: string) => void;
+  onOpenCreateTierModal?: () => void;
+  onOpenEditTierModal?: (tier: DashboardTicketTier) => void;
+  onOpenRetireTierModal?: (tier: DashboardTicketTier) => void;
 }
 
 export function TabTickets({
   tiers,
+  canManage = false,
   onSimulateTicketSale,
   onOpenRecordTicketModal,
+  onOpenCreateTierModal,
+  onOpenEditTierModal,
+  onOpenRetireTierModal,
 }: TabTicketsProps) {
   const [expandedTier, setExpandedTier] = useState<string | null>("early_bird");
 
@@ -61,9 +69,21 @@ export function TabTickets({
             </span>
           </div>
 
+          {canManage && onOpenCreateTierModal && (
+            <button
+              className="px-3.5 py-2 bg-white text-[#174C37] border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-xl font-semibold transition-colors flex items-center gap-1.5 min-h-[44px] shadow-xs cursor-pointer"
+              id="btn-add-ticket-tier"
+              onClick={onOpenCreateTierModal}
+              type="button"
+            >
+              <Plus className="w-4 h-4 text-[#174C37]" />
+              <span>Add Ticket Tier</span>
+            </button>
+          )}
+
           {onOpenRecordTicketModal && (
             <button
-              className="px-4 py-2.5 bg-[#174C37] text-white rounded-xl font-semibold hover:bg-[#103D2B] transition-colors flex items-center gap-1.5 min-h-[44px] shadow-xs"
+              className="px-4 py-2.5 bg-[#174C37] text-white rounded-xl font-semibold hover:bg-[#103D2B] transition-colors flex items-center gap-1.5 min-h-[44px] shadow-xs cursor-pointer"
               onClick={() => onOpenRecordTicketModal()}
               type="button"
             >
@@ -76,12 +96,27 @@ export function TabTickets({
 
       {/* Tiers Grid */}
       {tiers.length === 0 ? (
-        <EmptyStateCard
-          className="my-4"
-          description="No ticket tiers have been created for this event. Configure admission tiers to begin issuing passes."
-          icon={Ticket}
-          title="No Ticket Tiers Configured"
-        />
+        <div className="space-y-4">
+          <EmptyStateCard
+            className="my-4"
+            description="No ticket tiers have been created for this event. Configure admission tiers to begin issuing passes."
+            icon={Ticket}
+            title="No Ticket Tiers Configured"
+          />
+          {canManage && onOpenCreateTierModal && (
+            <div className="text-center">
+              <button
+                className="px-4 py-2.5 bg-[#174C37] text-white rounded-xl font-semibold hover:bg-[#103D2B] transition-colors inline-flex items-center gap-2 shadow-xs cursor-pointer"
+                id="btn-create-tier-empty"
+                onClick={onOpenCreateTierModal}
+                type="button"
+              >
+                <Plus className="w-4 h-4 text-[#D6A23A]" />
+                <span>Create Admission Tier</span>
+              </button>
+            </div>
+          )}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {tiers.map((tier) => {
@@ -234,6 +269,34 @@ export function TabTickets({
                           type="button"
                         >
                           Quick Test (+1 Sale)
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Management Actions */}
+                  {canManage && (
+                    <div className="mt-3 pt-2.5 border-t border-[#E5DDD3] flex items-center gap-2">
+                      {onOpenEditTierModal && (
+                        <button
+                          className="flex-1 px-3 py-1.5 text-xs font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-xl transition-colors flex items-center justify-center gap-1.5 min-h-[34px] cursor-pointer"
+                          id={`btn-edit-tier-${tier.id}`}
+                          onClick={() => onOpenEditTierModal(tier)}
+                          type="button"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          <span>Edit</span>
+                        </button>
+                      )}
+                      {onOpenRetireTierModal && (
+                        <button
+                          className="flex-1 px-3 py-1.5 text-xs font-semibold text-[#BA3C2A] bg-white border border-[#BA3C2A]/30 hover:bg-[#BA3C2A]/5 rounded-xl transition-colors flex items-center justify-center gap-1.5 min-h-[34px] cursor-pointer"
+                          id={`btn-retire-tier-${tier.id}`}
+                          onClick={() => onOpenRetireTierModal(tier)}
+                          type="button"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Retire</span>
                         </button>
                       )}
                     </div>
