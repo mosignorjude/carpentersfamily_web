@@ -17,10 +17,7 @@ const dashboardViewPath = new URL(
 
 describe("EventTicketTierModal", () => {
   it("file exists and exports EventTicketTierModal", () => {
-    assert.ok(
-      existsSync(modalPath),
-      "event-ticket-tier-modal.tsx must exist",
-    );
+    assert.ok(existsSync(modalPath), "event-ticket-tier-modal.tsx must exist");
     const source = readFileSync(modalPath, "utf8");
     assert.match(
       source,
@@ -62,6 +59,21 @@ describe("EventTicketTierModal", () => {
       source,
       /name="return_tab"/,
       "Must have return_tab hidden field",
+    );
+  });
+
+  it("shows reason textarea only during edit or retire, and submits hidden reason during create", () => {
+    if (!existsSync(modalPath)) return;
+    const source = readFileSync(modalPath, "utf8");
+    assert.match(
+      source,
+      /isCreate\s*\?\s*\(\s*<input[^>]*name="reason"[^>]*value="Initial admission tier entry"/,
+      "Must pass hidden 'Initial admission tier entry' when isCreate is true",
+    );
+    assert.match(
+      source,
+      /id="ticket-tier-reason"/,
+      "Must render ticket-tier-reason textarea when isEdit or isRetire",
     );
   });
 });

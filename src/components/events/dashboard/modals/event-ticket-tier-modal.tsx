@@ -230,36 +230,42 @@ export function EventTicketTierModal({
             </>
           )}
 
-          {/* Audit Reason Field (Required for all tier mutations) */}
-          <div className="space-y-1.5">
-            <label
-              className="block font-semibold text-[#3D291F]"
-              htmlFor="ticket-tier-reason"
-            >
-              Audit Reason <span className="text-[#BA3C2A]">*</span>
-            </label>
-            <textarea
-              className="w-full p-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] resize-none"
-              id="ticket-tier-reason"
-              maxLength={500}
+          {/* Audit Reason Field (Required for edit and retire; hidden default for create) */}
+          {isCreate ? (
+            <input
               name="reason"
-              onChange={(e) => setReason(e.target.value)}
-              placeholder={
-                isRetire
-                  ? "Explain why this tier is being retired (e.g. Sales quota reached, superseded by VIP II)..."
-                  : isEdit
-                    ? "Explain why this tier's parameters are changing..."
-                    : "Explain initial ticketing tier establishment (e.g. Approved tier pricing structure)..."
-              }
-              required
-              rows={3}
-              value={reason}
+              type="hidden"
+              value="Initial admission tier entry"
             />
-            <div className="flex justify-between items-center text-[10px] text-[#7A685D]">
-              <span>Required for club governance compliance.</span>
-              <span>{reason.length}/500</span>
+          ) : (
+            <div className="space-y-1.5">
+              <label
+                className="block font-semibold text-[#3D291F]"
+                htmlFor="ticket-tier-reason"
+              >
+                Audit Reason <span className="text-[#BA3C2A]">*</span>
+              </label>
+              <textarea
+                className="w-full p-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] resize-none"
+                id="ticket-tier-reason"
+                maxLength={500}
+                name="reason"
+                onChange={(e) => setReason(e.target.value)}
+                placeholder={
+                  isRetire
+                    ? "Explain why this tier is being retired (e.g. Sales quota reached, superseded by VIP II)..."
+                    : "Explain why this tier's parameters are changing..."
+                }
+                required
+                rows={3}
+                value={reason}
+              />
+              <div className="flex justify-between items-center text-[10px] text-[#7A685D]">
+                <span>Required for club governance compliance.</span>
+                <span>{reason.length}/500</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Footer Controls */}
           <div className="pt-3 border-t border-[#E5DDD3] flex items-center justify-end gap-2.5">

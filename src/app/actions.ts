@@ -2220,8 +2220,9 @@ export async function createEventTicketTierAction(formData: FormData) {
   const name = eventText(formData, "name", 80);
   const price = eventAmount(formData.get("price_ngn"));
   const capacity = eventCapacity(formData, "capacity", 100_000);
-  const reason = eventText(formData, "reason", 500);
-  if (!name || price === null || capacity === null || !reason) {
+  const reason =
+    eventText(formData, "reason", 500) || "Initial admission tier entry";
+  if (!name || price === null || capacity === null) {
     redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
   }
   const actor = await getActiveEventActor(eventId);

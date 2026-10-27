@@ -101,7 +101,10 @@ describe("setEventBudgetAction", () => {
 
 describe("Ticket tier actions return_tab routing and revalidation", () => {
   it("createEventTicketTierAction supports return_tab and revalidates dashboard", () => {
-    const body = extractActionBody(actionsSource, "createEventTicketTierAction");
+    const body = extractActionBody(
+      actionsSource,
+      "createEventTicketTierAction",
+    );
     assert.ok(body !== null);
     assert.match(
       body,
@@ -123,10 +126,18 @@ describe("Ticket tier actions return_tab routing and revalidation", () => {
       /eventFinanceNoticeUrl\(eventId,\s*"tier-saved",\s*returnTab\)/,
       "createEventTicketTierAction must redirect with returnTab",
     );
+    assert.match(
+      body,
+      /eventText\(formData,\s*"reason",\s*500\)\s*\|\|\s*"Initial admission tier entry"/,
+      "createEventTicketTierAction must fallback to 'Initial admission tier entry'",
+    );
   });
 
   it("updateEventTicketTierAction supports return_tab and revalidates dashboard", () => {
-    const body = extractActionBody(actionsSource, "updateEventTicketTierAction");
+    const body = extractActionBody(
+      actionsSource,
+      "updateEventTicketTierAction",
+    );
     assert.ok(body !== null);
     assert.match(
       body,
@@ -151,7 +162,10 @@ describe("Ticket tier actions return_tab routing and revalidation", () => {
   });
 
   it("retireEventTicketTierAction supports return_tab and revalidates dashboard", () => {
-    const body = extractActionBody(actionsSource, "retireEventTicketTierAction");
+    const body = extractActionBody(
+      actionsSource,
+      "retireEventTicketTierAction",
+    );
     assert.ok(body !== null);
     assert.match(
       body,
