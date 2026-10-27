@@ -28,6 +28,7 @@ export type FinanceTransaction = {
   category_name_snapshot: string | null;
   payer_payee: string | null;
   source_note: string | null;
+  is_opening_balance: boolean;
   payment_method?: string | null;
   created_at: string;
   updated_at: string;

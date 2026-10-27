@@ -26,6 +26,7 @@ type FinanceTransaction = {
   category_name_snapshot: string | null;
   payer_payee: string | null;
   source_note: string | null;
+  is_opening_balance: boolean;
   voided_at: string | null;
   void_reason: string | null;
   payment_method?: string | null;
@@ -135,7 +136,11 @@ function financeRowsToCsv(
     columns,
     ...transactions.map((transaction) => [
       transaction.transaction_date,
-      transaction.kind,
+      transaction.is_opening_balance
+        ? "Opening Balance"
+        : transaction.kind === "income"
+          ? "Other Income"
+          : "Disbursement",
       String(transaction.amount_ngn),
       transaction.payment_method ?? "",
       transaction.description ?? "",
@@ -174,7 +179,7 @@ function financeRowsToPdf(
     if (!amount) return null;
     const receipts = receiptsByTransaction.get(transaction.id) ?? [];
     lines.push(
-      `${transaction.transaction_date} | ${transaction.kind.toUpperCase()} | ${amount} | ${transaction.voided_at ? "Voided" : "Posted"}`,
+      `${transaction.transaction_date} | ${transaction.is_opening_balance ? "OPENING BALANCE" : transaction.kind.toUpperCase()} | ${amount} | ${transaction.voided_at ? "Voided" : "Posted"}`,
       `Description: ${transaction.description ?? "—"}`,
       `Category: ${transaction.category_name_snapshot ?? "—"} | Payer/payee: ${transaction.payer_payee ?? "—"}`,
       `Source: ${transaction.source_note ?? "—"}`,
@@ -325,6 +330,7 @@ async function createFinanceExport(
       return (
         typeof transaction.id !== "string" ||
         typeof transaction.kind !== "string" ||
+        typeof transaction.is_opening_balance !== "boolean" ||
         typeof transaction.transaction_date !== "string" ||
         !["income", "expense"].includes(transaction.kind) ||
         amount === null ||

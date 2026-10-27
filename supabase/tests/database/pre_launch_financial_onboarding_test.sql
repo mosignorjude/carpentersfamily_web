@@ -389,16 +389,12 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000961', true);
 
-select * from public.record_club_financial_transaction(
-  'income',
+select * from public.record_club_opening_balance(
   250000,
   '2026-10-01'::date,
-  null,
-  null,
-  'Club Treasury Opening Reserve',
   'Verified pre-launch opening treasury balance as of October 2026',
   '00000000-0000-0000-0000-000000000980'::uuid,
-  'cash'
+  null
 );
 
 -- As active ordinary member, query club_finance_summary

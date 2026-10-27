@@ -130,7 +130,7 @@ export default async function FinancesPage({
     supabase
       .from("club_financial_transactions")
       .select(
-        "id, kind, amount_ngn, transaction_date, description, category_id, category_name_snapshot, payer_payee, source_note, created_at, updated_at, voided_at, void_reason",
+        "id, kind, amount_ngn, transaction_date, description, category_id, category_name_snapshot, payer_payee, source_note, is_opening_balance, created_at, updated_at, voided_at, void_reason",
         { count: "exact", head: true },
       ),
     supabase
@@ -147,13 +147,11 @@ export default async function FinancesPage({
     supabase
       .from("club_financial_transactions")
       .select(
-        "id, amount_ngn, transaction_date, source_note, payer_payee, created_at",
+        "id, amount_ngn, transaction_date, source_note, payer_payee, is_opening_balance, created_at",
       )
       .eq("kind", "income")
+      .eq("is_opening_balance", true)
       .is("voided_at", null)
-      .or(
-        "source_note.ilike.%opening%balance%,payer_payee.eq.Club Treasury Opening Reserve",
-      ) // matches opening%treasury%balance or reserve payer_payee
       .order("transaction_date", { ascending: false })
       .limit(1)
       .maybeSingle(),
@@ -167,7 +165,7 @@ export default async function FinancesPage({
     supabase
       .from("club_financial_transactions")
       .select(
-        "id, kind, amount_ngn, transaction_date, description, category_id, category_name_snapshot, payer_payee, source_note, created_at, updated_at, voided_at, void_reason",
+        "id, kind, amount_ngn, transaction_date, description, category_id, category_name_snapshot, payer_payee, source_note, is_opening_balance, created_at, updated_at, voided_at, void_reason",
       )
       .order("transaction_date", { ascending: false })
       .order("created_at", { ascending: false })
@@ -178,6 +176,7 @@ export default async function FinancesPage({
           .select("id", { count: "exact", head: true })
           .in("action", [
             "club_finance_recorded",
+            "club_opening_balance_classified",
             "club_finance_corrected",
             "club_finance_voided",
             "club_finance_receipt_attached",
@@ -200,6 +199,7 @@ export default async function FinancesPage({
         )
         .in("action", [
           "club_finance_recorded",
+          "club_opening_balance_classified",
           "club_finance_corrected",
           "club_finance_voided",
           "club_finance_receipt_attached",

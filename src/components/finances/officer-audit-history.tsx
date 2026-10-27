@@ -72,6 +72,11 @@ export function OfficerAuditHistory({
           label: "Inflow / Disbursement Recorded",
           class: "bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20",
         };
+      case "club_opening_balance_classified":
+        return {
+          label: "Opening Balance Classified",
+          class: "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]",
+        };
       case "club_finance_corrected":
         return {
           label: "Parameter Corrected",

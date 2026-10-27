@@ -167,8 +167,8 @@ describe("Page and View Wiring verification", () => {
     );
     assert.match(
       source,
-      /\.from\(["']club_financial_transactions["']\)[\s\S]*?opening%treasury%balance/,
-      "finances/page.tsx must query opening treasury balance transaction",
+      /\.from\(["']club_financial_transactions["']\)[\s\S]*?is_opening_balance[\s\S]*?\.eq\(["']is_opening_balance["'],\s*true\)/,
+      "finances/page.tsx must query the explicitly classified opening balance",
     );
     assert.match(
       source,

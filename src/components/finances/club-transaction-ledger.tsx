@@ -257,16 +257,20 @@ export function ClubTransactionLedger({
                           className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
                             isVoided
                               ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3] line-through"
-                              : transaction.kind === "income"
+                              : transaction.is_opening_balance
+                                ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]"
+                                : transaction.kind === "income"
                                 ? "bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20"
                                 : "bg-[#BA3C2A]/10 text-[#BA3C2A] border border-[#BA3C2A]/20"
                           }`}
                         >
                           {isVoided
                             ? "Voided"
-                            : transaction.kind === "income"
-                              ? "Non-Dues Income"
-                              : "Disbursement"}
+                            : transaction.is_opening_balance
+                              ? "Opening Balance"
+                              : transaction.kind === "income"
+                                ? "Non-Dues Income"
+                                : "Disbursement"}
                         </span>
                         {isVoided && (
                           <span className="text-[10px] text-[#BA3C2A] font-semibold italic truncate">
@@ -294,7 +298,9 @@ export function ClubTransactionLedger({
                         </div>
                       ) : (
                         <span className="text-[11px] text-[#7A685D] italic">
-                          {transaction.kind === "income"
+                          {transaction.is_opening_balance
+                            ? "Opening Reserve"
+                            : transaction.kind === "income"
                             ? "Treasury Inflow"
                             : "General"}
                         </span>

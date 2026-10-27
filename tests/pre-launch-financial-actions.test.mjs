@@ -172,22 +172,12 @@ describe("recordOpeningBalanceAction structure and validation", () => {
     );
   });
 
-  it("calls record_club_financial_transaction RPC with income kind and cash method", () => {
+  it("calls the dedicated opening-balance RPC and supplies an idempotency key", () => {
     assert.ok(body !== null, "Action must exist");
     assert.match(
       body,
-      /rpc\(\s*["']record_club_financial_transaction["']/,
-      "Must invoke record_club_financial_transaction RPC",
-    );
-    assert.match(
-      body,
-      /p_kind:\s*["']income["']/,
-      "Kind must be set to income",
-    );
-    assert.match(
-      body,
-      /p_payment_method:\s*["']cash["']/,
-      "Payment method must be cash for opening balance",
+      /rpc\(\s*["']record_club_opening_balance["']/,
+      "Must invoke the dedicated record_club_opening_balance RPC",
     );
     assert.match(
       body,

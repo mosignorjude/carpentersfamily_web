@@ -1006,17 +1006,12 @@ export async function recordOpeningBalanceAction(
           .replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
 
   const { error } = await actor.supabase.rpc(
-    "record_club_financial_transaction",
+    "record_club_opening_balance",
     {
-      p_kind: "income",
       p_amount_ngn: amount,
       p_transaction_date: parsedDate.date,
-      p_description: null,
-      p_category_id: null,
-      p_payer_payee: "Club Treasury Opening Reserve",
       p_source_note: sourceNote,
       p_idempotency_key: idempotencyKey,
-      p_payment_method: "cash",
       p_transaction_id: targetId,
     },
   );

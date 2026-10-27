@@ -101,9 +101,11 @@ export function ReceiptModal({
                 Type / Category:
               </span>
               <span className="font-semibold text-[#174C37]">
-                {transaction.kind === "income"
-                  ? "Non-Dues Income"
-                  : (transaction.category_name_snapshot ?? "Expense")}
+                {transaction.is_opening_balance
+                  ? "Opening Balance"
+                  : transaction.kind === "income"
+                    ? "Non-Dues Income"
+                    : (transaction.category_name_snapshot ?? "Expense")}
               </span>
             </div>
             {transaction.payer_payee ? (
