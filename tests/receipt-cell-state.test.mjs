@@ -38,4 +38,48 @@ describe("receipt cell state", () => {
       "view_download",
     );
   });
+
+  it("handles display-formatted 'Bank Transfer (NIBSS)' with an uploaded receipt", () => {
+    assert.equal(
+      resolveReceiptCellState({
+        method: "Bank Transfer (NIBSS)",
+        status: "paid",
+        hasReceipt: true,
+      }),
+      "view_download",
+    );
+  });
+
+  it("handles display-formatted 'Bank Transfer (NIBSS)' pending payment", () => {
+    assert.equal(
+      resolveReceiptCellState({
+        method: "Bank Transfer (NIBSS)",
+        status: "pending",
+        hasReceipt: false,
+      }),
+      "pending_commitment",
+    );
+  });
+
+  it("handles display-formatted 'Cash Voucher'", () => {
+    assert.equal(
+      resolveReceiptCellState({
+        method: "Cash Voucher",
+        status: "paid",
+        hasReceipt: false,
+      }),
+      "cash",
+    );
+  });
+
+  it("resolves view_download when any method has an uploaded receipt", () => {
+    assert.equal(
+      resolveReceiptCellState({
+        method: "POS / Card Terminal",
+        status: "paid",
+        hasReceipt: true,
+      }),
+      "view_download",
+    );
+  });
 });

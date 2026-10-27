@@ -594,34 +594,95 @@ export default async function EventDashboardPage({
     });
   }
 
+  // Fetch linked receipts for manual transactions and ticket sales
+  const rawSaleIds = allSales.map((s) => s.id);
+  const rawTxnIds = rawTxns.map((t) => t.id);
+
+  const [txnReceiptsResult, saleReceiptsResult] = await Promise.all([
+    rawTxnIds.length > 0
+      ? supabase
+          .from("finance_receipts")
+          .select(
+            "id, event_transaction_id, original_filename, content_type, size_bytes",
+          )
+          .in("event_transaction_id", rawTxnIds)
+      : Promise.resolve({ data: [] }),
+    rawSaleIds.length > 0
+      ? supabase
+          .from("finance_receipts")
+          .select(
+            "id, event_ticket_sale_id, original_filename, content_type, size_bytes",
+          )
+          .in("event_ticket_sale_id", rawSaleIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const receiptByTxnId = new Map(
+    (txnReceiptsResult.data ?? []).map((r) => [
+      r.event_transaction_id,
+      {
+        id: r.id,
+        filename: r.original_filename,
+        contentType: r.content_type,
+        sizeBytes: r.size_bytes,
+      },
+    ]),
+  );
+
+  const receiptBySaleId = new Map(
+    (saleReceiptsResult.data ?? []).map((r) => [
+      r.event_ticket_sale_id,
+      {
+        id: r.id,
+        filename: r.original_filename,
+        contentType: r.content_type,
+        sizeBytes: r.size_bytes,
+      },
+    ]),
+  );
+
+  function formatReceiptSize(bytes?: number): string | undefined {
+    if (!bytes || bytes <= 0) return undefined;
+    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  }
+
   // Transactions Ledger (combine manual financial transactions + recorded ticket sales)
-  const manualTransactions: DashboardTransaction[] = rawTxns.map((t) => ({
-    id: t.id,
-    date: t.transaction_date,
-    type: t.kind === "income" ? "revenue" : "expense",
-    category: (t.category_name_snapshot || "general")
-      .toLowerCase()
-      .replace(/\s+/g, "_"),
-    categoryLabel: t.category_name_snapshot || "General",
-    description:
-      t.description ||
-      t.source_note ||
-      t.category_name_snapshot ||
-      "Ledger Entry",
-    amount: t.amount_ngn,
-    payerPayee: t.payer_payee || t.source_note || "Club Account",
-    paymentMethod: t.payment_method
-      ? paymentMethodLabels[t.payment_method] || t.payment_method
-      : "Bank Transfer (NIBSS)",
-    paymentRef: t.id.slice(0, 8).toUpperCase(),
-    authorizedBy: "Verified Officer",
-    authorizerRole: "Executive / Admin",
-    status: t.voided_at ? "voided" : "posted",
-    voidReason: t.void_reason || undefined,
-  }));
+  const manualTransactions: DashboardTransaction[] = rawTxns.map((t) => {
+    const rc = receiptByTxnId.get(t.id);
+    return {
+      id: t.id,
+      date: t.transaction_date,
+      type: t.kind === "income" ? "revenue" : "expense",
+      category: (t.category_name_snapshot || "general")
+        .toLowerCase()
+        .replace(/\s+/g, "_"),
+      categoryLabel: t.category_name_snapshot || "General",
+      description:
+        t.description ||
+        t.source_note ||
+        t.category_name_snapshot ||
+        "Ledger Entry",
+      amount: t.amount_ngn,
+      payerPayee: t.payer_payee || t.source_note || "Club Account",
+      paymentMethod: t.payment_method
+        ? paymentMethodLabels[t.payment_method] || t.payment_method
+        : "Bank Transfer (NIBSS)",
+      paymentRef: t.id.slice(0, 8).toUpperCase(),
+      paymentStatus: t.payment_status || "paid",
+      receipt: rc ?? null,
+      receiptFileName: rc?.filename,
+      receiptSize: formatReceiptSize(rc?.sizeBytes),
+      authorizedBy: "Verified Officer",
+      authorizerRole: "Executive / Admin",
+      status: t.voided_at ? "voided" : "posted",
+      voidReason: t.void_reason || undefined,
+    };
+  });
 
   const saleTransactions: DashboardTransaction[] = allSales.map((s) => {
     const tierName = tierNameById.get(s.tier_id) || "Admission Tier";
+    const rc = receiptBySaleId.get(s.id);
     return {
       id: s.id,
       date: s.created_at
@@ -635,6 +696,10 @@ export default async function EventDashboardPage({
       payerPayee: s.buyer_name || "Member Ticket Buyer",
       paymentMethod: paymentMethodLabels[s.payment_method] || s.payment_method,
       paymentRef: s.id.slice(0, 8).toUpperCase(),
+      paymentStatus: "paid",
+      receipt: rc ?? null,
+      receiptFileName: rc?.filename,
+      receiptSize: formatReceiptSize(rc?.sizeBytes),
       authorizedBy: "Verified Officer",
       authorizerRole: "Ticketing Desk",
       status: s.refunded_at ? "voided" : "posted",

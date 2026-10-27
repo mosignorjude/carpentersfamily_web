@@ -2,6 +2,7 @@
 
 import { Download, FileText, Paperclip, Search, Shield } from "lucide-react";
 import { useState } from "react";
+import { ReceiptCell } from "@/components/finances/receipt-cell";
 import { EmptyStateCard } from "@/components/ui/state-screen";
 import { downloadLedgerCSV, formatNaira } from "@/lib/format";
 import type { ActivityLogItem, DashboardTransaction } from "./dashboard-types";
@@ -329,21 +330,33 @@ export function TabAuditLog({
 
                         {/* Receipt Indicator */}
                         <td className="py-3.5 px-3.5 text-center whitespace-nowrap">
-                          {txn.receiptFileName ? (
-                            <button
-                              className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-[#174C37] bg-[#FAF6F0] rounded-md hover:bg-[#174C37] hover:text-white transition-colors cursor-pointer"
-                              onClick={() => onViewTransaction(txn)}
-                              title={`View receipt voucher: ${txn.receiptFileName}`}
-                              type="button"
-                            >
-                              <Paperclip className="w-3.5 h-3.5" />
-                              <span>PDF</span>
-                            </button>
-                          ) : (
-                            <span className="text-[#7A685D] text-[11px]">
-                              N/A
-                            </span>
-                          )}
+                          <div className="flex items-center justify-center">
+                            {txn.receipt ? (
+                              <ReceiptCell
+                                isLegacy={txn.isLegacy}
+                                paymentMethod={txn.paymentMethod}
+                                paymentStatus={txn.paymentStatus}
+                                receipt={txn.receipt}
+                              />
+                            ) : txn.receiptFileName ? (
+                              <button
+                                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-[#174C37] bg-[#FAF6F0] rounded-md hover:bg-[#174C37] hover:text-white transition-colors cursor-pointer"
+                                onClick={() => onViewTransaction(txn)}
+                                title={`View receipt voucher: ${txn.receiptFileName}`}
+                                type="button"
+                              >
+                                <Paperclip className="w-3.5 h-3.5" />
+                                <span>Receipt</span>
+                              </button>
+                            ) : (
+                              <ReceiptCell
+                                isLegacy={txn.isLegacy}
+                                paymentMethod={txn.paymentMethod}
+                                paymentStatus={txn.paymentStatus}
+                                receipt={null}
+                              />
+                            )}
+                          </div>
                         </td>
 
                         {/* Actions */}
