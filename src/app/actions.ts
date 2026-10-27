@@ -1272,12 +1272,12 @@ export async function voidClubFinanceAction(formData: FormData) {
 
 export async function createFinanceCategoryAction(formData: FormData) {
   const name = formString(formData, "name", 80);
-  const reason = formString(formData, "reason", 500);
+  const reason =
+    formString(formData, "reason", 500) || "Initial cost center entry";
   if (
     !name ||
     name.length < 2 ||
     containsControlCharacters(name) ||
-    !reason ||
     containsControlCharacters(reason)
   ) {
     redirect(financeNoticeUrl("invalid-request"));

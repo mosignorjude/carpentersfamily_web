@@ -443,43 +443,25 @@ export function FinanceCategoryForms({
           </h4>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label
-              className="block text-[11px] font-bold text-[#54433A] mb-1"
-              htmlFor="cat-name"
-            >
-              Category Name <span className="text-[#BA3C2A]">*</span>
-            </label>
-            <input
-              id="cat-name"
-              autoComplete="off"
-              className="w-full h-9 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
-              maxLength={80}
-              minLength={2}
-              name="name"
-              placeholder="e.g. Welfare & Benevolence"
-              required
-            />
-          </div>
+        <input name="reason" type="hidden" value="Initial cost center entry" />
 
-          <div>
-            <label
-              className="block text-[11px] font-bold text-[#54433A] mb-1"
-              htmlFor="cat-reason"
-            >
-              Governance Reason <span className="text-[#BA3C2A]">*</span>
-            </label>
-            <input
-              id="cat-reason"
-              autoComplete="off"
-              className="w-full h-9 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
-              maxLength={500}
-              name="reason"
-              placeholder="e.g. Approved budget head per Q4 Assembly"
-              required
-            />
-          </div>
+        <div>
+          <label
+            className="block text-[11px] font-bold text-[#54433A] mb-1"
+            htmlFor="cat-name"
+          >
+            Category Name <span className="text-[#BA3C2A]">*</span>
+          </label>
+          <input
+            id="cat-name"
+            autoComplete="off"
+            className="w-full h-9 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+            maxLength={80}
+            minLength={2}
+            name="name"
+            placeholder="e.g. Welfare & Benevolence"
+            required
+          />
         </div>
 
         <div className="flex justify-end pt-1">
