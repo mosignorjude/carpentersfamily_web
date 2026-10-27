@@ -4,7 +4,7 @@ import test from "node:test";
 
 const migration = await readFile(
   new URL(
-    "../supabase/migrations/20261027133759_notification_outbox_worker_schedule.sql",
+    "../supabase/migrations/20261027140652_notification_outbox_worker_schedule.sql",
     import.meta.url,
   ),
   "utf8",
