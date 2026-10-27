@@ -2086,6 +2086,7 @@ export async function setEventStatusAction(formData: FormData) {
       title: beforeRow.title,
       eventType: beforeRow.event_type,
       startsAt: beforeRow.starts_at,
+      timezone: beforeRow.timezone,
       location: beforeRow.location,
       reason,
     });

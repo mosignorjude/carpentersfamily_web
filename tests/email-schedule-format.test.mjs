@@ -7,6 +7,14 @@ const source = await readFile(
   new URL("../src/lib/email/format-schedule.ts", import.meta.url),
   "utf8",
 );
+const notificationsSource = await readFile(
+  new URL("../src/lib/email/notifications.ts", import.meta.url),
+  "utf8",
+);
+const actionsSource = await readFile(
+  new URL("../src/app/actions.ts", import.meta.url),
+  "utf8",
+);
 const compiled = ts.transpileModule(source, {
   compilerOptions: {
     module: ts.ModuleKind.ESNext,
@@ -49,6 +57,21 @@ describe("email schedule timezone labels", () => {
     assert.equal(
       formatSchedule("2026-01-15T12:00:00.000Z", "Not/A_Timezone"),
       "2026-01-15T12:00:00.000Z",
+    );
+  });
+
+  it("uses each event's timezone for cancellation and role-assignment dates", () => {
+    assert.match(
+      notificationsSource,
+      /Original Date[\s\S]{0,120}formatSchedule\(\s*params\.startsAt,\s*params\.timezone \?\? "Africa\/Lagos",?\s*\)/,
+    );
+    assert.match(
+      notificationsSource,
+      /\.select\("title, starts_at, location, timezone"\)[\s\S]{0,500}formatSchedule\(\s*eventRow\.starts_at,\s*eventRow\.timezone \?\? "Africa\/Lagos",?\s*\)/,
+    );
+    assert.match(
+      actionsSource,
+      /notifyEventCancelled\(\{[\s\S]{0,250}timezone: beforeRow\.timezone/,
     );
   });
 });

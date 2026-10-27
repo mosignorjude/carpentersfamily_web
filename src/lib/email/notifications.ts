@@ -874,6 +874,7 @@ export async function notifyEventCancelled(params: {
   title: string;
   eventType: string;
   startsAt: string;
+  timezone?: string | null;
   location: string;
   reason: string;
 }): Promise<void> {
@@ -903,7 +904,10 @@ export async function notifyEventCancelled(params: {
         details: [
           {
             label: "Original Date",
-            value: formatSchedule(params.startsAt),
+            value: formatSchedule(
+              params.startsAt,
+              params.timezone ?? "Africa/Lagos",
+            ),
           },
           { label: "Location", value: params.location },
         ],
@@ -932,7 +936,7 @@ export async function notifyEventRoleAssigned(params: {
       resolveMemberContact(params.supabase, params.memberId),
       params.supabase
         .from("events")
-        .select("title, starts_at, location")
+        .select("title, starts_at, location, timezone")
         .eq("id", params.eventId)
         .maybeSingle(),
     ]);
@@ -947,7 +951,10 @@ export async function notifyEventRoleAssigned(params: {
     if (eventRow?.starts_at) {
       details.push({
         label: "Event Date",
-        value: formatSchedule(eventRow.starts_at),
+        value: formatSchedule(
+          eventRow.starts_at,
+          eventRow.timezone ?? "Africa/Lagos",
+        ),
       });
     }
     if (eventRow?.location) {

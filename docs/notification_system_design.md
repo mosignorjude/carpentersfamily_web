@@ -544,10 +544,13 @@ Instead of signing up for a separate queue service, use Supabase's built-in exte
 1. In your Supabase Dashboard, go to **Database** -> **Extensions**.
 2. Search for **`pg_cron`** and toggle it **ON**.
 3. Search for **`pg_net`** and toggle it **ON**.
-4. Open the **SQL Editor** in Supabase and store your app URL and `CRON_SECRET` in Supabase Vault so `pg_cron` can securely call your Next.js reminder & outbox routes every 2 minutes:
+4. Open the **SQL Editor** in Supabase and store the full outbox worker URL and matching `CRON_SECRET` in Supabase Vault. The outbox worker runs every minute:
    ```sql
-   SELECT vault.create_secret('https://your-custom-domain.com', 'app_base_url');
-   SELECT vault.create_secret('your-generated-cron-secret-here', 'cron_secret');
+   SELECT vault.create_secret(
+     'https://your-custom-domain.com/api/internal/notifications/process-outbox',
+     'notification_worker_url'
+   );
+   SELECT vault.create_secret('your-generated-cron-secret-here', 'notification_cron_secret');
    ```
 
 ### Step 5: Add Environment Variables to `.env.local` and Vercel
