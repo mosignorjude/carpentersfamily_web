@@ -147,7 +147,7 @@ export function DuesPaymentForm({
             }
           >
             <option value="cash">Cash / Secretariat POS</option>
-            <option value="bank_transfer">Direct Bank Transfer</option>
+            <option value="bank_transfer">Bank Transfer</option>
           </select>
         </label>
 

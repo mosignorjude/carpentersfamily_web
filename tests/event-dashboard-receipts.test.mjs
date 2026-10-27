@@ -65,9 +65,22 @@ describe("Event Dashboard Receipts Integration", () => {
     );
   });
 
-  it("resolves view_download for ticket sale receipt with Bank Transfer (NIBSS)", () => {
+  it("maps bank_transfer to 'Bank Transfer' without NIBSS suffix in page.tsx", () => {
+    assert.match(
+      pageSource,
+      /bank_transfer:\s*["']Bank Transfer["']/,
+      "page.tsx must map bank_transfer to 'Bank Transfer'",
+    );
+    assert.doesNotMatch(
+      pageSource,
+      /Bank Transfer\s*\(NIBSS\)/,
+      "page.tsx must not contain 'Bank Transfer (NIBSS)'",
+    );
+  });
+
+  it("resolves view_download for ticket sale receipt with Bank Transfer", () => {
     const state = resolveReceiptCellState({
-      method: "Bank Transfer (NIBSS)",
+      method: "Bank Transfer",
       status: "paid",
       hasReceipt: true,
     });

@@ -619,7 +619,7 @@ export function RecordTransactionModal({
                   }
                   value={paymentMethod}
                 >
-                  <option value="bank_transfer">Direct Bank Transfer</option>
+                  <option value="bank_transfer">Bank Transfer</option>
                   <option value="cash">Cash at Box Office</option>
                 </select>
               </div>
@@ -874,7 +874,7 @@ export function RecordTransactionModal({
                     }
                     value={paymentMethod}
                   >
-                    <option value="bank_transfer">Direct Bank Transfer</option>
+                    <option value="bank_transfer">Bank Transfer</option>
                     <option value="cash">Cash Voucher / Petty Cash</option>
                   </select>
                 </div>

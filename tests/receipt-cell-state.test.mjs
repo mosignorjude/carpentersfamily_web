@@ -39,10 +39,10 @@ describe("receipt cell state", () => {
     );
   });
 
-  it("handles display-formatted 'Bank Transfer (NIBSS)' with an uploaded receipt", () => {
+  it("handles display-formatted 'Bank Transfer' with an uploaded receipt", () => {
     assert.equal(
       resolveReceiptCellState({
-        method: "Bank Transfer (NIBSS)",
+        method: "Bank Transfer",
         status: "paid",
         hasReceipt: true,
       }),
@@ -50,14 +50,25 @@ describe("receipt cell state", () => {
     );
   });
 
-  it("handles display-formatted 'Bank Transfer (NIBSS)' pending payment", () => {
+  it("handles display-formatted 'Bank Transfer' pending payment", () => {
     assert.equal(
       resolveReceiptCellState({
-        method: "Bank Transfer (NIBSS)",
+        method: "Bank Transfer",
         status: "pending",
         hasReceipt: false,
       }),
       "pending_commitment",
+    );
+  });
+
+  it("handles legacy display-formatted 'Bank Transfer (NIBSS)' with an uploaded receipt", () => {
+    assert.equal(
+      resolveReceiptCellState({
+        method: "Bank Transfer (NIBSS)",
+        status: "paid",
+        hasReceipt: true,
+      }),
+      "view_download",
     );
   });
 

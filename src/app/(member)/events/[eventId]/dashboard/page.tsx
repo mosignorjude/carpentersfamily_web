@@ -87,7 +87,7 @@ const dashboardNoticeMap: Record<
 
 const paymentMethodLabels: Record<string, string> = {
   cash: "Cash Voucher",
-  bank_transfer: "Bank Transfer (NIBSS)",
+  bank_transfer: "Bank Transfer",
   mobile_money: "Mobile Money",
   card: "POS / Card Terminal",
   cheque: "Cheque / Draft",
@@ -667,7 +667,7 @@ export default async function EventDashboardPage({
       payerPayee: t.payer_payee || t.source_note || "Club Account",
       paymentMethod: t.payment_method
         ? paymentMethodLabels[t.payment_method] || t.payment_method
-        : "Bank Transfer (NIBSS)",
+        : "Bank Transfer",
       paymentRef: t.id.slice(0, 8).toUpperCase(),
       paymentStatus: t.payment_status || "paid",
       receipt: rc ?? null,

@@ -63,7 +63,11 @@ import { TabTickets } from "./tab-tickets";
 
 function mapDbPaymentMethod(label: string): string {
   const normalized = label.toLowerCase();
-  if (normalized.includes("transfer") || normalized.includes("nibss")) {
+  if (
+    normalized.includes("transfer") ||
+    normalized.includes("bank") ||
+    normalized.includes("nibss")
+  ) {
     return "bank_transfer";
   }
   if (
