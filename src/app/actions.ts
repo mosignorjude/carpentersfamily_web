@@ -1005,16 +1005,13 @@ export async function recordOpeningBalanceAction(
           .digest("hex")
           .replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
 
-  const { error } = await actor.supabase.rpc(
-    "record_club_opening_balance",
-    {
-      p_amount_ngn: amount,
-      p_transaction_date: parsedDate.date,
-      p_source_note: sourceNote,
-      p_idempotency_key: idempotencyKey,
-      p_transaction_id: targetId,
-    },
-  );
+  const { error } = await actor.supabase.rpc("record_club_opening_balance", {
+    p_amount_ngn: amount,
+    p_transaction_date: parsedDate.date,
+    p_source_note: sourceNote,
+    p_idempotency_key: idempotencyKey,
+    p_transaction_id: targetId,
+  });
 
   if (error) {
     redirect(financeNoticeUrl(rpcErrorNotice(error)));

@@ -260,8 +260,8 @@ export function ClubTransactionLedger({
                               : transaction.is_opening_balance
                                 ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]"
                                 : transaction.kind === "income"
-                                ? "bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20"
-                                : "bg-[#BA3C2A]/10 text-[#BA3C2A] border border-[#BA3C2A]/20"
+                                  ? "bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20"
+                                  : "bg-[#BA3C2A]/10 text-[#BA3C2A] border border-[#BA3C2A]/20"
                           }`}
                         >
                           {isVoided
@@ -301,8 +301,8 @@ export function ClubTransactionLedger({
                           {transaction.is_opening_balance
                             ? "Opening Reserve"
                             : transaction.kind === "income"
-                            ? "Treasury Inflow"
-                            : "General"}
+                              ? "Treasury Inflow"
+                              : "General"}
                         </span>
                       )}
                     </td>
