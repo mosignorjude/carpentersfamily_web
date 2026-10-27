@@ -311,6 +311,12 @@ select ok(
   )
   and exists (
     select 1 from public.notifications
+    where recipient_id = '00000000-0000-0000-0000-000000002103'
+      and category = 'officer_money'
+      and event_id = current_setting('test.notification_event')::uuid
+  )
+  and exists (
+    select 1 from public.notifications
     where recipient_id = '00000000-0000-0000-0000-000000002102'
       and category = 'officer_money'
       and event_id = current_setting('test.notification_event')::uuid
@@ -327,7 +333,46 @@ select ok(
       and category = 'officer_money'
       and event_id = current_setting('test.notification_event')::uuid
   ),
-  'event finance alerts go only to global officers and that event Lead/Assistant, not Committee or ordinary members'
+  'event finance alerts retain actor-feed delivery and go only to global officers and that event Lead/Assistant, not Committee or ordinary members'
+);
+
+insert into public.audit_log (
+  actor_id, action, entity_type, entity_id, target_member_id, after_data, reason
+) values (
+  '00000000-0000-0000-0000-000000002103',
+  'dues_payment_request_submitted',
+  'dues_payment_request',
+  '00000000-0000-0000-0000-000000002199',
+  '00000000-0000-0000-0000-000000002103',
+  '{"amount_ngn":1000,"covered_months":["2026-10-01"],"payment_method":"bank_transfer"}'::jsonb,
+  'Notification dues actor-exclusion test'
+);
+select is(
+  (select count(*)::integer from public.notifications
+   where recipient_id = '00000000-0000-0000-0000-000000002103'
+     and category = 'officer_money'
+     and dedupe_key = 'officer-money:' || (
+       select id::text from public.audit_log
+       where entity_id = '00000000-0000-0000-0000-000000002199'
+         and action = 'dues_payment_request_submitted'
+     )),
+  0,
+  'an Executive who submits dues does not receive their own officer review notice'
+);
+select is(
+  (select count(*)::integer from public.notifications
+   where recipient_id in (
+       '00000000-0000-0000-0000-000000002101',
+       '00000000-0000-0000-0000-000000002102'
+     )
+     and category = 'officer_money'
+     and dedupe_key = 'officer-money:' || (
+       select id::text from public.audit_log
+       where entity_id = '00000000-0000-0000-0000-000000002199'
+         and action = 'dues_payment_request_submitted'
+     )),
+  2,
+  'other eligible Admin and Backup Admin officers still receive the dues review notice'
 );
 
 insert into public.audit_log (
