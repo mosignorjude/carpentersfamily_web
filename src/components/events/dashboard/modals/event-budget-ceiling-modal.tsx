@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { setEventBudgetAction } from "@/app/actions";
 import { FormattedAmountInput } from "@/components/formatted-amount-input";
 import { FormSubmitButton } from "@/components/ui/cf-button";
+import { FormFieldError } from "@/components/ui/form-feedback";
 import { formatNaira } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 
@@ -22,18 +23,53 @@ export function EventBudgetCeilingModal({
   currentCeiling,
 }: EventBudgetCeilingModalProps) {
   const [reason, setReason] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const clearFieldError = (fieldName: string) => {
+    if (fieldErrors[fieldName]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[fieldName];
+        return next;
+      });
+    }
+  };
 
   useModalHygiene({ isOpen, onClose });
 
   useEffect(() => {
     if (!isOpen) {
       setReason("");
+      setFieldErrors({});
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   const isEditing = currentCeiling > 0;
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const errors: Record<string, string> = {};
+
+    const rawTotal = String(formData.get("total_ngn") || "").replace(/\D/g, "");
+    if (!rawTotal || Number(rawTotal) <= 0) {
+      errors.total_ngn = "Please enter approved budget total.";
+    }
+
+    if (isEditing) {
+      const reasonVal = String(formData.get("reason") || "").trim();
+      if (!reasonVal) {
+        errors.reason = "Please enter audit reason.";
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      e.preventDefault();
+      setFieldErrors(errors);
+    }
+  };
 
   return (
     <div
@@ -83,7 +119,12 @@ export function EventBudgetCeilingModal({
         </div>
 
         {/* Form Body */}
-        <form action={setEventBudgetAction} className="p-6 space-y-4 text-xs">
+        <form
+          action={setEventBudgetAction}
+          className="p-6 space-y-4 text-xs"
+          noValidate
+          onSubmit={handleSubmit}
+        >
           <input name="event_id" type="hidden" value={eventId} />
           <input name="return_tab" type="hidden" value="budget" />
 
@@ -115,12 +156,24 @@ export function EventBudgetCeilingModal({
               <span className="text-[#BA3C2A]">*</span>
             </label>
             <FormattedAmountInput
-              className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] font-mono"
+              aria-describedby={
+                fieldErrors.total_ngn ? "budget-error-total" : undefined
+              }
+              aria-invalid={fieldErrors.total_ngn ? "true" : undefined}
+              className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 font-mono ${
+                fieldErrors.total_ngn
+                  ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                  : "border-[#E5DDD3] focus:ring-[#174C37]"
+              }`}
               defaultValue={isEditing ? String(currentCeiling) : ""}
               id="event-budget-total"
               name="total_ngn"
+              onChange={() => clearFieldError("total_ngn")}
               placeholder="e.g. 5,000,000"
-              required
+            />
+            <FormFieldError
+              id="budget-error-total"
+              message={fieldErrors.total_ngn}
             />
             <p className="text-[11px] text-[#7A685D] flex items-start gap-1 mt-1">
               <Info className="w-3.5 h-3.5 shrink-0 text-[#174C37] mt-0.5" />
@@ -148,15 +201,29 @@ export function EventBudgetCeilingModal({
                 Audit Reason <span className="text-[#BA3C2A]">*</span>
               </label>
               <textarea
-                className="w-full p-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] resize-none"
+                aria-describedby={
+                  fieldErrors.reason ? "budget-error-reason" : undefined
+                }
+                aria-invalid={fieldErrors.reason ? "true" : undefined}
+                className={`w-full p-3 text-xs bg-white border rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 resize-none ${
+                  fieldErrors.reason
+                    ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                    : "border-[#E5DDD3] focus:ring-[#174C37]"
+                }`}
                 id="event-budget-reason"
                 maxLength={500}
                 name="reason"
-                onChange={(e) => setReason(e.target.value)}
+                onChange={(e) => {
+                  setReason(e.target.value);
+                  clearFieldError("reason");
+                }}
                 placeholder="Explain why the total budget ceiling is being revised (e.g. Executive approval for expanded catering scope)..."
-                required
                 rows={3}
                 value={reason}
+              />
+              <FormFieldError
+                id="budget-error-reason"
+                message={fieldErrors.reason}
               />
               <div className="flex justify-between items-center text-[10px] text-[#7A685D]">
                 <span>Required for immutable audit logging.</span>

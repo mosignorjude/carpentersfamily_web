@@ -21,6 +21,20 @@ const financeFormsSource = readFileSync(
   new URL("../src/app/(member)/finances/finance-forms.tsx", import.meta.url),
   "utf8",
 );
+const budgetModalSource = readFileSync(
+  new URL(
+    "../src/components/events/dashboard/modals/event-budget-ceiling-modal.tsx",
+    import.meta.url,
+  ),
+  "utf8",
+);
+const ticketTierModalSource = readFileSync(
+  new URL(
+    "../src/components/events/dashboard/modals/event-ticket-tier-modal.tsx",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 describe("Field-specific required validation", () => {
   it("formats required field error message with the specific field label or name", () => {
@@ -91,6 +105,44 @@ describe("Club Finance Forms field-level validation", () => {
       financeFormsSource,
       /Please enter expense description/,
       "Must provide 'Please enter expense description' in expense form",
+    );
+  });
+});
+
+describe("Budget Ceiling and Ticket Tier Modals field-level validation", () => {
+  it("renders FormFieldError in EventBudgetCeilingModal", () => {
+    assert.match(
+      budgetModalSource,
+      /FormFieldError/,
+      "Must import and render FormFieldError in EventBudgetCeilingModal",
+    );
+    assert.match(
+      budgetModalSource,
+      /Please enter approved budget total/,
+      "Must provide 'Please enter approved budget total' error message",
+    );
+    assert.match(
+      budgetModalSource,
+      /Please enter audit reason/,
+      "Must provide 'Please enter audit reason' error message",
+    );
+  });
+
+  it("renders FormFieldError in EventTicketTierModal", () => {
+    assert.match(
+      ticketTierModalSource,
+      /FormFieldError/,
+      "Must import and render FormFieldError in EventTicketTierModal",
+    );
+    assert.match(
+      ticketTierModalSource,
+      /Please enter tier name/,
+      "Must provide 'Please enter tier name' error message",
+    );
+    assert.match(
+      ticketTierModalSource,
+      /Please enter audit reason/,
+      "Must provide 'Please enter audit reason' error message",
     );
   });
 });

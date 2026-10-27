@@ -9,6 +9,7 @@ import {
 } from "@/app/actions";
 import { FormattedAmountInput } from "@/components/formatted-amount-input";
 import { FormSubmitButton } from "@/components/ui/cf-button";
+import { FormFieldError } from "@/components/ui/form-feedback";
 import { formatNaira } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 import type { DashboardTicketTier } from "../dashboard-types";
@@ -31,6 +32,17 @@ export function EventTicketTierModal({
   const [name, setName] = useState("");
   const [capacity, setCapacity] = useState("");
   const [reason, setReason] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const clearFieldError = (fieldName: string) => {
+    if (fieldErrors[fieldName]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[fieldName];
+        return next;
+      });
+    }
+  };
 
   useModalHygiene({ isOpen, onClose });
 
@@ -39,6 +51,7 @@ export function EventTicketTierModal({
       setName("");
       setCapacity("");
       setReason("");
+      setFieldErrors({});
       return;
     }
 
@@ -46,10 +59,12 @@ export function EventTicketTierModal({
       setName(tier.name);
       setCapacity(String(tier.capacity));
       setReason("");
+      setFieldErrors({});
     } else {
       setName("");
       setCapacity("100");
       setReason("");
+      setFieldErrors({});
     }
   }, [isOpen, mode, tier]);
 
@@ -76,6 +91,41 @@ export function EventTicketTierModal({
     : isEdit
       ? `Update pricing or capacity parameters for ${tier?.name ?? "this tier"}.`
       : `Retire ${tier?.name ?? "this tier"} from active ticket inventory.`;
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const errors: Record<string, string> = {};
+
+    if (!isRetire) {
+      const nameVal = String(formData.get("name") || "").trim();
+      if (!nameVal) {
+        errors.name = "Please enter tier name.";
+      }
+
+      const priceVal = String(formData.get("price_ngn") || "").trim();
+      if (!priceVal) {
+        errors.price_ngn = "Please enter price.";
+      }
+
+      const capVal = Number(formData.get("capacity"));
+      if (!capVal || capVal <= 0) {
+        errors.capacity = "Please enter capacity.";
+      }
+    }
+
+    if (!isCreate) {
+      const reasonVal = String(formData.get("reason") || "").trim();
+      if (!reasonVal) {
+        errors.reason = "Please enter audit reason.";
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      e.preventDefault();
+      setFieldErrors(errors);
+    }
+  };
 
   return (
     <div
@@ -129,7 +179,12 @@ export function EventTicketTierModal({
         </div>
 
         {/* Form Body */}
-        <form action={formAction} className="p-6 space-y-4 text-xs">
+        <form
+          action={formAction}
+          className="p-6 space-y-4 text-xs"
+          noValidate
+          onSubmit={handleSubmit}
+        >
           <input name="event_id" type="hidden" value={eventId} />
           <input name="return_tab" type="hidden" value="tickets" />
           {!isCreate && tier && (
@@ -168,14 +223,28 @@ export function EventTicketTierModal({
                   Tier Name <span className="text-[#BA3C2A]">*</span>
                 </label>
                 <input
-                  className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+                  aria-describedby={
+                    fieldErrors.name ? "tier-error-name" : undefined
+                  }
+                  aria-invalid={fieldErrors.name ? "true" : undefined}
+                  className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 ${
+                    fieldErrors.name
+                      ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                      : "border-[#E5DDD3] focus:ring-[#174C37]"
+                  }`}
                   id="ticket-tier-name"
                   maxLength={80}
                   name="name"
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    clearFieldError("name");
+                  }}
                   placeholder="e.g. VIP Admission, Early Bird, General Pass..."
-                  required
                   value={name}
+                />
+                <FormFieldError
+                  id="tier-error-name"
+                  message={fieldErrors.name}
                 />
               </div>
 
@@ -189,12 +258,24 @@ export function EventTicketTierModal({
                     Ticket Price (NGN) <span className="text-[#BA3C2A]">*</span>
                   </label>
                   <FormattedAmountInput
-                    className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] font-mono"
+                    aria-describedby={
+                      fieldErrors.price_ngn ? "tier-error-price" : undefined
+                    }
+                    aria-invalid={fieldErrors.price_ngn ? "true" : undefined}
+                    className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 font-mono ${
+                      fieldErrors.price_ngn
+                        ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                        : "border-[#E5DDD3] focus:ring-[#174C37]"
+                    }`}
                     defaultValue={tier ? String(tier.price) : "0"}
                     id="ticket-tier-price"
                     name="price_ngn"
+                    onChange={() => clearFieldError("price_ngn")}
                     placeholder="0"
-                    required
+                  />
+                  <FormFieldError
+                    id="tier-error-price"
+                    message={fieldErrors.price_ngn}
                   />
                   <span className="text-[10px] text-[#7A685D] block">
                     Use 0 for complimentary or free admission.
@@ -209,16 +290,30 @@ export function EventTicketTierModal({
                     Capacity (Passes) <span className="text-[#BA3C2A]">*</span>
                   </label>
                   <input
-                    className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] font-mono"
+                    aria-describedby={
+                      fieldErrors.capacity ? "tier-error-capacity" : undefined
+                    }
+                    aria-invalid={fieldErrors.capacity ? "true" : undefined}
+                    className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 font-mono ${
+                      fieldErrors.capacity
+                        ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                        : "border-[#E5DDD3] focus:ring-[#174C37]"
+                    }`}
                     id="ticket-tier-capacity"
                     max={100_000}
                     min={tier ? Math.max(1, tier.sold) : 1}
                     name="capacity"
-                    onChange={(e) => setCapacity(e.target.value)}
+                    onChange={(e) => {
+                      setCapacity(e.target.value);
+                      clearFieldError("capacity");
+                    }}
                     placeholder="100"
-                    required
                     type="number"
                     value={capacity}
+                  />
+                  <FormFieldError
+                    id="tier-error-capacity"
+                    message={fieldErrors.capacity}
                   />
                   <span className="text-[10px] text-[#7A685D] block">
                     {tier && tier.sold > 0
@@ -246,19 +341,33 @@ export function EventTicketTierModal({
                 Audit Reason <span className="text-[#BA3C2A]">*</span>
               </label>
               <textarea
-                className="w-full p-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] resize-none"
+                aria-describedby={
+                  fieldErrors.reason ? "tier-error-reason" : undefined
+                }
+                aria-invalid={fieldErrors.reason ? "true" : undefined}
+                className={`w-full p-3 text-xs bg-white border rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 resize-none ${
+                  fieldErrors.reason
+                    ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                    : "border-[#E5DDD3] focus:ring-[#174C37]"
+                }`}
                 id="ticket-tier-reason"
                 maxLength={500}
                 name="reason"
-                onChange={(e) => setReason(e.target.value)}
+                onChange={(e) => {
+                  setReason(e.target.value);
+                  clearFieldError("reason");
+                }}
                 placeholder={
                   isRetire
                     ? "Explain why this tier is being retired (e.g. Sales quota reached, superseded by VIP II)..."
                     : "Explain why this tier's parameters are changing..."
                 }
-                required
                 rows={3}
                 value={reason}
+              />
+              <FormFieldError
+                id="tier-error-reason"
+                message={fieldErrors.reason}
               />
               <div className="flex justify-between items-center text-[10px] text-[#7A685D]">
                 <span>Required for club governance compliance.</span>
