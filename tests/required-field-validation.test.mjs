@@ -17,6 +17,10 @@ const recordModalSource = readFileSync(
   ),
   "utf8",
 );
+const financeFormsSource = readFileSync(
+  new URL("../src/app/(member)/finances/finance-forms.tsx", import.meta.url),
+  "utf8",
+);
 
 describe("Field-specific required validation", () => {
   it("formats required field error message with the specific field label or name", () => {
@@ -62,6 +66,31 @@ describe("RecordTransactionModal field-level validation", () => {
       recordModalSource,
       /Please enter transaction description/,
       "Must provide 'Please enter transaction description' error message",
+    );
+  });
+});
+
+describe("Club Finance Forms field-level validation", () => {
+  it("renders FormFieldError in ClubIncomeForm and ClubExpenseForm", () => {
+    assert.match(
+      financeFormsSource,
+      /FormFieldError/,
+      "Must import and render FormFieldError in finance-forms.tsx",
+    );
+    assert.match(
+      financeFormsSource,
+      /Please enter amount/,
+      "Must provide 'Please enter amount' in finance forms",
+    );
+    assert.match(
+      financeFormsSource,
+      /Please enter source note/,
+      "Must provide 'Please enter source note' in income form",
+    );
+    assert.match(
+      financeFormsSource,
+      /Please enter expense description/,
+      "Must provide 'Please enter expense description' in expense form",
     );
   });
 });

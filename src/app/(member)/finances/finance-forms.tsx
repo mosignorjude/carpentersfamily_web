@@ -11,6 +11,7 @@ import {
 } from "@/app/actions";
 import { FormattedAmountInput } from "@/components/formatted-amount-input";
 import { FormSubmitButton } from "@/components/ui/cf-button";
+import { FormFieldError } from "@/components/ui/form-feedback";
 
 export type FinanceCategory = {
   id: string;
@@ -58,12 +59,56 @@ export function ClubIncomeForm({
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "cash">(
     "bank_transfer",
   );
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const clearFieldError = (fieldName: string) => {
+    if (fieldErrors[fieldName]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[fieldName];
+        return next;
+      });
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const errors: Record<string, string> = {};
+
+    const rawAmount = String(formData.get("amount_ngn") || "").replace(
+      /\D/g,
+      "",
+    );
+    if (!rawAmount || Number(rawAmount) <= 0) {
+      errors.amount_ngn = "Please enter amount.";
+    }
+
+    const sourceNote = String(formData.get("source_note") || "").trim();
+    if (!sourceNote) {
+      errors.source_note = "Please enter source note.";
+    }
+
+    if (paymentMethod === "bank_transfer") {
+      const file = formData.get("receipt_file") as File | null;
+      if (!file || file.size === 0) {
+        errors.receipt_file = "Please attach payment receipt.";
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      e.preventDefault();
+      setFieldErrors(errors);
+    }
+  };
 
   return (
     <form
       action={recordClubFinanceAction}
       className="space-y-4 text-xs text-[#3D291F]"
       encType="multipart/form-data"
+      noValidate
+      onSubmit={handleSubmit}
     >
       <input name="kind" type="hidden" value="income" />
       <input name="idempotency_key" type="hidden" value={idempotencyKey} />
@@ -81,13 +126,25 @@ export function ClubIncomeForm({
               ₦
             </span>
             <FormattedAmountInput
-              className="w-full h-10 pl-8 pr-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+              aria-describedby={
+                fieldErrors.amount_ngn ? "income-error-amount" : undefined
+              }
+              aria-invalid={fieldErrors.amount_ngn ? "true" : undefined}
+              className={`w-full h-10 pl-8 pr-3 bg-white border rounded-lg text-xs font-semibold text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 ${
+                fieldErrors.amount_ngn
+                  ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                  : "border-[#E5DDD3] focus:ring-[#174C37]"
+              }`}
               id="income-amount"
               name="amount_ngn"
+              onChange={() => clearFieldError("amount_ngn")}
               placeholder="e.g. 50,000"
-              required
             />
           </div>
+          <FormFieldError
+            id="income-error-amount"
+            message={fieldErrors.amount_ngn}
+          />
         </div>
 
         <div>
@@ -123,10 +180,10 @@ export function ClubIncomeForm({
             name="payment_method"
             className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
             value={paymentMethod}
-            onChange={(e) =>
-              setPaymentMethod(e.target.value as "bank_transfer" | "cash")
-            }
-            required
+            onChange={(e) => {
+              setPaymentMethod(e.target.value as "bank_transfer" | "cash");
+              clearFieldError("receipt_file");
+            }}
           >
             <option value="bank_transfer">Bank Transfer</option>
             <option value="cash">Cash</option>
@@ -143,12 +200,24 @@ export function ClubIncomeForm({
               <span className="text-[#BA3C2A]">*</span>
             </label>
             <input
+              aria-describedby={
+                fieldErrors.receipt_file ? "income-error-receipt" : undefined
+              }
+              aria-invalid={fieldErrors.receipt_file ? "true" : undefined}
               id="income-receipt-file"
               type="file"
               name="receipt_file"
               accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-              required
-              className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
+              onChange={() => clearFieldError("receipt_file")}
+              className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
+                fieldErrors.receipt_file
+                  ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                  : "border-[#E5DDD3] focus:ring-[#174C37]"
+              }`}
+            />
+            <FormFieldError
+              id="income-error-receipt"
+              message={fieldErrors.receipt_file}
             />
             <p className="mt-1 text-[11px] text-[#7A685D]">
               PDF, JPG, or PNG up to 4 MiB
@@ -170,13 +239,25 @@ export function ClubIncomeForm({
           <span className="text-[#BA3C2A]">*</span>
         </label>
         <input
+          aria-describedby={
+            fieldErrors.source_note ? "income-error-source-note" : undefined
+          }
+          aria-invalid={fieldErrors.source_note ? "true" : undefined}
           id="income-source-note"
           autoComplete="off"
-          className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+          className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 ${
+            fieldErrors.source_note
+              ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+              : "border-[#E5DDD3] focus:ring-[#174C37]"
+          }`}
           maxLength={500}
           name="source_note"
+          onChange={() => clearFieldError("source_note")}
           placeholder="e.g. Corporate donation for community outreach project"
-          required
+        />
+        <FormFieldError
+          id="income-error-source-note"
+          message={fieldErrors.source_note}
         />
       </div>
 
@@ -233,12 +314,66 @@ export function ClubExpenseForm({
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "cash">(
     "bank_transfer",
   );
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const clearFieldError = (fieldName: string) => {
+    if (fieldErrors[fieldName]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[fieldName];
+        return next;
+      });
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const errors: Record<string, string> = {};
+
+    const rawAmount = String(formData.get("amount_ngn") || "").replace(
+      /\D/g,
+      "",
+    );
+    if (!rawAmount || Number(rawAmount) <= 0) {
+      errors.amount_ngn = "Please enter amount.";
+    }
+
+    const categoryId = String(formData.get("category_id") || "").trim();
+    if (!categoryId) {
+      errors.category_id = "Please select an expense category.";
+    }
+
+    const payee = String(formData.get("payer_payee") || "").trim();
+    if (!payee) {
+      errors.payer_payee = "Please enter payee name.";
+    }
+
+    const description = String(formData.get("description") || "").trim();
+    if (!description) {
+      errors.description = "Please enter expense description.";
+    }
+
+    if (paymentMethod === "bank_transfer") {
+      const file = formData.get("receipt_file") as File | null;
+      if (!file || file.size === 0) {
+        errors.receipt_file = "Please attach payment receipt.";
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      e.preventDefault();
+      setFieldErrors(errors);
+    }
+  };
 
   return (
     <form
       action={recordClubFinanceAction}
       className="space-y-4 text-xs text-[#3D291F]"
       encType="multipart/form-data"
+      noValidate
+      onSubmit={handleSubmit}
     >
       <input name="kind" type="hidden" value="expense" />
       <input name="idempotency_key" type="hidden" value={idempotencyKey} />
@@ -257,13 +392,25 @@ export function ClubExpenseForm({
               ₦
             </span>
             <FormattedAmountInput
-              className="w-full h-10 pl-8 pr-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
+              aria-describedby={
+                fieldErrors.amount_ngn ? "expense-error-amount" : undefined
+              }
+              aria-invalid={fieldErrors.amount_ngn ? "true" : undefined}
+              className={`w-full h-10 pl-8 pr-3 bg-white border rounded-lg text-xs font-semibold text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 ${
+                fieldErrors.amount_ngn
+                  ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                  : "border-[#E5DDD3] focus:ring-[#BA3C2A]"
+              }`}
               id="expense-amount"
               name="amount_ngn"
+              onChange={() => clearFieldError("amount_ngn")}
               placeholder="e.g. 25,000"
-              required
             />
           </div>
+          <FormFieldError
+            id="expense-error-amount"
+            message={fieldErrors.amount_ngn}
+          />
         </div>
 
         <div>
@@ -299,10 +446,10 @@ export function ClubExpenseForm({
             name="payment_method"
             className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
             value={paymentMethod}
-            onChange={(e) =>
-              setPaymentMethod(e.target.value as "bank_transfer" | "cash")
-            }
-            required
+            onChange={(e) => {
+              setPaymentMethod(e.target.value as "bank_transfer" | "cash");
+              clearFieldError("receipt_file");
+            }}
           >
             <option value="bank_transfer">Bank Transfer</option>
             <option value="cash">Cash</option>
@@ -319,12 +466,24 @@ export function ClubExpenseForm({
               <span className="text-[#BA3C2A]">*</span>
             </label>
             <input
+              aria-describedby={
+                fieldErrors.receipt_file ? "expense-error-receipt" : undefined
+              }
+              aria-invalid={fieldErrors.receipt_file ? "true" : undefined}
               id="expense-receipt-file"
               type="file"
               name="receipt_file"
               accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-              required
-              className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
+              onChange={() => clearFieldError("receipt_file")}
+              className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
+                fieldErrors.receipt_file
+                  ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                  : "border-[#E5DDD3] focus:ring-[#174C37]"
+              }`}
+            />
+            <FormFieldError
+              id="expense-error-receipt"
+              message={fieldErrors.receipt_file}
             />
             <p className="mt-1 text-[11px] text-[#7A685D]">
               PDF, JPG, or PNG up to 4 MiB
@@ -347,11 +506,19 @@ export function ClubExpenseForm({
             <span className="text-[#BA3C2A]">*</span>
           </label>
           <select
+            aria-describedby={
+              fieldErrors.category_id ? "expense-error-category" : undefined
+            }
+            aria-invalid={fieldErrors.category_id ? "true" : undefined}
             id="expense-category"
-            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
+            className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 ${
+              fieldErrors.category_id
+                ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                : "border-[#E5DDD3] focus:ring-[#BA3C2A]"
+            }`}
             defaultValue=""
             name="category_id"
-            required
+            onChange={() => clearFieldError("category_id")}
           >
             <option value="">Choose an active category</option>
             {activeCategories.map((category) => (
@@ -360,6 +527,10 @@ export function ClubExpenseForm({
               </option>
             ))}
           </select>
+          <FormFieldError
+            id="expense-error-category"
+            message={fieldErrors.category_id}
+          />
         </div>
 
         <div>
@@ -370,13 +541,25 @@ export function ClubExpenseForm({
             Payee / Vendor Entity <span className="text-[#BA3C2A]">*</span>
           </label>
           <input
+            aria-describedby={
+              fieldErrors.payer_payee ? "expense-error-payee" : undefined
+            }
+            aria-invalid={fieldErrors.payer_payee ? "true" : undefined}
             id="expense-payee"
             autoComplete="off"
-            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
+            className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 ${
+              fieldErrors.payer_payee
+                ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                : "border-[#E5DDD3] focus:ring-[#BA3C2A]"
+            }`}
             maxLength={160}
             name="payer_payee"
+            onChange={() => clearFieldError("payer_payee")}
             placeholder="e.g. Asaba Electric Disco Co."
-            required
+          />
+          <FormFieldError
+            id="expense-error-payee"
+            message={fieldErrors.payer_payee}
           />
         </div>
       </div>
@@ -390,13 +573,25 @@ export function ClubExpenseForm({
           <span className="text-[#BA3C2A]">*</span>
         </label>
         <input
+          aria-describedby={
+            fieldErrors.description ? "expense-error-description" : undefined
+          }
+          aria-invalid={fieldErrors.description ? "true" : undefined}
           id="expense-description"
           autoComplete="off"
-          className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
+          className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 ${
+            fieldErrors.description
+              ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+              : "border-[#E5DDD3] focus:ring-[#BA3C2A]"
+          }`}
           maxLength={500}
           name="description"
+          onChange={() => clearFieldError("description")}
           placeholder="e.g. Secretariat generator fueling and maintenance"
-          required
+        />
+        <FormFieldError
+          id="expense-error-description"
+          message={fieldErrors.description}
         />
       </div>
 
@@ -429,12 +624,26 @@ export function FinanceCategoryForms({
   categories: FinanceCategory[];
   onCancel?: () => void;
 }) {
+  const [nameError, setNameError] = useState<string>("");
+
+  const handleCreateSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const name = String(formData.get("name") || "").trim();
+    if (!name) {
+      e.preventDefault();
+      setNameError("Please enter category name.");
+    }
+  };
+
   return (
     <div className="space-y-6 text-xs text-[#3D291F]">
       {/* Create New Category Form */}
       <form
         action={createFinanceCategoryAction}
         className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-3"
+        noValidate
+        onSubmit={handleCreateSubmit}
       >
         <div className="flex items-center gap-2">
           <Tag className="w-4 h-4 text-[#174C37]" />
@@ -453,15 +662,21 @@ export function FinanceCategoryForms({
             Category Name <span className="text-[#BA3C2A]">*</span>
           </label>
           <input
+            aria-describedby={nameError ? "cat-error-name" : undefined}
+            aria-invalid={nameError ? "true" : undefined}
             id="cat-name"
             autoComplete="off"
-            className="w-full h-9 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+            className={`w-full h-9 px-3 bg-white border rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 ${
+              nameError
+                ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                : "border-[#E5DDD3] focus:ring-[#174C37]"
+            }`}
             maxLength={80}
-            minLength={2}
             name="name"
+            onChange={() => setNameError("")}
             placeholder="e.g. Welfare & Benevolence"
-            required
           />
+          <FormFieldError id="cat-error-name" message={nameError} />
         </div>
 
         <div className="flex justify-end pt-1">
