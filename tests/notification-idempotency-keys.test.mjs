@@ -99,6 +99,37 @@ describe("deterministic notification idempotency keys", () => {
     );
   });
 
+  it("builds keys for cancellations, polls, assignments, and attendance", () => {
+    assert.equal(
+      keys.meetingChangedKey(EVENT_ID, "ABCDEF1234"),
+      `meeting_changed:meeting:${EVENT_ID.toLowerCase()}:rev:abcdef1234`,
+    );
+    assert.equal(
+      keys.meetingCancelledKey(EVENT_ID),
+      `meeting_cancelled:meeting:${EVENT_ID.toLowerCase()}`,
+    );
+    assert.equal(
+      keys.eventCancelledKey(EVENT_ID),
+      `event_cancelled:event:${EVENT_ID.toLowerCase()}`,
+    );
+    assert.equal(
+      keys.pollCreatedKey(EVENT_ID),
+      `poll_created:poll:${EVENT_ID.toLowerCase()}`,
+    );
+    assert.equal(
+      keys.eventRoleAssignedKey({
+        eventId: EVENT_ID,
+        userId: USER_ID,
+        role: "Event Lead",
+      }),
+      `event_role_assigned:event:${EVENT_ID.toLowerCase()}:user:${USER_ID.toLowerCase()}:role:event_lead`,
+    );
+    assert.equal(
+      keys.attendanceOpenedKey(EVENT_ID),
+      `event_attendance_opened:event:${EVENT_ID.toLowerCase()}`,
+    );
+  });
+
   it("keeps changed-event group keys inside the database length limit", () => {
     const fullHash = "a".repeat(64);
     for (const groupKey of [

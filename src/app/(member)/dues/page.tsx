@@ -296,7 +296,7 @@ export default async function DuesPage({
     const { data: pendingData } = await supabase
       .from("dues_payment_requests")
       .select(
-        "id, member_id, amount_ngn, covered_months, payment_method, payment_reference, notes, status, created_at, reviewed_by, reviewed_at, review_reason",
+        "id, member_id, amount_ngn, covered_months, payment_method, notes, status, created_at, reviewed_by, reviewed_at, review_reason",
       )
       .eq("status", "pending")
       .order("created_at", { ascending: false })
@@ -340,7 +340,7 @@ export default async function DuesPage({
   const { data: ownRequestsData } = await supabase
     .from("dues_payment_requests")
     .select(
-      "id, member_id, amount_ngn, covered_months, payment_method, payment_reference, notes, status, created_at, reviewed_by, reviewed_at, review_reason",
+      "id, member_id, amount_ngn, covered_months, payment_method, notes, status, created_at, reviewed_by, reviewed_at, review_reason",
     )
     .eq("member_id", authData.user.id)
     .order("created_at", { ascending: false })

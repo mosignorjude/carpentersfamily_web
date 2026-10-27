@@ -48,6 +48,28 @@ test("outbox enqueue and dispatch failures log actionable diagnostics", () => {
     /\[Notification Outbox\] Failed to enqueue broadcast:/,
     "broadcast enqueue failures must be reported",
   );
+  assert.match(
+    outbox,
+    /throw new NotificationEnqueueError/,
+    "missing service credentials must fail visibly instead of returning an empty result",
+  );
+  assert.match(
+    outbox,
+    /withNotificationEnqueueRetry/,
+    "transient RPC failures must receive bounded retries",
+  );
+  assert.match(
+    outbox,
+    /throw error;/,
+    "permanent enqueue failures must propagate to the notification action",
+  );
+
+  const notifications = readSource("src/lib/email/notifications.ts");
+  assert.match(
+    notifications,
+    /if \(error instanceof NotificationEnqueueError\) throw error;/,
+    "notification wrappers must not swallow enqueue failures",
+  );
 
   const worker = readSource("src/lib/notifications/outbox-worker.ts");
   assert.match(

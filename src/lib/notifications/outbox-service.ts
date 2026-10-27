@@ -15,6 +15,10 @@ import {
   type NotificationCategory,
 } from "@/lib/email/templates/club-notification-email";
 import {
+  NotificationEnqueueError,
+  withNotificationEnqueueRetry,
+} from "@/lib/notifications/enqueue-retry";
+import {
   type OutboxJob,
   PACE_MS,
   type ProcessOutboxSummary,
@@ -96,39 +100,46 @@ function isDeliverableEmail(email: string | null | undefined): email is string {
 
 export async function enqueueNotificationEmail(
   input: EnqueueEmailInput,
-): Promise<string | null> {
+): Promise<string> {
   const admin = createSupabaseAdminClient();
   if (!admin) {
-    console.warn(
+    const error = new Error("SUPABASE_SECRET_KEY is not configured.");
+    console.error(
       "[Notification Outbox] SUPABASE_SECRET_KEY is not configured; email was not queued.",
     );
-    return null;
+    throw new NotificationEnqueueError("email", input.idempotencyKey, 0, error);
   }
 
-  const { data, error } = await admin.rpc("enqueue_notification_email", {
-    p_idempotency_key: input.idempotencyKey,
-    p_trigger_type: input.triggerType,
-    p_recipient_user_id: input.recipientUserId ?? null,
-    p_recipient_email: input.recipientEmail,
-    p_recipient_name: input.recipientName ?? null,
-    p_subject: input.subject,
-    p_heading: input.heading,
-    p_body_text: clampBody(input.bodyText),
-    p_cta_label: input.ctaLabel ?? null,
-    p_cta_url: input.ctaUrl ?? null,
-    p_batch_group_key: input.batchGroupKey ?? null,
-    p_template_payload: input.templatePayload ?? {},
-  });
+  try {
+    return await withNotificationEnqueueRetry(
+      async () => {
+        const { data, error } = await admin.rpc("enqueue_notification_email", {
+          p_idempotency_key: input.idempotencyKey,
+          p_trigger_type: input.triggerType,
+          p_recipient_user_id: input.recipientUserId ?? null,
+          p_recipient_email: input.recipientEmail,
+          p_recipient_name: input.recipientName ?? null,
+          p_subject: input.subject,
+          p_heading: input.heading,
+          p_body_text: clampBody(input.bodyText),
+          p_cta_label: input.ctaLabel ?? null,
+          p_cta_url: input.ctaUrl ?? null,
+          p_batch_group_key: input.batchGroupKey ?? null,
+          p_template_payload: input.templatePayload ?? {},
+        });
 
-  if (error) {
-    console.error(
-      "[Notification Outbox] Failed to enqueue email:",
-      error.message,
+        if (error) throw error;
+        if (typeof data !== "string" || !data) {
+          throw new Error("Email enqueue RPC returned no outbox job id.");
+        }
+        return data;
+      },
+      { operation: "email", idempotencyKey: input.idempotencyKey },
     );
-    return null;
+  } catch (error) {
+    console.error("[Notification Outbox] Failed to enqueue email:", error);
+    throw error;
   }
-
-  return typeof data === "string" ? data : null;
 }
 
 export async function enqueueNotificationBroadcast(
@@ -136,32 +147,47 @@ export async function enqueueNotificationBroadcast(
 ): Promise<number> {
   const admin = createSupabaseAdminClient();
   if (!admin) {
-    console.warn(
+    const error = new Error("SUPABASE_SECRET_KEY is not configured.");
+    console.error(
       "[Notification Outbox] SUPABASE_SECRET_KEY is not configured; broadcast was not queued.",
     );
-    return 0;
-  }
-
-  const { data, error } = await admin.rpc("enqueue_notification_broadcast", {
-    p_batch_group_key: input.batchGroupKey,
-    p_trigger_type: input.triggerType,
-    p_subject: input.subject,
-    p_heading: input.heading,
-    p_body_text: clampBody(input.bodyText),
-    p_cta_label: input.ctaLabel ?? null,
-    p_cta_url: input.ctaUrl ?? null,
-    p_template_payload: input.templatePayload ?? {},
-  });
-
-  if (error) {
-    console.error(
-      "[Notification Outbox] Failed to enqueue broadcast:",
-      error.message,
+    throw new NotificationEnqueueError(
+      "broadcast",
+      input.batchGroupKey,
+      0,
+      error,
     );
-    return 0;
   }
 
-  return typeof data === "number" ? data : 0;
+  try {
+    return await withNotificationEnqueueRetry(
+      async () => {
+        const { data, error } = await admin.rpc(
+          "enqueue_notification_broadcast",
+          {
+            p_batch_group_key: input.batchGroupKey,
+            p_trigger_type: input.triggerType,
+            p_subject: input.subject,
+            p_heading: input.heading,
+            p_body_text: clampBody(input.bodyText),
+            p_cta_label: input.ctaLabel ?? null,
+            p_cta_url: input.ctaUrl ?? null,
+            p_template_payload: input.templatePayload ?? {},
+          },
+        );
+
+        if (error) throw error;
+        if (typeof data !== "number" || !Number.isInteger(data) || data < 0) {
+          throw new Error("Broadcast enqueue RPC returned an invalid count.");
+        }
+        return data;
+      },
+      { operation: "broadcast", idempotencyKey: input.batchGroupKey },
+    );
+  } catch (error) {
+    console.error("[Notification Outbox] Failed to enqueue broadcast:", error);
+    throw error;
+  }
 }
 
 export async function resolveMemberContact(

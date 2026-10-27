@@ -2,7 +2,9 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { formatCoveredMonthsDisplay } from "@/lib/dues-governance.mjs";
+import { formatSchedule } from "@/lib/email/format-schedule";
 import type { NotificationCategory } from "@/lib/email/templates/club-notification-email";
+import { NotificationEnqueueError } from "@/lib/notifications/enqueue-retry";
 import {
   accountReactivatedKey,
   accountSuspendedKey,
@@ -48,18 +50,9 @@ function formatNgn(amount: number): string {
   return nairaFormatter.format(amount);
 }
 
-function formatSchedule(isoString: string, timezone = "Africa/Lagos"): string {
-  const date = new Date(isoString);
-  if (Number.isNaN(date.getTime())) return isoString;
-  try {
-    return `${new Intl.DateTimeFormat("en-NG", {
-      timeZone: timezone,
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(date)} WAT`;
-  } catch {
-    return isoString;
-  }
+function reportNotificationError(message: string, error: unknown): void {
+  console.error(message, error);
+  if (error instanceof NotificationEnqueueError) throw error;
 }
 
 function formatPaymentMethod(method: string): string {
@@ -287,7 +280,10 @@ export async function notifyNewMemberSignUp(params: {
       });
     }
   } catch (err) {
-    console.error("[Email Service] notifyNewMemberSignUp failed:", err);
+    reportNotificationError(
+      "[Email Service] notifyNewMemberSignUp failed:",
+      err,
+    );
   }
 }
 
@@ -306,7 +302,10 @@ export async function notifyWelcomeIfActive(userId: string): Promise<void> {
     if (!contact) return;
     await queueWelcome({ contact, memberId: userId });
   } catch (err) {
-    console.error("[Email Service] notifyWelcomeIfActive failed:", err);
+    reportNotificationError(
+      "[Email Service] notifyWelcomeIfActive failed:",
+      err,
+    );
   }
 }
 
@@ -399,7 +398,10 @@ export async function notifyMemberLifecycleChanged(params: {
       },
     });
   } catch (err) {
-    console.error("[Email Service] notifyMemberLifecycleChanged failed:", err);
+    reportNotificationError(
+      "[Email Service] notifyMemberLifecycleChanged failed:",
+      err,
+    );
   }
 }
 
@@ -464,7 +466,10 @@ export async function notifyClubRoleChanged(params: {
       },
     });
   } catch (err) {
-    console.error("[Email Service] notifyClubRoleChanged failed:", err);
+    reportNotificationError(
+      "[Email Service] notifyClubRoleChanged failed:",
+      err,
+    );
   }
 }
 
@@ -504,7 +509,10 @@ export async function notifyPasswordUpdated(params: {
       },
     });
   } catch (err) {
-    console.error("[Email Service] notifyPasswordUpdated failed:", err);
+    reportNotificationError(
+      "[Email Service] notifyPasswordUpdated failed:",
+      err,
+    );
   }
 }
 
@@ -562,7 +570,7 @@ export async function notifyDuesPaymentRequestSubmitted(params: {
       });
     }
 
-    await Promise.allSettled(
+    const officerQueueResults = await Promise.allSettled(
       officers
         .filter((officer) => officer.userId !== params.actorId)
         .map((officer) =>
@@ -600,8 +608,12 @@ export async function notifyDuesPaymentRequestSubmitted(params: {
           }),
         ),
     );
+    const officerQueueFailure = officerQueueResults.find(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+    if (officerQueueFailure) throw officerQueueFailure.reason;
   } catch (err) {
-    console.error(
+    reportNotificationError(
       "[Email Service] notifyDuesPaymentRequestSubmitted failed:",
       err,
     );
@@ -667,7 +679,10 @@ export async function notifyDuesPaymentConfirmed(params: {
       },
     });
   } catch (err) {
-    console.error("[Email Service] notifyDuesPaymentConfirmed failed:", err);
+    reportNotificationError(
+      "[Email Service] notifyDuesPaymentConfirmed failed:",
+      err,
+    );
   }
 }
 
@@ -730,7 +745,7 @@ export async function notifyDuesPaymentRequestRejected(params: {
       },
     });
   } catch (err) {
-    console.error(
+    reportNotificationError(
       "[Email Service] notifyDuesPaymentRequestRejected failed:",
       err,
     );
@@ -796,7 +811,10 @@ export async function notifyNewEventScheduled(params: {
       },
     });
   } catch (err) {
-    console.error("[Email Service] notifyNewEventScheduled failed:", err);
+    reportNotificationError(
+      "[Email Service] notifyNewEventScheduled failed:",
+      err,
+    );
   }
 }
 
@@ -847,7 +865,7 @@ export async function notifyEventChanged(params: {
       },
     });
   } catch (err) {
-    console.error("[Email Service] notifyEventChanged failed:", err);
+    reportNotificationError("[Email Service] notifyEventChanged failed:", err);
   }
 }
 
@@ -895,7 +913,10 @@ export async function notifyEventCancelled(params: {
       },
     });
   } catch (err) {
-    console.error("[Email Service] notifyEventCancelled failed:", err);
+    reportNotificationError(
+      "[Email Service] notifyEventCancelled failed:",
+      err,
+    );
   }
 }
 
@@ -957,7 +978,10 @@ export async function notifyEventRoleAssigned(params: {
       },
     });
   } catch (err) {
-    console.error("[Email Service] notifyEventRoleAssigned failed:", err);
+    reportNotificationError(
+      "[Email Service] notifyEventRoleAssigned failed:",
+      err,
+    );
   }
 }
 
@@ -1002,7 +1026,10 @@ export async function notifyEventAttendanceOpened(params: {
       },
     });
   } catch (err) {
-    console.error("[Email Service] notifyEventAttendanceOpened failed:", err);
+    reportNotificationError(
+      "[Email Service] notifyEventAttendanceOpened failed:",
+      err,
+    );
   }
 }
 
@@ -1045,7 +1072,10 @@ export async function notifyAnnouncementPublished(params: {
       },
     });
   } catch (err) {
-    console.error("[Email Service] notifyAnnouncementPublished failed:", err);
+    reportNotificationError(
+      "[Email Service] notifyAnnouncementPublished failed:",
+      err,
+    );
   }
 }
 
@@ -1086,6 +1116,6 @@ export async function notifyPollCreated(params: {
       },
     });
   } catch (err) {
-    console.error("[Email Service] notifyPollCreated failed:", err);
+    reportNotificationError("[Email Service] notifyPollCreated failed:", err);
   }
 }

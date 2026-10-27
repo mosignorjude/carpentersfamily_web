@@ -809,9 +809,7 @@ export async function approveDuesPaymentRequestAction(formData: FormData) {
 
   const { data: requestRow } = await actor.supabase
     .from("dues_payment_requests")
-    .select(
-      "member_id, amount_ngn, covered_months, payment_method, payment_reference",
-    )
+    .select("member_id, amount_ngn, covered_months, payment_method")
     .eq("id", requestId)
     .maybeSingle();
 
@@ -831,7 +829,6 @@ export async function approveDuesPaymentRequestAction(formData: FormData) {
       amountNgn: Number(requestRow.amount_ngn),
       coveredMonths: requestRow.covered_months ?? [],
       paymentMethod: requestRow.payment_method,
-      paymentReference: requestRow.payment_reference,
     });
   }
 
@@ -863,9 +860,7 @@ export async function rejectDuesPaymentRequestAction(formData: FormData) {
 
   const { data: requestRow } = await actor.supabase
     .from("dues_payment_requests")
-    .select(
-      "member_id, amount_ngn, covered_months, payment_method, payment_reference",
-    )
+    .select("member_id, amount_ngn, covered_months, payment_method")
     .eq("id", requestId)
     .maybeSingle();
 
@@ -886,7 +881,6 @@ export async function rejectDuesPaymentRequestAction(formData: FormData) {
       amountNgn: Number(requestRow.amount_ngn),
       coveredMonths: requestRow.covered_months ?? [],
       paymentMethod: requestRow.payment_method,
-      paymentReference: requestRow.payment_reference,
       reason,
     });
   }
