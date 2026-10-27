@@ -26,6 +26,22 @@ function isNativeFormField(
   );
 }
 
+function getFieldLabel(field: NativeFormField): string {
+  if (field.dataset.fieldName) return field.dataset.fieldName;
+  const label = field.closest("label");
+  const spanText = label?.querySelector("span")?.textContent?.trim();
+  if (spanText && !spanText.toLowerCase().includes("required")) {
+    return spanText.toLowerCase();
+  }
+  if (field.name === "email") return "email address";
+  if (field.name === "password") return "password";
+  if (field.name === "confirm_password") return "password confirmation";
+  if (field.name === "full_name") return "full name";
+  if (field.name === "username") return "username";
+  if (field.name === "amount" || field.name === "amount_ngn") return "amount";
+  return field.name || "this field";
+}
+
 function getErrorMessage(field: NativeFormField) {
   const isPassword =
     field instanceof HTMLInputElement && field.type === "password";
@@ -33,7 +49,7 @@ function getErrorMessage(field: NativeFormField) {
     field.required &&
     (!field.value || (!isPassword && !field.value.trim()))
   ) {
-    return "Please fill in this field.";
+    return `Please enter ${getFieldLabel(field)}.`;
   }
 
   if (

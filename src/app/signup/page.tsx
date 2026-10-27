@@ -108,6 +108,7 @@ export default async function SignupPage({
             <input
               autoComplete="name"
               aria-describedby="signup-full-name-error"
+              data-field-name="full name"
               id="signup-full-name"
               maxLength={120}
               name="full_name"
@@ -122,6 +123,7 @@ export default async function SignupPage({
               autoComplete="username"
               aria-describedby="signup-username-hint signup-username-error"
               data-error-message="Use 3–30 letters, numbers, or underscores."
+              data-field-name="username"
               id="signup-username"
               maxLength={30}
               minLength={3}
@@ -142,6 +144,7 @@ export default async function SignupPage({
               <input
                 autoComplete="email"
                 aria-describedby="signup-email-error"
+                data-field-name="email address"
                 id="signup-email"
                 maxLength={254}
                 name="email"
@@ -157,6 +160,7 @@ export default async function SignupPage({
             <AuthPasswordInput
               autoComplete="new-password"
               aria-describedby="signup-password-hint signup-password-error"
+              data-field-name="password"
               id="signup-password"
               maxLength={128}
               minLength={12}
@@ -174,6 +178,7 @@ export default async function SignupPage({
             <AuthPasswordInput
               autoComplete="new-password"
               aria-describedby="signup-confirm-password-error"
+              data-field-name="password confirmation"
               id="signup-confirm-password"
               maxLength={128}
               minLength={12}

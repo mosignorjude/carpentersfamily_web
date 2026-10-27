@@ -127,6 +127,7 @@ export default async function HomePage({
                 <input
                   autoComplete="email"
                   aria-describedby="sign-in-email-error"
+                  data-field-name="email address"
                   id="sign-in-email"
                   maxLength={254}
                   name="email"
@@ -142,6 +143,7 @@ export default async function HomePage({
               <AuthPasswordInput
                 autoComplete="current-password"
                 aria-describedby="sign-in-password-error"
+                data-field-name="password"
                 id="sign-in-password"
                 maxLength={128}
                 name="password"
