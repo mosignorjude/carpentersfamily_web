@@ -1957,81 +1957,104 @@ export async function setEventBudgetAction(formData: FormData) {
   const eventId = eventText(formData, "event_id", 36);
   if (!eventId || !uuidPattern.test(eventId))
     redirect(eventNoticeUrl("invalid-request"));
+  const returnTab =
+    normalizeEventFinanceTab(formData.get("return_tab")) ?? "budget";
   const actor = await getActiveEventActor(eventId);
   if (
     !eventManagerAllowed(actor.roles) &&
     !actor.eventRoles.has("lead") &&
     !actor.eventRoles.has("assistant")
   ) {
-    redirect(eventNoticeUrl("denied"));
+    redirect(eventFinanceNoticeUrl(eventId, "denied", returnTab));
   }
   if (
     !eventFieldsOnly(formData, [
       "event_id",
       "total_ngn",
-      "allocation_name",
-      "allocation_amount_ngn",
       "reason",
+      "return_tab",
     ])
   ) {
-    redirect(eventNoticeUrl("invalid-request"));
+    redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
   }
   const total = eventAmount(formData.get("total_ngn"));
-  const reason = eventText(formData, "reason", 500);
-  const names = formData.getAll("allocation_name");
-  const amounts = formData.getAll("allocation_amount_ngn");
   if (
     total === null ||
+    total <= 0 ||
     formData.getAll("total_ngn").length !== 1 ||
-    formData.getAll("event_id").length !== 1 ||
-    !reason ||
-    names.length < 1 ||
-    names.length > 50 ||
-    names.length !== amounts.length
+    formData.getAll("event_id").length !== 1
   ) {
-    redirect(eventNoticeUrl("invalid-request"));
+    redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
   }
-  const allocations: { name: string; amount_ngn: number }[] = [];
-  for (let index = 0; index < names.length; index += 1) {
-    const nameValue = names[index];
-    const amountValue = amounts[index];
-    if (typeof nameValue !== "string" || typeof amountValue !== "string") {
-      redirect(eventNoticeUrl("invalid-request"));
+
+  const reasonInput = formData.get("reason");
+  let reason: string | null = null;
+  if (typeof reasonInput === "string" && reasonInput.trim().length > 0) {
+    reason = eventText(formData, "reason", 500);
+    if (!reason) {
+      redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
     }
-    if (!nameValue.trim() && !amountValue.trim()) continue;
-    if (containsControlCharacters(nameValue)) {
-      redirect(eventNoticeUrl("invalid-request"));
-    }
-    const name = nameValue.trim();
-    const amount = eventAmount(amountValue);
-    if (
-      !name ||
-      name.length > 80 ||
-      containsControlCharacters(name) ||
-      amount === null
-    ) {
-      redirect(eventNoticeUrl("invalid-request"));
-    }
-    allocations.push({ name, amount_ngn: amount });
   }
-  if (
-    allocations.length < 1 ||
-    allocations.length > 50 ||
-    allocations.reduce((sum, allocation) => sum + allocation.amount_ngn, 0) !==
-      total
-  ) {
-    redirect(eventNoticeUrl("invalid-request"));
+
+  // 1. Fetch current budget to see if this is an update requiring a reason
+  const { data: existingBudget, error: budgetError } = await actor.supabase
+    .from("event_budgets")
+    .select("total_ngn")
+    .eq("event_id", eventId)
+    .maybeSingle();
+
+  if (budgetError) {
+    redirect(
+      eventFinanceNoticeUrl(eventId, rpcErrorNotice(budgetError), returnTab),
+    );
+  }
+
+  const budgetExists = Boolean(existingBudget);
+  if (budgetExists && !reason) {
+    redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
+  }
+
+  // 2. Fetch existing allocations to preserve them
+  const { data: existingAllocations, error: allocationsError } =
+    await actor.supabase
+      .from("event_budget_allocations")
+      .select("category_id, allocation_percent")
+      .eq("event_id", eventId)
+      .order("position", { ascending: true });
+
+  if (allocationsError) {
+    redirect(
+      eventFinanceNoticeUrl(
+        eventId,
+        rpcErrorNotice(allocationsError),
+        returnTab,
+      ),
+    );
+  }
+
+  const rpcAllocations = (existingAllocations ?? []).map((alloc) => ({
+    category_id: alloc.category_id,
+    percentage: Number(Number(alloc.allocation_percent).toFixed(4)),
+  }));
+
+  const sumPercent = rpcAllocations.reduce((sum, a) => sum + a.percentage, 0);
+  if (sumPercent > 100.0001) {
+    redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
   }
 
   const { error } = await actor.supabase.rpc("set_event_budget", {
     p_event_id: eventId,
     p_total_ngn: total,
-    p_allocations: allocations,
-    p_reason: reason,
+    p_allocations: rpcAllocations,
+    p_reason: reason || null,
   });
-  if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
+  if (error)
+    redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error), returnTab));
   revalidatePath("/events");
-  redirect(eventNoticeUrl("budget-saved"));
+  revalidatePath(`/events/${eventId}`);
+  revalidatePath(`/events/${eventId}/dashboard`);
+  revalidatePath(`/events/${eventId}/finance`);
+  redirect(eventFinanceNoticeUrl(eventId, "budget-saved", returnTab));
 }
 
 export async function setEventStatusAction(formData: FormData) {
@@ -2187,20 +2210,23 @@ export async function createEventTicketTierAction(formData: FormData) {
       "price_ngn",
       "capacity",
       "reason",
+      "return_tab",
     ])
   ) {
     redirect(eventNoticeUrl("invalid-request"));
   }
+  const returnTab =
+    normalizeEventFinanceTab(formData.get("return_tab")) ?? "tickets";
   const name = eventText(formData, "name", 80);
   const price = eventAmount(formData.get("price_ngn"));
   const capacity = eventCapacity(formData, "capacity", 100_000);
   const reason = eventText(formData, "reason", 500);
   if (!name || price === null || capacity === null || !reason) {
-    redirect(eventFinanceNoticeUrl(eventId, "invalid-request"));
+    redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
   }
   const actor = await getActiveEventActor(eventId);
   if (!eventFinanceManagerAllowed(actor)) {
-    redirect(eventFinanceNoticeUrl(eventId, "denied"));
+    redirect(eventFinanceNoticeUrl(eventId, "denied", returnTab));
   }
   const { error } = await actor.supabase.rpc("create_event_ticket_tier", {
     p_event_id: eventId,
@@ -2209,27 +2235,39 @@ export async function createEventTicketTierAction(formData: FormData) {
     p_capacity: capacity,
     p_reason: reason,
   });
-  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
+  if (error)
+    redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error), returnTab));
+  revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
-  redirect(eventFinanceNoticeUrl(eventId, "tier-saved"));
+  redirect(eventFinanceNoticeUrl(eventId, "tier-saved", returnTab));
 }
 
 export async function updateEventTicketTierAction(formData: FormData) {
   const { eventId, recordId: tierId } = eventFinanceInput(
     formData,
-    ["event_id", "tier_id", "name", "price_ngn", "capacity", "reason"],
+    [
+      "event_id",
+      "tier_id",
+      "name",
+      "price_ngn",
+      "capacity",
+      "reason",
+      "return_tab",
+    ],
     "tier_id",
   );
+  const returnTab =
+    normalizeEventFinanceTab(formData.get("return_tab")) ?? "tickets";
   const name = eventText(formData, "name", 80);
   const price = eventAmount(formData.get("price_ngn"));
   const capacity = eventCapacity(formData, "capacity", 100_000);
   const reason = eventText(formData, "reason", 500);
   if (!name || price === null || capacity === null || !reason) {
-    redirect(eventFinanceNoticeUrl(eventId, "invalid-request"));
+    redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
   }
   const actor = await getActiveEventActor(eventId);
   if (!eventFinanceManagerAllowed(actor)) {
-    redirect(eventFinanceNoticeUrl(eventId, "denied"));
+    redirect(eventFinanceNoticeUrl(eventId, "denied", returnTab));
   }
   const { error } = await actor.supabase.rpc("update_event_ticket_tier", {
     p_tier_id: tierId,
@@ -2238,30 +2276,37 @@ export async function updateEventTicketTierAction(formData: FormData) {
     p_capacity: capacity,
     p_reason: reason,
   });
-  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
+  if (error)
+    redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error), returnTab));
+  revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
-  redirect(eventFinanceNoticeUrl(eventId, "tier-saved"));
+  redirect(eventFinanceNoticeUrl(eventId, "tier-saved", returnTab));
 }
 
 export async function retireEventTicketTierAction(formData: FormData) {
   const { eventId, recordId: tierId } = eventFinanceInput(
     formData,
-    ["event_id", "tier_id", "reason"],
+    ["event_id", "tier_id", "reason", "return_tab"],
     "tier_id",
   );
+  const returnTab =
+    normalizeEventFinanceTab(formData.get("return_tab")) ?? "tickets";
   const reason = eventText(formData, "reason", 500);
-  if (!reason) redirect(eventFinanceNoticeUrl(eventId, "invalid-request"));
+  if (!reason)
+    redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
   const actor = await getActiveEventActor(eventId);
   if (!eventFinanceManagerAllowed(actor)) {
-    redirect(eventFinanceNoticeUrl(eventId, "denied"));
+    redirect(eventFinanceNoticeUrl(eventId, "denied", returnTab));
   }
   const { error } = await actor.supabase.rpc("retire_event_ticket_tier", {
     p_tier_id: tierId,
     p_reason: reason,
   });
-  if (error) redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error)));
+  if (error)
+    redirect(eventFinanceNoticeUrl(eventId, rpcErrorNotice(error), returnTab));
+  revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath(`/events/${eventId}/finance`);
-  redirect(eventFinanceNoticeUrl(eventId, "tier-retired"));
+  redirect(eventFinanceNoticeUrl(eventId, "tier-retired", returnTab));
 }
 
 export async function recordEventFinancialTransactionAction(
