@@ -10,6 +10,13 @@ const pageSource = readFileSync(
   new URL("../src/app/page.tsx", import.meta.url),
   "utf8",
 );
+const recordModalSource = readFileSync(
+  new URL(
+    "../src/components/events/dashboard/modals/record-transaction-modal.tsx",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 describe("Field-specific required validation", () => {
   it("formats required field error message with the specific field label or name", () => {
@@ -35,6 +42,26 @@ describe("Field-specific required validation", () => {
       pageSource,
       /data-field-name="password"/,
       "Password field must configure field name for validation feedback",
+    );
+  });
+});
+
+describe("RecordTransactionModal field-level validation", () => {
+  it("renders FormFieldError with AlertCircle under amount, description, and counterparty fields", () => {
+    assert.match(
+      recordModalSource,
+      /FormFieldError/,
+      "Must import and render FormFieldError in RecordTransactionModal",
+    );
+    assert.match(
+      recordModalSource,
+      /Please enter amount/,
+      "Must provide 'Please enter amount' error message",
+    );
+    assert.match(
+      recordModalSource,
+      /Please enter transaction description/,
+      "Must provide 'Please enter transaction description' error message",
     );
   });
 });

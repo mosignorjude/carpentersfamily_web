@@ -4,7 +4,7 @@ import { Loader2, Plus, Ticket, X } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { FormattedAmountInput } from "@/components/formatted-amount-input";
-import { FormAlertBanner } from "@/components/ui";
+import { FormAlertBanner, FormFieldError } from "@/components/ui";
 import { formatNaira, formatPercent } from "@/lib/format";
 import {
   buildDisbursementFields,
@@ -158,6 +158,17 @@ export function RecordTransactionModal({
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [notes, setNotes] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const clearFieldError = (fieldName: string) => {
+    if (fieldErrors[fieldName]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[fieldName];
+        return next;
+      });
+    }
+  };
 
   useModalHygiene({ isOpen, onClose });
 
@@ -181,6 +192,7 @@ export function RecordTransactionModal({
       setPaymentStatus("paid");
       setReceiptFile(null);
       setError("");
+      setFieldErrors({});
     } else {
       setDescription("");
       setAmount("");
@@ -190,6 +202,7 @@ export function RecordTransactionModal({
       setReceiptFile(null);
       setTicketQuantity(1);
       setError("");
+      setFieldErrors({});
     }
   }, [isOpen, initialCategory, initialType]);
 
@@ -212,6 +225,9 @@ export function RecordTransactionModal({
     e.preventDefault();
     if (isPending) return;
     setError("");
+    setFieldErrors({});
+
+    const errors: Record<string, string> = {};
 
     const now = new Date();
     const watTime = `${now.toISOString().slice(0, 10)} ${now
@@ -220,6 +236,17 @@ export function RecordTransactionModal({
       .padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
 
     if (mode === "ticket") {
+      if (!payerPayee.trim()) {
+        errors.payerPayee = "Please enter attendee name.";
+      }
+      if (paymentMethod === "bank_transfer" && !receiptFile) {
+        errors.receiptFile = "Please attach payment receipt.";
+      }
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+        return;
+      }
+
       if (!currentTier) {
         setError("Please select a valid ticket tier.");
         return;
@@ -231,17 +258,6 @@ export function RecordTransactionModal({
       if (currentTier.sold + ticketQuantity > currentTier.capacity) {
         setError(
           `Capacity exceeded! Only ${currentTier.capacity - currentTier.sold} tickets remaining for ${currentTier.name}.`,
-        );
-        return;
-      }
-      if (!payerPayee.trim()) {
-        setError("Attendee / Purchaser name is required.");
-        return;
-      }
-
-      if (paymentMethod === "bank_transfer" && !receiptFile) {
-        setError(
-          "Payment receipt file is required for bank transfer ticket sales.",
         );
         return;
       }
@@ -272,49 +288,47 @@ export function RecordTransactionModal({
 
     const rawDigits = amount.replace(/\D/g, "");
     const numAmount = Number(rawDigits);
-    if (!numAmount || numAmount <= 0) {
-      setError("Please enter a valid numeric amount greater than zero.");
-      return;
+    if (!amount.trim() || !numAmount || numAmount <= 0) {
+      errors.amount = "Please enter amount.";
     }
     if (!description.trim()) {
-      setError("Description is required.");
-      return;
+      errors.description = "Please enter transaction description.";
     }
     if (!payerPayee.trim()) {
-      setError("Payer or Payee name is required.");
-      return;
+      errors.payerPayee =
+        mode === "revenue"
+          ? "Please enter payer name."
+          : "Please enter payee name.";
     }
     if (
       paymentStatus === "paid" &&
       paymentMethod === "bank_transfer" &&
       !receiptFile
     ) {
-      setError(
-        "Payment receipt voucher file is required for settled bank transfer transactions.",
-      );
-      return;
+      errors.receiptFile = "Please attach payment receipt.";
     }
     if (mode === "revenue" && !category) {
-      setError(
-        "Please select an active revenue category (or create one in Categories).",
-      );
-      return;
+      errors.category = "Please select a revenue category.";
     }
     if (mode === "expense" && !category) {
-      setError(
-        "Please configure budget allocations for this event before recording disbursements.",
-      );
+      errors.category = "Please select a budget allocation.";
+    }
+    if (
+      mode === "expense" &&
+      expenseCategoryOptions.length > 0 &&
+      !expenseCategory
+    ) {
+      errors.expenseCategory = "Please select an expense category.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
+
     if (mode === "expense" && expenseCategoryOptions.length === 0) {
       setError(
         "No active expense categories are configured. Ask an Admin to add one before recording disbursements.",
-      );
-      return;
-    }
-    if (mode === "expense" && !expenseCategory) {
-      setError(
-        "Please select an active expense category for this disbursement.",
       );
       return;
     }
@@ -414,6 +428,7 @@ export function RecordTransactionModal({
             onClick={() => {
               setMode("ticket");
               setError("");
+              setFieldErrors({});
             }}
             type="button"
           >
@@ -432,6 +447,7 @@ export function RecordTransactionModal({
               setMode("revenue");
               setCategory(resolveCategoryForMode("revenue"));
               setError("");
+              setFieldErrors({});
             }}
             type="button"
           >
@@ -451,6 +467,7 @@ export function RecordTransactionModal({
               setCategory(allocationId);
               setExpenseCategory(resolveExpenseCategory(allocationId));
               setError("");
+              setFieldErrors({});
             }}
             type="button"
           >
@@ -461,6 +478,7 @@ export function RecordTransactionModal({
         {/* Modal Form Body */}
         <form
           className="p-6 overflow-y-auto space-y-4 text-xs"
+          noValidate
           onSubmit={handleSubmit}
         >
           {error ? (
@@ -545,13 +563,27 @@ export function RecordTransactionModal({
                   Attendee / Purchaser Name
                 </label>
                 <input
-                  className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+                  aria-describedby={
+                    fieldErrors.payerPayee ? "error-ticket-attendee" : undefined
+                  }
+                  aria-invalid={fieldErrors.payerPayee ? "true" : undefined}
+                  className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 ${
+                    fieldErrors.payerPayee
+                      ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                      : "border-[#E5DDD3] focus:ring-[#174C37]"
+                  }`}
                   id="ticket-attendee-name"
-                  onChange={(e) => setPayerPayee(e.target.value)}
+                  onChange={(e) => {
+                    setPayerPayee(e.target.value);
+                    clearFieldError("payerPayee");
+                  }}
                   placeholder="e.g. Chief Emeka Nwosu"
-                  required
                   type="text"
                   value={payerPayee}
+                />
+                <FormFieldError
+                  id="error-ticket-attendee"
+                  message={fieldErrors.payerPayee}
                 />
               </div>
 
@@ -602,14 +634,28 @@ export function RecordTransactionModal({
                     <span className="text-[#BA3C2A]">*</span>
                   </label>
                   <input
+                    aria-describedby={
+                      fieldErrors.receiptFile
+                        ? "error-ticket-receipt"
+                        : undefined
+                    }
+                    aria-invalid={fieldErrors.receiptFile ? "true" : undefined}
                     id="ticket-receipt-file"
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                    required
-                    onChange={(e) =>
-                      setReceiptFile(e.target.files?.[0] || null)
-                    }
-                    className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
+                    onChange={(e) => {
+                      setReceiptFile(e.target.files?.[0] || null);
+                      clearFieldError("receiptFile");
+                    }}
+                    className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
+                      fieldErrors.receiptFile
+                        ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                        : "border-[#E5DDD3] focus:ring-[#174C37]"
+                    }`}
+                  />
+                  <FormFieldError
+                    id="error-ticket-receipt"
+                    message={fieldErrors.receiptFile}
                   />
                   <p className="text-[11px] text-[#7A685D]">
                     PDF, JPG, or PNG up to 4 MiB
@@ -632,7 +678,15 @@ export function RecordTransactionModal({
                     : "Budget Allocation (Cost Center)"}
                 </label>
                 <select
-                  className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+                  aria-describedby={
+                    fieldErrors.category ? "error-category" : undefined
+                  }
+                  aria-invalid={fieldErrors.category ? "true" : undefined}
+                  className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 ${
+                    fieldErrors.category
+                      ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                      : "border-[#E5DDD3] focus:ring-[#174C37]"
+                  }`}
                   disabled={
                     (mode === "revenue" ? revenueCategories : allocationOptions)
                       .length === 0
@@ -640,10 +694,12 @@ export function RecordTransactionModal({
                   id="category-select"
                   onChange={(e) => {
                     setCategory(e.target.value);
+                    clearFieldError("category");
                     if (mode === "expense") {
                       setExpenseCategory(
                         resolveExpenseCategory(e.target.value),
                       );
+                      clearFieldError("expenseCategory");
                     }
                   }}
                   value={category}
@@ -669,6 +725,10 @@ export function RecordTransactionModal({
                     ))
                   )}
                 </select>
+                <FormFieldError
+                  id="error-category"
+                  message={fieldErrors.category}
+                />
               </div>
 
               {mode === "expense" && (
@@ -680,10 +740,25 @@ export function RecordTransactionModal({
                     Expense Category
                   </label>
                   <select
-                    className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+                    aria-describedby={
+                      fieldErrors.expenseCategory
+                        ? "error-expense-category"
+                        : undefined
+                    }
+                    aria-invalid={
+                      fieldErrors.expenseCategory ? "true" : undefined
+                    }
+                    className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 ${
+                      fieldErrors.expenseCategory
+                        ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                        : "border-[#E5DDD3] focus:ring-[#174C37]"
+                    }`}
                     disabled={expenseCategoryOptions.length === 0}
                     id="expense-category-select"
-                    onChange={(e) => setExpenseCategory(e.target.value)}
+                    onChange={(e) => {
+                      setExpenseCategory(e.target.value);
+                      clearFieldError("expenseCategory");
+                    }}
                     value={expenseCategory}
                   >
                     {expenseCategoryOptions.length === 0 ? (
@@ -703,6 +778,10 @@ export function RecordTransactionModal({
                       </>
                     )}
                   </select>
+                  <FormFieldError
+                    id="error-expense-category"
+                    message={fieldErrors.expenseCategory}
+                  />
                   <p className="text-[11px] text-[#7A685D] mt-1">
                     Every disbursement posts against an Admin-managed expense
                     category and an approved budget allocation.
@@ -718,17 +797,31 @@ export function RecordTransactionModal({
                   Transaction Description
                 </label>
                 <input
-                  className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+                  aria-describedby={
+                    fieldErrors.description ? "error-description" : undefined
+                  }
+                  aria-invalid={fieldErrors.description ? "true" : undefined}
+                  className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 ${
+                    fieldErrors.description
+                      ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                      : "border-[#E5DDD3] focus:ring-[#174C37]"
+                  }`}
                   id="txn-description"
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    clearFieldError("description");
+                  }}
                   placeholder={
                     mode === "revenue"
                       ? "e.g. Nigerian Breweries Stage Title Rights"
                       : "e.g. Lekki Meadow Grounds advance lease settlement"
                   }
-                  required
                   type="text"
                   value={description}
+                />
+                <FormFieldError
+                  id="error-description"
+                  message={fieldErrors.description}
                 />
               </div>
 
@@ -741,12 +834,26 @@ export function RecordTransactionModal({
                     Amount (₦ NGN)
                   </label>
                   <FormattedAmountInput
-                    className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+                    aria-describedby={
+                      fieldErrors.amount ? "error-amount" : undefined
+                    }
+                    aria-invalid={fieldErrors.amount ? "true" : undefined}
+                    className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 ${
+                      fieldErrors.amount
+                        ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                        : "border-[#E5DDD3] focus:ring-[#174C37]"
+                    }`}
                     id="txn-amount"
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => {
+                      setAmount(e.target.value);
+                      clearFieldError("amount");
+                    }}
                     placeholder="e.g. 500,000"
-                    required
                     value={amount}
+                  />
+                  <FormFieldError
+                    id="error-amount"
+                    message={fieldErrors.amount}
                   />
                 </div>
 
@@ -784,13 +891,27 @@ export function RecordTransactionModal({
                       : "Payee / Vendor"}
                   </label>
                   <input
-                    className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+                    aria-describedby={
+                      fieldErrors.payerPayee ? "error-party" : undefined
+                    }
+                    aria-invalid={fieldErrors.payerPayee ? "true" : undefined}
+                    className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 ${
+                      fieldErrors.payerPayee
+                        ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                        : "border-[#E5DDD3] focus:ring-[#174C37]"
+                    }`}
                     id="txn-party"
-                    onChange={(e) => setPayerPayee(e.target.value)}
+                    onChange={(e) => {
+                      setPayerPayee(e.target.value);
+                      clearFieldError("payerPayee");
+                    }}
                     placeholder="e.g. Meadow Estates Ltd"
-                    required
                     type="text"
                     value={payerPayee}
+                  />
+                  <FormFieldError
+                    id="error-party"
+                    message={fieldErrors.payerPayee}
                   />
                 </div>
 
@@ -834,14 +955,30 @@ export function RecordTransactionModal({
                       <span className="text-[#BA3C2A]">*</span>
                     </label>
                     <input
+                      aria-describedby={
+                        fieldErrors.receiptFile
+                          ? "error-receipt-file"
+                          : undefined
+                      }
+                      aria-invalid={
+                        fieldErrors.receiptFile ? "true" : undefined
+                      }
                       id="txn-receipt-file"
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                      required
-                      onChange={(e) =>
-                        setReceiptFile(e.target.files?.[0] || null)
-                      }
-                      className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
+                      onChange={(e) => {
+                        setReceiptFile(e.target.files?.[0] || null);
+                        clearFieldError("receiptFile");
+                      }}
+                      className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
+                        fieldErrors.receiptFile
+                          ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                          : "border-[#E5DDD3] focus:ring-[#174C37]"
+                      }`}
+                    />
+                    <FormFieldError
+                      id="error-receipt-file"
+                      message={fieldErrors.receiptFile}
                     />
                     <p className="text-[11px] text-[#7A685D]">
                       PDF, JPG, or PNG up to 4 MiB (Required for settled bank
