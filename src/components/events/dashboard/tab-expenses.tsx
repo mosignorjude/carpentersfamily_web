@@ -66,9 +66,9 @@ export function TabExpenses({
   });
 
   return (
-    <section className="bg-white rounded-2xl border border-[#E5DDD3] p-6 shadow-xs space-y-6">
+    <section className="bg-white rounded-2xl border border-[#E5DDD3] p-6 shadow-xs space-y-6 overflow-hidden max-w-full">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
         <div>
           <div className="flex items-center gap-2">
             <Wallet className="w-5 h-5 text-[#174C37]" />
@@ -124,9 +124,9 @@ export function TabExpenses({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 min-w-0 max-w-full">
         {/* Segmented Filter Buttons */}
-        <div className="flex items-center gap-1.5 p-1 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-x-auto">
+        <div className="flex items-center gap-1.5 p-1 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-x-auto min-w-0 max-w-full flex-1">
           <button
             className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors min-h-[36px] cursor-pointer ${
               selectedCenter === "all"
@@ -250,29 +250,29 @@ export function TabExpenses({
                   </div>
 
                   {/* Numbers Row */}
-                  <div className="mt-4 grid grid-cols-3 gap-2 p-3 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] text-center">
-                    <div>
+                  <div className="mt-4 grid grid-cols-3 gap-2 p-3 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] text-center min-w-0">
+                    <div className="min-w-0">
                       <span className="text-[11px] text-[#7A685D] block">
                         Disbursed
                       </span>
-                      <span className="font-bold text-xs text-[#BA3C2A] tabular-nums font-mono">
+                      <span className="font-bold text-xs text-[#BA3C2A] tabular-nums font-mono block truncate">
                         {formatNaira(center.spent)}
                       </span>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <span className="text-[11px] text-[#7A685D] block">
                         Committed POs
                       </span>
-                      <span className="font-semibold text-xs text-[#D6A23A] tabular-nums font-mono">
+                      <span className="font-semibold text-xs text-[#D6A23A] tabular-nums font-mono block truncate">
                         {formatNaira(center.committed)}
                       </span>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <span className="text-[11px] text-[#7A685D] block">
                         Variance
                       </span>
                       <span
-                        className={`font-semibold text-xs tabular-nums font-mono ${
+                        className={`font-semibold text-xs tabular-nums font-mono block truncate ${
                           isOverBudget ? "text-[#BA3C2A]" : "text-[#174C37]"
                         }`}
                       >
