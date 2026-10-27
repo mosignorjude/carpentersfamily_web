@@ -130,6 +130,19 @@ describe("TabTickets management controls", () => {
       "Must render Retire button for tier card",
     );
   });
+
+  it("renders flexible auto-fit grid for tier cards instead of rigid 4-column grid", () => {
+    assert.match(
+      source,
+      /auto-fit|grid-cols-\[repeat\(auto-fit/,
+      "Tiers grid must use auto-fit to allow cards to expand and shrink flexibly",
+    );
+    assert.doesNotMatch(
+      source,
+      /lg:grid-cols-4/,
+      "Tiers grid must not use rigid lg:grid-cols-4",
+    );
+  });
 });
 
 describe("EventDashboardView ticket tier integration", () => {

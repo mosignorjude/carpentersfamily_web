@@ -118,7 +118,7 @@ export function TabTickets({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
           {tiers.map((tier) => {
             const revenue = tier.sold * tier.price;
             const percentageFilled = Math.min(
