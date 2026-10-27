@@ -54,6 +54,11 @@ describe("setEventBudgetAction", () => {
       /\.from\("event_budgets"\)/,
       "setEventBudgetAction must check existing budget in event_budgets",
     );
+    assert.match(
+      body,
+      /Initial budget ceiling entry/,
+      "setEventBudgetAction must default reason to Initial budget ceiling entry for initial setup",
+    );
   });
 
   it("queries existing allocations to preserve them", () => {

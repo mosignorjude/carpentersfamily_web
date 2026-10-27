@@ -132,43 +132,38 @@ export function EventBudgetCeilingModal({
             </p>
           </div>
 
-          {/* Audit Reason Field */}
-          <div className="space-y-1.5">
-            <label
-              className="block font-semibold text-[#3D291F]"
-              htmlFor="event-budget-reason"
-            >
-              Audit Reason{" "}
-              {isEditing ? (
-                <span className="text-[#BA3C2A]">*</span>
-              ) : (
-                <span className="text-[#7A685D] font-normal">(Optional)</span>
-              )}
-            </label>
-            <textarea
-              className="w-full p-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] resize-none"
-              id="event-budget-reason"
-              maxLength={500}
+          {/* Audit Reason Field (Required only during revision; hidden default for create) */}
+          {!isEditing ? (
+            <input
               name="reason"
-              onChange={(e) => setReason(e.target.value)}
-              placeholder={
-                isEditing
-                  ? "Explain why the total budget ceiling is being revised (e.g. Executive approval for expanded catering scope)..."
-                  : "Optional note explaining initial budget authorization..."
-              }
-              required={isEditing}
-              rows={3}
-              value={reason}
+              type="hidden"
+              value="Initial budget ceiling entry"
             />
-            <div className="flex justify-between items-center text-[10px] text-[#7A685D]">
-              <span>
-                {isEditing
-                  ? "Required for immutable audit logging."
-                  : "Recorded in event financial ledger history if provided."}
-              </span>
-              <span>{reason.length}/500</span>
+          ) : (
+            <div className="space-y-1.5">
+              <label
+                className="block font-semibold text-[#3D291F]"
+                htmlFor="event-budget-reason"
+              >
+                Audit Reason <span className="text-[#BA3C2A]">*</span>
+              </label>
+              <textarea
+                className="w-full p-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] resize-none"
+                id="event-budget-reason"
+                maxLength={500}
+                name="reason"
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Explain why the total budget ceiling is being revised (e.g. Executive approval for expanded catering scope)..."
+                required
+                rows={3}
+                value={reason}
+              />
+              <div className="flex justify-between items-center text-[10px] text-[#7A685D]">
+                <span>Required for immutable audit logging.</span>
+                <span>{reason.length}/500</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Footer Controls */}
           <div className="pt-3 border-t border-[#E5DDD3] flex items-center justify-end gap-2.5">

@@ -56,11 +56,7 @@ describe("EventBudgetCeilingModal", () => {
       /name="return_tab"/,
       "Must include return_tab hidden field",
     );
-    assert.match(
-      source,
-      /name="reason"/,
-      "Must include reason field",
-    );
+    assert.match(source, /name="reason"/, "Must include reason field");
   });
 
   it("handles dynamic copy for initial setup vs revision", () => {
@@ -75,6 +71,21 @@ describe("EventBudgetCeilingModal", () => {
       source,
       /Edit Event Budget Total/,
       "Must include Edit Event Budget Total heading for existing ceiling",
+    );
+  });
+
+  it("renders hidden reason input for initial ceiling setup and visible required textarea on revision", () => {
+    if (!existsSync(modalPath)) return;
+    const source = readFileSync(modalPath, "utf8");
+    assert.match(
+      source,
+      /!isEditing\s*\?\s*\(\s*<input[^>]*name="reason"[^>]*value="Initial budget ceiling entry"/,
+      "Must submit hidden 'Initial budget ceiling entry' when !isEditing",
+    );
+    assert.match(
+      source,
+      /id="event-budget-reason"/,
+      "Must render event-budget-reason textarea when isEditing",
     );
   });
 });

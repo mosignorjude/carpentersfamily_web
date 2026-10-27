@@ -2013,6 +2013,9 @@ export async function setEventBudgetAction(formData: FormData) {
   if (budgetExists && !reason) {
     redirect(eventFinanceNoticeUrl(eventId, "invalid-request", returnTab));
   }
+  if (!budgetExists && !reason) {
+    reason = "Initial budget ceiling entry";
+  }
 
   // 2. Fetch existing allocations to preserve them
   const { data: existingAllocations, error: allocationsError } =
