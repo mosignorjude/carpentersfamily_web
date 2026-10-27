@@ -127,8 +127,8 @@ function finishMutation(formData: FormData, notice: string): never {
 export async function createEventFinanceCategoryAction(formData: FormData) {
   const type = categoryType(field(formData, "category_type", 30));
   const name = field(formData, "name", 80);
-  const reason = field(formData, "reason", 500);
-  if (!type || !name || name.length < 2 || !reason) {
+  const reason = field(formData, "reason", 500) || "Initial category entry";
+  if (!type || !name || name.length < 2) {
     redirect(redirectTarget(formData, "invalid-request"));
   }
 

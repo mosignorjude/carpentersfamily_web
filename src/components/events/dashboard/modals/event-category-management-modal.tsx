@@ -967,24 +967,11 @@ export function EventCategoryManagementModal({
                       />
                     </div>
 
-                    <div>
-                      <label
-                        className="block text-[11px] font-semibold text-[#5C4638] mb-1"
-                        htmlFor="create-category-reason"
-                      >
-                        Audit Reason <span className="text-[#BA3C2A]">*</span>
-                      </label>
-                      <input
-                        className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#7A685D] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
-                        id="create-category-reason"
-                        maxLength={500}
-                        minLength={1}
-                        name="reason"
-                        placeholder="Operational justification for adding this category..."
-                        required
-                        type="text"
-                      />
-                    </div>
+                    <input
+                      name="reason"
+                      type="hidden"
+                      value="Initial category entry"
+                    />
 
                     <div className="flex justify-end pt-1">
                       <FormSubmitButton
