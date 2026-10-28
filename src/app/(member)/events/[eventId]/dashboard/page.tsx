@@ -220,7 +220,7 @@ export default async function EventDashboardPage({
     supabase
       .from("event_ticket_sales")
       .select(
-        "id, tier_id, quantity, amount_ngn, buyer_name, payment_method, created_at, refunded_at, refund_reason, created_by, verification_status, verified_by, verified_at, rejection_reason",
+        "id, tier_id, quantity, amount_ngn, buyer_name, payment_method, created_at, refunded_at, refund_reason, seller_id, verification_status, verified_by, verified_at, rejection_reason",
       )
       .eq("event_id", eventId)
       .order("created_at", { ascending: false }),
@@ -647,9 +647,38 @@ export default async function EventDashboardPage({
     return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   }
 
+  // Fetch actor usernames for recording attribution
+  const actorIds = Array.from(
+    new Set([
+      ...rawTxns.map((t) => t.created_by).filter(Boolean),
+      ...allSales
+        .map((s) => (s as { seller_id?: string }).seller_id)
+        .filter(Boolean),
+    ]),
+  ) as string[];
+
+  const { data: actorProfiles } =
+    actorIds.length > 0
+      ? await supabase
+          .from("member_profiles")
+          .select("id, username")
+          .in("id", actorIds)
+      : { data: [] };
+
+  const usernameByActorId = new Map<string, string>(
+    (actorProfiles ?? [])
+      .filter((p) => p.username)
+      .map((p) => [p.id, p.username as string]),
+  );
+
   // Transactions Ledger (combine manual financial transactions + recorded ticket sales)
   const manualTransactions: DashboardTransaction[] = rawTxns.map((t) => {
     const rc = receiptByTxnId.get(t.id);
+    const creatorHandle = t.created_by
+      ? usernameByActorId.get(t.created_by)
+      : null;
+    const actorDisplay = creatorHandle ? `@${creatorHandle}` : "@secretariat";
+
     return {
       id: t.id,
       date: t.transaction_date,
@@ -673,11 +702,13 @@ export default async function EventDashboardPage({
       receipt: rc ?? null,
       receiptFileName: rc?.filename,
       receiptSize: formatReceiptSize(rc?.sizeBytes),
-      authorizedBy: "Verified Officer",
-      authorizerRole: "Executive / Admin",
+      authorizedBy: actorDisplay,
+      authorizerRole: "Recorded",
       status: t.voided_at ? "voided" : "posted",
       voidReason: t.void_reason || undefined,
-      verificationStatus: (t.verification_status as "recorded" | "approved" | "rejected") ?? (t.voided_at ? "rejected" : "approved"),
+      verificationStatus:
+        (t.verification_status as "recorded" | "approved" | "rejected") ??
+        (t.voided_at ? "rejected" : "approved"),
       verifiedBy: t.verified_by ?? undefined,
       verifiedAt: t.verified_at ?? undefined,
       rejectionReason: t.rejection_reason || t.void_reason || undefined,
@@ -688,6 +719,10 @@ export default async function EventDashboardPage({
   const saleTransactions: DashboardTransaction[] = allSales.map((s) => {
     const tierName = tierNameById.get(s.tier_id) || "Admission Tier";
     const rc = receiptBySaleId.get(s.id);
+    const sellerId = (s as { seller_id?: string }).seller_id;
+    const sellerHandle = sellerId ? usernameByActorId.get(sellerId) : null;
+    const actorDisplay = sellerHandle ? `@${sellerHandle}` : "@secretariat";
+
     return {
       id: s.id,
       date: s.created_at
@@ -705,15 +740,17 @@ export default async function EventDashboardPage({
       receipt: rc ?? null,
       receiptFileName: rc?.filename,
       receiptSize: formatReceiptSize(rc?.sizeBytes),
-      authorizedBy: "Verified Officer",
-      authorizerRole: "Ticketing Desk",
+      authorizedBy: actorDisplay,
+      authorizerRole: "Recorded",
       status: s.refunded_at ? "voided" : "posted",
       voidReason: s.refund_reason || undefined,
-      verificationStatus: (s.verification_status as "recorded" | "approved" | "rejected") ?? (s.refunded_at ? "rejected" : "approved"),
+      verificationStatus:
+        (s.verification_status as "recorded" | "approved" | "rejected") ??
+        (s.refunded_at ? "rejected" : "approved"),
       verifiedBy: s.verified_by ?? undefined,
       verifiedAt: s.verified_at ?? undefined,
       rejectionReason: s.rejection_reason || s.refund_reason || undefined,
-      createdBy: s.created_by ?? undefined,
+      createdBy: sellerId ?? undefined,
     };
   });
 
@@ -777,6 +814,7 @@ export default async function EventDashboardPage({
         notice={notice}
         teamMembers={teamMembers}
         userRole={computedRole}
+        currentUserId={authData.user.id}
       />
     </div>
   );
