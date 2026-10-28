@@ -411,9 +411,17 @@ describe("form control baseline", () => {
   });
 
   it("labels are real label elements, never placeholder-only", () => {
-    assert.match(field, /<label\s+htmlFor=\{htmlId\}/);
+    // Bounded [\s\S] gaps, not `\s+`: Biome wraps multi-attribute JSX at 80
+    // columns, so a regex demanding same-line adjacency cannot pass here.
+    assert.match(field, /<label[\s\S]{0,160}?htmlFor=\{htmlFor\}/);
     assert.match(field, /id=\{htmlId\}/);
     assert.match(field, /aria-describedby=\{describedBy\}/);
+    // The referenced ids must be the ids that are actually rendered, or
+    // aria-describedby points at nothing and the hint is never announced.
+    assert.match(field, /const hintId = hint \? `\$\{htmlId\}-hint` : undefined/);
+    assert.match(field, /const errorId = error \? `\$\{htmlId\}-error` : undefined/);
+    assert.match(field, /const describedBy = \[hintId, errorId\]\.filter\(Boolean\)\.join\(" "\) \|\| undefined/);
+    assert.doesNotMatch(field, /-desc/);
   });
 
   it("keeps no CfButton size below 44px", () => {
@@ -449,7 +457,8 @@ type FieldShellProps = {
   hint?: string;
   error?: string;
   htmlFor: string;
-  describedBy?: string;
+  hintId?: string;
+  errorId?: string;
 };
 
 function FieldShell({
@@ -457,7 +466,8 @@ function FieldShell({
   hint,
   error,
   htmlFor,
-  describedBy,
+  hintId,
+  errorId,
   children,
 }: FieldShellProps & { children: React.ReactNode }) {
   return (
@@ -467,12 +477,12 @@ function FieldShell({
       </label>
       {children}
       {hint && !error ? (
-        <p className="text-sm text-[#5C4638]" id={`${describedBy}-hint`}>
+        <p className="text-sm text-[#5C4638]" id={hintId}>
           {hint}
         </p>
       ) : null}
       {error ? (
-        <p className="text-sm font-semibold text-[#963B32]" id={`${describedBy}-error`} role="alert">
+        <p className="text-sm font-semibold text-[#BA3C2A]" id={errorId} role="alert">
           {error}
         </p>
       ) : null}
@@ -486,13 +496,15 @@ export const CfTextField = forwardRef<
 >(({ label, hint, error, className = "", id, ...props }, ref) => {
   const generatedId = useId();
   const htmlId = id ?? `field-${generatedId}`;
-  const describedBy = hint || error ? `${htmlId}-desc` : undefined;
+  const hintId = hint ? `${htmlId}-hint` : undefined;
+  const errorId = error ? `${htmlId}-error` : undefined;
+  const describedBy = [hintId, errorId].filter(Boolean).join(" ") || undefined;
   return (
-    <FieldShell describedBy={describedBy} error={error} hint={hint} htmlFor={htmlId} label={label}>
+    <FieldShell error={error} errorId={errorId} hint={hint} hintId={hintId} htmlFor={htmlId} label={label}>
       <input
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
-        className={`${CONTROL} ${error ? "border-[#963B32] ring-1 ring-[#963B32]" : ""} ${className}`}
+        className={`${CONTROL} ${error ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]" : ""} ${className}`}
         id={htmlId}
         ref={ref}
         {...props}
@@ -508,11 +520,15 @@ export const CfSelect = forwardRef<
 >(({ label, hint, error, className = "", id, children, ...props }, ref) => {
   const generatedId = useId();
   const htmlId = id ?? `field-${generatedId}`;
+  const hintId = hint ? `${htmlId}-hint` : undefined;
+  const errorId = error ? `${htmlId}-error` : undefined;
+  const describedBy = [hintId, errorId].filter(Boolean).join(" ") || undefined;
   return (
-    <FieldShell error={error} hint={hint} htmlFor={htmlId} label={label}>
+    <FieldShell error={error} errorId={errorId} hint={hint} hintId={hintId} htmlFor={htmlId} label={label}>
       <select
+        aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
-        className={`${CONTROL} ${className}`}
+        className={`${CONTROL} ${error ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]" : ""} ${className}`}
         id={htmlId}
         ref={ref}
         {...props}
@@ -524,6 +540,16 @@ export const CfSelect = forwardRef<
 });
 CfSelect.displayName = "CfSelect";
 ```
+
+**Corrected before dispatch (controller pre-flight, Task 4).** Three defects in the code above as originally written, now fixed in it:
+
+1. **`aria-describedby` pointed at an id that was never rendered.** The original wired `describedBy = \`${htmlId}-desc\`` to the input while rendering the paragraphs as `${describedBy}-hint` / `${describedBy}-error` — i.e. `field-x-desc-hint`. The referenced element did not exist, so no hint or error would ever be announced: a primitive shipped as "the accessible baseline" that is silently worse than the hand-wired markup it replaces (`finance-forms.tsx:129-131` sets `aria-describedby="income-error-amount"` against a real id today). The `hintId`/`errorId`/joined-`describedBy` shape above is the fix, and the test now pins it.
+2. **`CfSelect` rendered no `aria-describedby` at all**, so every migrated select would lose its error announcement. It now mirrors `CfTextField` exactly, including the error border treatment.
+3. **The error colour was `#963B32`, which these forms never render.** `finance-forms.tsx` uses `#BA3C2A` 39 times and `#963B32` zero times (it is `--color-danger` in `globals.css:93`, CSS-side only), and `cf-button`'s danger variant is `bg-[#BA3C2A]` (`cf-button.tsx:38`). Using the Tailwind-side red keeps the error state visual-neutral, which is this step's own stated goal.
+
+Two things this task changes that are **not** defects, to be called out in review rather than discovered:
+- **Labels change typography**, despite Step 3's "visual-neutral apart from size" claim. The forms currently render `<label className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5">`; `FieldShell` renders `text-sm font-semibold text-[#3D291F]` sentence-case. That is deliberate — an 11px uppercase label is the worst case for mobile legibility and reads worse to screen readers — but it is a visible change on every migrated form, so the consolidated gate must look at `/finances` for it. The `*` required-marker spans (`<span className="text-[#BA3C2A]">*</span>`) have no home in `FieldShell`: keep them in the `label` string (e.g. `label="Payment Method *"`) rather than inventing a required-indicator prop for Phase 1.
+- **`compact` buttons grow 32px → 44px**, already flagged below; `default` `text-xs` also becomes `text-sm`.
 
 - [ ] **Step 4: raise the `CfButton` floor** at `cf-button.tsx:44-49`:
 
@@ -538,11 +564,11 @@ const sizeStyles: Record<CfButtonSize, string> = {
 
 **Known trade-off, call it out in review:** `compact` moves 32px -> 44px, so dense modal footers grow by ~12px per row and a few may wrap. That is compliance, not a regression; check every modal in Step 7 and let the row wrap with `flex-wrap` rather than reverting the size.
 
-- [ ] **Step 5: migrate the money-entry forms.** `finance-forms.tsx` has **22** `h-10` controls at lines 133, 159, 181, 212, 248, 274, 399, 425, 447, 478, 514, 550, 582, 819, 836, 858, 876, 906, 926, 943, 963, 1031 — every one of them an `<input>` or `<select>` (the two at 212 and 478 are `type="file"`). Replace each `<label>...</label>` + control pair with one `<CfTextField label="..." name="..." />` or `<CfSelect label="..." name="...">...</CfSelect>` (import from `@/components/ui`), carrying the existing `name`, `value`, `onChange`, `placeholder`, `required` and `disabled` props across unchanged. Where an input carries a leading icon (the `pl-8` variants at 133 and 399), keep the icon wrapper and pass `className="pl-8"`. For the two file inputs, pass their `file:*` classes through `className`. Where a control used a red focus ring (`:425`, `:447`, `:1031`), pass `className="focus:ring-[#BA3C2A]"`.
+- [ ] **Step 5: migrate the money-entry forms.** `finance-forms.tsx` has **22** `h-10` controls at lines 133, 159, 181, 212, 248, 274, 399, 425, 447, 478, 514, 550, 582, 819, 836, 858, 876, 906, 926, 943, 963, 1031 — every one of them an `<input>` or `<select>` (the two at 212 and 478 are `type="file"`). Replace each `<label>...</label>` + control pair with one `<CfTextField label="..." name="..." />` or `<CfSelect label="..." name="...">...</CfSelect>` (import from `@/components/ui`), carrying the existing `name`, `value`, `onChange`, `placeholder`, `required` and `disabled` props across unchanged. Where an input carries a leading icon (the `pl-8` variants at 133 and 399), keep the icon wrapper and pass `className="pl-8"`. For the two file inputs, pass their `file:*` classes through `className`. **Corrected before dispatch — the three red-ring sites take CONTROL's green ring; do not pass `focus:ring-[#BA3C2A]`.** The original instruction was to preserve the red focus ring at `:425`, `:447`, `:1031` by passing it through `className`. That does not work reliably: `CONTROL` already emits `focus:ring-[#174C37]`, and two arbitrary-value utilities setting the same property on one element are resolved by *generated-CSS order*, not by the order they appear in the `className` string — so which ring wins is an implementation detail of the Tailwind build, not a decision in the code. Rather than ship a coin-flip, drop the red ring on those three inputs and let them use the shared green ring. Justification: the red ring is a decorative accent on "money out" fields, not a status signal (nothing is communicated by colour alone — `DESIGN.md:26` is about status), and one consistent compliant focus ring across every field is the point of a shared primitive. Cost: three inputs change focus colour, which the consolidated gate should look at. If the accent turns out to matter, the right fix is a `ringClass` prop on the primitive that *replaces* rather than competes with `CONTROL`'s — a Phase 2 decision, not a Phase 1 patch.
 
 **Corrected: do not add a default class to `FormattedAmountInput`.** All 12 of its call sites (`finance-forms.tsx:128,394,818`, `dues-forms.tsx:116,331,409`, `event-budget-allocation-fields.tsx:92`, `correct-transaction-modal.tsx:122`, `record-transaction-modal.tsx:836`, `event-category-management-modal.tsx:393,708`, `event-budget-ceiling-modal.tsx:158`, `event-ticket-tier-modal.tsx:260`) pass an explicit `className`, so a `className ?? CONTROL` fallback would never fire. The compliant sizing belongs at the call sites; the amount inputs inside `finance-forms.tsx` become `<CfTextField ... >`-wrapped `FormattedAmountInput` replacements only if `FormattedAmountInput` can accept the `CONTROL` class — otherwise migrate the three `finance-forms.tsx` amount inputs to `<CfTextField type="text">` and keep `FormattedAmountInput`'s thousands-formatting by rendering it with `className={CONTROL}`. Verify formatting still works in the browser step; `inputMode="numeric"` at `formatted-amount-input.tsx:123` must survive.
 - [ ] **Step 6: run everything** — `node --test tests/form-control-baseline.test.mjs`, `npm test`, `npm run lint`. Then grep for what is left, to size the remaining migration honestly: `grep -rn 'h-10 .*text-xs' src --include=*.tsx | wc -l`. Record the count in the commit body; the rest is Phase 2, not a silent omission here.
-- [ ] **Step 7: browser check** on `/finances` and the Pay Dues modal: every control >=48px tall, text >=16px, focus ring visible, and on a real device (or DevTools "mobile" with a throttled device) **focus does not zoom the page**.
+- [ ] **Step 7: browser check** on `/finances` and the Pay Dues modal: every control >=48px tall, text >=16px, focus ring visible, and on a real device (or DevTools "mobile" with a throttled device) **focus does not zoom the page**. *Deferred by controller ruling to the consolidated gate after Task 7. The gate must also look at the label typography change (11px uppercase -> `text-sm` sentence case) and at dense modal footers, where `compact` buttons growing 32px -> 44px may wrap a row.*
 - [ ] **Step 8: commit** — `git commit -m "feat(ui): add compliant text/select primitives and raise the button floor to 44px"`
 
 ---
