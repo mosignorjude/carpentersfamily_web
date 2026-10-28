@@ -3977,7 +3977,8 @@ textarea:focus-visible {
 
   .app-mobile-menu-panel {
     top: 3.75rem;
-    left: 0.75rem;
+    left: max(0.75rem, env(safe-area-inset-left, 0px));
+    max-height: calc(100dvh - 4.75rem - env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -4006,10 +4007,15 @@ textarea:focus-visible {
   position: fixed;
   z-index: 80;
   top: 4.5rem;
-  left: 1rem;
+  left: max(1rem, env(safe-area-inset-left, 0px));
   right: auto;
   width: min(20rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 5.5rem - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 0.65rem;
+  padding-bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px));
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
   background: var(--color-surface);

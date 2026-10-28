@@ -458,7 +458,7 @@ test("mobile drawer: panel css anchors to left under menu toggle button", async 
   const basePanel = panelMatches.find((m) => m[1].includes("position: fixed"));
   assert.ok(basePanel, "Expected base .app-mobile-menu-panel definition");
   assert.ok(
-    basePanel[1].includes("left: 1rem"),
+    basePanel[1].includes("left: max(1rem, env(safe-area-inset-left"),
     "Panel should anchor to left: 1rem",
   );
   assert.ok(
