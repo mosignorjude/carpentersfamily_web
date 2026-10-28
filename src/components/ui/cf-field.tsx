@@ -7,9 +7,12 @@ import { forwardRef, useId } from "react";
  * Shared form control classes for the money-entry floor: 48px tall
  * (`min-h-[3rem]`) with 16px text (`text-base`), per DESIGN.md. Every migrated
  * control inherits this instead of hand-rolling its own sizing.
+ *
+ * The radius is the 10px *control* token (`--radius-control`, globals.css), not
+ * the 12px card rounding — DESIGN.md separates the two on purpose.
  */
 export const CONTROL =
-  "w-full min-h-[3rem] px-3 rounded-xl border border-[#E5DDD3] bg-white text-base font-semibold text-[#3D291F] placeholder:text-[#B8ACA0] placeholder:font-normal focus:outline-hidden focus:ring-2 focus:ring-[#174C37] disabled:opacity-60";
+  "w-full min-h-[3rem] px-3 rounded-[var(--radius-control)] border border-[#E5DDD3] bg-white text-base font-semibold text-[#3D291F] placeholder:text-[#B8ACA0] placeholder:font-normal focus:outline-hidden focus:ring-2 focus:ring-[#174C37] disabled:opacity-60";
 
 type FieldShellProps = {
   label: string;
@@ -71,6 +74,18 @@ export function CfFieldLayout({
   );
 }
 
+/**
+ * Accessibility wiring, in one place for both primitives.
+ *
+ * The caller prop spread sits FIRST on purpose: the derived pair below is this
+ * primitive's contract, so a caller passing `aria-describedby`/`aria-invalid`
+ * can no longer silently un-wire the paragraphs this component renders. When
+ * the primitive derives nothing (no `hint`, no `error`) React drops the
+ * `undefined` attribute and the caller's own wiring from the spread survives —
+ * which is why there is no fallback re-spread here.
+ * `className` and `id` are destructured out and merged explicitly, so the
+ * caller override channel keeps working either way.
+ */
 export const CfTextField = forwardRef<
   HTMLInputElement,
   React.InputHTMLAttributes<HTMLInputElement> & CfFieldProps
@@ -90,12 +105,12 @@ export const CfTextField = forwardRef<
       label={label}
     >
       <input
+        {...props}
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
         className={`${CONTROL} ${error ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]" : ""} ${className}`}
         id={htmlId}
         ref={ref}
-        {...props}
       />
     </CfFieldLayout>
   );
@@ -121,12 +136,12 @@ export const CfSelect = forwardRef<
       label={label}
     >
       <select
+        {...props}
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
         className={`${CONTROL} ${error ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]" : ""} ${className}`}
         id={htmlId}
         ref={ref}
-        {...props}
       >
         {children}
       </select>

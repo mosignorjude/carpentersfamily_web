@@ -14,6 +14,7 @@ import { useId, useState } from "react";
 import type { DuesMonthOption } from "@/app/(member)/dues/dues-forms";
 import { submitDuesPaymentRequestAction } from "@/app/actions";
 import {
+  CfTextField,
   FormAlertBanner,
   FormFieldHint,
   FormSubmitButton,
@@ -485,31 +486,23 @@ export function PayDuesModal({
 
                       {/* Receipt file input for Bank Transfer */}
                       {channel === "transfer" && (
-                        <div className="space-y-1">
-                          <label
-                            className="block text-[11px] font-bold text-[#3D291F] uppercase tracking-wider"
-                            htmlFor="dues-receipt-file"
-                          >
-                            Payment Receipt / Screenshot{" "}
-                            <span className="text-[#BA3C2A]">*</span>
-                          </label>
-                          <input
-                            id="dues-receipt-file"
-                            name="receipt_file"
-                            type="file"
-                            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                            required
-                            onChange={(e) =>
-                              setHasReceiptFile(
-                                Boolean(
-                                  e.target.files && e.target.files.length > 0,
-                                ),
-                              )
-                            }
-                            className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2 text-xs text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
-                          />
-                          <FormFieldHint message="Upload your bank transfer confirmation slip or mobile app screenshot (PDF, JPG, PNG up to 4 MiB)." />
-                        </div>
+                        <CfTextField
+                          accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                          className="file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
+                          hint="Upload your bank transfer confirmation slip or mobile app screenshot (PDF, JPG, PNG up to 4 MiB)."
+                          id="dues-receipt-file"
+                          label="Payment Receipt / Screenshot *"
+                          name="receipt_file"
+                          onChange={(e) =>
+                            setHasReceiptFile(
+                              Boolean(
+                                e.target.files && e.target.files.length > 0,
+                              ),
+                            )
+                          }
+                          required
+                          type="file"
+                        />
                       )}
 
                       {/* Optional Notes */}

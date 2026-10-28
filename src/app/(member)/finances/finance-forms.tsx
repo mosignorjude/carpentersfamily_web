@@ -12,7 +12,6 @@ import {
 import { FormattedAmountInput } from "@/components/formatted-amount-input";
 import { CfFieldLayout, CfSelect, CfTextField, CONTROL } from "@/components/ui";
 import { FormSubmitButton } from "@/components/ui/cf-button";
-import { FormFieldError } from "@/components/ui/form-feedback";
 
 export type FinanceCategory = {
   id: string;
@@ -180,28 +179,15 @@ export function ClubIncomeForm({
           <div>
             <CfTextField
               accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-              aria-describedby={
-                fieldErrors.receipt_file ? "income-error-receipt" : undefined
-              }
-              aria-invalid={fieldErrors.receipt_file ? "true" : undefined}
-              className={`file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
-                fieldErrors.receipt_file
-                  ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
-                  : ""
-              }`}
+              className="file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
+              error={fieldErrors.receipt_file}
+              hint="PDF, JPG, or PNG up to 4 MiB"
               id="income-receipt-file"
               label="Payment Receipt / Voucher *"
               name="receipt_file"
               onChange={() => clearFieldError("receipt_file")}
               type="file"
             />
-            <FormFieldError
-              id="income-error-receipt"
-              message={fieldErrors.receipt_file}
-            />
-            <p className="mt-1 text-[11px] text-[#7A685D]">
-              PDF, JPG, or PNG up to 4 MiB
-            </p>
           </div>
         ) : (
           <div className="flex items-center text-xs text-[#7A685D] pt-6">
@@ -212,26 +198,14 @@ export function ClubIncomeForm({
 
       <div>
         <CfTextField
-          aria-describedby={
-            fieldErrors.source_note ? "income-error-source-note" : undefined
-          }
-          aria-invalid={fieldErrors.source_note ? "true" : undefined}
           autoComplete="off"
-          className={
-            fieldErrors.source_note
-              ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
-              : ""
-          }
+          error={fieldErrors.source_note}
           id="income-source-note"
           label="Source Note / Income Description *"
           maxLength={500}
           name="source_note"
           onChange={() => clearFieldError("source_note")}
           placeholder="e.g. Corporate donation for community outreach project"
-        />
-        <FormFieldError
-          id="income-error-source-note"
-          message={fieldErrors.source_note}
         />
       </div>
 
@@ -249,14 +223,14 @@ export function ClubIncomeForm({
       <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E5DDD3]">
         {onCancel && (
           <button
-            className="px-4 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer min-h-[40px]"
+            className="px-4 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer min-h-[44px]"
             onClick={onCancel}
             type="button"
           >
             Cancel
           </button>
         )}
-        <FormSubmitButton className="min-h-[40px]" loadingText="Recording...">
+        <FormSubmitButton loadingText="Recording...">
           Record Non-Dues Income
         </FormSubmitButton>
       </div>
@@ -412,28 +386,15 @@ export function ClubExpenseForm({
           <div>
             <CfTextField
               accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-              aria-describedby={
-                fieldErrors.receipt_file ? "expense-error-receipt" : undefined
-              }
-              aria-invalid={fieldErrors.receipt_file ? "true" : undefined}
-              className={`file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
-                fieldErrors.receipt_file
-                  ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
-                  : ""
-              }`}
+              className="file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer"
+              error={fieldErrors.receipt_file}
+              hint="PDF, JPG, or PNG up to 4 MiB"
               id="expense-receipt-file"
               label="Payment Receipt / Voucher *"
               name="receipt_file"
               onChange={() => clearFieldError("receipt_file")}
               type="file"
             />
-            <FormFieldError
-              id="expense-error-receipt"
-              message={fieldErrors.receipt_file}
-            />
-            <p className="mt-1 text-[11px] text-[#7A685D]">
-              PDF, JPG, or PNG up to 4 MiB
-            </p>
           </div>
         ) : (
           <div className="flex items-center text-xs text-[#7A685D] pt-6">
@@ -445,16 +406,8 @@ export function ClubExpenseForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <CfSelect
-            aria-describedby={
-              fieldErrors.category_id ? "expense-error-category" : undefined
-            }
-            aria-invalid={fieldErrors.category_id ? "true" : undefined}
-            className={
-              fieldErrors.category_id
-                ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
-                : ""
-            }
             defaultValue=""
+            error={fieldErrors.category_id}
             id="expense-category"
             label="Expense Category / Cost Center *"
             name="category_id"
@@ -467,24 +420,12 @@ export function ClubExpenseForm({
               </option>
             ))}
           </CfSelect>
-          <FormFieldError
-            id="expense-error-category"
-            message={fieldErrors.category_id}
-          />
         </div>
 
         <div>
           <CfTextField
-            aria-describedby={
-              fieldErrors.payer_payee ? "expense-error-payee" : undefined
-            }
-            aria-invalid={fieldErrors.payer_payee ? "true" : undefined}
             autoComplete="off"
-            className={
-              fieldErrors.payer_payee
-                ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
-                : ""
-            }
+            error={fieldErrors.payer_payee}
             id="expense-payee"
             label="Payee / Vendor Entity *"
             maxLength={160}
@@ -492,25 +433,13 @@ export function ClubExpenseForm({
             onChange={() => clearFieldError("payer_payee")}
             placeholder="e.g. Asaba Electric Disco Co."
           />
-          <FormFieldError
-            id="expense-error-payee"
-            message={fieldErrors.payer_payee}
-          />
         </div>
       </div>
 
       <div>
         <CfTextField
-          aria-describedby={
-            fieldErrors.description ? "expense-error-description" : undefined
-          }
-          aria-invalid={fieldErrors.description ? "true" : undefined}
           autoComplete="off"
-          className={
-            fieldErrors.description
-              ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
-              : ""
-          }
+          error={fieldErrors.description}
           id="expense-description"
           label="Disbursement Description / Justification *"
           maxLength={500}
@@ -518,27 +447,19 @@ export function ClubExpenseForm({
           onChange={() => clearFieldError("description")}
           placeholder="e.g. Secretariat generator fueling and maintenance"
         />
-        <FormFieldError
-          id="expense-error-description"
-          message={fieldErrors.description}
-        />
       </div>
 
       <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E5DDD3]">
         {onCancel && (
           <button
-            className="px-4 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer min-h-[40px]"
+            className="px-4 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer min-h-[44px]"
             onClick={onCancel}
             type="button"
           >
             Cancel
           </button>
         )}
-        <FormSubmitButton
-          className="min-h-[40px]"
-          loadingText="Recording..."
-          variant="danger"
-        >
+        <FormSubmitButton loadingText="Recording..." variant="danger">
           Record Expense Disbursement
         </FormSubmitButton>
       </div>
@@ -583,30 +504,16 @@ export function FinanceCategoryForms({
 
         <input name="reason" type="hidden" value="Initial cost center entry" />
 
-        <div>
-          <label
-            className="block text-[11px] font-bold text-[#54433A] mb-1"
-            htmlFor="cat-name"
-          >
-            Category Name <span className="text-[#BA3C2A]">*</span>
-          </label>
-          <input
-            aria-describedby={nameError ? "cat-error-name" : undefined}
-            aria-invalid={nameError ? "true" : undefined}
-            id="cat-name"
-            autoComplete="off"
-            className={`w-full h-9 px-3 bg-white border rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 ${
-              nameError
-                ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
-                : "border-[#E5DDD3] focus:ring-[#174C37]"
-            }`}
-            maxLength={80}
-            name="name"
-            onChange={() => setNameError("")}
-            placeholder="e.g. Welfare & Benevolence"
-          />
-          <FormFieldError id="cat-error-name" message={nameError} />
-        </div>
+        <CfTextField
+          autoComplete="off"
+          error={nameError}
+          id="cat-name"
+          label="Category Name *"
+          maxLength={80}
+          name="name"
+          onChange={() => setNameError("")}
+          placeholder="e.g. Welfare & Benevolence"
+        />
 
         <div className="flex justify-end pt-1">
           <FormSubmitButton
@@ -669,7 +576,7 @@ export function FinanceCategoryForms({
                   <input
                     id={`retire-reason-${category.id}`}
                     autoComplete="off"
-                    className="h-8 px-2.5 bg-white border border-[#E5DDD3] rounded-md text-[11px] text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-1 focus:ring-[#BA3C2A]"
+                    className="min-h-[44px] px-2.5 bg-white border border-[#E5DDD3] rounded-md text-base placeholder:text-sm text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-1 focus:ring-[#BA3C2A]"
                     maxLength={500}
                     name="reason"
                     placeholder="Reason for retirement..."
@@ -696,7 +603,7 @@ export function FinanceCategoryForms({
       {onCancel && (
         <div className="flex justify-end pt-3 border-t border-[#E5DDD3]">
           <button
-            className="px-4 py-2 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer"
+            className="px-4 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer min-h-[44px]"
             onClick={onCancel}
             type="button"
           >
@@ -856,14 +763,14 @@ export function FinanceCorrectionForm({
       <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5DDD3]">
         {onCancel && (
           <button
-            className="px-4 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer min-h-[40px]"
+            className="px-4 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer min-h-[44px]"
             onClick={onCancel}
             type="button"
           >
             Cancel
           </button>
         )}
-        <FormSubmitButton className="min-h-[40px]" loadingText="Saving...">
+        <FormSubmitButton loadingText="Saving...">
           Save Correction
         </FormSubmitButton>
       </div>
@@ -917,18 +824,14 @@ export function FinanceVoidForm({
       <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5DDD3]">
         {onCancel && (
           <button
-            className="px-4 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer min-h-[40px]"
+            className="px-4 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer min-h-[44px]"
             onClick={onCancel}
             type="button"
           >
             Cancel
           </button>
         )}
-        <FormSubmitButton
-          className="min-h-[40px]"
-          loadingText="Voiding..."
-          variant="danger"
-        >
+        <FormSubmitButton loadingText="Voiding..." variant="danger">
           Confirm Void
         </FormSubmitButton>
       </div>

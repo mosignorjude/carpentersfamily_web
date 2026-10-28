@@ -71,7 +71,7 @@ export function CorrectTransactionModal({
         </div>
 
         {/* Body */}
-        <div className="p-6">
+        <div className="p-6 max-h-[75vh] overflow-y-auto">
           <FinanceCorrectionForm
             categories={categories}
             onCancel={onClose}

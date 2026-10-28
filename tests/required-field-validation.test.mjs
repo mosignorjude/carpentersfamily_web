@@ -85,11 +85,23 @@ describe("RecordTransactionModal field-level validation", () => {
 });
 
 describe("Club Finance Forms field-level validation", () => {
-  it("renders FormFieldError in ClubIncomeForm and ClubExpenseForm", () => {
+  it("renders field-level errors in ClubIncomeForm and ClubExpenseForm", () => {
+    // Superseded by the Task 4 review round. This asserted the literal
+    // `FormFieldError` component name, but the money forms now render every
+    // field error through the shared field primitive — one label/hint/error
+    // implementation, 14px text instead of 11px, assertive instead of polite.
+    // The behaviour this test guarded is unchanged: each required field still
+    // renders its message next to its control. So the assertion follows the new
+    // owner of that wiring rather than the retired component.
     assert.match(
       financeFormsSource,
+      /error=\{fieldErrors\./,
+      "Must render field-level errors through the field primitives in finance-forms.tsx",
+    );
+    assert.doesNotMatch(
+      financeFormsSource,
       /FormFieldError/,
-      "Must import and render FormFieldError in finance-forms.tsx",
+      "finance-forms.tsx must not carry a second error implementation beside the primitive",
     );
     assert.match(
       financeFormsSource,

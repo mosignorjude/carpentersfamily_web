@@ -67,7 +67,7 @@ export function RecordIncomeModal({
         </div>
 
         {/* Body */}
-        <div className="p-6">
+        <div className="p-6 max-h-[75vh] overflow-y-auto">
           <ClubIncomeForm
             canBackdate={canBackdate}
             idempotencyKey={idempotencyKey}

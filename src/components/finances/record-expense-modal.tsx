@@ -75,7 +75,7 @@ export function RecordExpenseModal({
         </div>
 
         {/* Body */}
-        <div className="p-6">
+        <div className="p-6 max-h-[75vh] overflow-y-auto">
           {categoryUnavailable ? (
             <FormAlertBanner
               message="Expense entry is disabled until cost centers are reconciled."
