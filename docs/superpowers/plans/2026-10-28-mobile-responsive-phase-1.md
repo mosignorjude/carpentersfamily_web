@@ -619,7 +619,7 @@ This adds one export beyond the plan's whitelist — justified because the alter
 ### Task 5: Dashboard tab strip becomes tappable and obviously scrollable
 
 **Files:**
-- Modify: `src/components/events/dashboard/event-dashboard-view.tsx:552-579` (tab strip) and `:421` (the "back to events" link, `min-h-[36px]`)
+- Modify: `src/components/events/dashboard/event-dashboard-view.tsx:551-580` (tab strip: outer scroller `:551`, pill row `:552`, pill `className` `:560`) and `:421` (the "back to events" link, `min-h-[36px]`)
 - Test: `tests/dashboard-tab-strip.test.mjs`
 
 **Why:** the audit measured the strip at 413px client / 877px scroll — 8 pills of `min-h-[38px]` with `gap-1` (4px). Two problems: 38px targets below the 44px floor, 4px gaps, and no affordance at all that the strip scrolls, so 4 of 8 tabs are effectively undiscoverable on a phone. The `justify-between` on an `overflow-x-auto` container also collapses to nothing useful once content overflows.
@@ -683,7 +683,7 @@ describe("dashboard tab strip", () => {
       })}
     </div>
   </TableScroll>
-  <p className="mt-1.5 text-xs text-[#7A685D] hidden max-sm:block">
+  <p className="mt-1.5 text-xs text-[#7A685D] sm:hidden">
     Swipe right for more sections
   </p>
 </div>
@@ -691,9 +691,16 @@ describe("dashboard tab strip", () => {
 
 `aria-current="page"` is the active signal, so the green fill is reinforcement rather than the only cue (DESIGN.md:26). `text-xs` -> `text-sm` here is *non*-control text at 14px, which is fine — the 16px rule applies to inputs. Import `TableScroll` from `@/components/ui` (Task 1 must land first).
 
+**Corrected before dispatch (controller pre-flight, Task 5).** The hint line above originally read `className="… hidden max-sm:block"`. Two reasons that is the wrong spelling here:
+
+1. **`max-*` variants are used nowhere in this codebase** (`grep -rhoE '\bmax-(sm|md|lg|xl)…' src --include=*.tsx` returns zero hits), while `sm:` appears on every other page (`sm:p-` ×70, `sm:flex-row` ×65). An unproven variant is not a theoretical risk in this specific place: if `max-sm:block` failed to compile, the base `hidden` would still apply, the hint would never render on a phone, and **Step 1's test would stay green**, because it only asserts the string `Swipe right for more sections` exists in the source. The failure mode is the exact defect this task exists to fix, hidden by the test that is supposed to catch it.
+2. **`sm:hidden` on a `<p>` in normal flow is the same behaviour with the proven mechanism** — visible below `sm`, `display: none` at and above it — and it needs no base `hidden` class to fail open.
+
+Because a source-text suite cannot prove a breakpoint works, Step 4 must additionally build and confirm the rule reaches the emitted CSS: `npx next build && grep -o 'max-width:40rem' .next/static/chunks/*.css` (or find the `.sm\:hidden` rule in the emitted bundle). Record which file carried it.
+
 - [ ] **Step 3b: raise the back link** at `event-dashboard-view.tsx:421` from `min-h-[36px]` to `min-h-[44px]` — it lives in the same header card and the file-level test cannot pass while it stays under the floor.
-- [ ] **Step 4:** re-run, `npm test`, `npm run lint`.
-- [ ] **Step 5: browser check** at 360px: 8th tab ("Reports") reachable by swipe and by Tab; the hint line is visible only below `sm`; active tab announced by screen reader as current.
+- [ ] **Step 4:** re-run, `npm test`, `npm run lint`, then `npx next build` and confirm the `sm:hidden` rule is present in the emitted CSS (see the pre-flight note above — the source-text test cannot prove a breakpoint compiles).
+- [ ] **Step 5: browser check** at 360px: 8th tab ("Reports") reachable by swipe and by Tab; the hint line is visible only below `sm`; active tab announced by screen reader as current. *Deferred by controller ruling to the consolidated gate after Task 7 — the gate owns every browser step in this plan. It must confirm the hint line is actually visible at 360px, which is the item the source-text test cannot cover.*
 - [ ] **Step 6: commit** — `git commit -m "fix(events): enlarge dashboard tab targets and expose the strip scroll"`
 
 ---
