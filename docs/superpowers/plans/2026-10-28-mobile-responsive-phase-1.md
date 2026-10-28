@@ -313,12 +313,21 @@ describe("dashboard menu panel contrast", () => {
   });
 
   it("keeps the hover state readable", () => {
-    assert.match(css, /\.app-shell-dashboard\s+\.app-mobile-menu-panel\s+\.app-mobile-menu-signout\s+button:hover/);
+    assert.match(css, /\.app-shell-dashboard\s+\.app-mobile-menu-panel\s+\.app-mobile-menu-signout\s+button:hover\s*\{[^}]*color:\s*#ffd0c7/);
+  });
+
+  it("makes the focus ring visible on the dark panel", () => {
+    assert.match(css, /\.app-shell-dashboard\s+\.app-mobile-menu-panel\s+\.app-mobile-menu-signout\s+button:focus-visible\s*\{[^}]*outline-color:\s*var\(--brand-ochre\)/);
   });
 });
 ```
 
 - [ ] **Step 2:** `node --test tests/mobile-menu-panel.test.mjs` → the new cases fail.
+
+**Corrected during execution (Task 3 review).** Two amendments, both from the task review:
+
+1. The hover assertion above originally matched only the *selector* (`…button:hover`) with no declarations consumed — it stayed green even if the rule regressed to `color: #073523` (1.13:1, the exact failure this task exists to prevent) or dropped `color` entirely. Pin the declarations, including the alpha, because 7.28:1 depends on the blend and not only on the text colour.
+2. The `:focus-visible` state was missing from the brief. `globals.css:4055` sets `outline: 3px solid var(--color-focus-ring)`, and that token resolves through `--color-focus-ring` → `--brand-forest-hover` (`:96`, `:82`) to `#103d2b` = **1.118:1 against the forest panel** (12.18:1 on the light panel it was designed for) — a keyboard-only user on the dashboard shell sees no focus indicator on Sign out at all. Same defect class, and inside Task 3's charter ("sign-out contrast on the dark menu panel"), so it is fixed here rather than deferred.
 - [ ] **Step 3: insert after `globals.css:4756`:**
 
 ```css
@@ -334,9 +343,18 @@ describe("dashboard menu panel contrast", () => {
   background: rgb(240 168 158 / 0.16);
   color: #ffd0c7;
 }
+
+.app-shell-dashboard
+  .app-mobile-menu-panel
+  .app-mobile-menu-signout
+  button:focus-visible {
+  outline-color: var(--brand-ochre);
+}
 ```
 
-`#f0a89e` on `#073523` computes to **7.0:1** (fg relative luminance 0.4899, bg 0.0271). The button stays a destructive action by label and position, so colour is reinforcement rather than the only signal — DESIGN.md:26 holds.
+`#f0a89e` on `#073523` computes to **7.0:1** (fg relative luminance 0.4899, bg 0.0271). The button stays a destructive action by label and position, so colour is reinforcement rather than the only signal — DESIGN.md:26 holds. `var(--brand-ochre)` = `#d6a23a` measures **5.89:1** on `#073523` — clear of the 3:1 WCAG 2.2 AA bar for non-text focus appearance — and is an existing brand token, so no new literal enters the file. The override wins on specificity (`0-4-1` vs the base `0-3-1`), so the longhand `outline-color` replaces the shorthand's colour regardless of order — the same mechanism `border-top-color` uses against `border-top` at `:4034`.
+
+Deliberately **not** changed: the separator `rgb(243 244 239 / 0.22)` measures 1.905:1 against the panel, which reads like a failure only until it is compared with the baseline it mirrors — the light panel's separator is `var(--line)` = `#e5ddd3` on `#fff` = **1.345:1**, so the dark divider is already *more* visible than the app's design norm. Raising it to 3:1 would make this one divider louder than every other one. It is decoration, not the row's identifier (the `Sign out` label is).
 
 - [ ] **Step 4:** re-run the file, `npm test`, `npm run lint`.
 - [ ] **Step 5: browser check** — on an event dashboard, open the hamburger, read the computed pair from the DOM rather than trusting the stylesheet:
@@ -350,7 +368,7 @@ describe("dashboard menu panel contrast", () => {
 })();
 ```
 
-Paste both `rgb()` values into any contrast check; expect >=4.5:1 and `size >= 44`.
+Paste both `rgb()` values into any contrast check; expect >=4.5:1 and `size >= 44`. *Deferred by controller ruling to the consolidated gate after Task 7 (locked 510x425 audit viewport; `X-Frame-Options: DENY` blocks iframe emulation). The gate must additionally read `getComputedStyle(button).outlineColor` while focused — expect `rgb(214, 162, 58)` — and confirm the panel's own `backgroundColor` is `rgb(7, 53, 35)`, which is what proves the `.app-shell-dashboard` branch is the live one.*
 - [ ] **Step 6: commit** — `git commit -m "fix(nav): restore sign-out contrast on the dark mobile menu panel"`
 
 ---
