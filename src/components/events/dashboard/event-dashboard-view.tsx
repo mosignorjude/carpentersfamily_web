@@ -27,6 +27,7 @@ import {
   voidEventFinancialTransactionAction,
 } from "@/app/actions";
 import { dispatchActionStatusToast } from "@/components/ui/flash-card";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { useSuccessNotice } from "@/components/ui/use-success-notice";
 import { downloadLedgerCSV } from "@/lib/format";
 import { getScrollBehavior } from "@/lib/tab-navigation.mjs";
@@ -418,7 +419,7 @@ export function EventDashboardView({
         {/* Navigation Breadcrumb & Back Link */}
         <div className="flex items-center justify-between gap-4 pb-3 border-b border-[#E5DDD3]">
           <Link
-            className="inline-flex items-center gap-2 text-xs font-semibold text-[#174C37] hover:underline min-h-[36px]"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-[#174C37] hover:underline min-h-[44px]"
             href="/events"
           >
             <ArrowLeft className="w-4 h-4 text-[#174C37]" />
@@ -549,33 +550,39 @@ export function EventDashboardView({
         )}
 
         {/* 8 Horizontal Pill Tabs */}
-        <div className="flex items-center justify-between gap-3 pt-2 overflow-x-auto border-t border-[#E5DDD3]">
-          <div className="flex items-center gap-1 p-1 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] shrink-0">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
+        <div className="pt-2 border-t border-[#E5DDD3]">
+          <TableScroll className="rounded-xl" label="Dashboard sections">
+            <div className="flex w-max items-center gap-2 p-1.5 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
 
-              return (
-                <button
-                  className={`px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-colors flex items-center gap-1.5 min-h-[38px] cursor-pointer border-0 ${
-                    isActive
-                      ? "bg-[#174C37] text-white shadow-xs font-semibold"
-                      : "bg-transparent text-[#5C4638] hover:text-[#174C37] hover:bg-white/80"
-                  }`}
-                  key={tab.id}
-                  onClick={() => selectTab(tab.id)}
-                  type="button"
-                >
-                  <Icon
-                    className={`w-3.5 h-3.5 ${
-                      isActive ? "text-[#D6A23A]" : "text-[#7A685D]"
+                return (
+                  <button
+                    aria-current={isActive ? "page" : undefined}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex items-center gap-1.5 min-h-[44px] cursor-pointer border-0 ${
+                      isActive
+                        ? "bg-[#174C37] text-white shadow-xs font-semibold"
+                        : "bg-transparent text-[#5C4638] hover:text-[#174C37] hover:bg-white/80"
                     }`}
-                  />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
+                    key={tab.id}
+                    onClick={() => selectTab(tab.id)}
+                    type="button"
+                  >
+                    <Icon
+                      className={`w-4 h-4 ${
+                        isActive ? "text-[#D6A23A]" : "text-[#7A685D]"
+                      }`}
+                    />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </TableScroll>
+          <p className="mt-1.5 text-xs text-[#7A685D] sm:hidden">
+            Swipe right for more sections
+          </p>
         </div>
       </section>
 
