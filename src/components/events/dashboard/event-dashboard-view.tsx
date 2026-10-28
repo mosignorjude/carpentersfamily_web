@@ -429,7 +429,7 @@ export function EventDashboardView({
           <div className="flex items-center gap-2">
             {(event.attendanceEnabled || event.minutesEnabled) && (
               <Link
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] hover:border-[#174C37]/40 text-xs font-semibold text-[#174C37] transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] hover:border-[#174C37]/40 text-xs font-semibold text-[#174C37] transition-colors min-h-[44px]"
                 href={`/attendance?event=${encodeURIComponent(event.id)}`}
               >
                 <FileText className="w-3.5 h-3.5 text-[#174C37]" />
@@ -560,7 +560,7 @@ export function EventDashboardView({
                 return (
                   <button
                     aria-current={isActive ? "page" : undefined}
-                    className={`px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex items-center gap-1.5 min-h-[44px] cursor-pointer border-0 ${
+                    className={`px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex items-center gap-1.5 min-h-[48px] cursor-pointer border-0 ${
                       isActive
                         ? "bg-[#174C37] text-white shadow-xs font-semibold"
                         : "bg-transparent text-[#5C4638] hover:text-[#174C37] hover:bg-white/80"
@@ -580,7 +580,7 @@ export function EventDashboardView({
               })}
             </div>
           </TableScroll>
-          <p className="mt-1.5 text-xs text-[#7A685D] sm:hidden">
+          <p className="mt-1.5 text-xs text-[#7A685D] lg:hidden">
             Swipe right for more sections
           </p>
         </div>
