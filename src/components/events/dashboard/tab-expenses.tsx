@@ -136,10 +136,7 @@ export function TabExpenses({
             title="No Expenses Recorded"
           />
         ) : (
-          <TableScroll
-            className="overflow-x-auto min-w-0"
-            label="Expenses by cost center"
-          >
+          <TableScroll label="Expenses by cost center">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">

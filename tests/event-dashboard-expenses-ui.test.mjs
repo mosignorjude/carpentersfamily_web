@@ -8,11 +8,11 @@ const source = readFileSync(
 );
 
 describe("TabExpenses layout and overflow protection", () => {
-  it("constrains the segmented button scroll container with min-w-0 and flex-1", () => {
+  it("wraps the expenses table in the TableScroll region component", () => {
     assert.match(
       source,
-      /overflow-x-auto[^"]*min-w-0|min-w-0[^"]*overflow-x-auto/,
-      "Segmented filter buttons container must include min-w-0 to prevent flex blowout"
+      /<TableScroll[^>]*label="Expenses by cost center"/,
+      "Expenses table must be wrapped in TableScroll, which supplies the table-scroll-region treatment"
     );
   });
 
