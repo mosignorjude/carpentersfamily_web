@@ -428,7 +428,7 @@ test("micro-interactions: chevron rotation classes toggle smoothly", () => {
 // 6. MOBILE HEADER BRANDING & LEFT-ALIGNED DRAWER
 // ============================================================================
 
-test("mobile header: renders mobile brand logo and shortName with lg:hidden", async () => {
+test("mobile header: renders mobile brand logo and shortName gated to the nav breakpoint", async () => {
   const fs = await import("node:fs");
   const headerContent = fs.readFileSync(
     "src/components/app-header.tsx",
@@ -440,7 +440,7 @@ test("mobile header: renders mobile brand logo and shortName with lg:hidden", as
   assert.ok(headerContent.includes('href="/"'));
   assert.ok(headerContent.includes("clubBrand.logoSrc"));
   assert.ok(headerContent.includes("clubBrand.shortName"));
-  assert.ok(headerContent.includes("lg:hidden"));
+  assert.ok(headerContent.includes("app-mobile-nav"));
 });
 
 test("mobile drawer: panel css anchors to left under menu toggle button", async () => {

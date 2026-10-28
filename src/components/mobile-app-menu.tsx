@@ -42,7 +42,7 @@ export default function MobileAppMenu({
       {isOpen && (
         <div
           aria-hidden="true"
-          className="fixed inset-0 z-70 bg-black/20 backdrop-blur-[1px] lg:hidden"
+          className="fixed inset-0 z-70 bg-black/20 backdrop-blur-[1px]"
           onClick={() => setIsOpen(false)}
         />
       )}

@@ -3976,12 +3976,12 @@ textarea:focus-visible {
   }
 }
 
-.app-mobile-header {
-  display: none;
-}
-
 .app-mobile-menu {
   position: relative;
+}
+
+.app-mobile-nav {
+  display: none;
 }
 
 .app-menu-toggle {
@@ -4058,51 +4058,16 @@ textarea:focus-visible {
 }
 
 @media (max-width: 56rem) {
+  .app-mobile-nav {
+    display: flex;
+  }
+
   .app-shell {
     display: block;
   }
 
   .app-sidebar {
     display: none;
-  }
-
-  .app-mobile-header {
-    position: sticky;
-    z-index: 70;
-    top: 0;
-    display: flex;
-    min-height: 4rem;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.5rem 1rem;
-    border-bottom: 1px solid var(--line);
-    background: var(--color-canvas);
-  }
-
-  .app-mobile-header .app-brand {
-    font-size: 0.95rem;
-  }
-
-  .app-mobile-header .app-brand-slogan {
-    display: none;
-  }
-
-  .app-mobile-header .app-brand-logo {
-    width: 1.1rem;
-    height: 2rem;
-  }
-
-  .app-mobile-actions {
-    display: flex;
-    flex: 0 0 auto;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .app-mobile-actions .app-signout-form button {
-    min-height: var(--control-height);
-    padding-inline: 0.7rem;
   }
 }
 
@@ -4631,12 +4596,6 @@ textarea:focus-visible {
   object-fit: contain;
 }
 
-.app-shell-dashboard .app-mobile-header .app-brand-logo {
-  width: 2.15rem;
-  height: 2.8rem;
-  border-radius: 0;
-}
-
 .app-shell-dashboard .app-brand-copy {
   gap: 0.22rem;
 }
@@ -4733,25 +4692,6 @@ textarea:focus-visible {
 
 .app-shell-dashboard .app-page-content {
   width: 100%;
-}
-
-.app-shell-dashboard .app-mobile-header {
-  background: var(--dashboard-forest);
-  border-color: rgb(255 255 255 / 13%);
-}
-
-.app-shell-dashboard .app-mobile-header .app-brand {
-  color: #fff;
-}
-
-.app-shell-dashboard .app-mobile-header .app-brand-slogan {
-  color: #d5dfd8;
-}
-
-.app-shell-dashboard .app-mobile-header .button-secondary {
-  border-color: rgb(255 255 255 / 30%);
-  background: transparent;
-  color: #fff;
 }
 
 .app-shell-dashboard .app-mobile-menu-panel {
@@ -6331,10 +6271,6 @@ textarea:focus-visible {
 }
 
 @media (max-width: 56rem) {
-  .app-shell-dashboard .app-sidebar {
-    display: none;
-  }
-
   .home-shell {
     padding-top: 1rem;
   }

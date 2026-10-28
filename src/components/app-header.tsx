@@ -229,7 +229,7 @@ export default function AppHeader({
       <header className="app-sticky-header">
         {/* Left Side: Mobile Menu & Mobile Brand Logo/Name */}
         <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-          <div className="flex items-center lg:hidden">
+          <div className="app-mobile-nav items-center">
             <MobileAppMenu items={memberNavigationItems} showIcons={dashboard}>
               <form action={signOutAction} className="app-mobile-menu-signout">
                 <button type="submit">Sign out</button>
@@ -239,7 +239,7 @@ export default function AppHeader({
 
           <Link
             aria-label={`${clubBrand.shortName} home`}
-            className="flex items-center gap-2 lg:hidden text-inherit no-underline focus-visible:outline-2 focus-visible:outline-[#174C37] rounded-lg"
+            className="app-mobile-nav items-center gap-2 text-inherit no-underline focus-visible:outline-2 focus-visible:outline-[#174C37] rounded-lg"
             href="/"
           >
             {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
