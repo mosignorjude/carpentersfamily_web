@@ -30,10 +30,7 @@ const ibmPlexSans = localFont({
   display: "swap",
 });
 
-// The hex below is not free: it is .app-sticky-header's own colour in
-// globals.css, the surface a phone shows under its status bar on a member
-// page. The mobile viewport test reads that rule back, so a header repaint
-// cannot silently orphan this tag.
+// Must equal .app-sticky-header's background in globals.css; the viewport test reads that rule back.
 export const viewport: Viewport = {
   themeColor: "#f7f6f2",
   width: "device-width",
