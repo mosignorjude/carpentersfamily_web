@@ -165,10 +165,15 @@ export function TransactionDetailModal({
 
             <div>
               <span className="text-[#7A685D] block text-[10px] uppercase font-bold">
-                Authorized Officer
+                Recorded / Authorized by
               </span>
-              <span className="text-[#3D291F] font-semibold mt-0.5 block">
-                {transaction.authorizedBy} ({transaction.authorizerRole})
+              <span className="font-mono text-[#3D291F] font-semibold mt-0.5 block">
+                {transaction.authorizedBy}
+                {transaction.authorizerRole && (
+                  <span className="font-sans text-xs text-[#7A685D] font-normal ml-1.5">
+                    ({transaction.authorizerRole})
+                  </span>
+                )}
               </span>
             </div>
           </div>

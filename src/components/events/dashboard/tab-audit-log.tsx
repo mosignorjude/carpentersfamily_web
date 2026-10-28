@@ -215,7 +215,7 @@ export function TabAuditLog({
                   <th className="py-3 px-3.5">Description & Counterparty</th>
                   <th className="py-3 px-3.5">Category</th>
                   <th className="py-3 px-3.5 text-right">Amount (NGN)</th>
-                  <th className="py-3 px-3.5">Authorized By</th>
+                  <th className="py-3 px-3.5">Recorded/Auth by</th>
                   <th className="py-3 px-3.5 text-center">Receipt</th>
                   <th className="py-3 px-3.5 text-right">Action</th>
                 </tr>
@@ -318,14 +318,16 @@ export function TabAuditLog({
                           )}
                         </td>
 
-                        {/* Authorization */}
+                        {/* Recorded / Authorized by */}
                         <td className="py-3.5 px-3.5 whitespace-nowrap text-xs">
-                          <span className="text-[#3D291F] font-medium block">
+                          <span className="font-mono text-[#3D291F] font-semibold block">
                             {txn.authorizedBy}
                           </span>
-                          <span className="text-[10px] text-[#7A685D]">
-                            {txn.authorizerRole}
-                          </span>
+                          {txn.authorizerRole && (
+                            <span className="text-[10px] text-[#7A685D] block">
+                              {txn.authorizerRole}
+                            </span>
+                          )}
                         </td>
 
                         {/* Receipt Indicator */}
