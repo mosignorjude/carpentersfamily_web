@@ -159,61 +159,112 @@ describe("form control baseline", () => {
   });
 
   it("gives the element that wraps each money-entry form a scroll region", () => {
-    // The round-1 version of this pin matched the scroll classes anywhere in the
-    // file, so it was placement-blind: moving them from the body onto the header
-    // row left the form with no scroll region and stayed green. This version
-    // names the element that must scroll — the `<div>` a host opens immediately
-    // around the migrated form component — and reads its `className`.
-    const formTags =
-      /<(?:ClubIncomeForm|ClubExpenseForm|FinanceVoidForm|FinanceCorrectionForm)\b/g;
-    const bodies = [];
+    // Round 1 matched the scroll classes anywhere in the file, so it was
+    // placement-blind. Round 2 fixed that by naming "the last `<div>` before the
+    // form", which is placement-exact but the wrong *role*: that is the
+    // innermost wrapper, so an innocuous `<div className="space-y-4">` added
+    // between the body and the form failed the suite while the modal was still
+    // correct. This version identifies each element by what it does.
     for (const host of modalHosts) {
-      const renderedForms = [...host.source.matchAll(formTags)];
+      const divs = [...host.source.matchAll(/<div className="([^"]*)"/g)];
+      // A host whose scroll region is built dynamically cannot be read from
+      // source text at all, and the honest failure is to say so rather than to
+      // fall back on the header row and pass.
+      assert.ok(
+        divs.length > 0,
+        `${host.name}: no literal <div className> found — this pin reads literal class strings`,
+      );
+      const panels = divs.filter((m) => m[1].includes("rounded-2xl"));
       assert.equal(
-        renderedForms.length,
+        panels.length,
+        1,
+        `${host.name}: exactly one panel element, got ${panels.length}`,
+      );
+      const bodies = divs.filter((m) => m[1].includes("overflow-y-auto"));
+      assert.equal(
+        bodies.length,
+        1,
+        `${host.name}: exactly one literal div may scroll; 0 means the scroll region is no longer a literal className, >1 means two regions compete`,
+      );
+      const headers = divs.filter((m) => m[1].includes("p-5 border-b"));
+      assert.equal(headers.length, 1, `${host.name}: exactly one header row`);
+      // The panel is the element that must fit the viewport, and the body is the
+      // element that absorbs whatever the header does not use. Capping the
+      // *body* instead was the round-2 defect: `panel = header + cap`, and the
+      // 81px header this file was pinned against is only 81px while the title
+      // and subtitle stay on one line. At a 360px viewport the panel is 328px
+      // wide, the header's own padding/icon/close button leave the text column
+      // ~190px, and a 22-33 character `text-base font-extrabold` title wraps to
+      // two 24px lines over a 12px subtitle that wraps to two or three — a
+      // 121-137px header, which put the panel 33-49px past the backdrop box and
+      // re-clipped the submit row exactly as `75vh` had. Subtracting the
+      // backdrop's own padding (`p-4` = 2rem) instead leaves nothing to guess
+      // about, because the body's `flex-1 min-h-0` gives it the remainder
+      // whatever the header's height turns out to be.
+      assert.match(
+        panels[0][1],
+        /max-h-\[calc\(100dvh-2rem\)\]/,
+        `${host.name}: the panel must be capped against the viewport`,
+      );
+      assert.match(
+        panels[0][1],
+        /flex flex-col/,
+        `${host.name}: a capped panel must be a column or the body cannot absorb the remainder`,
+      );
+      assert.match(
+        panels[0][1],
+        /overflow-hidden/,
+        `${host.name}: the panel's clip is why an uncapped body overflows invisibly`,
+      );
+      assert.match(
+        bodies[0][1],
+        /flex-1/,
+        `${host.name}: the scroll region must take the space left by the header`,
+      );
+      assert.match(
+        bodies[0][1],
+        /min-h-0/,
+        `${host.name}: without min-h-0 a flex child refuses to shrink below its content and the scroll region never forms`,
+      );
+      assert.ok(
+        panels[0].index < bodies[0].index,
+        `${host.name}: the scroll region must sit inside the capped panel`,
+      );
+      assert.ok(
+        headers[0].index < bodies[0].index,
+        `${host.name}: the header must precede the scroll region, not be it`,
+      );
+      assert.match(
+        headers[0][1],
+        /shrink-0/,
+        `${host.name}: a wrapped header must not be squeezed by the body`,
+      );
+      // Neither superseded cap may creep back, in a literal or inside a
+      // `cn(...)` call — counted across the whole file, not per div.
+      assert.doesNotMatch(
+        host.source,
+        /max-h-\[(75vh|calc\(100dvh-7\.5rem\)\])/,
+        `${host.name}: both superseded caps resolve against a viewport or a header height this file does not control`,
+      );
+      assert.equal(
+        (host.source.match(/overflow-y-auto/g) ?? []).length,
+        1,
+        `${host.name}: a second scroll region anywhere in the file, dynamic or not`,
+      );
+      // The hosts are named for the forms they render; if that link is renamed,
+      // this pin is measuring the wrong file and must say so.
+      assert.equal(
+        [
+          ...host.source.matchAll(
+            /<(?:ClubIncomeForm|ClubExpenseForm|FinanceVoidForm|FinanceCorrectionForm)\b/g,
+          ),
+        ].length,
         1,
         `${host.name} must render exactly one migrated money-entry form`,
       );
-      // The innermost element before that form is its container: nothing between
-      // them opens another element in these files.
-      const divs = [
-        ...host.source
-          .slice(0, renderedForms[0].index)
-          .matchAll(/<div className="([^"]*)"/g),
-      ];
-      const body = divs[divs.length - 1];
-      assert.ok(
-        body,
-        `${host.name} must wrap its form in a body <div>, not render it bare`,
-      );
-      // `vh` resolves against the *large* viewport on iOS Safari and Chrome
-      // Android while `fixed inset-0` tracks the visible one, so a 75vh cap can
-      // be taller than the space the backdrop actually has: the body then
-      // overflows an `overflow-hidden` panel and the submit row is unreachable
-      // with nothing scrollable. `dvh` tracks the small (chrome-shown)
-      // viewport, and the 7.5rem it gives up is the modal's own chrome —
-      // 2rem of backdrop padding + the 81px header + 7px of slack.
-      assert.match(
-        body[1],
-        /max-h-\[calc\(100dvh-7\.5rem\)\]/,
-        `${host.name}: the body cap must be measured in dvh, not vh`,
-      );
-      assert.match(
-        body[1],
-        /overflow-y-auto/,
-        `${host.name}: the capped body must be the scroll region`,
-      );
-      assert.doesNotMatch(
-        host.source,
-        /max-h-\[75vh\]/,
-        `${host.name}: the large-viewport cap is the defect this replaced`,
-      );
-      bodies.push(body[1]);
     }
-    // Length guard, for the reason item 1 of the review round gives: without it,
-    // a renamed form component makes the loop above inert instead of failing it.
     assert.equal(
-      bodies.length,
+      modalHosts.length,
       4,
       "all four money-entry hosts must be measured",
     );
@@ -324,14 +375,49 @@ describe("form control baseline", () => {
     //     source text and are not claimed here;
     //  (d) the `required` inventory, for the reason stated at its definition.
     const blocks = [
-      ...forms.matchAll(
-        /<(CfTextField|CfSelect|CfFieldLayout)\b([\s\S]*?)(?:\/>|<\/(?:CfTextField|CfSelect|CfFieldLayout)>)/g,
-      ),
-    ];
+      ...forms.matchAll(/<(CfTextField|CfSelect|CfFieldLayout)\b/g),
+    ].map((open) => {
+      const tag = open[1];
+      const rest = forms.slice(open.index + tag.length + 1);
+      const close = rest.indexOf(`</${tag}>`);
+      const nextOpen = rest.search(new RegExp(`<${tag}\\b`));
+      const container = close !== -1 && (nextOpen === -1 || close < nextOpen);
+      const text = container
+        ? rest.slice(0, close + tag.length + 3)
+        : rest.slice(0, rest.indexOf("/>") + 2);
+      return { tag, text, container };
+    });
     // The same length guard the button-floor fix rests on: without it, one
     // renamed primitive or one reformat returns `[]` and every loop below is
     // inert while the suite stays green.
     assert.equal(blocks.length, 23, "every primitive block must be measured");
+    // Truncation detector, stated as an invariant rather than a promise about the
+    // regex. A lazy `(?:\/>|<\/(?:…)>)` alternation — what this block used to do
+    // — stops a `CfFieldLayout` at its wrapped control's `/>` and drops the tail.
+    // That was inert at the commit it shipped (the dropped text was two closing
+    // tags) and would have propagated to Task 5's and Task 6's copies of this pin
+    // as a silent narrowing of what rules (a)-(d) actually inspect.
+    for (const block of blocks) {
+      assert.ok(
+        block.container
+          ? block.text.endsWith(`</${block.tag}>`)
+          : block.text.endsWith("/>"),
+        `${block.tag} block was not captured through its own terminator`,
+      );
+      // The premise that makes "the next `</tag>` is mine" sound: none of these
+      // primitives nests inside another. If that ever changes, this fails before
+      // the rules below start reading someone else's attributes.
+      assert.equal(
+        block.text.indexOf(`<${block.tag}`, 1),
+        -1,
+        `${block.tag} nests inside another ${block.tag} block`,
+      );
+    }
+    assert.equal(
+      blocks.filter((block) => block.tag === "CfFieldLayout").length,
+      3,
+      "the three caller-owned money shells must be measured",
+    );
 
     // Blocks carrying the HTML `required` attribute, measured at this commit.
     // Deliberately a list and not a derivation: `label="… *"` is *not* a proxy
@@ -364,7 +450,7 @@ describe("form control baseline", () => {
     );
     const blockIds = [];
     const requiredSeen = [];
-    for (const [, tag, body] of blocks) {
+    for (const { tag, text: body } of blocks) {
       const id = (body.match(/\bid="([^"]+)"/) ?? [])[1];
       assert.ok(
         id,

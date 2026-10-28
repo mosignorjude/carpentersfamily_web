@@ -44,9 +44,9 @@ export function RecordExpenseModal({
         onClick={onClose}
         type="button"
       />
-      <div className="relative z-10 bg-white rounded-2xl border border-[#E5DDD3] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="relative z-10 bg-white rounded-2xl border border-[#E5DDD3] w-full max-w-lg shadow-2xl flex flex-col max-h-[calc(100dvh-2rem)] overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between">
+        <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#BA3C2A] text-white flex items-center justify-center font-bold text-base shadow-xs">
               <TrendingDown className="w-5 h-5 text-white" />
@@ -74,8 +74,8 @@ export function RecordExpenseModal({
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6 max-h-[calc(100dvh-7.5rem)] overflow-y-auto">
+        {/* Body: the panel owns the viewport cap, this row owns the scroll */}
+        <div className="p-6 flex-1 min-h-0 overflow-y-auto">
           {categoryUnavailable ? (
             <FormAlertBanner
               message="Expense entry is disabled until cost centers are reconciled."
