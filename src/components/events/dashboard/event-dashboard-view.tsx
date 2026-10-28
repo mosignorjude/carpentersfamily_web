@@ -658,11 +658,15 @@ export function EventDashboardView({
             budgetCeiling={event.budgetCeiling}
             canRecord={canRecord}
             costCenters={costCenters}
+            currentUserId={currentUserId}
+            eventId={event.id}
+            expenseTransactions={transactions.filter((t) => t.type === "expense")}
             onRecordExpense={(cat) => {
               setRecordInitialType("expense");
               setRecordInitialCategory(cat);
               setIsRecordModalOpen(true);
             }}
+            userRole={userRole}
           />
         )}
 
@@ -684,6 +688,8 @@ export function EventDashboardView({
           <TabRevenue
             canManageCategories={canManageCategories}
             canRecord={canRecord}
+            currentUserId={currentUserId}
+            eventId={event.id}
             onManageCategories={() => {
               setCategoryModalType("revenue");
               setIsCategoryModalOpen(true);
@@ -693,7 +699,11 @@ export function EventDashboardView({
               setRecordInitialCategory(cat);
               setIsRecordModalOpen(true);
             }}
+            revenueTransactions={transactions.filter(
+              (t) => t.type === "revenue" && t.category !== "ticket_sales"
+            )}
             streams={revenueStreams}
+            userRole={userRole}
           />
         )}
 
