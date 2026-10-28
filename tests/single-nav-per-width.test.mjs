@@ -34,9 +34,8 @@ const DISPLAY_TOKENS = new Set([
 function mediaBlocks(source) {
   const out = [];
   const opener = /@media([^{]*)\{/g;
-  let m;
-  // biome-ignore lint/suspicious/noAssignInExpressions: the exec loop is the idiomatic way to walk a global regex while lastIndex is rewritten inside the body.
-  while ((m = opener.exec(source))) {
+  let match = opener.exec(source);
+  while (match !== null) {
     const bodyStart = opener.lastIndex;
     let depth = 1;
     let i = bodyStart;
@@ -46,12 +45,13 @@ function mediaBlocks(source) {
       i += 1;
     }
     out.push({
-      query: m[1].trim(),
+      query: match[1].trim(),
       body: source.slice(bodyStart, i - 1),
-      start: m.index,
+      start: match.index,
       end: i,
     });
     opener.lastIndex = i;
+    match = opener.exec(source);
   }
   return out;
 }
@@ -127,6 +127,26 @@ describe("exactly one primary navigation at every width", () => {
       rule[1],
       /display:\s*none/,
       ".app-mobile-nav must hide by default",
+    );
+
+    // Cascade, which no source-text test can see unless someone does the arithmetic:
+    // `.app-mobile-nav { display: none }` and the in-block `display: flex` have the
+    // same specificity, so the one that appears LAST in the file wins inside the
+    // media range. Moving the unconditional default below the block therefore blanks
+    // mobile navigation at every width while every other assertion here stays green.
+    const showingBlocks = BLOCKS.filter((b) => showsNavGroup(b.body));
+    assert.equal(
+      showingBlocks.length,
+      1,
+      `${showingBlocks.length} @media blocks set .app-mobile-nav to display:flex; exactly one may, ` +
+        "or two ranges fight and the later one in the file decides",
+    );
+    const defaultAt = css.search(/^\.app-mobile-nav\s*\{/m);
+    assert.ok(
+      defaultAt !== -1 && defaultAt < showingBlocks[0].start,
+      `the top-level .app-mobile-nav default sits at offset ${defaultAt} and the block that re-shows it at ` +
+        `${showingBlocks[0].start}: equal specificity means the later rule wins, so the default must precede the block ` +
+        "or the hamburger and mobile brand disappear on phones",
     );
   });
 
