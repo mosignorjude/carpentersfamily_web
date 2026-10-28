@@ -566,7 +566,41 @@ const sizeStyles: Record<CfButtonSize, string> = {
 
 - [ ] **Step 5: migrate the money-entry forms.** `finance-forms.tsx` has **22** `h-10` controls at lines 133, 159, 181, 212, 248, 274, 399, 425, 447, 478, 514, 550, 582, 819, 836, 858, 876, 906, 926, 943, 963, 1031 — every one of them an `<input>` or `<select>` (the two at 212 and 478 are `type="file"`). Replace each `<label>...</label>` + control pair with one `<CfTextField label="..." name="..." />` or `<CfSelect label="..." name="...">...</CfSelect>` (import from `@/components/ui`), carrying the existing `name`, `value`, `onChange`, `placeholder`, `required` and `disabled` props across unchanged. Where an input carries a leading icon (the `pl-8` variants at 133 and 399), keep the icon wrapper and pass `className="pl-8"`. For the two file inputs, pass their `file:*` classes through `className`. **Corrected before dispatch — the three red-ring sites take CONTROL's green ring; do not pass `focus:ring-[#BA3C2A]`.** The original instruction was to preserve the red focus ring at `:425`, `:447`, `:1031` by passing it through `className`. That does not work reliably: `CONTROL` already emits `focus:ring-[#174C37]`, and two arbitrary-value utilities setting the same property on one element are resolved by *generated-CSS order*, not by the order they appear in the `className` string — so which ring wins is an implementation detail of the Tailwind build, not a decision in the code. Rather than ship a coin-flip, drop the red ring on those three inputs and let them use the shared green ring. Justification: the red ring is a decorative accent on "money out" fields, not a status signal (nothing is communicated by colour alone — `DESIGN.md:26` is about status), and one consistent compliant focus ring across every field is the point of a shared primitive. Cost: three inputs change focus colour, which the consolidated gate should look at. If the accent turns out to matter, the right fix is a `ringClass` prop on the primitive that *replaces* rather than competes with `CONTROL`'s — a Phase 2 decision, not a Phase 1 patch.
 
-**Corrected: do not add a default class to `FormattedAmountInput`.** All 12 of its call sites (`finance-forms.tsx:128,394,818`, `dues-forms.tsx:116,331,409`, `event-budget-allocation-fields.tsx:92`, `correct-transaction-modal.tsx:122`, `record-transaction-modal.tsx:836`, `event-category-management-modal.tsx:393,708`, `event-budget-ceiling-modal.tsx:158`, `event-ticket-tier-modal.tsx:260`) pass an explicit `className`, so a `className ?? CONTROL` fallback would never fire. The compliant sizing belongs at the call sites; the amount inputs inside `finance-forms.tsx` become `<CfTextField ... >`-wrapped `FormattedAmountInput` replacements only if `FormattedAmountInput` can accept the `CONTROL` class — otherwise migrate the three `finance-forms.tsx` amount inputs to `<CfTextField type="text">` and keep `FormattedAmountInput`'s thousands-formatting by rendering it with `className={CONTROL}`. Verify formatting still works in the browser step; `inputMode="numeric"` at `formatted-amount-input.tsx:123` must survive.
+**Corrected before dispatch — the amount inputs need a layout export, because `CfTextField` renders its own `<input>`.** The original wording ("become `<CfTextField>`-wrapped `FormattedAmountInput` replacements only if… otherwise migrate to `<CfTextField type="text">`… or render it with `className={CONTROL}`") is self-contradictory: `CfTextField` always renders the `<input>` itself, so there is no way to put `FormattedAmountInput` inside it, and there is nowhere to attach `label`/`hint`/`error` to a bare `className={CONTROL}`. The three call sites at `finance-forms.tsx:128`, `:394`, `:818` are exactly the money fields whose thousands-formatting the app depends on, so silently replacing them with plain `<CfTextField type="text">` would regress money entry — and leaving them as-is would miss this task's own goal for them.
+
+Ruling: **export the shell as `CfFieldLayout`** — the same `FieldShell` component the primitives already use internally, given `id`/`describedBy` props so the caller can wire the control it renders:
+
+```tsx
+export function CfFieldLayout({
+  children,
+  error,
+  errorId,
+  hint,
+  hintId,
+  htmlFor,
+  label,
+}: FieldShellProps & { children: React.ReactNode }) { /* same markup as FieldShell */ }
+```
+
+`CfTextField` and `CfSelect` then render *through* `CfFieldLayout` rather than duplicating it, so there is exactly one label/hint/error implementation in the file — which is the point of the task. The three amount inputs become:
+
+```tsx
+<CfFieldLayout error={msg} errorId={`${htmlId}-error`} htmlFor={htmlId} label="Amount (NGN)">
+  <FormattedAmountInput
+    aria-describedby={msg ? `${htmlId}-error` : undefined}
+    aria-invalid={msg ? true : undefined}
+    className={`${CONTROL} ${msg ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]" : ""}`}
+    id={htmlId}
+    ...
+  />
+</CfFieldLayout>
+```
+
+This adds one export beyond the plan's whitelist — justified because the alternative is a functional regression on money entry. `FormattedAmountInput` keeps its own `inputMode="numeric"` (`formatted-amount-input.tsx:123`) and its formatting; `CONTROL` supplies the 48px/16px floor it never had.
+
+**Preserve every existing `id` verbatim.** `finance-forms.tsx` carries 32 explicit ids, and the error paragraphs are among them (`income-error-amount`, `expense-error-category`, `cat-error-name` …) referenced by hand-written `aria-describedby` on the controls. The primitive generates ids via `useId`, which would rename them. Pass the existing `id` into each `CfTextField`/`CfSelect`/`CfFieldLayout` control and derive `hintId`/`errorId` from that same id, so the DOM node names do not change — no test references them by name today, but the consolidated browser gate and any future deep-link anchor both key off them.
+
+**Also corrected: do not add a default class to `FormattedAmountInput`.** All 12 of its call sites (`finance-forms.tsx:128,394,818`, `dues-forms.tsx:116,331,409`, `event-budget-allocation-fields.tsx:92`, `correct-transaction-modal.tsx:122`, `record-transaction-modal.tsx:836`, `event-category-management-modal.tsx:393,708`, `event-budget-ceiling-modal.tsx:158`, `event-ticket-tier-modal.tsx:260`) pass an explicit `className`, so a `className ?? CONTROL` fallback inside the component would never fire. The compliant sizing belongs at the call sites — which is what the `CfFieldLayout` ruling above does for the three inside `finance-forms.tsx`. The other nine call sites are Phase 2, not this task: record them in the commit body alongside the Step 6 grep count rather than migrating them here. `inputMode="numeric"` at `formatted-amount-input.tsx:123` must survive, and formatting is verified at the browser gate.
 - [ ] **Step 6: run everything** — `node --test tests/form-control-baseline.test.mjs`, `npm test`, `npm run lint`. Then grep for what is left, to size the remaining migration honestly: `grep -rn 'h-10 .*text-xs' src --include=*.tsx | wc -l`. Record the count in the commit body; the rest is Phase 2, not a silent omission here.
 - [ ] **Step 7: browser check** on `/finances` and the Pay Dues modal: every control >=48px tall, text >=16px, focus ring visible, and on a real device (or DevTools "mobile" with a throttled device) **focus does not zoom the page**. *Deferred by controller ruling to the consolidated gate after Task 7. The gate must also look at the label typography change (11px uppercase -> `text-sm` sentence case) and at dense modal footers, where `compact` buttons growing 32px -> 44px may wrap a row.*
 - [ ] **Step 8: commit** — `git commit -m "feat(ui): add compliant text/select primitives and raise the button floor to 44px"`
