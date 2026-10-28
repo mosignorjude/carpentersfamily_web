@@ -39,7 +39,7 @@ This repo does **not** use jsdom or Playwright. Tests are `node:test` files that
 | `src/components/ui/index.ts` | Barrel exports for both new files |
 | `src/components/ui/cf-button.tsx` | Size floor raised to 44px |
 | 8 dashboard table wrappers | Use `TableScroll` |
-| `src/components/app-header.tsx`, `mobile-app-menu.tsx` | `lg:hidden` -> `max-nav:hidden` so one nav per width |
+| `src/components/app-header.tsx`, `mobile-app-menu.tsx` | `flex … lg:hidden` -> `hidden max-nav:flex …` (base `flex` deleted) so one nav per width |
 | `src/app/(member)/finances/finance-forms.tsx`, `src/components/dues/pay-dues-modal.tsx` | Adopt `CfTextField` / `CfSelect` |
 
 Verification build: `npm run build && npx next start -p 3001`, then `http://127.0.0.1:3001` (per project convention, `.env.local` points at local Supabase).
@@ -352,7 +352,7 @@ describe("dashboard menu panel contrast", () => {
 }
 ```
 
-`#f0a89e` on `#073523` computes to **7.0:1** (fg relative luminance 0.4899, bg 0.0271). The button stays a destructive action by label and position, so colour is reinforcement rather than the only signal — DESIGN.md:26 holds. `var(--brand-ochre)` = `#d6a23a` measures **5.89:1** on `#073523` — clear of the 3:1 WCAG 2.2 AA bar for non-text focus appearance — and is an existing brand token, so no new literal enters the file. The override wins on specificity (`0-4-1` vs the base `0-3-1`), so the longhand `outline-color` replaces the shorthand's colour regardless of order — the same mechanism `border-top-color` uses against `border-top` at `:4034`.
+`#f0a89e` on `#073523` computes to **7.0:1** (fg relative luminance 0.4899, bg 0.0271). The button stays a destructive action by label and position, so colour is reinforcement rather than the only signal — DESIGN.md:26 holds. `var(--brand-ochre)` = `#d6a23a` measures **5.89:1** on `#073523` — clear of the 3:1 WCAG 2.2 AA bar for non-text focus appearance — and is an existing brand token, so no new literal enters the file. The override wins on specificity (`0-4-1` vs the base rule's `0-2-1` — corrected during Task 3's review, which measured the base as three class/token segments, not four), so the longhand `outline-color` replaces the shorthand's colour regardless of order — the same mechanism `border-top-color` uses against `border-top` at `:4034`.
 
 Deliberately **not** changed: the separator `rgb(243 244 239 / 0.22)` measures 1.905:1 against the panel, which reads like a failure only until it is compared with the baseline it mirrors — the light panel's separator is `var(--line)` = `#e5ddd3` on `#fff` = **1.345:1**, so the dark divider is already *more* visible than the app's design norm. Raising it to 3:1 would make this one divider louder than every other one. It is decoration, not the row's identifier (the `Sign out` label is).
 
@@ -710,10 +710,16 @@ Because a source-text suite cannot prove a breakpoint works, Step 4 must additio
 **Files:**
 - Modify: `src/app/globals.css` `@theme` block (`53-68`)
 - Modify: `src/components/app-header.tsx:232`, `:242`, `src/components/mobile-app-menu.tsx:45`
-- Delete: dead `.app-mobile-header` / `.app-mobile-actions` rules at `globals.css:3984-3986`, `4061-4098`, `4626`, `4730-4742`
+- Delete: the 12 dead selectors listed in Step 5, found by name in `src/app/globals.css`
 - Test: `tests/mobile-nav-breakpoint.test.mjs`
 
-**Why:** the sidebar disappears at `max-width: 56rem` = 896px (`globals.css:4052-4059`) but the hamburger is `lg:hidden` = visible until 1024px. Between 897 and 1023 the user gets **both** navs. The rule that was supposed to resolve this — `.app-mobile-header` — exists only in CSS; no component ever used it, so it has been dead since it was written.
+**Why:** the sidebar disappears at `max-width: 56rem` = 896px (`globals.css:4060`, whose live rules are `.app-shell` at `:4061` and `.app-sidebar` at `:4065`) but the hamburger is `lg:hidden` = visible until 1024px. Between 897 and 1023 the user gets **both** navs. The rule that was supposed to resolve this — `.app-mobile-header` — exists only in CSS; no component ever used it, so it has been dead since it was written.
+
+**Corrected before dispatch (controller pre-flight, Task 6).** Two defects that would have shipped damage:
+
+1. **The delete list's line ranges straddle live CSS, and Task 2 shifted them.** `.app-mobile-header` is not in four tidy groups at `3984-3986` / `4061-4098` / `4626` / `4730-4742`: it is **12 selectors** at `:3979`, `:4069`, `:4083`, `:4087`, `:4091`, `:4634`, `:4738`, `:4743`, `:4747`, `:4751`, plus `.app-mobile-actions` at `:4096` and `:4103`. And the `4061-4098` range, taken literally, deletes `.app-shell { display: block }` (`:4061-4063`) and `.app-sidebar` (`:4065-4067`) — **the live mobile layout switch**. Deleting those changes the app shell at every phone width, and no test in the suite would notice, because every test here is a source-text regex on class strings. Step 5 therefore names the selectors and forbids the ranges; delete by selector text, and confirm `:4061` and `:4065` still exist afterwards.
+2. **`.app-brand`, `.app-brand-logo`, `.app-brand-slogan` and `.app-signout-form` are live classes** (`app-shell.tsx:47,53,60` renders the brand; the sign-out form is real). Only their *descendant* forms under `.app-mobile-header` / `.app-mobile-actions` are inert. Step 5 must not touch a standalone `.app-brand*` rule.
+3. **`hidden max-nav:flex` written after a base `flex` works only by emission-order luck.** Step 4 as written produced `className="flex items-center hidden max-nav:flex"`, i.e. two base-level `display` utilities on one element. Measured in this build's own output (`.next/static/chunks/22jx0s314z00c.css`): `.block` at byte 15262, `.flex` at 15310, `.grid` at 15329, `.hidden` at 15348 — so `hidden` currently wins the tie and the hamburger does hide. But that is the identical coin-flip this plan rejected in Task 4 for competing `focus:ring-[…]` utilities, and it is free to change with a Tailwind bump. Step 4 now removes the base `flex` instead, leaving exactly one base `display` utility and one media variant.
 
 - [ ] **Step 1: failing test**
 
@@ -734,8 +740,42 @@ describe("single navigation per viewport", () => {
 
   it("hides the hamburger at the sidebar breakpoint, not at lg", () => {
     assert.doesNotMatch(header, /className="flex items-center lg:hidden"/);
-    assert.match(header, /hidden max-nav:flex/);
+    assert.match(header, /hidden max-nav:flex items-center/);
     assert.doesNotMatch(menu, /lg:hidden/);
+    // One base display utility per element: `flex` + `hidden` together would be
+    // resolved by generated-CSS order, not by the class string.
+    const doubleDisplay = [
+      ...header.matchAll(/className="([^"]*)"/g),
+      ...menu.matchAll(/className="([^"]*)"/g),
+    ].filter((m) => {
+      const base = m[1].split(/\s+/).filter((c) => !c.includes(":"));
+      return base.filter((c) => c === "flex" || c === "hidden" || c === "block" || c === "grid").length > 1;
+    });
+    assert.deepEqual(doubleDisplay, [], `two base display utilities on one element: ${doubleDisplay.map((m) => m[1])}`);
+  });
+
+  it("keeps the live mobile layout switch that sits beside the dead rules", () => {
+    // Step 5 deletes 12 dead selectors from the same @media block that carries
+    // the live rules; without this guard a range-delete passes every other test.
+    // There are eight `@media (max-width: 56rem)` blocks in this file, so the
+    // extractor must find the one holding the layout switch, not the first.
+    // `\n\}` relies on Biome indenting inner closers (the target block runs
+    // 4060-4107 with no column-0 brace until its own). If that changes, fix the
+    // extractor — do NOT weaken the three asserts.
+    const blocks = [
+      ...css.matchAll(/@media \(max-width: 56rem\) \{([\s\S]*?)\n\}/g),
+    ].map((m) => m[1]);
+    assert.ok(blocks.length >= 2, `expected several 56rem blocks, saw ${blocks.length}`);
+    const layout = blocks.find(
+      (b) => /\.app-shell\s*\{/.test(b) || /\.app-sidebar\s*\{/.test(b),
+    );
+    assert.ok(
+      layout,
+      "the 56rem mobile layout switch (.app-shell / .app-sidebar) has been deleted",
+    );
+    assert.match(layout, /\.app-shell\s*\{[^}]*display:\s*block/);
+    assert.match(layout, /\.app-sidebar\s*\{[^}]*display:\s*none/);
+    assert.doesNotMatch(layout, /\.app-mobile-(header|actions)/);
   });
 
   it("drops the never-used mobile header rules", () => {
@@ -747,10 +787,18 @@ describe("single navigation per viewport", () => {
 
 - [ ] **Step 2:** `node --test tests/mobile-nav-breakpoint.test.mjs` → 3 failures.
 - [ ] **Step 3:** add `--breakpoint-nav: 56rem;` inside the `@theme` block at `globals.css:53-68`. Tailwind v4 derives both `nav:` and `max-nav:` variants from any `--breakpoint-*` key.
-- [ ] **Step 4:** in `app-header.tsx:232` and `:242` change `lg:hidden` -> `hidden max-nav:flex` (both elements are already `flex`, so this preserves layout). In `mobile-app-menu.tsx:45` drop the now-impossible `lg:hidden` from the scrim.
-- [ ] **Step 5:** delete the four dead rule groups listed above. Leave `.app-menu-toggle` and `.app-menu-icon` (`globals.css:3992-4003`) — those are live, used at `mobile-app-menu.tsx:33,38`.
+- [ ] **Step 4:** delete the base `flex` and lead with `hidden` — one base `display` utility per element, so nothing depends on emission order:
+  - `app-header.tsx:232`: `className="flex items-center lg:hidden"` → `className="hidden max-nav:flex items-center"`
+  - `app-header.tsx:242` (the mobile brand Link): `className="flex items-center gap-2 lg:hidden text-inherit …"` → `className="hidden max-nav:flex items-center gap-2 text-inherit …"`, leaving `no-underline`, both `focus-visible:*` classes and `rounded-lg` untouched
+  - `mobile-app-menu.tsx:45`: drop only `lg:hidden` from the scrim; `fixed inset-0 z-70 bg-black/20 backdrop-blur-[1px]` stays verbatim (`notice-methods-verification.test.mjs:483` asserts `fixed inset-0 z-70`). The scrim needs no display utility of its own — it is rendered inside the `:232` container, which already gates it.
+  - Do **not** touch the outer left group at `:229` (`flex items-center gap-2.5 sm:gap-3 shrink-0`): it has no `lg:hidden` and is meant to be visible at every width. The Step 1 guard finds zero double-display strings in these two files today, so it is a regression guard, not a RED assertion — it must stay green.
+- [ ] **Step 5: delete the dead selectors — by name, never by line range.** All 12 occurrences, in three regions:
+  - `:3979` top-level `.app-mobile-header { … }`
+  - inside the live `@media (max-width: 56rem)` block at `:4060-4107`: `.app-mobile-header` (`:4069`), `.app-mobile-header .app-brand` (`:4083`), `.app-mobile-header .app-brand-slogan` (`:4087`), `.app-mobile-header .app-brand-logo` (`:4091`), `.app-mobile-actions` (`:4096`), `.app-mobile-actions .app-signout-form button` (`:4103`). **Keep `.app-shell { display: block }` (`:4061`) and `.app-sidebar { display: none }` (`:4065`)** — they are the mobile layout switch and they sit in the same block. Step 1's fourth test exists precisely because deleting the block by range would otherwise pass every assertion.
+  - the dashboard-shell variants `.app-shell-dashboard .app-mobile-header …` at `:4634`, `:4738`, `:4743`, `:4747`, `:4751`
+  - Do not touch the live `.app-brand` / `.app-brand-logo` / `.app-brand-copy` / `.app-brand-name` / `.app-brand-slogan` rules (rendered at `app-shell.tsx:47,53,58-60` inside the sidebar), nor `.app-signout-form` itself, nor `.app-menu-toggle` (`:3987`) and `.app-menu-icon` (`:3995`) — those are live, used at `mobile-app-menu.tsx:33,38`.
 - [ ] **Step 5b: update the superseded test.** `tests/notice-methods-verification.test.mjs:443` asserts `headerContent.includes("lg:hidden")`; after this task the header uses `hidden max-nav:flex`, so change that assertion to `headerContent.includes("hidden max-nav:flex")` and retitle the test to "...with the nav breakpoint". Do **not** touch `:483` (`menuContent.includes("fixed inset-0 z-70")`) — the scrim keeps those classes; only its `lg:hidden` leaves.
-- [ ] **Step 6:** `node --test tests/mobile-nav-breakpoint.test.mjs`, `npm test`, `npm run lint`.
+- [ ] **Step 6:** `node --test tests/mobile-nav-breakpoint.test.mjs`, `npm test`, `npm run lint`. Then `npx next build` and prove the variant actually compiles: the emitted CSS must contain a `max-nav` rule at `(width < 56rem)` (grep the chunks for `max-nav`). A `--breakpoint-nav` key that Tailwind did not pick up leaves **both** navs rendered between 897 and 1023 — the exact blocker this task exists to remove — while all four source-text tests stay green, because they read the class string, not the cascade. Record the chunk file that carried it.
 - [ ] **Step 7: browser check** at 900px, 1000px, 1024px: exactly one primary nav visible at each; at 880px the hamburger works and the sidebar is gone. `document.querySelectorAll('nav[aria-label="Mobile primary navigation"]')` must be 1 and the sidebar `<nav>` hidden.
 - [ ] **Step 8: commit** — `git commit -m "fix(nav): align hamburger with the sidebar breakpoint and drop dead mobile-header CSS"`
 
@@ -777,7 +825,7 @@ const layout = readFileSync(new URL("../src/app/layout.tsx", import.meta.url), "
 describe("viewport export", () => {
   it("exports a viewport with a theme colour", () => {
     assert.match(layout, /export const viewport: Viewport =/);
-    assert.match(layout, /themeColor:\s*"#073523"/);
+    assert.match(layout, /themeColor:\s*"#f7f6f2"/);
   });
 
   it("never blocks pinch zoom", () => {
@@ -787,15 +835,24 @@ describe("viewport export", () => {
 ```
 
 - [ ] **Step 2:** `node --test tests/mobile-viewport.test.mjs` → 1 failure.
-- [ ] **Step 3:** in `layout.tsx` add `import type { Metadata, Viewport } from "next";` (extend the existing `Metadata` import) and, above the `metadata` export:
+- [ ] **Step 3:** in `layout.tsx` add `import type { Metadata, Viewport } from "next";` (extend the existing `Metadata` import at `:1`) and, above the `metadata` export at `:33`:
 
 ```ts
 export const viewport: Viewport = {
-  themeColor: "#073523",
+  themeColor: "#f7f6f2",
   width: "device-width",
   initialScale: 1,
 };
 ```
+
+**Corrected before dispatch (controller pre-flight, Task 7).** The value above was `#073523`. That is wrong for this app, and the measured record is:
+
+- `themeColor` appears **nowhere in `src/`** today (`grep -rn 'themeColor' src` → no matches), so nothing is being corrected — the tag is simply absent, and Step 2's single RED is that absence.
+- What the phone actually shows under the status bar is `.app-sticky-header`, `background: rgb(247 246 242 / 97%)` (`globals.css:3962`) — a **light** surface. There is no dark variant: `grep 'app-shell-dashboard .app-sticky-header'` returns nothing, so the dashboard shell keeps the same light header and only its *menu panel* is forest (`#073523`).
+- `#073523` must be opaque in `themeColor` anyway (a translucent chrome colour cannot be declared), and a dark status bar above a light header is a visible mismatch on every member page, which is worse than today's absence. So: `#f7f6f2`, the header's own colour, not the brand's.
+- `width: "device-width"` and `initialScale: 1` re-declare what Next already emits — the built HTML carries exactly `<meta name="viewport" content="width=device-width, initial-scale=1">`. They are kept so the intent is declared in source rather than inherited from a framework default, which is what the safe-area work in Task 2 assumes. This changes no rendered byte; review should not read it as a behaviour change.
+- Two claims from the audit trail are **disproved and must not be acted on here**: there is no `src/components/auth/login-view.tsx` (no `login*` file exists under `src/`), no `Club Members` string anywhere in `src/`, and the sidebar brand at `app-shell.tsx:44-62` lives *inside* `<aside className="app-sidebar">`, which `.app-sidebar { display: none }` hides below 897px — so it is not duplicated on phones. Fonts are also fine: `layout.tsx:9` and `:21` load DM Sans *and* IBM Plex Sans through `next/font/local` from `src/fonts/*.woff2`, so `--font-ibm-plex-sans` is backed by a real file and `localFont` already ships `font-display: swap`.
+- The real Phase 2 typographic item is unrelated to this task: `globals.css:55` and `:130` list `var(--font-dm-sans), "DM Sans", var(--font-ibm-plex-sans), "IBM Plex Sans", ui-sans-serif…` — the generic family names sit *after* the loaded variables, so they only matter if the variable itself fails to resolve.
 
 - [ ] **Step 4:** `node --test tests/mobile-viewport.test.mjs`, `npm test`, `npm run lint`, `npm run build`.
 - [ ] **Step 5: Phase 1 gate.** Against the production build on `:3001`, run the audit's own probes and require them all clean:
