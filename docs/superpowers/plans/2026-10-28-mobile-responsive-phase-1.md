@@ -841,6 +841,10 @@ describe("single navigation per viewport", () => {
 - [ ] **Step 5b: update the superseded test.** `tests/notice-methods-verification.test.mjs:443` asserts `headerContent.includes("lg:hidden")`; after this task the header uses `hidden max-nav:flex`, so change that assertion to `headerContent.includes("hidden max-nav:flex")` and retitle the test to "...with the nav breakpoint". Do **not** touch `:483` (`menuContent.includes("fixed inset-0 z-70")`) — the scrim keeps those classes; only its `lg:hidden` leaves.
 - [ ] **Step 6:** `node --test tests/mobile-nav-breakpoint.test.mjs`, `npm test`, `npm run lint`. Then `npx next build` and prove the variant actually compiles: the emitted CSS must contain a `max-nav` rule at `(width < 56rem)` (grep the chunks for `max-nav`). A `--breakpoint-nav` key that Tailwind did not pick up leaves **both** navs rendered between 897 and 1023 — the exact blocker this task exists to remove — while all four source-text tests stay green, because they read the class string, not the cascade. Record the chunk file that carried it.
 - [ ] **Step 7: browser check** at 900px, 1000px, 1024px: exactly one primary nav visible at each; at 880px the hamburger works and the sidebar is gone. `document.querySelectorAll('nav[aria-label="Mobile primary navigation"]')` must be 1 and the sidebar `<nav>` hidden.
+
+**As shipped (`64005b7`), superseding Steps 5b and 6.** The `@theme { --breakpoint-nav: 56rem }` + `hidden max-nav:flex` mechanism was rejected before it landed: Tailwind compiles a `max-*` variant to `@media not all and (min-width: 56rem)` — strict-less-than — while the sidebar's own switch is the inclusive `@media (max-width: 56rem)`, so at exactly 896 CSS px both navs would hide and the user gets **no** navigation. The shipped gate is a class instead: `.app-mobile-nav` is `display: none` at `globals.css:3987` and is re-shown inside the same `@media (max-width: 56rem)` block that hides `.app-sidebar`, so one query governs both navs. `tests/mobile-nav-breakpoint.test.mjs` therefore never existed — the file is `tests/single-nav-per-width.test.mjs`, named for the invariant because the mechanism has no breakpoint token. Step 5b's assertion shipped as `headerContent.includes("app-mobile-nav")` (`tests/notice-methods-verification.test.mjs:443`), and Step 6's `grep max-nav` build proof is replaced by pinning the cascade order that media block depends on (`b7a2d9f`).
+
+**Step 7 also carries B-1's check — expected to pass, still unverified in this app.** At 360px and 880px, open the hamburger and confirm the scrim covers the whole viewport (a tap low on the page dismisses the menu) and the panel has not moved. `304bc3c` removed the `backdrop-filter` from the header: a non-none `backdrop-filter` makes an element the containing block for its `position: fixed` descendants, so the `fixed inset-0` scrim resolved against the header's box and covered only its 56-64px band. The evidence is a Chrome page carrying the shipped declarations (scrim height 72px with the property, 425.33px = `innerHeight` without; panel top/left/width unchanged), plus `tests/single-nav-per-width.test.mjs`, which walks every ancestor of the overlay and rejects a non-none `backdrop-filter`/`filter`/`transform`/`perspective`, a `container-type` other than `normal`, `contain: layout|paint`, or a `will-change` naming any of them — vendor prefixes included, because Safari honours `-webkit-backdrop-filter` alone. Neither proof is this app in a real browser, so the step stays on the consolidated gate.
 - [ ] **Step 8: commit** — `git commit -m "fix(nav): align hamburger with the sidebar breakpoint and drop dead mobile-header CSS"`
 
 ---
@@ -914,7 +918,7 @@ export const viewport: Viewport = {
 })();
 ```
 
-Expect `deadClip === 0`, `clipped === []`, `pageWide === false`. `small` will still list the ~106 unmigrated controls from the rest of the app — that is the Phase 2 backlog; **record it, do not chase it here.**
+Expect `deadClip === 0`, `clipped === []`, `pageWide === false`. `small` will still list the sub-44px controls on the pages the probe is run on — the audit measured ~106 — and that is the Phase 2 backlog; **record it, do not chase it here.** It is not the same denominator as the source scan in the out-of-scope list below: the probe sees one rendered page at one width, the scan sees every `.tsx` in `src/`.
 - [ ] **Step 6: commit** — `git commit -m "feat(seo): declare an explicit viewport with the portal theme colour"`
 
 ---
@@ -923,8 +927,52 @@ Expect `deadClip === 0`, `clipped === []`, `pageWide === false`. `small` will st
 
 - **DESIGN.md:32 card fallbacks** replacing the 7-column revenue/expenses/audit tables on phones. Task 1 makes the data *reachable*; making it *readable* is the density phase.
 - **Home/dues/finances duplication** — the 1,035px Quick Access section, the restated summary tiles, the decorative reassurance lines, the 3 pay-dues triggers. The chosen direction is "delete duplicates outright"; that is a content decision per card and deserves its own review, not a blocker PR.
-- **The remaining ~74 sub-44px controls and ~106 small targets** outside the money-entry paths.
-- **Dead CSS deletion of the `slk-*` block** (~1,580 lines, includes the only `min-height: 100vh`).
+- **The rest of the sub-floor controls.** Re-running this phase's own scanner (`controls()` + `declaredFloor()`)
+  over every `.tsx` in `src/` at `3fff121` measures **89 files and 459 hand-rolled controls**: **71 carry an
+  explicit floor below 44px** (the band runs `min-h-[30px]`…`min-h-[42px]`), **334 carry none the scanner can
+  read**, and the remaining 54 are already floored. Named first: the **13 dialog close affordances** outside the
+  money paths — listed one by one as `DEFERRED_CLOSE_BUTTONS` in `tests/form-control-baseline.test.mjs`, which is
+  also the file that fails when one of them is migrated or a new dialog appears unlisted. Then the 7 files in
+  `src/components/events/dashboard/modals/` — each one's `aria-label="Close dialog"` button is a bare `p-2` with no
+  floor token at all, except `event-category-management-modal.tsx:234`, which declares `min-h-[36px]` and
+  `min-w-[36px]` — plus the two communications modals, the attendance roster, and the `.cf-btn` primitives:
+  `min-height: 38px` at `globals.css:11615`, and `.cf-btn--icon-close` at `:11730`, which declares
+  `min-height: 0; padding: 0.25rem` and so has no floor to raise.
+  Fixing `.cf-btn` alone moves none of the dialog boxes: unlayered author CSS outranks Tailwind's `@layer
+  utilities`, so a utility added on such an element loses to the rule already applied to it. The primitive (20
+  consumer files) and its consumers move together or not at all.
+- **Dead CSS.** `grep -rn` across `src/` finds no consumer outside `globals.css` for `slk-`, `.club-finance-page`,
+  `.club-finance-panel`, `.event-finance-page`, `.event-finance-tabs`, `.communications-workspace-page`,
+  `.communications-panel`, `.notifications-workspace-page`, `.notifications-workspace-panel`, `.finance-heading` or
+  `.finance-overview`. The sweep is therefore much larger than the `slk-*` block
+  (`globals.css:8969`–`:10935`, 304 selector lines) this plan first named; its true extent is that task's own
+  measurement, not this draft's — and the block does hold the only plain `min-height: 100vh` left in the file
+  (`:8986`), so retiring it belongs in a commit message rather than riding along unnoticed. Two hazards, measured
+  at `3fff121`: the rule
+  `.club-finance-panel, .event-finance-panel, .notifications-workspace-panel` (`:6974`–`:6976`, with its
+  `@media (max-width: 52rem)` twin at `:7729`–`:7732`) mixes dead classes with **live** `.event-finance-panel`,
+  which `event-dashboard-view.tsx:592` renders, and the same interleaving runs through the whole
+  `*-finance-panel` descendant family beneath it. So delete by selector line, never by rule, and re-measure each
+  selector on its own: Task 6's pre-flight found standalone `.app-brand*` rules live while the identical names
+  under `.app-mobile-header` were inert, and `.slk-event-dashboard .event-finance-panel` (`:9355`) is the mirror
+  case — a live class inside a dead descendant form. Task 6 deleted only the 12 `.app-mobile-header` /
+  `.app-mobile-actions` selectors it could prove were inert, and left the rest because deleting CSS in the same
+  commit that changes nav behaviour would have made the behaviour fix unverifiable. Seven suites read
+  `globals.css`, so the deletion commit re-runs `npm test` and moves any pin that quoted what it removed; none
+  quotes these selectors today (`tests/finance-table-scroll-region.test.mjs` reads the stylesheet, but for
+  `.table-scroll-region`, which stays).
+- **The harness's own next step.** `tests/helpers/css-rules.mjs` already shares one brace-counted CSS parser,
+  imported by `mobile-menu-panel` and `single-nav-per-width`. Four readers sit outside it: `tagEnd`
+  (`tests/form-control-baseline.test.mjs:129`) and `openingTag` (`tests/dashboard-tab-strip.test.mjs:75`) are the
+  same JSX-tag walk written twice, `objectLiteralOf` (`tests/mobile-viewport.test.mjs:23`) is a third brace
+  counter, and `offendingSelectors` (`tests/finance-table-scroll-region.test.mjs`) still reads CSS by regex. Every
+  inert-cascade defect this phase closed was a variant of "one guard reads one spelling", so finishing the merge
+  makes that class structurally impossible instead of individually patched. Also open: narrowing Tailwind's
+  automatic source detection so prose in `tests/` and tracked `docs/` stops emitting utilities. The live example is
+  this file — `min-h-[2rem]` appears nowhere in `src/`, yet the build at `3fff121` still ships a rule for it because
+  Task 4's review note above spells it inside backticks; Task 5's build shipped six such floors (`e775f14`). Which
+  directive narrows detection in the installed Tailwind 4.3.3 is Phase 2's first measurement, not this plan's
+  assertion.
 - **`/finances` "Ledger Data Unavailable"** — partly local DB drift (`event_ticket_sales` missing `verification_*` columns), partly the non-actionable copy. Neither is a responsive fix.
 
 ### Verification limitations to disclose in review
