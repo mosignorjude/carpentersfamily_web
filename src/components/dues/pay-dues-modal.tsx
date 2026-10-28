@@ -514,7 +514,7 @@ export function PayDuesModal({
                           Additional Notes (Optional)
                         </label>
                         <textarea
-                          className="w-full min-h-[44px] rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden resize-none"
+                          className="w-full min-h-[7rem] rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden resize-none"
                           id={notesInputId}
                           maxLength={500}
                           name="notes"

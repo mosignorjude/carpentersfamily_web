@@ -576,7 +576,7 @@ export function FinanceCategoryForms({
                   <input
                     id={`retire-reason-${category.id}`}
                     autoComplete="off"
-                    className="min-w-0 flex-1 min-h-[44px] px-2.5 bg-white border border-[#E5DDD3] rounded-md text-base placeholder:text-sm text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-1 focus:ring-[#BA3C2A]"
+                    className="min-w-0 flex-1 min-h-12 px-2.5 bg-white border border-[#E5DDD3] rounded-md text-base placeholder:text-sm text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-1 focus:ring-[#BA3C2A]"
                     maxLength={500}
                     name="reason"
                     placeholder="Reason for retirement..."

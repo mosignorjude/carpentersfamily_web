@@ -10,9 +10,8 @@
  * which query" instead of pattern-matching a spelling.
  *
  * Values are offsets into the original source, so a caller can compare rule order
- * against a block's start. Braces inside quoted strings are not tracked; this file
- * has none, and a scanner that pretended to handle them would be harder to audit
- * than the assertion it serves.
+ * against a block's start. Comments and quoted strings are both skipped, so neither
+ * a brace in prose nor `content: "}"` can end a rule early.
  */
 
 /** At-rules whose children are ordinary rules, so they must be descended into. */
@@ -37,7 +36,8 @@ function skipTrivia(source, from) {
 }
 
 /** Index just past the `}` that closes the `{` at `open`. Comments are skipped, so
- *  a brace written in prose cannot end the rule early. */
+ *  a brace written in prose cannot end the rule early, and neither can one inside a
+ *  string: `content: "}"` is a value, not a close. */
 function matchingBrace(source, open) {
   let depth = 0;
   for (let i = open; i < source.length; i += 1) {
@@ -45,6 +45,13 @@ function matchingBrace(source, open) {
       const end = source.indexOf("*/", i + 2);
       if (end === -1) return source.length;
       i = end + 1;
+    } else if (source[i] === '"' || source[i] === "'") {
+      const quote = source[i];
+      i += 1;
+      while (i < source.length && source[i] !== quote) {
+        if (source[i] === "\\") i += 1;
+        i += 1;
+      }
     } else if (source[i] === "{") {
       depth += 1;
     } else if (source[i] === "}") {
@@ -60,13 +67,20 @@ function matchingBrace(source, open) {
  *
  * `media` is the enclosing query text (`""` when the rule is at top level), so
  * "equal specificity, later source order wins" can be asked per rule without
- * re-deriving which block it fell inside. `start` is an offset into the original
- * source, so two rules can be compared for order.
+ * re-deriving which block it fell inside. `mediaAt` is the offset of the `@media`
+ * that carries it, or `null` at top level: query text alone cannot tell two blocks
+ * that ask the same question apart, and a rule moved from one to the other has
+ * different neighbours even while the text matches. `layer` is the enclosing
+ * `@layer` name, or `null` when the rule is unlayered — and the difference decides
+ * real fights, because an unlayered author rule outranks every layered one, `base`
+ * loses to `utilities`, and specificity cannot arbitrate across layers at all.
+ * `start` is an offset into the original source, so two rules can be compared for
+ * order.
  */
 export function parseCss(source) {
   const rules = [];
 
-  function scan(from, to, media) {
+  function scan(from, to, media, layer, mediaAt) {
     let i = from;
     while (i < to) {
       const start = skipTrivia(source, i);
@@ -81,15 +95,30 @@ export function parseCss(source) {
         const query = /^@media\b/.test(prelude)
           ? prelude.slice(6).trim()
           : media;
-        scan(brace + 1, end - 1, query);
+        const named = /^@layer\b/.exec(prelude);
+        scan(
+          brace + 1,
+          end - 1,
+          query,
+          named ? prelude.slice(named[0].length).trim() || named[0] : layer,
+          /^@media\b/.test(prelude) ? start : mediaAt,
+        );
       } else if (!prelude.startsWith("@")) {
-        rules.push({ selector: prelude, body, start, end, media });
+        rules.push({
+          selector: prelude,
+          body,
+          start,
+          end,
+          media,
+          mediaAt,
+          layer,
+        });
       }
       i = end;
     }
   }
 
-  scan(0, source.length, "");
+  scan(0, source.length, "", null);
   return { rules };
 }
 

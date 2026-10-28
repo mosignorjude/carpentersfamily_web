@@ -3,6 +3,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
+import { declares, parseCss } from "./helpers/css-rules.mjs";
 
 const field = readFileSync(
   new URL("../src/components/ui/cf-field.tsx", import.meta.url),
@@ -213,7 +214,16 @@ function controls(source) {
           /<(?:input|textarea|select)(?![\w-])/.test(
             source.slice(end + 1, closing),
           );
-        if (wraps) out.push({ tag, at, end, attrs, classes, iconOnly: false });
+        if (wraps)
+          out.push({
+            tag,
+            at,
+            end,
+            attrs,
+            classes,
+            type,
+            iconOnly: false,
+          });
       } else if (classes?.includes("fixed") && classes?.includes("inset-0")) {
         // the backdrop: its tap target is the whole viewport
       } else if (
@@ -230,6 +240,7 @@ function controls(source) {
           end,
           attrs,
           classes,
+          type,
           iconOnly:
             tag === "button" &&
             /^<[A-Z][A-Za-z0-9]*[\s\S]*\/>$/.test(inner.trim()),
@@ -239,6 +250,60 @@ function controls(source) {
     }
   }
   return out.sort((a, b) => a.at - b.at);
+}
+
+/**
+ * The `min-height` `globals.css` already guarantees for a *bare* element selector
+ * (`textarea { … }`, not `.some-scope textarea`), plus whether an element utility
+ * can beat it. The layer decides: unlayered author CSS outranks every utility,
+ * while a rule inside `@layer base` loses to one regardless of specificity. So
+ * `min-h-[44px]` on a `<textarea>` whose base floor is `7rem` is a shrink, and the
+ * same token against an unlayered rule would instead be a dead letter.
+ */
+const DOCUMENT = parseCss(css);
+
+function lengthPx(value, seen = new Set()) {
+  if (value === null || seen.has(value)) return null;
+  const literal = pxOf(value);
+  if (literal !== null) return literal;
+  const variable = /^var\((--[\w-]+)\)$/.exec(value);
+  if (variable === null) return null;
+  seen.add(value);
+  const declared = DOCUMENT.rules
+    .map((rule) => declares(rule.body, variable[1]))
+    .filter((found) => found !== null)
+    .at(-1);
+  return lengthPx(declared, seen);
+}
+
+function authorFloor(tag) {
+  const bare = (selector) =>
+    selector.split(",").some(
+      (part) =>
+        part
+          .replace(/:not\((?:[^()]|\([^()]*\))*\)/g, "")
+          .trim()
+          .split(/[\s>+~]+/)
+          .at(-1) === tag &&
+        !part.includes(" ") &&
+        !part.includes(".") &&
+        !part.includes("#"),
+    );
+  const hits = DOCUMENT.rules
+    .filter(
+      (rule) =>
+        rule.media === "" &&
+        bare(rule.selector) &&
+        declares(rule.body, "min-height") !== null,
+    )
+    .at(-1);
+  if (hits === undefined) return null;
+  return {
+    px: lengthPx(declares(hits.body, "min-height")),
+    raw: declares(hits.body, "min-height"),
+    layer: hits.layer,
+    selector: hits.selector,
+  };
 }
 
 describe("form control baseline", () => {
@@ -404,9 +469,16 @@ describe("form control baseline", () => {
       const found = controls(source);
       tally.set(rel, found.length);
       for (const control of found) {
-        // Collect, do not short-circuit: one run has to name every sub-floor
-        // control in the app, because the first assert.ok that throws hides the
-        // rest and a fix that stops at the reported one leaves the defect alive.
+        // Collect, do not short-circuit: one run has to name every sub-floor control
+        // PHASE1_CONTROL_FILES contains, because the first assert.ok that throws hides
+        // the rest and a fix that stops at the reported one leaves the defect alive.
+        // What this sweep cannot see, recorded so nobody reads the green as coverage of
+        // the app: `controls()` walks lowercase button/input/textarea/select/label, so an
+        // `<a role="button">` is not a control here; `declaredFloor` strips variant
+        // prefixes and stops at the first token, so a `min-h-[44px]` followed by a smaller
+        // `max-md:` floor reads as 44px; and `iconOnly` needs an uppercase child, so a `<button>` wrapping `<svg>`
+        // never has its width asked. Widening them is Phase 2 work, with mutations, not a
+        // edit to this loop.
         const problems = [];
         const label = (control.attrs.match(
           /(?:^|\s)(?:aria-label|id)="([^"]*)"/,
@@ -470,6 +542,68 @@ describe("form control baseline", () => {
     );
   });
 
+  it("never lets a utility token shrink the floor globals.css already gives a control", () => {
+    // The sibling sweep above asks "does this control own a floor, and is it
+    // >= 44px" — a question that cannot see a token making a control *smaller*.
+    // `@layer base` gives a bare `textarea` 7rem and a bare `input`/`select`
+    // `var(--control-height)` (48px); a utility lands in Tailwind's `utilities`
+    // layer, which is later than `base`, so `min-h-[44px]` on a notes textarea is
+    // a 112px -> 54px shrink that measures compliant. Design's own number for
+    // inputs is 48px, so the base floor is the one to respect, not overwrite.
+    const offenders = [];
+    const floors = new Map();
+    for (const rel of PHASE1_CONTROL_FILES) {
+      const source = readFileSync(
+        new URL(`../${rel}`, import.meta.url),
+        "utf8",
+      );
+      for (const control of controls(source)) {
+        if (control.type === "checkbox" || control.type === "radio") continue;
+        const base = authorFloor(control.tag);
+        if (base === null) continue;
+        if (base.px === null) {
+          offenders.push(
+            `${rel}:<${control.tag}> — globals.css floors this tag at "${base.raw}", ` +
+              `set by "${base.selector}", a value this resolver cannot read`,
+          );
+          continue;
+        }
+        floors.set(control.tag, base);
+        if (control.classes === null) continue;
+        const token = declaredFloor(control.classes, "min-h");
+        if (token === null || token.px === null) continue;
+        if (base.layer === null) {
+          // Unlayered author CSS outranks the utility: the token is a dead letter,
+          // and a guard that counted it as the floor would be reading a number the
+          // browser never applies.
+          offenders.push(
+            `${rel}:<${control.tag}> declares ${token.token}, but the unlayered rule ` +
+              `"${base.selector}" already sets min-height: ${base.px}px, which wins — ` +
+              "the token does nothing",
+          );
+          continue;
+        }
+        if (token.px < base.px) {
+          offenders.push(
+            `${rel}:<${control.tag}> declares ${token.token} = ${token.px}px, below the ` +
+              `${base.px}px its "@layer ${base.layer}" rule already guarantees — the ` +
+              "utility wins, so this shrinks the control",
+          );
+        }
+      }
+    }
+    assert.ok(
+      floors.size >= 2,
+      `only ${floors.size} tag(s) were compared; the base floor for textarea/input/select ` +
+        "disappeared from globals.css and this sweep is now inert",
+    );
+    assert.deepEqual(
+      offenders,
+      [],
+      `tokens that lower an existing floor:\n    ${offenders.join("\n    ")}`,
+    );
+  });
+
   it("stops a caller from overriding a primitive's floor", () => {
     // The sweep above reads lowercase tags, so `<FormSubmitButton>` and
     // `<CfTextField>` are invisible to it: their height belongs to the
@@ -529,7 +663,14 @@ describe("form control baseline", () => {
     ].sort();
     // A dialog that is neither audited nor deferred has to be named here first,
     // which is the whole point: the deferred paths are a debt with an owner,
-    // not a blind spot.
+    // not a blind spot. The key is the literal label, and that is the limit of the
+    // claim — measured at this commit, three dialogs close with a *button* under some
+    // other aria-label and so belong to no list here: notifications-drawer.tsx
+    // ("Close notifications", `p-2` around a 20px glyph = 36px), receipt-viewer.tsx
+    // ("Close receipt viewer", `p-1` = 28px) and home/announcement-detail-modal.tsx
+    // ("Close modal", which carries its own min-h/min-w and clears the floor by accident).
+    // Deleting those tokens from the third would RED nothing, because a guard cannot
+    // measure a control it was told to look for under a different name.
     assert.deepEqual(
       found,
       expected,

@@ -199,7 +199,7 @@ export function ReceiptModal({
               <div>
                 <input
                   accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                  className="w-full min-h-[44px] py-1 text-xs text-[#54433A] file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border file:border-[#E5DDD3] file:text-xs file:font-bold file:bg-white file:text-[#3D291F] hover:file:bg-[#FAF6F0] cursor-pointer"
+                  className="w-full min-h-12 py-1 text-xs text-[#54433A] file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border file:border-[#E5DDD3] file:text-xs file:font-bold file:bg-white file:text-[#3D291F] hover:file:bg-[#FAF6F0] cursor-pointer"
                   name="file"
                   required
                   type="file"
