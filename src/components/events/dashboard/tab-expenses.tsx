@@ -11,6 +11,7 @@ import {
 import type React from "react";
 import { useState } from "react";
 import { EmptyStateCard } from "@/components/ui/state-screen";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { formatNaira, formatPercent } from "@/lib/format";
 import { percentWidthClass } from "@/lib/percent-width-class";
 import type {
@@ -135,7 +136,10 @@ export function TabExpenses({
             title="No Expenses Recorded"
           />
         ) : (
-          <div className="overflow-x-auto min-w-0">
+          <TableScroll
+            className="overflow-x-auto min-w-0"
+            label="Expenses by cost center"
+          >
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
@@ -232,7 +236,7 @@ export function TabExpenses({
                 })}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
         )}
       </section>
 

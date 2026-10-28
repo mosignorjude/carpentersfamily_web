@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, Printer } from "lucide-react";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { downloadLedgerCSV, formatNaira, formatPercent } from "@/lib/format";
 import type {
   DashboardCostCenter,
@@ -170,7 +171,7 @@ export function TabReports({
             </span>
           </h4>
 
-          <div className="overflow-x-auto">
+          <TableScroll label="Financial report">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-[#E5DDD3] text-[10px] text-[#7A685D] uppercase tracking-wider">
@@ -221,7 +222,7 @@ export function TabReports({
                 )}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
         </div>
 
         {/* Statement of Expenses Table */}
@@ -236,7 +237,7 @@ export function TabReports({
             </span>
           </h4>
 
-          <div className="overflow-x-auto">
+          <TableScroll label="Report summary">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-[#E5DDD3] text-[10px] text-[#7A685D] uppercase tracking-wider">
@@ -290,7 +291,7 @@ export function TabReports({
                 )}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
         </div>
 
         {/* Auditor Sign-off */}

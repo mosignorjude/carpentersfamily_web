@@ -4,6 +4,7 @@ import { Download, FileText, Paperclip, Search, Shield } from "lucide-react";
 import { useState } from "react";
 import { ReceiptCell } from "@/components/finances/receipt-cell";
 import { EmptyStateCard } from "@/components/ui/state-screen";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { downloadLedgerCSV, formatNaira } from "@/lib/format";
 import type { ActivityLogItem, DashboardTransaction } from "./dashboard-types";
 
@@ -204,7 +205,10 @@ export function TabAuditLog({
             title="No Historical Audits"
           />
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-[#E5DDD3]">
+          <TableScroll
+            className="rounded-xl border border-[#E5DDD3]"
+            label="Audit log entries"
+          >
             <table
               aria-label="Transaction journal"
               className="w-full text-xs text-left"
@@ -389,7 +393,7 @@ export function TabAuditLog({
                 )}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
         )}
       </section>
 

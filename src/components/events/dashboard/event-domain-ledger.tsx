@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { ReceiptCell } from "@/components/finances/receipt-cell";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { formatNaira } from "@/lib/format";
 import type { DashboardTransaction } from "./dashboard-types";
 
@@ -203,7 +204,7 @@ export function EventDomainLedger({
       </div>
 
       {/* Ledger Table */}
-      <div className="overflow-x-auto">
+      <TableScroll label="Ledger transactions">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
@@ -402,7 +403,7 @@ export function EventDomainLedger({
             )}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
 
       {/* Pagination Footer */}
       {totalPages > 1 && (

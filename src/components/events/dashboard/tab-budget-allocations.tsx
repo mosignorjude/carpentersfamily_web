@@ -2,6 +2,7 @@
 
 import { BarChart3, Pencil, Plus, Tags } from "lucide-react";
 import { useState } from "react";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { formatNaira, formatPercent } from "@/lib/format";
 import { percentWidthClass } from "@/lib/percent-width-class";
 import type {
@@ -245,7 +246,7 @@ export function TabBudgetAllocations({
               </div>
 
               {/* Matrix Table */}
-              <div className="overflow-x-auto">
+              <TableScroll label="Budget allocations">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
@@ -335,7 +336,7 @@ export function TabBudgetAllocations({
                     })}
                   </tbody>
                 </table>
-              </div>
+              </TableScroll>
             </div>
           )}
         </div>

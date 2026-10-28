@@ -8733,10 +8733,8 @@ textarea:focus-visible {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
-.event-finance-page,
 .event-finance-panel {
   min-width: 0;
-  overflow-x: clip;
 }
 
 .event-finance-panel > .finance-balance-grid > .finance-balance-forecast {
@@ -8754,6 +8752,50 @@ textarea:focus-visible {
   width: 100%;
   min-width: 0;
   max-width: 100%;
+}
+
+/* Focusable horizontal scroll region for wide data tables.
+   Layers 1-2 are surface-coloured masks pinned to the ends of the scrolled
+   content (`local`); layers 3-4 are edge shadows pinned to the visible edges
+   (`scroll`). A mask only covers its shadow once that edge is reached, so a
+   shadow reads as "there is more content this way" without colour-only
+   signalling. The masks assume the --color-surface panel these tables sit on. */
+.table-scroll-region {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+  background-image:
+    linear-gradient(90deg, var(--color-surface) 30%, rgb(255 255 255 / 0)),
+    linear-gradient(270deg, var(--color-surface) 30%, rgb(255 255 255 / 0)),
+    linear-gradient(270deg, rgb(122 104 93 / 0.22), rgb(122 104 93 / 0)),
+    linear-gradient(90deg, rgb(122 104 93 / 0.22), rgb(122 104 93 / 0));
+  background-position:
+    0% 50%,
+    100% 50%,
+    100% 50%,
+    0% 50%;
+  background-size:
+    2.5rem 100%,
+    2.5rem 100%,
+    2.5rem 100%,
+    2.5rem 100%;
+  background-repeat: no-repeat;
+  background-attachment: local, local, scroll, scroll;
+  scrollbar-gutter: stable;
+}
+
+.table-scroll-region:focus-visible {
+  outline: 3px solid var(--brand-forest);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table-scroll-region {
+    scroll-behavior: auto;
+  }
 }
 
 .event-budget-table-scroll:focus-visible {
