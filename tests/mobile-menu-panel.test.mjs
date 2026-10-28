@@ -1,81 +1,129 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
+import { declares, parseCss, rulesFor } from "./helpers/css-rules.mjs";
 
 const css = readFileSync(
   new URL("../src/app/globals.css", import.meta.url),
   "utf8",
 );
 
-function ruleBody(source, anchor) {
-  const start = source.indexOf(anchor);
-  assert.notEqual(start, -1, `missing rule near "${anchor}"`);
-  const open = source.indexOf("{", start);
-  return source.slice(open + 1, source.indexOf("}", open));
-}
+const DOC = parseCss(css);
+/**
+ * Value compare that does not care how the declaration is line-wrapped.
+ *
+ * The file breaks `min(...)` and `calc(...)` over lines, which puts whitespace after
+ * each open paren and before each close. Removing exactly that, then collapsing the
+ * rest to single spaces, leaves the string a reader would write by hand. Spaces
+ * between operands survive, because `calc(100% - 2rem)` is only meaningful with them
+ * — a normaliser that stripped every space would compare two mangled strings and
+ * call it a pass.
+ */
+const flat = (value) =>
+  value === null
+    ? null
+    : value
+        .replace(/\(\s+/g, "(")
+        .replace(/\s+\)/g, ")")
+        .replace(/\s+/g, " ")
+        .trim();
+
+/**
+ * Rules whose subject is the panel itself. `.app-shell-dashboard
+ * .app-mobile-menu-panel .app-nav-links a` styles a link inside the panel, not the
+ * panel, so it must not enter a geometry question — but `.app-shell-dashboard
+ * .app-mobile-menu-panel` does, and that one is the repaint Task 3 shipped.
+ */
+const panelRules = () => rulesFor(DOC, "app-mobile-menu-panel");
+const basePanelRule = () =>
+  panelRules().find((rule) => rule.selector === ".app-mobile-menu-panel");
 
 describe("mobile menu panel fits the viewport", () => {
-  // The "\n." anchor is load-bearing: it extracts only the base rule written at
-  // column 0, never an indented .app-mobile-menu-panel rule nested inside a
-  // media query. The geometry-before-base test below is what keeps a media
-  // override from creeping back in front of the base rule as inert dead CSS.
-  const panel = ruleBody(css, "\n.app-mobile-menu-panel {");
+  it("has one base rule to read the geometry from", () => {
+    assert.ok(
+      basePanelRule(),
+      "no rule whose selector is exactly .app-mobile-menu-panel — the panel's box is undefined",
+    );
+  });
 
   it("caps height at the dvh viewport minus the full reservation", () => {
-    // Whole-declaration match: a loose /max-height:[^;]*100dvh/ also passes on
-    // caps that overflow the viewport (no reservation, or added instead of
-    // subtracted terms).
-    assert.match(
-      panel,
-      /max-height:\s*calc\(\s*100dvh\s*-\s*5\.5rem\s*-\s*env\(safe-area-inset-bottom,\s*0px\)\s*\)/,
+    const panel = basePanelRule();
+    assert.ok(panel, "no base .app-mobile-menu-panel rule");
+    // Whole-declaration equality, not a substring: /100dvh/ also passes on a cap
+    // that adds the reservation instead of subtracting it, or drops it entirely.
+    assert.equal(
+      flat(declares(panel.body, "max-height")),
+      "calc(100dvh - 5.5rem - env(safe-area-inset-bottom, 0px))",
     );
   });
 
   it("scrolls its own overflow instead of spilling off-screen", () => {
-    assert.match(panel, /overflow-y:\s*auto/);
-    assert.match(panel, /overscroll-behavior:\s*contain/);
+    const panel = basePanelRule();
+    assert.ok(panel, "no base .app-mobile-menu-panel rule");
+    assert.equal(flat(declares(panel.body, "overflow-y")), "auto");
+    assert.equal(flat(declares(panel.body, "overscroll-behavior")), "contain");
   });
 
   it("pins the geometry the vertical and horizontal fit depends on", () => {
-    assert.match(panel, /top:\s*4\.5rem/);
-    assert.match(
-      panel,
-      /left:\s*max\(1rem,\s*env\(safe-area-inset-left,\s*0px\)\)/,
+    const panel = basePanelRule();
+    assert.ok(panel, "no base .app-mobile-menu-panel rule");
+    assert.equal(flat(declares(panel.body, "position")), "fixed");
+    assert.equal(flat(declares(panel.body, "top")), "4.5rem");
+    assert.equal(
+      flat(declares(panel.body, "left")),
+      "max(1rem, env(safe-area-inset-left, 0px))",
     );
-    assert.match(
-      panel,
-      /width:\s*min\(\s*20rem,\s*calc\(\s*100vw\s*-\s*2rem\s*-\s*env\(safe-area-inset-left,\s*0px\)\s*-\s*env\(safe-area-inset-right,\s*0px\)\s*\)\s*\)/,
+    // 100%, not 100vw: a fixed element's containing block is the viewport MINUS a
+    // classic scrollbar, while 100vw includes it. At 510 CSS px with a 15px
+    // scrollbar, 100vw is 510 and the containing block is 494.67, so a 20rem panel
+    // starts 16px in and ends 1px past the visible edge on a 320px window. On a
+    // phone the two are identical, so this is the desktop-narrow-window half of the
+    // same invariant, and it holds whichever ancestor owns the containing block.
+    assert.equal(
+      flat(declares(panel.body, "width")),
+      "min(20rem, calc(100% - 2rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)))",
     );
-    assert.match(
-      panel,
-      /padding-bottom:\s*calc\(\s*0\.65rem\s*\+\s*env\(safe-area-inset-bottom,\s*0px\)\s*\)/,
+    assert.equal(
+      flat(declares(panel.body, "padding-bottom")),
+      "calc(0.65rem + env(safe-area-inset-bottom, 0px))",
     );
   });
 
   it("leaves the base rule as the sole geometry source in the cascade", () => {
-    // A .app-mobile-menu-panel rule earlier in source order than the base rule
-    // is inert dead CSS (equal specificity, media queries add none) unless it
-    // is more specific; either way it must not set panel geometry.
-    const baseStart = css.indexOf("\n.app-mobile-menu-panel {");
-    assert.notEqual(baseStart, -1, "base .app-mobile-menu-panel rule missing");
-    for (const match of css.matchAll(
-      /\.app-mobile-menu-panel\s*\{([^}]+)\}/g,
-    )) {
-      if (match.index > baseStart) {
-        break;
-      }
-      for (const prop of [
-        /^\s*top\s*:/m,
-        /^\s*left\s*:/m,
-        /^\s*max-height\s*:/m,
-      ]) {
-        assert.doesNotMatch(
-          match[1],
-          prop,
-          "a .app-mobile-menu-panel rule before the base rule must not set top/left/max-height",
-        );
-      }
-    }
+    // Two hazards, and the guard has to face both. A same-specificity geometry rule
+    // BEFORE the base rule is inert dead CSS — main carried one, which is the bug
+    // this branch fixed, and Task 2 originally guarded only that direction. A rule
+    // AFTER the base (or a more specific descendant-context rule anywhere) wins the
+    // cascade and silently replaces the fit math the block above pins: the exact
+    // shape of the B2 regression, one line later in the file.
+    //
+    // Reading only the base rule and its successors by index arithmetic missed both:
+    // the loop compared a match that starts at the selector's dot against an anchor
+    // that starts at the newline before it, so it broke on its first iteration and
+    // no rule was ever examined. Parsed rules make the question "does any other rule
+    // style this box's geometry", which has no order caveat.
+    const geometry = ["top", "left", "right", "bottom", "width", "max-height"];
+    const offenders = panelRules()
+      .filter((rule) => rule !== basePanelRule())
+      .filter((rule) => !rule.selector.includes("::"))
+      .filter((rule) =>
+        geometry.some((prop) => declares(rule.body, prop) !== null),
+      )
+      .map(
+        (rule) =>
+          `${rule.media ? `(${rule.media}) ` : ""}${rule.selector} { ${geometry
+            .map((prop) => `${prop}: ${flat(declares(rule.body, prop))}`)
+            .filter((part) => !part.endsWith("null"))
+            .join("; ")} } at offset ${rule.start}`,
+      );
+    // A narrow-screen override should edit the rule above, not shadow it: the
+    // min()/calc() cap is already viewport-adaptive, so a second geometry rule is
+    // either dead or a change nobody measured.
+    assert.deepEqual(
+      offenders,
+      [],
+      "only the base .app-mobile-menu-panel rule may set the panel's box geometry",
+    );
   });
 });
 

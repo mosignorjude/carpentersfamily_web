@@ -3960,8 +3960,12 @@ textarea:focus-visible {
   gap: 0.75rem;
   padding: 0.65rem 1.5rem;
   background: rgb(247 246 242 / 97%);
-  backdrop-filter: blur(14px) saturate(180%);
-  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  /* No backdrop-filter here, deliberately: the mobile menu's scrim and panel are
+     position:fixed descendants of this header, and a non-none backdrop-filter would
+     make the header their containing block — `inset-0` would then cover a 64px band
+     instead of the viewport and outside-tap dismissal would stop working. The
+     surface is already 97% opaque, so the blur had nothing to blend. Guarded by
+     tests/single-nav-per-width.test.mjs. */
   border-bottom: 1px solid rgb(229 221 211 / 90%);
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.03);
   transition:
@@ -4003,10 +4007,13 @@ textarea:focus-visible {
   top: 4.5rem;
   left: max(1rem, env(safe-area-inset-left, 0px));
   right: auto;
+  /* 100%, not 100vw: this box is fixed, so its containing block is the viewport
+     minus a classic scrollbar while 100vw includes it — the cap would overshoot by
+     the scrollbar width on a narrow desktop window. */
   width: min(
     20rem,
     calc(
-      100vw -
+      100% -
       2rem -
       env(safe-area-inset-left, 0px) -
       env(safe-area-inset-right, 0px)
