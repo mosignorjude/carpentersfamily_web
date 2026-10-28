@@ -15,14 +15,20 @@ function ruleBody(source, anchor) {
 }
 
 describe("mobile menu panel fits the viewport", () => {
-  // The "\n." anchor is load-bearing: an unanchored search matches the
-  // .app-mobile-menu-panel override inside @media (max-width: 48rem) first,
-  // which legitimately does not carry overflow-y.
+  // The "\n." anchor is load-bearing: it extracts only the base rule written at
+  // column 0, never an indented .app-mobile-menu-panel rule nested inside a
+  // media query. The geometry-before-base test below is what keeps a media
+  // override from creeping back in front of the base rule as inert dead CSS.
   const panel = ruleBody(css, "\n.app-mobile-menu-panel {");
 
-  it("caps height with dvh plus the bottom safe area", () => {
-    assert.match(panel, /max-height:[^;]*100dvh/);
-    assert.match(panel, /max-height:[^;]*env\(safe-area-inset-bottom/);
+  it("caps height at the dvh viewport minus the full reservation", () => {
+    // Whole-declaration match: a loose /max-height:[^;]*100dvh/ also passes on
+    // caps that overflow the viewport (no reservation, or added instead of
+    // subtracted terms).
+    assert.match(
+      panel,
+      /max-height:\s*calc\(\s*100dvh\s*-\s*5\.5rem\s*-\s*env\(safe-area-inset-bottom,\s*0px\)\s*\)/,
+    );
   });
 
   it("scrolls its own overflow instead of spilling off-screen", () => {
@@ -30,8 +36,45 @@ describe("mobile menu panel fits the viewport", () => {
     assert.match(panel, /overscroll-behavior:\s*contain/);
   });
 
-  it("insets for notch and landscape safe areas", () => {
-    assert.match(panel, /left:\s*max\([^;]*env\(safe-area-inset-left/);
-    assert.match(panel, /padding-bottom:[^;]*env\(safe-area-inset-bottom/);
+  it("pins the geometry the vertical and horizontal fit depends on", () => {
+    assert.match(panel, /top:\s*4\.5rem/);
+    assert.match(
+      panel,
+      /left:\s*max\(1rem,\s*env\(safe-area-inset-left,\s*0px\)\)/,
+    );
+    assert.match(
+      panel,
+      /width:\s*min\(\s*20rem,\s*calc\(\s*100vw\s*-\s*2rem\s*-\s*env\(safe-area-inset-left,\s*0px\)\s*-\s*env\(safe-area-inset-right,\s*0px\)\s*\)\s*\)/,
+    );
+    assert.match(
+      panel,
+      /padding-bottom:\s*calc\(\s*0\.65rem\s*\+\s*env\(safe-area-inset-bottom,\s*0px\)\s*\)/,
+    );
+  });
+
+  it("leaves the base rule as the sole geometry source in the cascade", () => {
+    // A .app-mobile-menu-panel rule earlier in source order than the base rule
+    // is inert dead CSS (equal specificity, media queries add none) unless it
+    // is more specific; either way it must not set panel geometry.
+    const baseStart = css.indexOf("\n.app-mobile-menu-panel {");
+    assert.notEqual(baseStart, -1, "base .app-mobile-menu-panel rule missing");
+    for (const match of css.matchAll(
+      /\.app-mobile-menu-panel\s*\{([^}]+)\}/g,
+    )) {
+      if (match.index > baseStart) {
+        break;
+      }
+      for (const prop of [
+        /^\s*top\s*:/m,
+        /^\s*left\s*:/m,
+        /^\s*max-height\s*:/m,
+      ]) {
+        assert.doesNotMatch(
+          match[1],
+          prop,
+          "a .app-mobile-menu-panel rule before the base rule must not set top/left/max-height",
+        );
+      }
+    }
   });
 });

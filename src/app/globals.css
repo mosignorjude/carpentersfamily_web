@@ -3974,12 +3974,6 @@ textarea:focus-visible {
     padding: 0.5rem 0.85rem;
     min-height: 3.5rem;
   }
-
-  .app-mobile-menu-panel {
-    top: 3.75rem;
-    left: max(0.75rem, env(safe-area-inset-left, 0px));
-    max-height: calc(100dvh - 4.75rem - env(safe-area-inset-bottom, 0px));
-  }
 }
 
 .app-mobile-header {
@@ -4009,7 +4003,15 @@ textarea:focus-visible {
   top: 4.5rem;
   left: max(1rem, env(safe-area-inset-left, 0px));
   right: auto;
-  width: min(20rem, calc(100vw - 2rem));
+  width: min(
+    20rem,
+    calc(
+      100vw -
+      2rem -
+      env(safe-area-inset-left, 0px) -
+      env(safe-area-inset-right, 0px)
+    )
+  );
   max-height: calc(100dvh - 5.5rem - env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;

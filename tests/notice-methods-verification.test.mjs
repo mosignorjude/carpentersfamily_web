@@ -447,7 +447,8 @@ test("mobile drawer: panel css anchors to left under menu toggle button", async 
   const fs = await import("node:fs");
   const cssContent = fs.readFileSync("src/app/globals.css", "utf8");
 
-  // Ensure .app-mobile-menu-panel sets left: 1rem (and not right: 1rem)
+  // Ensure .app-mobile-menu-panel anchors to a safe-area-aware left inset
+  // (max(1rem, env(safe-area-inset-left, ...)), and not right: 1rem)
   const panelMatches = [
     ...cssContent.matchAll(/\.app-mobile-menu-panel\s*\{([^}]+)\}/g),
   ];
@@ -459,7 +460,7 @@ test("mobile drawer: panel css anchors to left under menu toggle button", async 
   assert.ok(basePanel, "Expected base .app-mobile-menu-panel definition");
   assert.ok(
     basePanel[1].includes("left: max(1rem, env(safe-area-inset-left"),
-    "Panel should anchor to left: 1rem",
+    "Panel should anchor to the safe-area-aware left inset",
   );
   assert.ok(
     basePanel[1].includes("right: auto"),
