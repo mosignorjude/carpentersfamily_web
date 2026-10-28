@@ -163,7 +163,7 @@ export function TabBudgetAllocations({
         </div>
       </div>
 
-      {/* View 1: Cost Center Spending Allocation vs Spent */}
+      {/* View 1: Consolidated Capital Allocation & Burn Rate Matrix */}
       {activeChartTab === "allocation" && (
         <div className="space-y-6">
           {costCenters.length === 0 ? (
@@ -191,116 +191,142 @@ export function TabBudgetAllocations({
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {costCenters.map((center) => {
-                const percent = Math.min(
-                  100,
-                  (center.spent / (center.allocated || 1)) * 100,
-                );
-                return (
-                  <div
-                    className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]"
-                    key={center.id}
-                  >
-                    <span className="text-xs text-[#7A685D] block truncate">
-                      {center.name}
+            <div className="bg-white rounded-2xl border border-[#E5DDD3] p-5 sm:p-6 shadow-xs space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
+                <div>
+                  <h4 className="text-base font-bold text-[#3D291F]">
+                    Capital Allocation & Burn Rate Matrix
+                  </h4>
+                  <p className="text-xs text-[#7A685D] mt-0.5">
+                    Authorized ceiling allocations, actual disbursements, and operational commitments.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
+                    <span className="text-[11px] text-[#7A685D] block">
+                      Total Ceiling
                     </span>
-                    <div className="flex items-baseline justify-between mt-1">
-                      <span className="text-base font-bold text-[#3D291F] tabular-nums font-mono">
-                        {formatNaira(center.spent)}
-                      </span>
-                      <span className="text-xs font-semibold text-[#174C37] tabular-nums">
-                        {formatPercent(percent)}
-                      </span>
-                    </div>
-                    <div className="w-full bg-[#E5DDD3] rounded-full h-1.5 mt-2 overflow-hidden">
-                      <div
-                        className={`bg-[#174C37] h-full rounded-full ${percentWidthClass(percent)}`}
-                      />
-                    </div>
-                    <span className="text-[11px] text-[#7A685D] mt-2 block">
-                      Budget: {formatNaira(center.allocated)}
+                    <span className="font-bold text-[#174C37] text-sm tabular-nums font-mono">
+                      {formatNaira(budgetCeiling)}
                     </span>
                   </div>
-                );
-              })}
+                  <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
+                    <span className="text-[11px] text-[#7A685D] block">
+                      Overall Burn Rate
+                    </span>
+                    <span className="font-bold text-[#3D291F] text-sm tabular-nums font-mono">
+                      {formatPercent(
+                        budgetCeiling > 0
+                          ? ((totalExpenses + costCenters.reduce((s, c) => s + c.committed, 0)) / budgetCeiling) * 100
+                          : 0
+                      )}
+                    </span>
+                  </div>
+                  {canManageCategories && onOpenBudgetCeilingModal && (
+                    <button
+                      className="px-3.5 py-2 bg-white text-[#174C37] border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[40px] shadow-xs cursor-pointer"
+                      onClick={onOpenBudgetCeilingModal}
+                      type="button"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      <span>{budgetCeiling > 0 ? "Edit Ceiling" : "Set Ceiling"}</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Matrix Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
+                      <th className="py-2.5 px-3.5">Cost Center</th>
+                      <th className="py-2.5 px-3.5">Allocated Ceiling</th>
+                      <th className="py-2.5 px-3.5">Disbursed Spend</th>
+                      <th className="py-2.5 px-3.5">Committed POs</th>
+                      <th className="py-2.5 px-3.5">Burn Rate Bar</th>
+                      <th className="py-2.5 px-3.5 text-right">Buffer Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#EBE5DC]">
+                    {costCenters.map((center) => {
+                      const totalUtilized = center.spent + center.committed;
+                      const percent = Math.min(
+                        100,
+                        (totalUtilized / (center.allocated || 1)) * 100
+                      );
+                      const variance = center.allocated - totalUtilized;
+                      const isOverBudget = variance < 0;
+
+                      return (
+                        <tr
+                          key={center.id}
+                          className="hover:bg-[#FAF6F0]/50 transition-colors"
+                        >
+                          <td className="py-3 px-3.5 font-bold text-[#3D291F]">
+                            {center.name}
+                          </td>
+                          <td className="py-3 px-3.5 whitespace-nowrap font-mono font-semibold text-[#3D291F]">
+                            {formatNaira(center.allocated)}{" "}
+                            <span className="text-[11px] font-normal text-[#7A685D]">
+                              (
+                              {formatPercent(
+                                center.percentage !== undefined
+                                  ? center.percentage
+                                  : budgetCeiling > 0
+                                    ? (center.allocated / budgetCeiling) * 100
+                                    : 0
+                              )}
+                              )
+                            </span>
+                          </td>
+                          <td className="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-[#BA3C2A]">
+                            {formatNaira(center.spent)}
+                          </td>
+                          <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#D6A23A]">
+                            {formatNaira(center.committed)}
+                          </td>
+                          <td className="py-3 px-3.5 whitespace-nowrap min-w-[140px]">
+                            <div className="flex items-baseline justify-between font-mono text-xs">
+                              <span className="font-semibold text-[#3D291F]">
+                                {formatPercent(percent)}
+                              </span>
+                            </div>
+                            <div className="w-full bg-[#E5DDD3] rounded-full h-1.5 mt-1.5 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-300 ${
+                                  isOverBudget
+                                    ? "bg-[#BA3C2A]"
+                                    : percent > 85
+                                      ? "bg-[#D6A23A]"
+                                      : "bg-[#174C37]"
+                                } ${percentWidthClass(percent)}`}
+                              />
+                            </div>
+                          </td>
+                          <td className="py-3 px-3.5 text-right whitespace-nowrap">
+                            {isOverBudget ? (
+                              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
+                                {formatNaira(Math.abs(variance))} Deficit
+                              </span>
+                            ) : percent > 85 ? (
+                              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
+                                Near Cap (+{formatNaira(variance)})
+                              </span>
+                            ) : (
+                              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
+                                Healthy (+{formatNaira(variance)})
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
-
-          {/* Comparative Horizontal Bar Matrix */}
-          <div className="p-5 rounded-2xl border border-[#E5DDD3] bg-white space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h4 className="text-xs font-semibold text-[#7A685D] uppercase tracking-wider">
-                Disbursed Outflow vs Authorized Allocation Ceiling
-              </h4>
-              <span className="text-xs font-mono text-[#174C37] font-semibold">
-                Total Ceiling: {formatNaira(budgetCeiling)}
-              </span>
-            </div>
-
-            <div className="space-y-4">
-              {costCenters.map((center) => {
-                const maxBenchmark = Math.max(2_000_000, budgetCeiling * 0.45);
-                const spentPercent = Math.min(
-                  100,
-                  (center.spent / maxBenchmark) * 100,
-                );
-                const allocatedPercent = Math.min(
-                  100,
-                  (center.allocated / maxBenchmark) * 100,
-                );
-
-                return (
-                  <div className="space-y-1.5" key={center.id}>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-[#3D291F]">
-                        {center.name}
-                      </span>
-                      <span className="text-[#7A685D] tabular-nums font-mono">
-                        <strong className="text-[#BA3C2A]">
-                          {formatNaira(center.spent)}
-                        </strong>{" "}
-                        / {formatNaira(center.allocated)}{" "}
-                        <span className="text-[#174C37] font-semibold">
-                          (
-                          {formatPercent(
-                            center.percentage !== undefined
-                              ? center.percentage
-                              : budgetCeiling > 0
-                                ? (center.allocated / budgetCeiling) * 100
-                                : 0,
-                          )}
-                          )
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="relative w-full bg-[#FAF6F0] rounded-lg h-5 border border-[#E5DDD3] overflow-hidden">
-                      {/* Authorized Ceiling Marker */}
-                      <div
-                        className={`absolute top-0 bottom-0 bg-[#E5DDD3]/70 ${percentWidthClass(allocatedPercent)}`}
-                      />
-                      {/* Actual Spent */}
-                      <div
-                        className={`absolute top-0 bottom-0 bg-[#174C37] rounded-l-md transition-all duration-500 ${percentWidthClass(spentPercent)}`}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="flex items-center gap-6 pt-2 text-xs text-[#7A685D]">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-xs bg-[#174C37]" />
-                <span>Actual Disbursed Outflow</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-xs bg-[#E5DDD3]" />
-                <span>Authorized Allocation Limit</span>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
@@ -361,7 +387,7 @@ export function TabBudgetAllocations({
       {/* View 3: Cash Velocity Timeline */}
       {activeChartTab === "cash_velocity" && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {cashTimeline.map((item) => (
               <div
                 className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-2 text-xs"
