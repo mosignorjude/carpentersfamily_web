@@ -78,3 +78,19 @@ describe("mobile menu panel fits the viewport", () => {
     }
   });
 });
+
+describe("dashboard menu panel contrast", () => {
+  it("recolours sign out for the dark dashboard panel", () => {
+    assert.match(
+      css,
+      /\.app-shell-dashboard\s+\.app-mobile-menu-panel\s+\.app-mobile-menu-signout\s+button\s*\{[^}]*color:\s*#f0a89e/,
+    );
+  });
+
+  it("keeps the hover state readable", () => {
+    assert.match(
+      css,
+      /\.app-shell-dashboard\s+\.app-mobile-menu-panel\s+\.app-mobile-menu-signout\s+button:hover/,
+    );
+  });
+});

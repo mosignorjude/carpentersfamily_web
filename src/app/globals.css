@@ -4770,6 +4770,22 @@ textarea:focus-visible {
   color: #fff;
 }
 
+.app-shell-dashboard .app-mobile-menu-panel .app-mobile-menu-signout {
+  border-top-color: rgb(243 244 239 / 0.22);
+}
+
+.app-shell-dashboard .app-mobile-menu-panel .app-mobile-menu-signout button {
+  color: #f0a89e;
+}
+
+.app-shell-dashboard
+  .app-mobile-menu-panel
+  .app-mobile-menu-signout
+  button:hover {
+  background: rgb(240 168 158 / 0.16);
+  color: #ffd0c7;
+}
+
 .home-shell {
   width: 100%;
   max-width: none;
