@@ -372,24 +372,39 @@ describe("dashboard tab strip", () => {
     );
     // Parsed, and order-blind: `gap-2 p-1.5` as a conjunction went RED for the
     // improvement `gap-3` and GREEN for a decoy element carrying the substring.
-    const gaps = [
-      ...className.matchAll(/(?:^|\s)gap(?:x|y)?-(\[[^\]]*\]|[\w.]+)(?=\s|$)/g),
-    ].map((m) => ({ token: m[0].trim(), px: resolveSpacing(m[1]) }));
-    const pads = [
-      ...className.matchAll(/(?:^|\s)p(?:x|y)?-(\[[^\]]*\]|[\w.]+)(?=\s|$)/g),
-    ].map((m) => ({ token: m[0].trim(), px: resolveSpacing(m[1]) }));
-    const gapPx = Math.max(0, ...gaps.map((g) => g.px ?? 0));
-    const padPx = Math.max(0, ...pads.map((p) => p.px ?? 0));
+    // A token whose length this file cannot resolve is a FAILURE, not a zero:
+    // `gap-[var(--x)]` measured as 0px reads as "no gap token", which is the
+    // inert-guard shape the rest of this suite exists to forbid.
+    const spacing = (pattern) => {
+      const resolved = [];
+      const unreadable = [];
+      for (const m of className.matchAll(pattern)) {
+        const px = resolveSpacing(m[1]);
+        const token = m[0].trim();
+        if (px === undefined) unreadable.push(token);
+        else resolved.push({ token, px });
+      }
+      return { resolved, unreadable };
+    };
+    const gaps = spacing(/(?:^|\s)gap(?:x|y)?-(\[[^\]]*\]|[\w.]+)(?=\s|$)/g);
+    const pads = spacing(/(?:^|\s)p(?:x|y)?-(\[[^\]]*\]|[\w.]+)(?=\s|$)/g);
+    assert.deepEqual(
+      [...gaps.unreadable, ...pads.unreadable],
+      [],
+      `the pill row sets spacing this suite cannot measure: ${[...gaps.unreadable, ...pads.unreadable].join(", ")}`,
+    );
+    const gapPx = Math.max(0, ...gaps.resolved.map((g) => g.px));
+    const padPx = Math.max(0, ...pads.resolved.map((p) => p.px));
     assert.ok(
       gapPx >= 2 * SPACING_PX,
       `the pill row separates its pills by ${gapPx}px ` +
-        `(${gaps.map((g) => g.token).join(", ") || "no gap token"}); the strip is ` +
+        `(${gaps.resolved.map((g) => g.token).join(", ") || "no gap token"}); the strip is ` +
         "8 tabs wide on a 360px viewport and 4px separation is what made it unreadable",
     );
     assert.ok(
       padPx >= 1.5 * SPACING_PX,
       `the pill row pads itself by ${padPx}px ` +
-        `(${pads.map((p) => p.token).join(", ") || "no padding token"}); the row ` +
+        `(${pads.resolved.map((p) => p.token).join(", ") || "no padding token"}); the row ` +
         "needs 6px so the pills' own focus ring is not clipped by the scroller",
     );
     assert.match(
@@ -437,12 +452,29 @@ describe("dashboard tab strip", () => {
       "the pill's own opening tag carries no aria-current — the shipped pin was " +
         'satisfied by "page" on the inner <span>, which is the accessibility bug',
     );
-    const value = match[1] ?? match[2];
+    const [, quoted, expr] = match;
+    const value = (quoted ?? expr).trim();
     assert.match(
       value,
       /["'](page|true)["']/,
-      `aria-current=${value.trim()} is not a current-item spelling an AT announces ` +
+      `aria-current=${value} is not a current-item spelling an AT announces ` +
         '("page" or "true"; the strip deep-links a ?tab= URL, so "page" is honest)',
+    );
+    // The other half of a current cue is the part that turns it off. A static
+    // `aria-current="page"` satisfies the spelling match above while every pill
+    // in the strip announces itself as the current page — ten current pages is
+    // the same defect as none — so the value has to be conditional and its
+    // inactive branch has to render nothing at all.
+    assert.equal(
+      quoted,
+      undefined,
+      `aria-current="${quoted}" is a static string: the cue never leaves the other pills`,
+    );
+    assert.match(
+      expr,
+      /\S\s*\?\s*["'](?:page|true)["']\s*:\s*(?:undefined|null|false)\s*$/,
+      `aria-current={${expr}} is not "cue when this tab is active, nothing otherwise" — ` +
+        "an always-true or inverted condition makes the attribute decorative",
     );
   });
 

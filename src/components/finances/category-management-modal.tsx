@@ -48,7 +48,7 @@ export function CategoryManagementModal({
 
           <button
             aria-label="Close dialog"
-            className="p-2 text-[#7A685D] hover:text-[#3D291F] rounded-lg hover:bg-[#E5DDD3]/50 transition-colors cursor-pointer"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center p-2 text-[#7A685D] hover:text-[#3D291F] rounded-lg hover:bg-[#E5DDD3]/50 transition-colors cursor-pointer"
             onClick={onClose}
             type="button"
           >

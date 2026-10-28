@@ -76,7 +76,7 @@ export function ReceiptModal({
 
           <button
             aria-label="Close dialog"
-            className="p-2 text-[#7A685D] hover:text-[#3D291F] rounded-lg hover:bg-[#E5DDD3]/50 transition-colors cursor-pointer"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center p-2 text-[#7A685D] hover:text-[#3D291F] rounded-lg hover:bg-[#E5DDD3]/50 transition-colors cursor-pointer"
             onClick={onClose}
             type="button"
           >
@@ -199,7 +199,7 @@ export function ReceiptModal({
               <div>
                 <input
                   accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                  className="w-full text-xs text-[#54433A] file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border file:border-[#E5DDD3] file:text-xs file:font-bold file:bg-white file:text-[#3D291F] hover:file:bg-[#FAF6F0] cursor-pointer"
+                  className="w-full min-h-[44px] py-1 text-xs text-[#54433A] file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border file:border-[#E5DDD3] file:text-xs file:font-bold file:bg-white file:text-[#3D291F] hover:file:bg-[#FAF6F0] cursor-pointer"
                   name="file"
                   required
                   type="file"
@@ -220,7 +220,7 @@ export function ReceiptModal({
 
           <div className="flex justify-end pt-2 border-t border-[#E5DDD3]">
             <button
-              className="px-4 py-2 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer"
+              className="min-h-[44px] px-4 py-2 rounded-lg border border-[#E5DDD3] bg-white text-[#54433A] hover:bg-[#FAF6F0] text-xs font-bold transition-colors cursor-pointer"
               onClick={onClose}
               type="button"
             >

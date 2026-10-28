@@ -157,7 +157,7 @@ export function PayDuesModal({
 
           <button
             aria-label="Close dialog"
-            className="p-2 text-[#7A685D] hover:text-[#3D291F] rounded-lg hover:bg-[#E5DDD3]/50 transition-colors cursor-pointer"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center p-2 text-[#7A685D] hover:text-[#3D291F] rounded-lg hover:bg-[#E5DDD3]/50 transition-colors cursor-pointer"
             onClick={onClose}
             type="button"
           >
@@ -250,7 +250,7 @@ export function PayDuesModal({
                         </span>
                         <div className="flex items-center gap-2">
                           <button
-                            className="text-[10px] font-bold text-[#174C37] hover:underline cursor-pointer"
+                            className="flex min-h-[44px] min-w-[44px] items-center justify-center px-2 text-[10px] font-bold text-[#174C37] hover:underline cursor-pointer"
                             onClick={selectAll}
                             type="button"
                           >
@@ -258,7 +258,7 @@ export function PayDuesModal({
                           </button>
                           <span className="text-[#B8ACA0]">·</span>
                           <button
-                            className="text-[10px] font-bold text-[#7A685D] hover:underline cursor-pointer"
+                            className="flex min-h-[44px] min-w-[44px] items-center justify-center px-2 text-[10px] font-bold text-[#7A685D] hover:underline cursor-pointer"
                             id="btn-clear-dues-months"
                             onClick={clearSelection}
                             type="button"
@@ -274,7 +274,7 @@ export function PayDuesModal({
                           return (
                             <label
                               key={opt.month}
-                              className={`flex items-center justify-between p-2 rounded-lg border text-xs cursor-pointer transition-colors ${
+                              className={`flex min-h-[44px] items-center justify-between p-2 rounded-lg border text-xs cursor-pointer transition-colors ${
                                 isChecked
                                   ? "bg-white border-[#174C37] text-[#174C37] font-bold shadow-2xs"
                                   : "bg-transparent border-[#E5DDD3] text-[#54433A] hover:bg-white"
@@ -384,7 +384,7 @@ export function PayDuesModal({
                           <button
                             id="btn-copy-account-number"
                             disabled={!isBankConfigured}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
+                            className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                               !isBankConfigured
                                 ? "opacity-50 cursor-not-allowed bg-neutral-200 text-neutral-500"
                                 : copied
@@ -514,7 +514,7 @@ export function PayDuesModal({
                           Additional Notes (Optional)
                         </label>
                         <textarea
-                          className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden resize-none"
+                          className="w-full min-h-[44px] rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden resize-none"
                           id={notesInputId}
                           maxLength={500}
                           name="notes"
