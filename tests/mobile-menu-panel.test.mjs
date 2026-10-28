@@ -35,11 +35,32 @@ const flat = (value) =>
  * .app-mobile-menu-panel` does, and that one is the repaint Task 3 shipped.
  */
 const panelRules = () => rulesFor(DOC, "app-mobile-menu-panel");
+/**
+ * The rule that gives the panel its box: the selector exactly, at top level.
+ *
+ * "Exactly this selector" is not enough on its own. The same selector inside
+ * `@media (max-width: 40rem)` still reads as the base rule to a selector-only find,
+ * so moving the whole block into a query — the one edit that leaves the panel with no
+ * box at all outside that range — kept every assertion in this file green. The
+ * top-level requirement is the anchor the original guard had before a rewrite lost it.
+ */
 const basePanelRule = () =>
-  panelRules().find((rule) => rule.selector === ".app-mobile-menu-panel");
+  panelRules().find(
+    (rule) => rule.selector === ".app-mobile-menu-panel" && rule.media === "",
+  );
 
 describe("mobile menu panel fits the viewport", () => {
   it("has one base rule to read the geometry from", () => {
+    const topLevel = panelRules().filter(
+      (rule) =>
+        rule.selector.replace(/::[\w-]+/g, "") === ".app-mobile-menu-panel" &&
+        rule.media === "",
+    );
+    assert.equal(
+      topLevel.length,
+      1,
+      `${topLevel.length} top-level rules whose subject is the panel itself; the geometry below is read from exactly one`,
+    );
     assert.ok(
       basePanelRule(),
       "no rule whose selector is exactly .app-mobile-menu-panel — the panel's box is undefined",

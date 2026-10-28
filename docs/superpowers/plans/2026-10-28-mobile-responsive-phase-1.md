@@ -973,6 +973,27 @@ Expect `deadClip === 0`, `clipped === []`, `pageWide === false`. `small` will st
   Task 4's review note above spells it inside backticks; Task 5's build shipped six such floors (`e775f14`). Which
   directive narrows detection in the installed Tailwind 4.3.3 is Phase 2's first measurement, not this plan's
   assertion.
+- **A utility can shrink a floor, and Phase 2 must know that before it sweeps the 459.** `@layer base` guarantees a
+  bare `textarea` 7rem and a bare `input`/`select` `var(--control-height)` = 3rem, and a utility compiles into
+  `utilities`, which is later than `base`, so specificity never gets to argue — `min-h-[44px]` on the Pay Dues notes
+  box is 112px → ~54px while reading as compliant to a "does it carry a floor ≥ 44px" question. `3fff121` shipped
+  exactly that on two controls and a third had been carrying it since Task 4 (`finance-forms.tsx`, 48 → 44px);
+  `tests/form-control-baseline.test.mjs` now answers "does this token lower the floor `globals.css` already gives
+  this tag", and it is the question the 71-file/459-control sweep has to ask first, or a compliant-looking Phase 2
+  wave makes phones harder to tap. Reading the answer needs `parseCss` to carry the enclosing `@layer` — an
+  unlayered author rule is the opposite case, where the utility is a dead letter rather than a shrink.
+- **Guard blind spots left open on purpose, so nobody reads green as coverage.** In
+  `tests/form-control-baseline.test.mjs`: `controls()` walks lowercase `button`/`input`/`textarea`/`select`/`label`,
+  so an `<a role="button">` is not a control; `declaredFloor` strips variant prefixes and stops at the first token,
+  so a `min-h-[44px]` followed by a smaller `max-md:` floor reads as 44px; `iconOnly` needs an uppercase child, so a
+  `<button>` wrapping `<svg>` never has its width asked; the caller-override sweep reads only `min-h`, so a primitive
+  handed `className="h-9"` passes; and the close-affordance inventory is keyed on the literal
+  `aria-label="Close dialog"`, which is how
+  notifications-drawer.tsx (36px), receipt-viewer.tsx (28px) and home/announcement-detail-modal.tsx (compliant by
+  accident, unmeasured) sit outside every list. In `tests/single-nav-per-width.test.mjs` the containing-block guard
+  reaches a path element through one combinator step, not two, so `.app-sticky-header .brand img` stays out. Each is
+  recorded here and in the test's own comment, and each is a *Phase 2* widening with its own mutation — not an
+  edit to a passing assertion.
 - **`/finances` "Ledger Data Unavailable"** — partly local DB drift (`event_ticket_sales` missing `verification_*` columns), partly the non-actionable copy. Neither is a responsive fix.
 
 ### Verification limitations to disclose in review
