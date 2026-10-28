@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import { GlobalFlashListener } from "@/components/ui/global-flash-listener";
@@ -29,6 +29,16 @@ const ibmPlexSans = localFont({
   variable: "--font-ibm-plex-sans",
   display: "swap",
 });
+
+// The hex below is not free: it is .app-sticky-header's own colour in
+// globals.css, the surface a phone shows under its status bar on a member
+// page. The mobile viewport test reads that rule back, so a header repaint
+// cannot silently orphan this tag.
+export const viewport: Viewport = {
+  themeColor: "#f7f6f2",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: clubBrand.name,
