@@ -37,6 +37,12 @@ type CfFieldProps = Omit<FieldShellProps, "errorId" | "hintId" | "htmlFor">;
  * too, passing `htmlFor` plus the `hintId`/`errorId` they wire `aria-describedby`
  * to. Pass `errorId`/`hintId` whenever the control references them: the paragraphs
  * get exactly those ids, so `aria-describedby` never points at a missing node.
+ *
+ * The hint paragraph renders only when `hint && !error` (an error is the more
+ * urgent text, and a phone field has room for one line under it), so a caller
+ * that derives a `hintId` must use that *same* predicate. Deriving it from
+ * `hint` alone puts an idref in `aria-describedby` at a node that is not in the
+ * tree whenever the field is errored — which is the invariant above.
  */
 export function CfFieldLayout({
   children,
@@ -92,7 +98,7 @@ export const CfTextField = forwardRef<
 >(({ label, hint, error, className = "", id, ...props }, ref) => {
   const generatedId = useId();
   const htmlId = id ?? `field-${generatedId}`;
-  const hintId = hint ? `${htmlId}-hint` : undefined;
+  const hintId = hint && !error ? `${htmlId}-hint` : undefined;
   const errorId = error ? `${htmlId}-error` : undefined;
   const describedBy = [hintId, errorId].filter(Boolean).join(" ") || undefined;
   return (
@@ -123,7 +129,7 @@ export const CfSelect = forwardRef<
 >(({ label, hint, error, className = "", id, children, ...props }, ref) => {
   const generatedId = useId();
   const htmlId = id ?? `field-${generatedId}`;
-  const hintId = hint ? `${htmlId}-hint` : undefined;
+  const hintId = hint && !error ? `${htmlId}-hint` : undefined;
   const errorId = error ? `${htmlId}-error` : undefined;
   const describedBy = [hintId, errorId].filter(Boolean).join(" ") || undefined;
   return (

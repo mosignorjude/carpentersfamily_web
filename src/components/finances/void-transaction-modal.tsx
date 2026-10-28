@@ -57,7 +57,7 @@ export function VoidTransactionModal({
         </div>
 
         {/* Body */}
-        <div className="p-6 max-h-[75vh] overflow-y-auto">
+        <div className="p-6 max-h-[calc(100dvh-7.5rem)] overflow-y-auto">
           <FinanceVoidForm onCancel={onClose} transaction={transaction} />
         </div>
       </div>
