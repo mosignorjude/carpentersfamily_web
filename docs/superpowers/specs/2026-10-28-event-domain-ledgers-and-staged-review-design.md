@@ -140,6 +140,23 @@ Features:
   - Right: Receipt voucher document preview from Cloudflare R2 (PDF or image) with SHA-256 hash and file size.
 - Decision footer: "Approve Record" vs "Reject / Reverse". Clicking "Reject" displays the required reason textarea before submission.
 
+### 5.6 Consolidated Master Breakdown Matrix Cards (UI Modernization)
+To prevent vertical screen bloat and ensure the newly introduced 20-row paginated transaction ledgers remain visible above the fold, all standalone category/tier cards across domain tabs are consolidated into **one cohesive card per tab**:
+
+1. **`TabTickets` (Admission Tiers & Inventory Matrix)**:
+   - **Header Strip**: Displays Gross Ticketing Inflow, Total Passes Issued (`sold / capacity`), `+ Add Ticket Tier` button (authorized managers), and the **single primary `Record Ticket Sale` button for all tiers** (opens the modal with tier dropdown).
+   - **Proportional Capacity Mix Bar**: Multi-segment visual bar representing total seats distributed across tiers.
+   - **Tier Rows (Table Matrix)**: Columns for Tier Name & Description, Unit Price, Passes Issued & Quota (`sold / capacity` with mini progress bar and status badge), and Gross Inflow.
+   - **Per-Tier Actions**: Strictly administrative **`Edit`** and **`Retire`** buttons (no redundant per-tier Record Sale buttons).
+2. **`TabExpenses` (Operational Cost Centers & Budget Matrix)**:
+   - **Header Strip**: Disbursed Outflows, Committed POs, Unallocated Buffer, and the **single primary `+ Record Disbursement` button for all cost centers** (opens modal with cost center dropdown).
+   - **Cost Center Rows**: Cost Center Name & Icon, Authorized Budget Ceiling, Disbursed Spend, Committed POs, Stacked Utilization Bar, and Available Buffer badge (no redundant per-row record buttons).
+3. **`TabRevenue` (Revenue Streams & Inflow Matrix)**:
+   - **Header Strip**: Gross Reconciled, Pending Receivables, Categories button (if authorized), and the **single primary `+ Record Revenue` button for all revenue channels** (opens modal with revenue stream dropdown).
+   - **Stream Rows**: Channel Name & Icon, Target Projection, Reconciled Inflow, Pending Receivables, Fulfillment %, and Target Status Badge (no redundant per-row record buttons).
+4. **`TabBudgetAllocations` (Capital Allocation & Burn Rate Matrix)**:
+   - Combines previous top summary tiles and comparative horizontal bars into a single unified matrix showing Allocation Ceiling, Disbursed Spend, Committed POs, Burn Rate %, and Budget Health badges.
+
 ---
 
 ## 6. Database Migration & Security

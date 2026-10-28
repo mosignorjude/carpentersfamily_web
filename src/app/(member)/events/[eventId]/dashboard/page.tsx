@@ -220,7 +220,7 @@ export default async function EventDashboardPage({
     supabase
       .from("event_ticket_sales")
       .select(
-        "id, tier_id, quantity, amount_ngn, buyer_name, payment_method, created_at, refunded_at, refund_reason",
+        "id, tier_id, quantity, amount_ngn, buyer_name, payment_method, created_at, refunded_at, refund_reason, created_by, verification_status, verified_by, verified_at, rejection_reason",
       )
       .eq("event_id", eventId)
       .order("created_at", { ascending: false }),
@@ -239,7 +239,7 @@ export default async function EventDashboardPage({
     supabase
       .from("event_financial_transactions")
       .select(
-        "id, kind, amount_ngn, transaction_date, description, payer_payee, source_note, payment_method, category_id, category_name_snapshot, budget_allocation_category_id, budget_allocation_name_snapshot, payment_status, voided_at, void_reason",
+        "id, kind, amount_ngn, transaction_date, description, payer_payee, source_note, payment_method, category_id, category_name_snapshot, budget_allocation_category_id, budget_allocation_name_snapshot, payment_status, voided_at, void_reason, created_by, verification_status, verified_by, verified_at, rejection_reason",
       )
       .eq("event_id", eventId)
       .order("transaction_date", { ascending: false }),
@@ -677,6 +677,11 @@ export default async function EventDashboardPage({
       authorizerRole: "Executive / Admin",
       status: t.voided_at ? "voided" : "posted",
       voidReason: t.void_reason || undefined,
+      verificationStatus: (t.verification_status as "recorded" | "approved" | "rejected") ?? (t.voided_at ? "rejected" : "approved"),
+      verifiedBy: t.verified_by ?? undefined,
+      verifiedAt: t.verified_at ?? undefined,
+      rejectionReason: t.rejection_reason || t.void_reason || undefined,
+      createdBy: t.created_by ?? undefined,
     };
   });
 
@@ -704,6 +709,11 @@ export default async function EventDashboardPage({
       authorizerRole: "Ticketing Desk",
       status: s.refunded_at ? "voided" : "posted",
       voidReason: s.refund_reason || undefined,
+      verificationStatus: (s.verification_status as "recorded" | "approved" | "rejected") ?? (s.refunded_at ? "rejected" : "approved"),
+      verifiedBy: s.verified_by ?? undefined,
+      verifiedAt: s.verified_at ?? undefined,
+      rejectionReason: s.rejection_reason || s.refund_reason || undefined,
+      createdBy: s.created_by ?? undefined,
     };
   });
 

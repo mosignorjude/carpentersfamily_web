@@ -100,6 +100,11 @@ export interface DashboardTransaction {
   voidedBy?: string;
   voidedAt?: string;
   notes?: string;
+  verificationStatus?: "recorded" | "approved" | "rejected";
+  verifiedBy?: string;
+  verifiedAt?: string;
+  rejectionReason?: string;
+  createdBy?: string;
 }
 
 export interface ActivityLogItem {
