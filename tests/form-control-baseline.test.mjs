@@ -226,9 +226,32 @@ describe("form control baseline", () => {
         /min-h-0/,
         `${host.name}: without min-h-0 a flex child refuses to shrink below its content and the scroll region never forms`,
       );
+      // The body's padding is part of the remedy, not incidental to it: the
+      // round-3 review found the pin passing with `p-6` deleted, which ships an
+      // unstyled form flush against the panel edge.
+      assert.match(
+        bodies[0][1],
+        /p-6/,
+        `${host.name}: the scroll region keeps its inset padding while it scrolls`,
+      );
+      // And the lesson of N-1 in one line: the viewport constant belongs on the
+      // panel. A second `max-h-` here would compete with it, and substring
+      // matching on the identifiers above would not notice.
+      assert.doesNotMatch(
+        bodies[0][1],
+        /max-h-/,
+        `${host.name}: the body must carry no viewport cap — that is the defect this replaced`,
+      );
+      // Containment, measured rather than implied by file order: the panel must
+      // still be open when the body opens. Comparing the two `index` values only
+      // proves the panel's tag comes first, so re-parenting the body out of the
+      // panel — the exact structural claim this pin exists to hold — stays green.
+      const between = host.source.slice(panels[0].index, bodies[0].index);
+      const openDivs = (between.match(/<div\b/g) ?? []).length;
+      const closeDivs = (between.match(/<\/div>/g) ?? []).length;
       assert.ok(
-        panels[0].index < bodies[0].index,
-        `${host.name}: the scroll region must sit inside the capped panel`,
+        openDivs - closeDivs >= 1,
+        `${host.name}: the scroll region is not inside the capped panel (${openDivs} <div> opens vs ${closeDivs} closes between them)`,
       );
       assert.ok(
         headers[0].index < bodies[0].index,
