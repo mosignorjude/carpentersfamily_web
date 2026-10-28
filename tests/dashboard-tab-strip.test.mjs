@@ -448,8 +448,10 @@ describe("dashboard tab strip", () => {
 
   it("keeps the phone hint visible to sighted users below a breakpoint", () => {
     // The copy is pinned loosely (/more sections/i, not the full string) so a
-    // wording fix is one file, not two, and the breakpoint spelling is accepted
-    // at sm/md/lg/xl because the property here is the visibility OUTCOME.
+    // wording fix is one file, not two. The breakpoint is pinned NUMERICALLY: the
+    // property under test is the visibility OUTCOME, and accepting any of
+    // sm/md/lg/xl as a spelling let `sm:hidden` — which drops the cue at 640px,
+    // while the strip is still mid-scroll — pass every assertion in this block.
     const copyAt = source.search(/more sections/i);
     assert.notEqual(copyAt, -1, "the phone hint copy is gone from the file");
     const wrappers = enclosingTags(source, copyAt);
@@ -463,11 +465,42 @@ describe("dashboard tab strip", () => {
       className,
       "the hint's className is not a static literal, so its visibility cannot be read",
     );
-    assert.match(
-      className,
-      /(?:^|\s)(?:sm|md|lg|xl):hidden(?:\s|$)/,
-      "the hint sets no breakpoint-conditional display:none, so it either shows at " +
-        "every width or never shows",
+
+    // Tailwind v4's default `--breakpoint-*` scale in rem. `globals.css` declares
+    // no overrides — its `@theme` block has no `--breakpoint-*` line — so these
+    // are the widths the variants actually compile to.
+    const BREAKPOINT_REM = { sm: 40, md: 48, lg: 64, xl: 80, "2xl": 96 };
+    // The strip stops being phone-width when the shell switches to the
+    // two-column layout, and that boundary is `@media (max-width: 56rem)` in
+    // globals.css. A cue that switches off below it is gone while the tabs past
+    // the fold are still undiscoverable, which is the defect this block exists
+    // to catch.
+    const HINT_MIN_BREAKPOINT_REM = 56;
+
+    const hiddenAt = className
+      .split(/\s+/)
+      .filter((token) => /^[a-z0-9-]+:hidden$/.test(token))
+      .map((token) => token.slice(0, token.indexOf(":")));
+    assert.equal(
+      hiddenAt.length,
+      1,
+      `the hint carries ${hiddenAt.length} breakpoint-conditional \`hidden\` tokens ` +
+        `(found: ${hiddenAt.join(", ") || "none"}). Exactly one is required: zero means ` +
+        "it shows at every width, and two mean a second variant re-shows it at some " +
+        "width no reader can work out from this element",
+    );
+    const hintBreakpoint = BREAKPOINT_REM[hiddenAt[0]];
+    assert.ok(
+      hintBreakpoint !== undefined,
+      `the hint hides at \`${hiddenAt[0]}:hidden\`, a variant whose width is not in the ` +
+        "default Tailwind scale, so its visibility cannot be resolved against the " +
+        "app's mobile boundary",
+    );
+    assert.ok(
+      hintBreakpoint >= HINT_MIN_BREAKPOINT_REM,
+      `the hint hides at ${hiddenAt[0]}:hidden = ${hintBreakpoint}rem, below the app's ` +
+        `${HINT_MIN_BREAKPOINT_REM}rem mobile boundary: sighted phone and small-tablet ` +
+        "users lose the swipe cue while the pill row still scrolls",
     );
     // The two guards that earn their keep: a base `hidden` is the fail-open
     // shape (it wins unless the variant lands), and `max-*:` is a variant this
