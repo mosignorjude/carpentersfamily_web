@@ -10,6 +10,7 @@ import {
   voidClubFinanceAction,
 } from "@/app/actions";
 import { FormattedAmountInput } from "@/components/formatted-amount-input";
+import { CfFieldLayout, CfSelect, CfTextField, CONTROL } from "@/components/ui";
 import { FormSubmitButton } from "@/components/ui/cf-button";
 import { FormFieldError } from "@/components/ui/form-feedback";
 
@@ -115,49 +116,40 @@ export function ClubIncomeForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label
-            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+          <CfFieldLayout
+            error={fieldErrors.amount_ngn}
+            errorId="income-error-amount"
             htmlFor="income-amount"
+            label="Amount in whole Naira (₦) *"
           >
-            Amount in whole Naira (₦) <span className="text-[#BA3C2A]">*</span>
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#7A685D]">
-              ₦
-            </span>
-            <FormattedAmountInput
-              aria-describedby={
-                fieldErrors.amount_ngn ? "income-error-amount" : undefined
-              }
-              aria-invalid={fieldErrors.amount_ngn ? "true" : undefined}
-              className={`w-full h-10 pl-8 pr-3 bg-white border rounded-lg text-xs font-semibold text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 ${
-                fieldErrors.amount_ngn
-                  ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
-                  : "border-[#E5DDD3] focus:ring-[#174C37]"
-              }`}
-              id="income-amount"
-              name="amount_ngn"
-              onChange={() => clearFieldError("amount_ngn")}
-              placeholder="e.g. 50,000"
-            />
-          </div>
-          <FormFieldError
-            id="income-error-amount"
-            message={fieldErrors.amount_ngn}
-          />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#7A685D]">
+                ₦
+              </span>
+              <FormattedAmountInput
+                aria-describedby={
+                  fieldErrors.amount_ngn ? "income-error-amount" : undefined
+                }
+                aria-invalid={fieldErrors.amount_ngn ? "true" : undefined}
+                className={`${CONTROL} pl-8 ${
+                  fieldErrors.amount_ngn
+                    ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
+                    : ""
+                }`}
+                id="income-amount"
+                name="amount_ngn"
+                onChange={() => clearFieldError("amount_ngn")}
+                placeholder="e.g. 50,000"
+              />
+            </div>
+          </CfFieldLayout>
         </div>
 
         <div>
-          <label
-            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
-            htmlFor="income-date"
-          >
-            Transaction Date <span className="text-[#BA3C2A]">*</span>
-          </label>
-          <input
-            id="income-date"
-            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+          <CfTextField
             defaultValue={today}
+            id="income-date"
+            label="Transaction Date *"
             max={today}
             min={canBackdate ? yearStart : today}
             name="transaction_date"
@@ -169,16 +161,10 @@ export function ClubIncomeForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label
-            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
-            htmlFor="income-payment-method"
-          >
-            Payment Method <span className="text-[#BA3C2A]">*</span>
-          </label>
-          <select
+          <CfSelect
             id="income-payment-method"
+            label="Payment Method *"
             name="payment_method"
-            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
             value={paymentMethod}
             onChange={(e) => {
               setPaymentMethod(e.target.value as "bank_transfer" | "cash");
@@ -187,33 +173,27 @@ export function ClubIncomeForm({
           >
             <option value="bank_transfer">Bank Transfer</option>
             <option value="cash">Cash</option>
-          </select>
+          </CfSelect>
         </div>
 
         {paymentMethod === "bank_transfer" ? (
           <div>
-            <label
-              className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
-              htmlFor="income-receipt-file"
-            >
-              Payment Receipt / Voucher{" "}
-              <span className="text-[#BA3C2A]">*</span>
-            </label>
-            <input
+            <CfTextField
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
               aria-describedby={
                 fieldErrors.receipt_file ? "income-error-receipt" : undefined
               }
               aria-invalid={fieldErrors.receipt_file ? "true" : undefined}
-              id="income-receipt-file"
-              type="file"
-              name="receipt_file"
-              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-              onChange={() => clearFieldError("receipt_file")}
-              className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
+              className={`file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
                 fieldErrors.receipt_file
-                  ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
-                  : "border-[#E5DDD3] focus:ring-[#174C37]"
+                  ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
+                  : ""
               }`}
+              id="income-receipt-file"
+              label="Payment Receipt / Voucher *"
+              name="receipt_file"
+              onChange={() => clearFieldError("receipt_file")}
+              type="file"
             />
             <FormFieldError
               id="income-error-receipt"
@@ -231,25 +211,19 @@ export function ClubIncomeForm({
       </div>
 
       <div>
-        <label
-          className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
-          htmlFor="income-source-note"
-        >
-          Source Note / Income Description{" "}
-          <span className="text-[#BA3C2A]">*</span>
-        </label>
-        <input
+        <CfTextField
           aria-describedby={
             fieldErrors.source_note ? "income-error-source-note" : undefined
           }
           aria-invalid={fieldErrors.source_note ? "true" : undefined}
-          id="income-source-note"
           autoComplete="off"
-          className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 ${
+          className={
             fieldErrors.source_note
-              ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
-              : "border-[#E5DDD3] focus:ring-[#174C37]"
-          }`}
+              ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
+              : ""
+          }
+          id="income-source-note"
+          label="Source Note / Income Description *"
           maxLength={500}
           name="source_note"
           onChange={() => clearFieldError("source_note")}
@@ -262,16 +236,10 @@ export function ClubIncomeForm({
       </div>
 
       <div>
-        <label
-          className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
-          htmlFor="income-payer"
-        >
-          Payer / Donor Entity (Optional)
-        </label>
-        <input
-          id="income-payer"
+        <CfTextField
           autoComplete="off"
-          className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+          id="income-payer"
+          label="Payer / Donor Entity (Optional)"
           maxLength={160}
           name="payer_payee"
           placeholder="e.g. Chief O. Emeka Foundation"
@@ -380,50 +348,40 @@ export function ClubExpenseForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label
-            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+          <CfFieldLayout
+            error={fieldErrors.amount_ngn}
+            errorId="expense-error-amount"
             htmlFor="expense-amount"
+            label="Disbursement Amount in whole Naira (₦) *"
           >
-            Disbursement Amount in whole Naira (₦){" "}
-            <span className="text-[#BA3C2A]">*</span>
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#7A685D]">
-              ₦
-            </span>
-            <FormattedAmountInput
-              aria-describedby={
-                fieldErrors.amount_ngn ? "expense-error-amount" : undefined
-              }
-              aria-invalid={fieldErrors.amount_ngn ? "true" : undefined}
-              className={`w-full h-10 pl-8 pr-3 bg-white border rounded-lg text-xs font-semibold text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 ${
-                fieldErrors.amount_ngn
-                  ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
-                  : "border-[#E5DDD3] focus:ring-[#BA3C2A]"
-              }`}
-              id="expense-amount"
-              name="amount_ngn"
-              onChange={() => clearFieldError("amount_ngn")}
-              placeholder="e.g. 25,000"
-            />
-          </div>
-          <FormFieldError
-            id="expense-error-amount"
-            message={fieldErrors.amount_ngn}
-          />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#7A685D]">
+                ₦
+              </span>
+              <FormattedAmountInput
+                aria-describedby={
+                  fieldErrors.amount_ngn ? "expense-error-amount" : undefined
+                }
+                aria-invalid={fieldErrors.amount_ngn ? "true" : undefined}
+                className={`${CONTROL} pl-8 ${
+                  fieldErrors.amount_ngn
+                    ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
+                    : ""
+                }`}
+                id="expense-amount"
+                name="amount_ngn"
+                onChange={() => clearFieldError("amount_ngn")}
+                placeholder="e.g. 25,000"
+              />
+            </div>
+          </CfFieldLayout>
         </div>
 
         <div>
-          <label
-            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
-            htmlFor="expense-date"
-          >
-            Disbursement Date <span className="text-[#BA3C2A]">*</span>
-          </label>
-          <input
-            id="expense-date"
-            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
+          <CfTextField
             defaultValue={today}
+            id="expense-date"
+            label="Disbursement Date *"
             max={today}
             min={canBackdate ? yearStart : today}
             name="transaction_date"
@@ -435,16 +393,10 @@ export function ClubExpenseForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label
-            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
-            htmlFor="expense-payment-method"
-          >
-            Payment Method <span className="text-[#BA3C2A]">*</span>
-          </label>
-          <select
+          <CfSelect
             id="expense-payment-method"
+            label="Payment Method *"
             name="payment_method"
-            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
             value={paymentMethod}
             onChange={(e) => {
               setPaymentMethod(e.target.value as "bank_transfer" | "cash");
@@ -453,33 +405,27 @@ export function ClubExpenseForm({
           >
             <option value="bank_transfer">Bank Transfer</option>
             <option value="cash">Cash</option>
-          </select>
+          </CfSelect>
         </div>
 
         {paymentMethod === "bank_transfer" ? (
           <div>
-            <label
-              className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
-              htmlFor="expense-receipt-file"
-            >
-              Payment Receipt / Voucher{" "}
-              <span className="text-[#BA3C2A]">*</span>
-            </label>
-            <input
+            <CfTextField
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
               aria-describedby={
                 fieldErrors.receipt_file ? "expense-error-receipt" : undefined
               }
               aria-invalid={fieldErrors.receipt_file ? "true" : undefined}
-              id="expense-receipt-file"
-              type="file"
-              name="receipt_file"
-              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-              onChange={() => clearFieldError("receipt_file")}
-              className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
+              className={`file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
                 fieldErrors.receipt_file
-                  ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
-                  : "border-[#E5DDD3] focus:ring-[#174C37]"
+                  ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
+                  : ""
               }`}
+              id="expense-receipt-file"
+              label="Payment Receipt / Voucher *"
+              name="receipt_file"
+              onChange={() => clearFieldError("receipt_file")}
+              type="file"
             />
             <FormFieldError
               id="expense-error-receipt"
@@ -498,25 +444,19 @@ export function ClubExpenseForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label
-            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
-            htmlFor="expense-category"
-          >
-            Expense Category / Cost Center{" "}
-            <span className="text-[#BA3C2A]">*</span>
-          </label>
-          <select
+          <CfSelect
             aria-describedby={
               fieldErrors.category_id ? "expense-error-category" : undefined
             }
             aria-invalid={fieldErrors.category_id ? "true" : undefined}
-            id="expense-category"
-            className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 ${
+            className={
               fieldErrors.category_id
-                ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
-                : "border-[#E5DDD3] focus:ring-[#BA3C2A]"
-            }`}
+                ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
+                : ""
+            }
             defaultValue=""
+            id="expense-category"
+            label="Expense Category / Cost Center *"
             name="category_id"
             onChange={() => clearFieldError("category_id")}
           >
@@ -526,7 +466,7 @@ export function ClubExpenseForm({
                 {category.name}
               </option>
             ))}
-          </select>
+          </CfSelect>
           <FormFieldError
             id="expense-error-category"
             message={fieldErrors.category_id}
@@ -534,24 +474,19 @@ export function ClubExpenseForm({
         </div>
 
         <div>
-          <label
-            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
-            htmlFor="expense-payee"
-          >
-            Payee / Vendor Entity <span className="text-[#BA3C2A]">*</span>
-          </label>
-          <input
+          <CfTextField
             aria-describedby={
               fieldErrors.payer_payee ? "expense-error-payee" : undefined
             }
             aria-invalid={fieldErrors.payer_payee ? "true" : undefined}
-            id="expense-payee"
             autoComplete="off"
-            className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 ${
+            className={
               fieldErrors.payer_payee
-                ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
-                : "border-[#E5DDD3] focus:ring-[#BA3C2A]"
-            }`}
+                ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
+                : ""
+            }
+            id="expense-payee"
+            label="Payee / Vendor Entity *"
             maxLength={160}
             name="payer_payee"
             onChange={() => clearFieldError("payer_payee")}
@@ -565,25 +500,19 @@ export function ClubExpenseForm({
       </div>
 
       <div>
-        <label
-          className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
-          htmlFor="expense-description"
-        >
-          Disbursement Description / Justification{" "}
-          <span className="text-[#BA3C2A]">*</span>
-        </label>
-        <input
+        <CfTextField
           aria-describedby={
             fieldErrors.description ? "expense-error-description" : undefined
           }
           aria-invalid={fieldErrors.description ? "true" : undefined}
-          id="expense-description"
           autoComplete="off"
-          className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 ${
+          className={
             fieldErrors.description
-              ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
-              : "border-[#E5DDD3] focus:ring-[#BA3C2A]"
-          }`}
+              ? "border-[#BA3C2A] ring-1 ring-[#BA3C2A]"
+              : ""
+          }
+          id="expense-description"
+          label="Disbursement Description / Justification *"
           maxLength={500}
           name="description"
           onChange={() => clearFieldError("description")}
@@ -809,32 +738,25 @@ export function FinanceCorrectionForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label
-            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
+          <CfFieldLayout
             htmlFor="correct-amount"
+            label="Amount in whole Naira (₦) *"
           >
-            Amount in whole Naira (₦) <span className="text-[#BA3C2A]">*</span>
-          </label>
-          <FormattedAmountInput
-            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
-            defaultValue={transaction.amount_ngn}
-            id="correct-amount"
-            name="amount_ngn"
-            required
-          />
+            <FormattedAmountInput
+              className={CONTROL}
+              defaultValue={transaction.amount_ngn}
+              id="correct-amount"
+              name="amount_ngn"
+              required
+            />
+          </CfFieldLayout>
         </div>
 
         <div>
-          <label
-            className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
-            htmlFor="correct-date"
-          >
-            Transaction Date <span className="text-[#BA3C2A]">*</span>
-          </label>
-          <input
-            id="correct-date"
-            className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+          <CfTextField
             defaultValue={transaction.transaction_date}
+            id="correct-date"
+            label="Transaction Date *"
             max={today}
             min={yearStart}
             name="transaction_date"
@@ -847,16 +769,10 @@ export function FinanceCorrectionForm({
       {transaction.kind === "expense" ? (
         <>
           <div>
-            <label
-              className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
-              htmlFor="correct-desc"
-            >
-              Description <span className="text-[#BA3C2A]">*</span>
-            </label>
-            <input
-              id="correct-desc"
-              className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+            <CfTextField
               defaultValue={transaction.description ?? ""}
+              id="correct-desc"
+              label="Description *"
               maxLength={500}
               name="description"
               required
@@ -865,16 +781,10 @@ export function FinanceCorrectionForm({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label
-                className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
-                htmlFor="correct-cat"
-              >
-                Category <span className="text-[#BA3C2A]">*</span>
-              </label>
-              <select
-                id="correct-cat"
-                className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+              <CfSelect
                 defaultValue={transaction.category_id ?? ""}
+                id="correct-cat"
+                label="Category *"
                 name="category_id"
                 required
               >
@@ -891,20 +801,14 @@ export function FinanceCorrectionForm({
                     {category.retired_at ? " · Retired" : ""}
                   </option>
                 ))}
-              </select>
+              </CfSelect>
             </div>
 
             <div>
-              <label
-                className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
-                htmlFor="correct-payee"
-              >
-                Payee <span className="text-[#BA3C2A]">*</span>
-              </label>
-              <input
-                id="correct-payee"
-                className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+              <CfTextField
                 defaultValue={transaction.payer_payee ?? ""}
+                id="correct-payee"
+                label="Payee *"
                 maxLength={160}
                 name="payer_payee"
                 required
@@ -915,16 +819,10 @@ export function FinanceCorrectionForm({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label
-              className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
-              htmlFor="correct-source"
-            >
-              Source Note <span className="text-[#BA3C2A]">*</span>
-            </label>
-            <input
-              id="correct-source"
-              className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+            <CfTextField
               defaultValue={transaction.source_note ?? ""}
+              id="correct-source"
+              label="Source Note *"
               maxLength={500}
               name="source_note"
               required
@@ -932,16 +830,10 @@ export function FinanceCorrectionForm({
           </div>
 
           <div>
-            <label
-              className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
-              htmlFor="correct-payer"
-            >
-              Payer (Optional)
-            </label>
-            <input
-              id="correct-payer"
-              className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+            <CfTextField
               defaultValue={transaction.payer_payee ?? ""}
+              id="correct-payer"
+              label="Payer (Optional)"
               maxLength={160}
               name="payer_payee"
             />
@@ -950,17 +842,10 @@ export function FinanceCorrectionForm({
       )}
 
       <div>
-        <label
-          className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
-          htmlFor="correct-reason"
-        >
-          Required Correction Reason (Audited){" "}
-          <span className="text-[#BA3C2A]">*</span>
-        </label>
-        <input
-          id="correct-reason"
+        <CfTextField
           autoComplete="off"
-          className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+          id="correct-reason"
+          label="Required Correction Reason (Audited) *"
           maxLength={500}
           name="reason"
           placeholder="e.g. Correcting typo in vendor invoice amount per receipt voucher"
@@ -1018,17 +903,10 @@ export function FinanceVoidForm({
       </div>
 
       <div>
-        <label
-          className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1"
-          htmlFor="void-reason"
-        >
-          Required Void Reason (Audited){" "}
-          <span className="text-[#BA3C2A]">*</span>
-        </label>
-        <input
-          id="void-reason"
+        <CfTextField
           autoComplete="off"
-          className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
+          id="void-reason"
+          label="Required Void Reason (Audited) *"
           maxLength={500}
           name="reason"
           placeholder="e.g. Duplicated voucher entry created in error"

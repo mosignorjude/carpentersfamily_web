@@ -42,10 +42,10 @@ const variantStyles: Record<CfButtonVariant, string> = {
 };
 
 const sizeStyles: Record<CfButtonSize, string> = {
-  default: "h-10 px-4 py-2 text-xs font-bold rounded-xl gap-2",
-  compact: "h-8 px-3 py-1.5 text-[11px] font-semibold rounded-lg gap-1.5",
+  default: "h-12 px-4 py-2 text-sm font-bold rounded-xl gap-2",
+  compact: "h-11 px-3 py-1.5 text-xs font-semibold rounded-lg gap-1.5",
   large: "h-12 px-6 py-3 text-sm font-bold rounded-xl gap-2.5",
-  icon: "h-9 w-9 p-0 rounded-xl justify-center text-xs",
+  icon: "h-11 w-11 p-0 rounded-xl justify-center text-sm",
 };
 
 /**
