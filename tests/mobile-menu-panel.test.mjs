@@ -88,9 +88,29 @@ describe("dashboard menu panel contrast", () => {
   });
 
   it("keeps the hover state readable", () => {
+    // Whole declarations, not just the selector: the 7.28:1 hover ratio depends
+    // on the text colour AND the alpha of the blended background, so a rule
+    // that regressed to the panel colour, dropped color, or emptied itself must
+    // fail. A selector-only match stayed green on all three.
     assert.match(
       css,
-      /\.app-shell-dashboard\s+\.app-mobile-menu-panel\s+\.app-mobile-menu-signout\s+button:hover/,
+      /\.app-shell-dashboard\s+\.app-mobile-menu-panel\s+\.app-mobile-menu-signout\s+button:hover\s*\{[^}]*color:\s*#ffd0c7/,
+    );
+    assert.match(
+      css,
+      /\.app-shell-dashboard\s+\.app-mobile-menu-panel\s+\.app-mobile-menu-signout\s+button:hover\s*\{[^}]*background:\s*rgb\(240 168 158 \/ 0\.16\)/,
+    );
+  });
+
+  it("makes the focus ring visible on the dark panel", () => {
+    // The base ring is var(--color-focus-ring) -> --brand-forest-hover =
+    // #103d2b: 1.118:1 on the forest panel, i.e. no keyboard indicator at all.
+    // The dashboard override must pin the ochre token (5.89:1, over the 3:1
+    // WCAG 2.2 AA bar for non-text focus appearance) via the outline-color
+    // longhand, which keeps the base rule's 3px width and 2px offset.
+    assert.match(
+      css,
+      /\.app-shell-dashboard\s+\.app-mobile-menu-panel\s+\.app-mobile-menu-signout\s+button:focus-visible\s*\{[^}]*outline-color:\s*var\(--brand-ochre\)/,
     );
   });
 });

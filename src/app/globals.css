@@ -4786,6 +4786,18 @@ textarea:focus-visible {
   color: #ffd0c7;
 }
 
+/* The base ring is var(--color-focus-ring) -> --brand-forest-hover = #103d2b,
+   which measures 1.118:1 on the forest panel: an invisible focus indicator for
+   keyboard-only users. --brand-ochre is 5.89:1 here (3:1 is the WCAG 2.2 AA bar
+   for non-text focus appearance). Longhand only, so this rule's 0-4-1 specificity
+   replaces the shorthand's colour while keeping its 3px width and 2px offset. */
+.app-shell-dashboard
+  .app-mobile-menu-panel
+  .app-mobile-menu-signout
+  button:focus-visible {
+  outline-color: var(--brand-ochre);
+}
+
 .home-shell {
   width: 100%;
   max-width: none;
