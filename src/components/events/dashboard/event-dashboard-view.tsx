@@ -88,6 +88,7 @@ function mapDbPaymentMethod(label: string): string {
 interface EventDashboardViewProps {
   event: DashboardEventInfo;
   userRole: string;
+  currentUserId?: string;
   initialTab?: DashboardTab;
   initialTicketTiers: DashboardTicketTier[];
   initialRevenueStreams: DashboardRevenueStream[];
@@ -105,6 +106,7 @@ interface EventDashboardViewProps {
 export function EventDashboardView({
   event,
   userRole,
+  currentUserId,
   initialTab = "overview",
   initialTicketTiers,
   initialRevenueStreams,
@@ -619,6 +621,8 @@ export function EventDashboardView({
         {activeTab === "tickets" && (
           <TabTickets
             canManage={canManageCategories}
+            currentUserId={currentUserId}
+            eventId={event.id}
             onOpenCreateTierModal={() => {
               setSelectedTierForEdit(null);
               setTierModalMode("create");
@@ -643,7 +647,9 @@ export function EventDashboardView({
               setTierModalMode("retire");
               setIsTierModalOpen(true);
             }}
+            ticketSalesTransactions={transactions.filter((t) => t.category === "ticket_sales")}
             tiers={ticketTiers}
+            userRole={userRole}
           />
         )}
 
