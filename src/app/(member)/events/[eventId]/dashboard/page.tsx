@@ -706,9 +706,10 @@ export default async function EventDashboardPage({
       authorizerRole: "Recorded",
       status: t.voided_at ? "voided" : "posted",
       voidReason: t.void_reason || undefined,
-      verificationStatus:
-        (t.verification_status as "recorded" | "approved" | "rejected") ??
-        (t.voided_at ? "rejected" : "approved"),
+      verificationStatus: t.voided_at
+        ? "rejected"
+        : (t.verification_status as "recorded" | "approved" | "rejected") ||
+          "approved",
       verifiedBy: t.verified_by ?? undefined,
       verifiedAt: t.verified_at ?? undefined,
       rejectionReason: t.rejection_reason || t.void_reason || undefined,
@@ -744,9 +745,10 @@ export default async function EventDashboardPage({
       authorizerRole: "Recorded",
       status: s.refunded_at ? "voided" : "posted",
       voidReason: s.refund_reason || undefined,
-      verificationStatus:
-        (s.verification_status as "recorded" | "approved" | "rejected") ??
-        (s.refunded_at ? "rejected" : "approved"),
+      verificationStatus: s.refunded_at
+        ? "rejected"
+        : (s.verification_status as "recorded" | "approved" | "rejected") ||
+          "approved",
       verifiedBy: s.verified_by ?? undefined,
       verifiedAt: s.verified_at ?? undefined,
       rejectionReason: s.rejection_reason || s.refund_reason || undefined,

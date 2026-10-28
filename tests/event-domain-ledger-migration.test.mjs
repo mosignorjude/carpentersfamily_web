@@ -12,6 +12,11 @@ const grantMigrationSource = readFileSync(
   "utf8"
 );
 
+const syncVoidMigrationSource = readFileSync(
+  new URL("../supabase/migrations/20261028014047_sync_event_void_with_verification_status.sql", import.meta.url),
+  "utf8"
+);
+
 describe("Event Domain Ledgers & Verification Migration", () => {
   it("adds verification_status column with check constraint to transactions and ticket sales", () => {
     assert.match(migrationSource, /verification_status\s+text\s+not\s+null\s+default\s+'approved'/i);
@@ -41,5 +46,15 @@ describe("Event Domain Ledgers & Verification Migration", () => {
   it("uses seller_id and populates refunded_by in verify_event_ticket_sale", () => {
     assert.match(grantMigrationSource, /v_sale\.seller_id\s*=\s*v_actor_id/i);
     assert.match(grantMigrationSource, /refunded_by\s*=\s*v_actor_id/i);
+  });
+
+  it("synchronizes verification_status to rejected upon void or refund", () => {
+    assert.match(syncVoidMigrationSource, /create\s+or\s+replace\s+function\s+private\.refund_event_ticket_sale[\s\S]*verification_status\s*=\s*'rejected'/i);
+    assert.match(syncVoidMigrationSource, /create\s+or\s+replace\s+function\s+private\.void_event_financial_transaction[\s\S]*verification_status\s*=\s*'rejected'/i);
+  });
+
+  it("allows verification updates in guard triggers via app.event_verification_active", () => {
+    assert.match(syncVoidMigrationSource, /current_setting\('app\.event_verification_active',\s*true\)\s*=\s*'on'/i);
+    assert.match(syncVoidMigrationSource, /set_config\('app\.event_verification_active',\s*'on',\s*true\)/i);
   });
 });

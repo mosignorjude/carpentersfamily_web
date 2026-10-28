@@ -48,8 +48,9 @@ export function VoucherInspectionDrawer({
   if (!isOpen || !transaction) return null;
 
   const status =
-    transaction.verificationStatus ||
-    (transaction.status === "voided" ? "rejected" : "approved");
+    transaction.status === "voided"
+      ? "rejected"
+      : transaction.verificationStatus || "approved";
   const isRejected = status === "rejected";
   const isApproved = status === "approved";
   const isPending = status === "recorded";

@@ -53,11 +53,12 @@ export function EventDomainLedger({
 
   const isExecutive = userRole === "executive";
 
+  const resolveStatus = (txn: DashboardTransaction) =>
+    txn.status === "voided" ? "rejected" : txn.verificationStatus || "approved";
+
   // Filter transactions by status and search query
   const filtered = transactions.filter((txn) => {
-    const status =
-      txn.verificationStatus ||
-      (txn.status === "voided" ? "rejected" : "approved");
+    const status = resolveStatus(txn);
     if (statusFilter !== "all" && status !== statusFilter) {
       return false;
     }
@@ -85,19 +86,13 @@ export function EventDomainLedger({
   const pageTransactions = filtered.slice(startIndex, endIndex);
 
   const pendingCount = transactions.filter(
-    (t) =>
-      (t.verificationStatus ||
-        (t.status === "voided" ? "rejected" : "approved")) === "recorded",
+    (t) => resolveStatus(t) === "recorded",
   ).length;
   const approvedCount = transactions.filter(
-    (t) =>
-      (t.verificationStatus ||
-        (t.status === "voided" ? "rejected" : "approved")) === "approved",
+    (t) => resolveStatus(t) === "approved",
   ).length;
   const rejectedCount = transactions.filter(
-    (t) =>
-      (t.verificationStatus ||
-        (t.status === "voided" ? "rejected" : "approved")) === "rejected",
+    (t) => resolveStatus(t) === "rejected",
   ).length;
 
   return (
@@ -241,9 +236,7 @@ export function EventDomainLedger({
               </tr>
             ) : (
               pageTransactions.map((txn) => {
-                const status =
-                  txn.verificationStatus ||
-                  (txn.status === "voided" ? "rejected" : "approved");
+                const status = resolveStatus(txn);
                 const isRejected = status === "rejected";
                 const isPending = status === "recorded";
                 const isApproved = status === "approved";
