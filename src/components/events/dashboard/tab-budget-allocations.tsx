@@ -198,7 +198,8 @@ export function TabBudgetAllocations({
                     Capital Allocation & Burn Rate Matrix
                   </h4>
                   <p className="text-xs text-[#7A685D] mt-0.5">
-                    Authorized ceiling allocations, actual disbursements, and operational commitments.
+                    Authorized ceiling allocations, actual disbursements, and
+                    operational commitments.
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
@@ -217,8 +218,14 @@ export function TabBudgetAllocations({
                     <span className="font-bold text-[#3D291F] text-sm tabular-nums font-mono">
                       {formatPercent(
                         budgetCeiling > 0
-                          ? ((totalExpenses + costCenters.reduce((s, c) => s + c.committed, 0)) / budgetCeiling) * 100
-                          : 0
+                          ? ((totalExpenses +
+                              costCenters.reduce(
+                                (s, c) => s + c.committed,
+                                0,
+                              )) /
+                              budgetCeiling) *
+                              100
+                          : 0,
                       )}
                     </span>
                   </div>
@@ -229,7 +236,9 @@ export function TabBudgetAllocations({
                       type="button"
                     >
                       <Pencil className="w-3.5 h-3.5" />
-                      <span>{budgetCeiling > 0 ? "Edit Ceiling" : "Set Ceiling"}</span>
+                      <span>
+                        {budgetCeiling > 0 ? "Edit Ceiling" : "Set Ceiling"}
+                      </span>
                     </button>
                   )}
                 </div>
@@ -245,7 +254,9 @@ export function TabBudgetAllocations({
                       <th className="py-2.5 px-3.5">Disbursed Spend</th>
                       <th className="py-2.5 px-3.5">Committed POs</th>
                       <th className="py-2.5 px-3.5">Burn Rate Bar</th>
-                      <th className="py-2.5 px-3.5 text-right">Buffer Status</th>
+                      <th className="py-2.5 px-3.5 text-right">
+                        Buffer Status
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#EBE5DC]">
@@ -253,7 +264,7 @@ export function TabBudgetAllocations({
                       const totalUtilized = center.spent + center.committed;
                       const percent = Math.min(
                         100,
-                        (totalUtilized / (center.allocated || 1)) * 100
+                        (totalUtilized / (center.allocated || 1)) * 100,
                       );
                       const variance = center.allocated - totalUtilized;
                       const isOverBudget = variance < 0;
@@ -275,7 +286,7 @@ export function TabBudgetAllocations({
                                   ? center.percentage
                                   : budgetCeiling > 0
                                     ? (center.allocated / budgetCeiling) * 100
-                                    : 0
+                                    : 0,
                               )}
                               )
                             </span>

@@ -1,17 +1,14 @@
 "use client";
 
-import {
-  ChevronDown,
-  Pencil,
-  Plus,
-  Ticket,
-  Trash2,
-} from "lucide-react";
+import { ChevronDown, Pencil, Plus, Ticket, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { EmptyStateCard } from "@/components/ui/state-screen";
 import { formatNaira, formatPercent } from "@/lib/format";
 import { percentWidthClass } from "@/lib/percent-width-class";
-import type { DashboardTicketTier, DashboardTransaction } from "./dashboard-types";
+import type {
+  DashboardTicketTier,
+  DashboardTransaction,
+} from "./dashboard-types";
 import { EventDomainLedger } from "./event-domain-ledger";
 import { VoucherInspectionDrawer } from "./voucher-inspection-drawer";
 
@@ -41,7 +38,9 @@ export function TabTickets({
   currentUserId,
   userRole,
 }: TabTicketsProps) {
-  const [selectedTxn, setSelectedTxn] = useState<DashboardTransaction | null>(null);
+  const [selectedTxn, setSelectedTxn] = useState<DashboardTransaction | null>(
+    null,
+  );
   const [expandedTier, setExpandedTier] = useState<string | null>(null);
 
   const totalSold = tiers.reduce((acc, t) => acc + t.sold, 0);
@@ -70,7 +69,8 @@ export function TabTickets({
               </h3>
             </div>
             <p className="text-xs text-[#7A685D] mt-1">
-              Reconciled ticketing tallies across all authorized admission tiers.
+              Reconciled ticketing tallies across all authorized admission
+              tiers.
             </p>
           </div>
 
@@ -128,7 +128,8 @@ export function TabTickets({
             </span>
             <div className="flex-1 h-3 bg-[#E5DDD3] rounded-full overflow-hidden flex">
               {tiers.map((tier, idx) => {
-                const widthPercent = totalCapacity > 0 ? (tier.capacity / totalCapacity) * 100 : 0;
+                const widthPercent =
+                  totalCapacity > 0 ? (tier.capacity / totalCapacity) * 100 : 0;
                 return (
                   <div
                     key={tier.id}
@@ -143,7 +144,10 @@ export function TabTickets({
               })}
             </div>
             <span className="text-xs font-mono font-semibold text-[#174C37]">
-              {totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0}% Filled
+              {totalCapacity > 0
+                ? Math.round((totalSold / totalCapacity) * 100)
+                : 0}
+              % Filled
             </span>
           </div>
         )}
@@ -188,7 +192,7 @@ export function TabTickets({
                   const revenue = tier.sold * tier.price;
                   const percentageFilled = Math.min(
                     100,
-                    (tier.sold / (tier.capacity || 1)) * 100
+                    (tier.sold / (tier.capacity || 1)) * 100,
                   );
                   const remaining = tier.capacity - tier.sold;
                   const isExpanded = expandedTier === tier.id;
@@ -234,10 +238,14 @@ export function TabTickets({
                         {tier.benefits && tier.benefits.length > 0 && (
                           <button
                             className="mt-1 text-[11px] text-[#174C37] font-medium hover:underline flex items-center gap-0.5 cursor-pointer"
-                            onClick={() => setExpandedTier(isExpanded ? null : tier.id)}
+                            onClick={() =>
+                              setExpandedTier(isExpanded ? null : tier.id)
+                            }
                             type="button"
                           >
-                            <span>{isExpanded ? "Hide perks" : "View perks"}</span>
+                            <span>
+                              {isExpanded ? "Hide perks" : "View perks"}
+                            </span>
                             <ChevronDown
                               className={`w-3 h-3 transition-transform ${
                                 isExpanded ? "rotate-180" : ""
@@ -247,8 +255,8 @@ export function TabTickets({
                         )}
                         {isExpanded && tier.benefits && (
                           <ul className="mt-1.5 space-y-0.5 pl-3 list-disc text-[11px] text-[#5C4638]">
-                            {tier.benefits.map((b, i) => (
-                              <li key={i}>{b}</li>
+                            {tier.benefits.map((b) => (
+                              <li key={b}>{b}</li>
                             ))}
                           </ul>
                         )}
@@ -274,9 +282,10 @@ export function TabTickets({
                         <div className="w-full bg-[#E5DDD3] rounded-full h-1.5 mt-1.5 overflow-hidden">
                           <div
                             className={`h-full rounded-full ${percentWidthClass(
-                              percentageFilled
+                              percentageFilled,
                             )} ${
-                              tier.status === "sold_out" || tier.sold >= tier.capacity
+                              tier.status === "sold_out" ||
+                              tier.sold >= tier.capacity
                                 ? "bg-[#BA3C2A]"
                                 : "bg-[#174C37]"
                             }`}
@@ -317,7 +326,9 @@ export function TabTickets({
                             )}
                           </div>
                         ) : (
-                          <span className="text-[11px] text-[#7A685D]">Active Quota</span>
+                          <span className="text-[11px] text-[#7A685D]">
+                            Active Quota
+                          </span>
                         )}
                       </td>
                     </tr>

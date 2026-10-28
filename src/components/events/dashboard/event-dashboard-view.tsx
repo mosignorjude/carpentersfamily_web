@@ -647,7 +647,9 @@ export function EventDashboardView({
               setTierModalMode("retire");
               setIsTierModalOpen(true);
             }}
-            ticketSalesTransactions={transactions.filter((t) => t.category === "ticket_sales")}
+            ticketSalesTransactions={transactions.filter(
+              (t) => t.category === "ticket_sales",
+            )}
             tiers={ticketTiers}
             userRole={userRole}
           />
@@ -660,7 +662,9 @@ export function EventDashboardView({
             costCenters={costCenters}
             currentUserId={currentUserId}
             eventId={event.id}
-            expenseTransactions={transactions.filter((t) => t.type === "expense")}
+            expenseTransactions={transactions.filter(
+              (t) => t.type === "expense",
+            )}
             onRecordExpense={(cat) => {
               setRecordInitialType("expense");
               setRecordInitialCategory(cat);
@@ -700,7 +704,7 @@ export function EventDashboardView({
               setIsRecordModalOpen(true);
             }}
             revenueTransactions={transactions.filter(
-              (t) => t.type === "revenue" && t.category !== "ticket_sales"
+              (t) => t.type === "revenue" && t.category !== "ticket_sales",
             )}
             streams={revenueStreams}
             userRole={userRole}

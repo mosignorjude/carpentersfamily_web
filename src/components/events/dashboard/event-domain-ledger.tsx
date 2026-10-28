@@ -55,14 +55,18 @@ export function EventDomainLedger({
 
   // Filter transactions by status and search query
   const filtered = transactions.filter((txn) => {
-    const status = txn.verificationStatus || (txn.status === "voided" ? "rejected" : "approved");
+    const status =
+      txn.verificationStatus ||
+      (txn.status === "voided" ? "rejected" : "approved");
     if (statusFilter !== "all" && status !== statusFilter) {
       return false;
     }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchRef = (txn.paymentRef || txn.id.slice(0, 8)).toLowerCase().includes(q);
+      const matchRef = (txn.paymentRef || txn.id.slice(0, 8))
+        .toLowerCase()
+        .includes(q);
       const matchId = txn.id.toLowerCase().includes(q);
       const matchDesc = (txn.description || "").toLowerCase().includes(q);
       const matchParty = (txn.payerPayee || "").toLowerCase().includes(q);
@@ -81,13 +85,19 @@ export function EventDomainLedger({
   const pageTransactions = filtered.slice(startIndex, endIndex);
 
   const pendingCount = transactions.filter(
-    (t) => (t.verificationStatus || (t.status === "voided" ? "rejected" : "approved")) === "recorded"
+    (t) =>
+      (t.verificationStatus ||
+        (t.status === "voided" ? "rejected" : "approved")) === "recorded",
   ).length;
   const approvedCount = transactions.filter(
-    (t) => (t.verificationStatus || (t.status === "voided" ? "rejected" : "approved")) === "approved"
+    (t) =>
+      (t.verificationStatus ||
+        (t.status === "voided" ? "rejected" : "approved")) === "approved",
   ).length;
   const rejectedCount = transactions.filter(
-    (t) => (t.verificationStatus || (t.status === "voided" ? "rejected" : "approved")) === "rejected"
+    (t) =>
+      (t.verificationStatus ||
+        (t.status === "voided" ? "rejected" : "approved")) === "rejected",
   ).length;
 
   return (
@@ -100,7 +110,8 @@ export function EventDomainLedger({
             <h4 className="text-base font-bold text-[#3D291F]">{title}</h4>
           </div>
           <p className="text-xs text-[#7A685D] mt-0.5">
-            Transparent, chronological record of all verified and pending {domain} entries.
+            Transparent, chronological record of all verified and pending{" "}
+            {domain} entries.
           </p>
         </div>
 
@@ -187,7 +198,8 @@ export function EventDomainLedger({
         <div className="text-xs text-[#7A685D] font-mono">
           {totalItems > 0 ? (
             <span>
-              Showing {startIndex + 1} – {Math.min(endIndex, totalItems)} of {totalItems}
+              Showing {startIndex + 1} – {Math.min(endIndex, totalItems)} of{" "}
+              {totalItems}
             </span>
           ) : (
             <span>0 records found</span>
@@ -212,9 +224,14 @@ export function EventDomainLedger({
           <tbody className="divide-y divide-[#EBE5DC]">
             {pageTransactions.length === 0 ? (
               <tr>
-                <td className="py-12 px-4 text-center text-[#7A685D]" colSpan={7}>
+                <td
+                  className="py-12 px-4 text-center text-[#7A685D]"
+                  colSpan={7}
+                >
                   <AlertCircle className="w-6 h-6 mx-auto mb-2 text-[#D6A23A]" />
-                  <p className="font-semibold text-sm text-[#3D291F]">No domain transactions found</p>
+                  <p className="font-semibold text-sm text-[#3D291F]">
+                    No domain transactions found
+                  </p>
                   <p className="text-xs mt-1">
                     {searchQuery
                       ? "No records match your search criteria."
@@ -225,11 +242,13 @@ export function EventDomainLedger({
             ) : (
               pageTransactions.map((txn) => {
                 const status =
-                  txn.verificationStatus || (txn.status === "voided" ? "rejected" : "approved");
+                  txn.verificationStatus ||
+                  (txn.status === "voided" ? "rejected" : "approved");
                 const isRejected = status === "rejected";
                 const isPending = status === "recorded";
                 const isApproved = status === "approved";
-                const isExpense = domain === "expenses" || txn.type === "expense";
+                const isExpense =
+                  domain === "expenses" || txn.type === "expense";
 
                 const isSelfReview =
                   Boolean(currentUserId) &&
@@ -258,11 +277,17 @@ export function EventDomainLedger({
 
                     {/* Description & Counterparty */}
                     <td className="py-3 px-4 max-w-[280px]">
-                      <div className="font-semibold text-[#3D291F] truncate" title={txn.description}>
+                      <div
+                        className="font-semibold text-[#3D291F] truncate"
+                        title={txn.description}
+                      >
                         {txn.description}
                       </div>
                       <div className="text-[11px] text-[#7A685D] truncate mt-0.5">
-                        Party: <span className="font-medium text-[#5C4638]">{txn.payerPayee}</span>
+                        Party:{" "}
+                        <span className="font-medium text-[#5C4638]">
+                          {txn.payerPayee}
+                        </span>
                       </div>
                       {isRejected && txn.rejectionReason && (
                         <div className="mt-1 text-[10px] text-[#BA3C2A] bg-[#FDF0EE] p-1.5 rounded-md border border-[#F5C7C0]">
@@ -276,7 +301,9 @@ export function EventDomainLedger({
                       <span className="font-medium text-[#3D291F] block">
                         {txn.categoryLabel || "General"}
                       </span>
-                      <span className="text-[11px] text-[#7A685D]">{txn.paymentMethod}</span>
+                      <span className="text-[11px] text-[#7A685D]">
+                        {txn.paymentMethod}
+                      </span>
                     </td>
 
                     {/* Amount */}
@@ -344,38 +371,36 @@ export function EventDomainLedger({
                         </button>
 
                         {/* Quick Approve / Reject for Officers */}
-                        {isOfficer && isPending && (
-                          <>
-                            {isExecutive && isSelfReview ? (
-                              <span className="text-[10px] font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-2 py-1 rounded-lg">
-                                Awaiting Independent Officer Review
-                              </span>
-                            ) : (
-                              <>
-                                {onApprove && (
-                                  <button
-                                    className="p-1 text-[#174C37] hover:bg-[#E9F4EE] rounded-lg transition-colors border border-[#174C37]/30 cursor-pointer"
-                                    onClick={() => onApprove(txn)}
-                                    title="Quick Approve Record"
-                                    type="button"
-                                  >
-                                    <Check className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                                {onReject && (
-                                  <button
-                                    className="p-1 text-[#BA3C2A] hover:bg-[#FDF0EE] rounded-lg transition-colors border border-[#BA3C2A]/30 cursor-pointer"
-                                    onClick={() => onReject(txn)}
-                                    title="Reject and Reverse Transaction"
-                                    type="button"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                              </>
-                            )}
-                          </>
-                        )}
+                        {isOfficer &&
+                          isPending &&
+                          (isExecutive && isSelfReview ? (
+                            <span className="text-[10px] font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-2 py-1 rounded-lg">
+                              Awaiting Independent Officer Review
+                            </span>
+                          ) : (
+                            <>
+                              {onApprove && (
+                                <button
+                                  className="p-1 text-[#174C37] hover:bg-[#E9F4EE] rounded-lg transition-colors border border-[#174C37]/30 cursor-pointer"
+                                  onClick={() => onApprove(txn)}
+                                  title="Quick Approve Record"
+                                  type="button"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                              {onReject && (
+                                <button
+                                  className="p-1 text-[#BA3C2A] hover:bg-[#FDF0EE] rounded-lg transition-colors border border-[#BA3C2A]/30 cursor-pointer"
+                                  onClick={() => onReject(txn)}
+                                  title="Reject and Reverse Transaction"
+                                  type="button"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </>
+                          ))}
                       </div>
                     </td>
                   </tr>
@@ -391,7 +416,8 @@ export function EventDomainLedger({
         <div className="p-4 border-t border-[#E5DDD3] bg-[#FAF6F0] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <span className="text-[#7A685D]">
             Page <strong className="text-[#3D291F]">{validPage}</strong> of{" "}
-            <strong className="text-[#3D291F]">{totalPages}</strong> (20 per page)
+            <strong className="text-[#3D291F]">{totalPages}</strong> (20 per
+            page)
           </span>
 
           <div className="flex items-center gap-1.5">

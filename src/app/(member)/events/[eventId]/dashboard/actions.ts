@@ -18,16 +18,23 @@ export interface VerifyTicketSaleParams {
 }
 
 export async function verifyEventFinancialTransactionAction(
-  params: VerifyTransactionParams
+  params: VerifyTransactionParams,
 ): Promise<{ success: boolean; error?: string }> {
   if (!params.transactionId || !params.decision) {
-    return { success: false, error: "Missing required transaction verification parameters." };
-  }
-
-  if (params.decision === "rejected" && (!params.reason || params.reason.trim().length < 5)) {
     return {
       success: false,
-      error: "A mandatory explanation of at least 5 characters is required to reject/reverse a transaction.",
+      error: "Missing required transaction verification parameters.",
+    };
+  }
+
+  if (
+    params.decision === "rejected" &&
+    (!params.reason || params.reason.trim().length < 5)
+  ) {
+    return {
+      success: false,
+      error:
+        "A mandatory explanation of at least 5 characters is required to reject/reverse a transaction.",
     };
   }
 
@@ -52,16 +59,23 @@ export async function verifyEventFinancialTransactionAction(
 }
 
 export async function verifyEventTicketSaleAction(
-  params: VerifyTicketSaleParams
+  params: VerifyTicketSaleParams,
 ): Promise<{ success: boolean; error?: string }> {
   if (!params.saleId || !params.decision) {
-    return { success: false, error: "Missing required ticket sale verification parameters." };
-  }
-
-  if (params.decision === "rejected" && (!params.reason || params.reason.trim().length < 5)) {
     return {
       success: false,
-      error: "A mandatory explanation of at least 5 characters is required to reject/reverse a ticket sale.",
+      error: "Missing required ticket sale verification parameters.",
+    };
+  }
+
+  if (
+    params.decision === "rejected" &&
+    (!params.reason || params.reason.trim().length < 5)
+  ) {
+    return {
+      success: false,
+      error:
+        "A mandatory explanation of at least 5 characters is required to reject/reverse a ticket sale.",
     };
   }
 

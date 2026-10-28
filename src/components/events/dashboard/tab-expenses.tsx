@@ -42,7 +42,9 @@ export function TabExpenses({
   currentUserId,
   userRole,
 }: TabExpensesProps) {
-  const [selectedTxn, setSelectedTxn] = useState<DashboardTransaction | null>(null);
+  const [selectedTxn, setSelectedTxn] = useState<DashboardTransaction | null>(
+    null,
+  );
 
   const centerIcons: Record<
     ExpenseCategory,
@@ -76,7 +78,8 @@ export function TabExpenses({
               </h3>
             </div>
             <p className="text-xs text-[#7A685D] mt-1">
-              Reconciliation of operational cost centers and authorized disbursements.
+              Reconciliation of operational cost centers and authorized
+              disbursements.
             </p>
           </div>
 
@@ -132,7 +135,7 @@ export function TabExpenses({
             title="No Expenses Recorded"
           />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-w-0">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
@@ -150,7 +153,7 @@ export function TabExpenses({
                   const totalUtilized = center.spent + center.committed;
                   const percentUtilized = Math.min(
                     100,
-                    (totalUtilized / (center.allocated || 1)) * 100
+                    (totalUtilized / (center.allocated || 1)) * 100,
                   );
                   const variance = center.allocated - totalUtilized;
                   const isOverBudget = variance < 0;

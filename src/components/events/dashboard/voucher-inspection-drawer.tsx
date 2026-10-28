@@ -99,7 +99,9 @@ export function VoucherInspectionDrawer({
     if (!transaction) return;
     const trimmed = rejectionReason.trim();
     if (trimmed.length < 5) {
-      setErrorMessage("Please enter an explanation of at least 5 characters to reject/reverse.");
+      setErrorMessage(
+        "Please enter an explanation of at least 5 characters to reject/reverse.",
+      );
       return;
     }
 
@@ -148,7 +150,8 @@ export function VoucherInspectionDrawer({
                 Voucher Audit & Verification Inspection
               </h3>
               <p className="text-xs text-[#7A685D] mt-0.5">
-                Inspect receipt voucher documentation against the claimed financial record.
+                Inspect receipt voucher documentation against the claimed
+                financial record.
               </p>
             </div>
           </div>
@@ -181,7 +184,9 @@ export function VoucherInspectionDrawer({
                   className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F]"
                   title={`UUID: ${transaction.id}`}
                 >
-                  #{transaction.paymentRef || transaction.id.slice(0, 8).toUpperCase()}
+                  #
+                  {transaction.paymentRef ||
+                    transaction.id.slice(0, 8).toUpperCase()}
                 </span>
               </div>
 
@@ -204,24 +209,36 @@ export function VoucherInspectionDrawer({
                 </div>
                 <div className="text-xs text-[#7A685D] pt-1">
                   Payment Method:{" "}
-                  <strong className="text-[#3D291F]">{transaction.paymentMethod}</strong>
+                  <strong className="text-[#3D291F]">
+                    {transaction.paymentMethod}
+                  </strong>
                 </div>
               </div>
 
               {/* Transaction Metadata Grid */}
               <div className="space-y-3 text-xs bg-white border border-[#E5DDD3] rounded-2xl p-4">
                 <div>
-                  <span className="text-[#7A685D] block text-[11px]">Description</span>
-                  <p className="font-semibold text-[#3D291F] mt-0.5">{transaction.description}</p>
+                  <span className="text-[#7A685D] block text-[11px]">
+                    Description
+                  </span>
+                  <p className="font-semibold text-[#3D291F] mt-0.5">
+                    {transaction.description}
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#E5DDD3]/60">
                   <div>
-                    <span className="text-[#7A685D] block text-[11px]">Counterparty</span>
-                    <p className="font-medium text-[#3D291F] mt-0.5">{transaction.payerPayee}</p>
+                    <span className="text-[#7A685D] block text-[11px]">
+                      Counterparty
+                    </span>
+                    <p className="font-medium text-[#3D291F] mt-0.5">
+                      {transaction.payerPayee}
+                    </p>
                   </div>
                   <div>
-                    <span className="text-[#7A685D] block text-[11px]">Category</span>
+                    <span className="text-[#7A685D] block text-[11px]">
+                      Category
+                    </span>
                     <p className="font-medium text-[#3D291F] mt-0.5">
                       {transaction.categoryLabel || "General"}
                     </p>
@@ -230,13 +247,17 @@ export function VoucherInspectionDrawer({
 
                 <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#E5DDD3]/60">
                   <div>
-                    <span className="text-[#7A685D] block text-[11px]">Transaction Date</span>
+                    <span className="text-[#7A685D] block text-[11px]">
+                      Transaction Date
+                    </span>
                     <p className="font-mono font-medium text-[#3D291F] mt-0.5">
                       {transaction.date}
                     </p>
                   </div>
                   <div>
-                    <span className="text-[#7A685D] block text-[11px]">Current Review Status</span>
+                    <span className="text-[#7A685D] block text-[11px]">
+                      Current Review Status
+                    </span>
                     <div className="mt-0.5">
                       {isPending && (
                         <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
@@ -259,7 +280,9 @@ export function VoucherInspectionDrawer({
 
                 {isRejected && transaction.rejectionReason && (
                   <div className="p-3 rounded-xl bg-[#FDF0EE] border border-[#F5C7C0] text-xs text-[#BA3C2A] space-y-1">
-                    <strong className="block font-bold">Officer Rejection Explanation:</strong>
+                    <strong className="block font-bold">
+                      Officer Rejection Explanation:
+                    </strong>
                     <p className="italic">"{transaction.rejectionReason}"</p>
                   </div>
                 )}
@@ -284,7 +307,10 @@ export function VoucherInspectionDrawer({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 overflow-hidden">
                       <Paperclip className="w-4 h-4 text-[#174C37] shrink-0" />
-                      <span className="text-xs font-bold text-[#3D291F] truncate" title={transaction.receipt.filename}>
+                      <span
+                        className="text-xs font-bold text-[#3D291F] truncate"
+                        title={transaction.receipt.filename}
+                      >
                         {transaction.receipt.filename}
                       </span>
                     </div>
@@ -305,7 +331,9 @@ export function VoucherInspectionDrawer({
 
                   {/* Document Preview Box */}
                   <div className="rounded-xl border border-[#E5DDD3] bg-white overflow-hidden min-h-[220px] max-h-[340px] flex items-center justify-center p-2">
-                    {transaction.receipt.contentType.startsWith("image/") && receiptUrl ? (
+                    {transaction.receipt.contentType.startsWith("image/") &&
+                    receiptUrl ? (
+                      /* biome-ignore lint/performance/noImgElement: dynamic user-uploaded receipt evidence loaded via authorized API */
                       <img
                         alt="Receipt Voucher Evidence"
                         className="max-h-[320px] max-w-full object-contain mx-auto rounded-lg shadow-xs"
@@ -342,8 +370,11 @@ export function VoucherInspectionDrawer({
                     <ShieldCheck className="w-4 h-4 text-[#174C37] shrink-0 mt-0.5" />
                     <span>
                       Check that the voucher's issued total matches the claimed{" "}
-                      <strong className="text-[#174C37] font-mono">{formatNaira(transaction.amount)}</strong>.
-                      If there is a mismatch or missing proof, reverse the record below.
+                      <strong className="text-[#174C37] font-mono">
+                        {formatNaira(transaction.amount)}
+                      </strong>
+                      . If there is a mismatch or missing proof, reverse the
+                      record below.
                     </span>
                   </div>
                 </div>
@@ -355,7 +386,8 @@ export function VoucherInspectionDrawer({
                       No Receipt Document Uploaded
                     </h5>
                     <p className="text-xs text-[#7A685D] mt-1 max-w-sm mx-auto">
-                      This transaction claim was submitted without an attached digital voucher or invoice.
+                      This transaction claim was submitted without an attached
+                      digital voucher or invoice.
                     </p>
                   </div>
                 </div>
@@ -413,7 +445,8 @@ export function VoucherInspectionDrawer({
           <div className="text-xs text-[#7A685D]">
             {isRejected ? (
               <span className="text-[#BA3C2A] font-medium">
-                This transaction has been permanently reversed. Re-approval is forbidden.
+                This transaction has been permanently reversed. Re-approval is
+                forbidden.
               </span>
             ) : isOfficer ? (
               isExecutiveSelfReview ? (
@@ -438,41 +471,39 @@ export function VoucherInspectionDrawer({
               Close
             </button>
 
-            {isOfficer && !isRejected && (
-              <>
-                {isExecutiveSelfReview ? (
-                  <span className="text-xs font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-3 py-2 rounded-xl">
-                    Awaiting Independent Officer Review
-                  </span>
-                ) : (
-                  <>
-                    {!showRejectInput && (
-                      <button
-                        className="px-4 py-2 bg-white text-[#BA3C2A] border border-[#BA3C2A]/40 rounded-xl text-xs font-bold hover:bg-[#FDF0EE] transition-colors cursor-pointer flex items-center gap-1.5 min-h-[38px]"
-                        disabled={isSubmitting}
-                        onClick={() => setShowRejectInput(true)}
-                        type="button"
-                      >
-                        <X className="w-4 h-4" />
-                        <span>Reject / Reverse</span>
-                      </button>
-                    )}
+            {isOfficer &&
+              !isRejected &&
+              (isExecutiveSelfReview ? (
+                <span className="text-xs font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-3 py-2 rounded-xl">
+                  Awaiting Independent Officer Review
+                </span>
+              ) : (
+                <>
+                  {!showRejectInput && (
+                    <button
+                      className="px-4 py-2 bg-white text-[#BA3C2A] border border-[#BA3C2A]/40 rounded-xl text-xs font-bold hover:bg-[#FDF0EE] transition-colors cursor-pointer flex items-center gap-1.5 min-h-[38px]"
+                      disabled={isSubmitting}
+                      onClick={() => setShowRejectInput(true)}
+                      type="button"
+                    >
+                      <X className="w-4 h-4" />
+                      <span>Reject / Reverse</span>
+                    </button>
+                  )}
 
-                    {!isApproved && (
-                      <button
-                        className="px-4 py-2 bg-[#174C37] text-white rounded-xl text-xs font-bold hover:bg-[#103D2B] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 min-h-[38px] shadow-xs"
-                        disabled={isSubmitting}
-                        onClick={handleApprove}
-                        type="button"
-                      >
-                        <CheckCircle2 className="w-4 h-4 text-[#D6A23A]" />
-                        <span>Approve Record</span>
-                      </button>
-                    )}
-                  </>
-                )}
-              </>
-            )}
+                  {!isApproved && (
+                    <button
+                      className="px-4 py-2 bg-[#174C37] text-white rounded-xl text-xs font-bold hover:bg-[#103D2B] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 min-h-[38px] shadow-xs"
+                      disabled={isSubmitting}
+                      onClick={handleApprove}
+                      type="button"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-[#D6A23A]" />
+                      <span>Approve Record</span>
+                    </button>
+                  )}
+                </>
+              ))}
           </div>
         </div>
       </div>

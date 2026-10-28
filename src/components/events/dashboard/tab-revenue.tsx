@@ -5,7 +5,6 @@ import {
   Beer,
   HeartHandshake,
   Plus,
-  Search,
   Store,
   Tags,
   Ticket,
@@ -46,7 +45,9 @@ export function TabRevenue({
   currentUserId,
   userRole,
 }: TabRevenueProps) {
-  const [selectedTxn, setSelectedTxn] = useState<DashboardTransaction | null>(null);
+  const [selectedTxn, setSelectedTxn] = useState<DashboardTransaction | null>(
+    null,
+  );
 
   const streamIcons: Record<
     RevenueCategory,
@@ -61,7 +62,6 @@ export function TabRevenue({
 
   const totalActual = streams.reduce((acc, s) => acc + s.actual, 0);
   const totalPending = streams.reduce((acc, s) => acc + s.pending, 0);
-  const totalTarget = streams.reduce((acc, s) => acc + s.target, 0);
 
   return (
     <div className="space-y-6">
@@ -77,7 +77,8 @@ export function TabRevenue({
               </h3>
             </div>
             <p className="text-xs text-[#7A685D] mt-1">
-              Reconciled receipts vs target projections across authorized club revenue channels.
+              Reconciled receipts vs target projections across authorized club
+              revenue channels.
             </p>
           </div>
 
@@ -148,9 +149,10 @@ export function TabRevenue({
                   const Icon = streamIcons[stream.id] || TrendingUp;
                   const percentage = Math.min(
                     100,
-                    (stream.actual / (stream.target || 1)) * 100
+                    (stream.actual / (stream.target || 1)) * 100,
                   );
-                  const isAchieved = stream.actual >= stream.target && stream.target > 0;
+                  const isAchieved =
+                    stream.actual >= stream.target && stream.target > 0;
 
                   return (
                     <tr
