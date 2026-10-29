@@ -170,10 +170,10 @@ export default async function DuesPage({
   );
   const isOfficer =
     !roleError &&
-    (roles.has("executive") || roles.has("admin") || roles.has("backup_admin"));
-  const canRecord = isOfficer;
+    (roles.has("executive") || roles.has("admin") || roles.has("president"));
+  const canRecord = roles.has("executive") || roles.has("president");
   const canWriteOff = isOfficer;
-  const canCorrect = roles.has("admin") || roles.has("backup_admin");
+  const canCorrect = roles.has("admin") || roles.has("president");
   const canChangeRate = canCorrect;
 
   let members: DuesMemberOption[] = [
@@ -500,8 +500,8 @@ export default async function DuesPage({
     statusResult.error || paymentResult.error || coverageError,
   );
 
-  const isAdmin =
-    !roleError && (roles.has("admin") || roles.has("backup_admin"));
+  const isAdmin = !roleError && (roles.has("admin") || roles.has("president"));
+  const isDuesExempt = !roleError && roles.has("admin");
 
   return (
     <DuesPageView
@@ -521,6 +521,7 @@ export default async function DuesPage({
       duesRows={duesRows}
       invalidSelection={invalidSelection}
       isAdmin={isAdmin}
+      isDuesExempt={isDuesExempt}
       isOfficer={isOfficer}
       member={member}
       memberListError={memberListError}

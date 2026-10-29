@@ -279,7 +279,7 @@ export default async function EventDashboardPage({
   const eventRoles = (eventRolesResult.data ?? []).map((r) => r.role);
 
   const isAdmin =
-    clubRoles.includes("admin") || clubRoles.includes("backup_admin");
+    clubRoles.includes("admin") || clubRoles.includes("president");
   const isExecutive = clubRoles.includes("executive");
   const isEventLead =
     eventRoles.includes("lead") || eventRoles.includes("event_lead");

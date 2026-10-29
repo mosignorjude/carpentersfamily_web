@@ -123,8 +123,8 @@ export default async function MemberAdministrationPage({
   let initialOfficerRole: OfficerRole = "executive";
   if (ownRoles.has("admin")) {
     initialOfficerRole = "admin";
-  } else if (ownRoles.has("backup_admin")) {
-    initialOfficerRole = "backup_admin";
+  } else if (ownRoles.has("president")) {
+    initialOfficerRole = "president";
   }
 
   // Fetch all members
@@ -161,8 +161,8 @@ export default async function MemberAdministrationPage({
   const rolesByMember = new Map<string, string>();
   for (const r of roleRows ?? []) {
     if (r.role === "admin") rolesByMember.set(r.member_id, "Admin");
-    else if (r.role === "backup_admin" && !rolesByMember.has(r.member_id))
-      rolesByMember.set(r.member_id, "Backup Admin");
+    else if (r.role === "president" && !rolesByMember.has(r.member_id))
+      rolesByMember.set(r.member_id, "President");
     else if (r.role === "executive" && !rolesByMember.has(r.member_id))
       rolesByMember.set(r.member_id, "Executive");
   }
@@ -187,7 +187,7 @@ export default async function MemberAdministrationPage({
     !membersError && members.length > 0
       ? members.map((member) => {
           const isSelf = member.id === authData.user.id;
-          // Another active Admin or Backup Admin must deactivate your account.
+          // Another active Admin or President must deactivate your account.
           const isComplete = Boolean(member.profile_completed_at);
           const assignedRole: ClubMemberRecord["clubRole"] =
             (rolesByMember.get(member.id) as ClubMemberRecord["clubRole"]) ||

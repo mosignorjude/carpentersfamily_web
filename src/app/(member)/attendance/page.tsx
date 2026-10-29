@@ -48,7 +48,7 @@ export default async function AttendancePage({
 
   const globalRoles = new Set((globalRolesData ?? []).map((r) => r.role));
   const isGlobalAdmin =
-    globalRoles.has("admin") || globalRoles.has("backup_admin");
+    globalRoles.has("admin") || globalRoles.has("president");
   const isGlobalExecutive = globalRoles.has("executive");
 
   let computedRole = "member";

@@ -33,8 +33,8 @@ test("accepts only a reasoned grant/revoke request for the Executive role", () =
   );
 });
 
-test("rejects Admin and Backup Admin role tampering", () => {
-  for (const role of ["admin", "backup_admin", "member", "Executive"]) {
+test("rejects Admin and President role tampering", () => {
+  for (const role of ["admin", "president", "member", "Executive"]) {
     assert.equal(parseExecutiveRoleRequest(validRequest({ role })), null, role);
   }
 });

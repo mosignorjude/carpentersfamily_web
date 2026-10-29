@@ -226,7 +226,7 @@ export function EventCategoryManagementModal({
             <p className="text-xs text-[#7A685D] mt-0.5">
               {isBudgetAllocationMode
                 ? `Total event budget ceiling: ${formatNaira(budgetCeiling)} • Allocated: ${formatNaira(currentTotalAllocated)} • Remaining buffer: ${formatNaira(remainingHeadroom)}`
-                : "Admin, Backup Admin, and Event Leads can create and edit categories."}
+                : "Admin, President, and Event Leads can create and edit categories."}
             </p>
           </div>
           <button
@@ -471,8 +471,7 @@ export function EventCategoryManagementModal({
                   <Info className="w-4 h-4 text-[#7A685D] shrink-0" />
                   <span>
                     You have view-only access. Allocating or modifying budget
-                    categories requires Admin, Backup Admin, or Event Lead
-                    roles.
+                    categories requires Admin, President, or Event Lead roles.
                   </span>
                 </div>
               )}
@@ -989,7 +988,7 @@ export function EventCategoryManagementModal({
                   <Info className="w-4 h-4 text-[#7A685D] shrink-0" />
                   <span>
                     You have view-only access to categories. Creating or editing
-                    requires Admin, Backup Admin, or Event Lead permissions.
+                    requires Admin, President, or Event Lead permissions.
                   </span>
                 </div>
               )}

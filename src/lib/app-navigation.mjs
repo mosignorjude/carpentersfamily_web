@@ -1,4 +1,4 @@
-const clubOfficerRoles = new Set(["executive", "admin", "backup_admin"]);
+const clubOfficerRoles = new Set(["executive", "admin", "president"]);
 
 /**
  * Build navigation from roles read on the server. The shared finance ledger is available to active members; administrative areas remain role-specific.

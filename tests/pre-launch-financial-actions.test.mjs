@@ -73,12 +73,12 @@ describe("updateClubPaymentSettingsAction structure and authorization", () => {
     );
   });
 
-  it("enforces admin or backup_admin authorization and rejects unauthorized callers", () => {
+  it("enforces admin or president authorization and rejects unauthorized callers", () => {
     assert.ok(body !== null, "Action must exist");
     assert.match(
       body,
-      /roles\.has\("admin"\)\s*\|\|\s*actor\.roles\.has\("backup_admin"\)/,
-      "Must require admin or backup_admin role",
+      /roles\.has\("admin"\)\s*\|\|\s*actor\.roles\.has\("president"\)/,
+      "Must require admin or president role",
     );
     assert.match(
       body,
@@ -158,12 +158,12 @@ describe("recordOpeningBalanceAction structure and validation", () => {
     );
   });
 
-  it("enforces admin or backup_admin authorization and rejects unauthorized callers", () => {
+  it("enforces admin or president authorization and rejects unauthorized callers", () => {
     assert.ok(body !== null, "Action must exist");
     assert.match(
       body,
-      /roles\.has\("admin"\)\s*\|\|\s*actor\.roles\.has\("backup_admin"\)/,
-      "Must require admin or backup_admin role",
+      /roles\.has\("admin"\)\s*\|\|\s*actor\.roles\.has\("president"\)/,
+      "Must require admin or president role",
     );
     assert.match(
       body,
@@ -235,12 +235,12 @@ describe("backfillMemberHistoricalDuesAction structure and validation", () => {
     );
   });
 
-  it("enforces admin or backup_admin authorization and rejects unauthorized callers", () => {
+  it("enforces admin or president authorization and rejects unauthorized callers", () => {
     assert.ok(body !== null, "Action must exist");
     assert.match(
       body,
-      /roles\.has\("admin"\)\s*\|\|\s*actor\.roles\.has\("backup_admin"\)/,
-      "Must require admin or backup_admin role",
+      /roles\.has\("admin"\)\s*\|\|\s*actor\.roles\.has\("president"\)/,
+      "Must require admin or president role",
     );
     assert.match(
       body,

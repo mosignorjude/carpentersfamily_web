@@ -34,7 +34,7 @@ interface NextUpEventsCardProps {
 
 export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
   const isOfficer =
-    roles?.some((r) => ["admin", "executive", "backup_admin"].includes(r)) ??
+    roles?.some((r) => ["admin", "executive", "president"].includes(r)) ??
     false;
 
   if (events.unavailable) {

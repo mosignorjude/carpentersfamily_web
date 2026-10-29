@@ -172,8 +172,8 @@ describe("Page and View Wiring verification", () => {
     );
     assert.match(
       source,
-      /roles\.has\(["']admin["']\)\s*\|\|\s*roles\.has\(["']backup_admin["']\)|roles\.includes\(["']admin["']\)\s*\|\|\s*roles\.includes\(["']backup_admin["']\)/,
-      "finances/page.tsx must evaluate isAdmin based on admin or backup_admin roles",
+      /roles\.has\(["']admin["']\)\s*\|\|\s*roles\.has\(["']president["']\)|roles\.includes\(["']admin["']\)\s*\|\|\s*roles\.includes\(["']president["']\)/,
+      "finances/page.tsx must evaluate isAdmin based on admin or president roles",
     );
     assert.match(
       source,

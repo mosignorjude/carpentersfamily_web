@@ -180,12 +180,12 @@ export function PayDuesModal({
                   <ShieldCheck className="w-6 h-6 text-[#174C37]" />
                 </div>
                 <h4 className="font-bold text-sm text-[#3D291F]">
-                  Club Administrator Exemption
+                  System Administrator Exemption
                 </h4>
                 <p className="text-xs text-[#54433A] max-w-sm mx-auto leading-relaxed">
-                  As an active Club Administrator, you are exempt from statutory
-                  dues obligations under club financial policy. No payment
-                  submission is required.
+                  As an active system administrator, you are exempt from
+                  statutory dues obligations under club financial policy. No
+                  payment submission is required.
                 </p>
                 <div className="pt-2">
                   <button
@@ -531,7 +531,7 @@ export function PayDuesModal({
 
                 {/* Verification Protocol Notice */}
                 <FormAlertBanner
-                  message="Dues payments are database-backed and verified by designated Club Officers (Executive, Admin, or Backup Admin). Officers cannot approve their own dues."
+                  message="Dues payments are database-backed and verified by designated Club Officers (Executive or President). Officers cannot approve their own dues."
                   title="Verification Protocol"
                   variant="info"
                 />

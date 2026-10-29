@@ -49,8 +49,8 @@ test("executives keep manager capabilities but cannot reopen events", () => {
   assert.equal(executive.canReopen, false);
 });
 
-test("Admin and Backup Admin can reopen; both retain event manager capabilities", () => {
-  for (const role of ["admin", "backup_admin"]) {
+test("Admin and President can reopen; both retain event manager capabilities", () => {
+  for (const role of ["admin", "president"]) {
     const admin = access({ roles: [role] });
     assert.equal(admin.isManager, true);
     assert.equal(admin.canEdit, true);

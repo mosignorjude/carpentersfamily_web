@@ -47,7 +47,7 @@ export function EventDomainLedger({
 
   const isOfficer =
     userRole === "admin" ||
-    userRole === "backup_admin" ||
+    userRole === "president" ||
     userRole === "executive" ||
     userRole === "lead" ||
     userRole === "event_lead";

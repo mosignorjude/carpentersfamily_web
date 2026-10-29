@@ -59,7 +59,7 @@ const uuidPattern =
 const clubRoleRank: Record<string, number> = {
   member: 0,
   executive: 1,
-  backup_admin: 2,
+  president: 2,
   admin: 3,
 };
 
@@ -303,13 +303,11 @@ async function getActiveFinanceActor() {
 }
 
 function financeRoleAllowed(roles: Set<string>) {
-  return (
-    roles.has("executive") || roles.has("admin") || roles.has("backup_admin")
-  );
+  return roles.has("executive") || roles.has("admin") || roles.has("president");
 }
 
 function financeCorrectionAllowed(roles: Set<string>) {
-  return roles.has("admin") || roles.has("backup_admin");
+  return roles.has("admin") || roles.has("president");
 }
 
 function eventNoticeUrl(notice: string) {
@@ -336,13 +334,11 @@ function eventAttendanceNoticeUrl(
 }
 
 function eventManagerAllowed(roles: Set<string>) {
-  return (
-    roles.has("executive") || roles.has("admin") || roles.has("backup_admin")
-  );
+  return roles.has("executive") || roles.has("admin") || roles.has("president");
 }
 
 function attendanceSessionControllerAllowed(roles: Set<string>) {
-  return roles.has("executive") || roles.has("admin");
+  return roles.has("executive") || roles.has("admin") || roles.has("president");
 }
 
 function eventFinanceManagerAllowed(actor: {
@@ -357,7 +353,7 @@ function eventFinanceManagerAllowed(actor: {
 }
 
 function eventCorrectionAllowed(roles: Set<string>) {
-  return roles.has("admin") || roles.has("backup_admin");
+  return roles.has("admin") || roles.has("president");
 }
 
 function eventCheckbox(formData: FormData, key: string) {
@@ -531,11 +527,7 @@ export async function recordDuesPaymentAction(formData: FormData) {
   }
 
   const actor = await getActiveDuesActor();
-  if (
-    !actor.roles.has("executive") &&
-    !actor.roles.has("admin") &&
-    !actor.roles.has("backup_admin")
-  ) {
+  if (!actor.roles.has("executive") && !actor.roles.has("president")) {
     redirect(duesNoticeUrl("denied", memberId));
   }
 
@@ -615,7 +607,7 @@ export async function writeOffDuesAction(formData: FormData) {
   if (
     !actor.roles.has("executive") &&
     !actor.roles.has("admin") &&
-    !actor.roles.has("backup_admin")
+    !actor.roles.has("president")
   ) {
     redirect(duesNoticeUrl("denied", memberId));
   }
@@ -653,7 +645,7 @@ export async function correctDuesPaymentAction(formData: FormData) {
   }
 
   const actor = await getActiveDuesActor();
-  if (!actor.roles.has("admin") && !actor.roles.has("backup_admin")) {
+  if (!actor.roles.has("admin") && !actor.roles.has("president")) {
     redirect(duesNoticeUrl("denied", memberId));
   }
 
@@ -690,7 +682,7 @@ export async function setDuesRateAction(formData: FormData) {
   }
 
   const actor = await getActiveDuesActor();
-  if (!actor.roles.has("admin") && !actor.roles.has("backup_admin")) {
+  if (!actor.roles.has("admin") && !actor.roles.has("president")) {
     redirect(duesNoticeUrl("denied"));
   }
 
@@ -800,9 +792,7 @@ export async function approveDuesPaymentRequestAction(formData: FormData) {
 
   const actor = await getActiveDuesActor();
   const isOfficer =
-    actor.roles.has("executive") ||
-    actor.roles.has("admin") ||
-    actor.roles.has("backup_admin");
+    actor.roles.has("executive") || actor.roles.has("president");
   if (!isOfficer) {
     redirect(duesNoticeUrl("denied"));
   }
@@ -851,9 +841,7 @@ export async function rejectDuesPaymentRequestAction(formData: FormData) {
 
   const actor = await getActiveDuesActor();
   const isOfficer =
-    actor.roles.has("executive") ||
-    actor.roles.has("admin") ||
-    actor.roles.has("backup_admin");
+    actor.roles.has("executive") || actor.roles.has("president");
   if (!isOfficer) {
     redirect(duesNoticeUrl("denied"));
   }
@@ -937,7 +925,7 @@ export async function updateClubPaymentSettingsAction(
   }
 
   const actor = await getActiveFinanceActor();
-  const allowed = actor.roles.has("admin") || actor.roles.has("backup_admin");
+  const allowed = actor.roles.has("admin") || actor.roles.has("president");
   if (!allowed) {
     redirect(noticeUrl("denied"));
   }
@@ -990,7 +978,7 @@ export async function recordOpeningBalanceAction(
   }
 
   const actor = await getActiveFinanceActor();
-  const allowed = actor.roles.has("admin") || actor.roles.has("backup_admin");
+  const allowed = actor.roles.has("admin") || actor.roles.has("president");
   if (!allowed) {
     redirect(financeNoticeUrl("denied"));
   }
@@ -1059,7 +1047,7 @@ export async function backfillMemberHistoricalDuesAction(
   }
 
   const actor = await getActiveDuesActor();
-  const allowed = actor.roles.has("admin") || actor.roles.has("backup_admin");
+  const allowed = actor.roles.has("admin") || actor.roles.has("president");
   if (!allowed) {
     redirect(duesNoticeUrl("denied", memberId));
   }
@@ -1516,8 +1504,8 @@ export async function memberLifecycleAction(formData: FormData) {
     (assignments ?? []).map((assignment) => assignment.role),
   );
   const canApprove =
-    roles.has("executive") || roles.has("admin") || roles.has("backup_admin");
-  const canManageStatus = roles.has("admin") || roles.has("backup_admin");
+    roles.has("executive") || roles.has("admin") || roles.has("president");
+  const canManageStatus = roles.has("admin") || roles.has("president");
   const allowed = operation === "approve" ? canApprove : canManageStatus;
   if (!allowed) redirect("/admin/members?notice=denied");
 
@@ -1582,7 +1570,7 @@ export async function executiveRoleAction(formData: FormData) {
   const roles = new Set(
     (assignments ?? []).map((assignment) => assignment.role),
   );
-  if (!roles.has("admin") && !roles.has("backup_admin")) {
+  if (!roles.has("admin") && !roles.has("president")) {
     redirect("/admin/members?notice=denied");
   }
 
@@ -1639,7 +1627,7 @@ export async function clubRoleChangeAction(formData: FormData) {
   const roles = new Set(
     (assignments ?? []).map((assignment) => assignment.role),
   );
-  if (!roles.has("admin") && !roles.has("backup_admin")) {
+  if (!roles.has("admin") && !roles.has("president")) {
     redirect("/admin/members?notice=denied");
   }
 

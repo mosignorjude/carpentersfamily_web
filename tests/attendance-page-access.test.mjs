@@ -28,10 +28,10 @@ test("event Leads and Assistants review attendance for their assigned event", ()
   }
 });
 
-test("Backup Admin can review attendance and audit history, not control sessions or minutes", () => {
-  const identity = access({ roles: ["backup_admin"] });
-  assert.equal(identity.canControl, false);
-  assert.equal(identity.canWriteMinutes, false);
+test("President can control sessions, write minutes, and review attendance", () => {
+  const identity = access({ roles: ["president"] });
+  assert.equal(identity.canControl, true);
+  assert.equal(identity.canWriteMinutes, true);
   assert.equal(identity.canReviewAttendance, true);
   assert.equal(identity.isOfficer, true);
 });

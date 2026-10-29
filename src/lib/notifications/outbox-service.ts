@@ -256,7 +256,7 @@ export async function resolveOfficerContacts(
     const { data: assignments } = await admin
       .from("member_role_assignments")
       .select("member_id, role")
-      .in("role", ["admin", "backup_admin", "executive"])
+      .in("role", ["admin", "president", "executive"])
       .is("revoked_at", null);
 
     const officerIds = new Set(

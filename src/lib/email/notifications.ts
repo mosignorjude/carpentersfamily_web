@@ -69,7 +69,7 @@ function formatPaymentMethod(method: string): string {
 function formatRoleLabel(role: string): string {
   const labels: Record<string, string> = {
     admin: "Admin",
-    backup_admin: "Backup Admin",
+    president: "President",
     executive: "Executive",
     member: "Member",
     lead: "Event Lead",

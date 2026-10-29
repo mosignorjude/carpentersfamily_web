@@ -37,8 +37,8 @@ function access({
   });
 }
 
-test("members, Committee, Assistant, and Backup Admin do not get publishing controls", () => {
-  for (const role of ["member", "committee", "assistant", "backup_admin"]) {
+test("members, Committee, and Assistant do not get publishing controls", () => {
+  for (const role of ["member", "committee", "assistant"]) {
     const permissions = access({ roles: [role] });
     assert.equal(permissions.canPublish, false, role);
     assert.equal(permissions.globalPublisher, false, role);
@@ -47,8 +47,8 @@ test("members, Committee, Assistant, and Backup Admin do not get publishing cont
   }
 });
 
-test("Admin and Executive can publish club-wide and to active events", () => {
-  for (const role of ["admin", "executive"]) {
+test("President, Admin, and Executive can publish club-wide and to active events", () => {
+  for (const role of ["president", "admin", "executive"]) {
     const permissions = access({ roles: [role] });
     assert.equal(permissions.globalPublisher, true, role);
     assert.equal(permissions.canPublish, true, role);
@@ -59,8 +59,8 @@ test("Admin and Executive can publish club-wide and to active events", () => {
   }
 });
 
-test("Admin and Executive retain club-wide publishing when no active events exist", () => {
-  for (const role of ["admin", "executive"]) {
+test("Admin, President, and Executive retain club-wide publishing when no active events exist", () => {
+  for (const role of ["admin", "president", "executive"]) {
     const permissions = getCommunicationsPageAccess({ roles: [role] });
     assert.equal(permissions.canPublish, true, role);
     assert.equal(permissions.globalPublisher, true, role);

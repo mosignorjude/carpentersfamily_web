@@ -92,8 +92,8 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
 
   const resolvedOfficerId = currentOfficerId ?? "";
 
-  const isAdminOrBackup =
-    officerRole === "admin" || officerRole === "backup_admin";
+  const isAdminOrPresident =
+    officerRole === "admin" || officerRole === "president";
 
   const pendingRequests = useMemo(
     () => members.filter((m) => m.accountStatus === "pending"),
@@ -298,7 +298,7 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
         <MemberRosterSection
           members={members}
           currentOfficerId={resolvedOfficerId}
-          isAdminOrBackup={isAdminOrBackup}
+          isAdminOrPresident={isAdminOrPresident}
           roleLookupFailed={roleLookupFailed}
           onOpenDeactivateModal={(member) => {
             setSelectedMember(member);

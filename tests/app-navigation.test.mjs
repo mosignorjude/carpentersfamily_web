@@ -26,8 +26,8 @@ test("executives receive officer links without changing their role identity", ()
   assert.ok(links.includes("/admin/members"));
 });
 
-test("Admin and Backup Admin receive the same navigation links", () => {
-  assert.deepEqual(hrefs(["admin"]), hrefs(["backup_admin"]));
+test("Admin and President receive the same navigation links", () => {
+  assert.deepEqual(hrefs(["admin"]), hrefs(["president"]));
 });
 
 test("event roles receive member links without implying club officer access", () => {

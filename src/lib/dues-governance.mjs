@@ -1,15 +1,13 @@
 /**
  * Dues Payment Request & Approval Governance Rules (Phase 4):
- * 1. Admins do NOT pay dues.
- * 2. Active members/officers (Executive, Backup Admin, Member) can submit dues payment requests.
- * 3. Approvers must be active club officers: Admin, Executive, or Backup Admin.
- * 4. Self-approval rule: Officers (Executive, Backup Admin) CANNOT approve their own dues.
- * 5. Admin can approve all users' dues (including Backup Admin).
- * 6. Executive CAN approve Backup Admin dues.
- * 7. Executive CAN approve regular members and other Executives.
- * 8. Backup Admin CAN approve regular members and Executives.
- * 9. Backup Admin CANNOT approve Backup Admin dues (only Admin and Executive can approve Backup Admin).
- * 10. Regular members cannot approve any dues.
+ * 1. System administrators do NOT pay dues.
+ * 2. Active members/officers (Executive, President, Member) can submit dues payment requests.
+ * 3. Approvers must be active club officers: Executive or President.
+ * 4. Self-approval rule: Officers (Executive, President) CANNOT approve their own dues.
+ * 5. Executive CAN approve regular members, other Executives, and the President.
+ * 6. President CAN approve regular members and Executives.
+ * 7. A President's dues can only be reviewed by an Executive.
+ * 8. Regular members cannot approve any dues.
  */
 
 /**
@@ -19,7 +17,7 @@
  */
 export function canSubmitDues(actorRoles) {
   const roles = new Set(actorRoles || []);
-  // Admins do not pay dues
+  // System administrators do not pay dues
   if (roles.has("admin")) return false;
   return true;
 }
@@ -42,23 +40,14 @@ export function canReviewDuesRequest({
   const approverRoleSet = new Set(approverRoles || []);
   const targetRoleSet = new Set(targetRoles || []);
 
-  const isApproverAdmin = approverRoleSet.has("admin");
-  const isApproverBackupAdmin = approverRoleSet.has("backup_admin");
+  const isApproverPresident = approverRoleSet.has("president");
   const isApproverExecutive = approverRoleSet.has("executive");
 
   // Must be an active officer
-  if (!isApproverAdmin && !isApproverBackupAdmin && !isApproverExecutive) {
+  if (!isApproverPresident && !isApproverExecutive) {
     return {
       allowed: false,
-      reason: "Only an Executive, Admin, or Backup Admin may review dues.",
-    };
-  }
-
-  // Admins do not pay dues
-  if (targetRoleSet.has("admin")) {
-    return {
-      allowed: false,
-      reason: "Admins are exempt from paying dues.",
+      reason: "Only an Executive or President may review dues.",
     };
   }
 
@@ -70,15 +59,12 @@ export function canReviewDuesRequest({
     };
   }
 
-  // Backup Admin dues payments can only be approved by an Admin or Executive
-  if (targetRoleSet.has("backup_admin")) {
-    if (!isApproverAdmin && !isApproverExecutive) {
-      return {
-        allowed: false,
-        reason:
-          "Backup Admin dues payments can only be approved by an Admin or Executive.",
-      };
-    }
+  // A President's dues can only be reviewed by an Executive
+  if (targetRoleSet.has("president") && !isApproverExecutive) {
+    return {
+      allowed: false,
+      reason: "President dues payments can only be approved by an Executive.",
+    };
   }
 
   return { allowed: true, reason: null };

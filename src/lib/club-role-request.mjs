@@ -1,7 +1,7 @@
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ALLOWED_FIELDS = new Set(["member_id", "role", "reason"]);
-const ALLOWED_ROLES = new Set(["member", "executive", "admin", "backup_admin"]);
+const ALLOWED_ROLES = new Set(["member", "executive"]);
 
 function containsControlCharacters(value) {
   return Array.from(value).some((character) => {

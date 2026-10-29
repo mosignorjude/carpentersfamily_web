@@ -25,7 +25,10 @@ const KEY_PATTERN = /^[a-z0-9][a-z0-9:_-]{0,254}$/;
 
 describe("deterministic notification idempotency keys", () => {
   it("builds account and security keys", () => {
-    assert.equal(keys.welcomeKey(USER_ID), `welcome:user:${USER_ID.toLowerCase()}`);
+    assert.equal(
+      keys.welcomeKey(USER_ID),
+      `welcome:user:${USER_ID.toLowerCase()}`,
+    );
     assert.equal(
       keys.roleUpgradeKey({
         userId: USER_ID,
@@ -150,10 +153,10 @@ describe("deterministic notification idempotency keys", () => {
     assert.equal(
       keys.roleChangedKey({
         userId: USER_ID,
-        role: "Backup Admin",
+        role: "President",
         occurredAt: new Date("2026-10-26T15:30:45.000Z"),
       }),
-      `club_role_changed:user:${USER_ID.toLowerCase()}:role:backup_admin:202610261530`,
+      `club_role_changed:user:${USER_ID.toLowerCase()}:role:president:202610261530`,
     );
     assert.equal(
       keys.passwordUpdatedKey({

@@ -87,7 +87,7 @@ async function getCategoryClient(
   const clubRoles = new Set(
     (roleResult.data ?? []).map((assignment) => assignment.role),
   );
-  const isAdmin = clubRoles.has("admin") || clubRoles.has("backup_admin");
+  const isAdmin = clubRoles.has("admin") || clubRoles.has("president");
 
   if (requireAdminOnly) {
     if (!isAdmin) {

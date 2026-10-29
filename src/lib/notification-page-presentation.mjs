@@ -195,7 +195,7 @@ export function getNotificationHref(notification) {
         body.startsWith("Your ") &&
         !body.startsWith("Your role changed to Executive") &&
         !body.startsWith("Your role changed to Admin") &&
-        !body.startsWith("Your role changed to Backup Admin")
+        !body.startsWith("Your role changed to President")
       ) {
         return "/";
       }

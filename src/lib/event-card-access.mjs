@@ -7,13 +7,13 @@ export function getEventCardAccess({
   budgetReadError = false,
 }) {
   const isManager =
-    roles.has("executive") || roles.has("admin") || roles.has("backup_admin");
+    roles.has("executive") || roles.has("admin") || roles.has("president");
   const canEdit =
     isManager || eventRoles.has("lead") || eventRoles.has("assistant");
   const canSetStatus = isManager || eventRoles.has("lead");
   const canSetBudget =
     isManager || eventRoles.has("lead") || eventRoles.has("assistant");
-  const canReopen = roles.has("admin") || roles.has("backup_admin");
+  const canReopen = roles.has("admin") || roles.has("president");
   const mutable = status === "scheduled" && !archivedAt && !archivedGroup;
 
   return {

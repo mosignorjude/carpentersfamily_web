@@ -19,7 +19,7 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
   const isOfficer =
     roles.includes("admin") ||
     roles.includes("executive") ||
-    roles.includes("backup_admin");
+    roles.includes("president");
 
   const links = [
     {

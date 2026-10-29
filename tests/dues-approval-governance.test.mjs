@@ -6,21 +6,21 @@ import {
   formatCoveredMonthsDisplay,
 } from "../src/lib/dues-governance.mjs";
 
-test("dues eligibility: Admins do NOT pay dues", () => {
+test("dues eligibility: system administrators do NOT pay dues", () => {
   assert.equal(
     canSubmitDues(["admin"]),
     false,
-    "Admin must not be allowed to submit or pay dues",
+    "A system administrator must not be allowed to submit or pay dues",
   );
   assert.equal(
     canSubmitDues(["admin", "executive"]),
     false,
-    "Member with admin role must be exempt from dues",
+    "A member holding the system administrator role must be exempt from dues",
   );
   assert.equal(
-    canSubmitDues(["backup_admin"]),
+    canSubmitDues(["president"]),
     true,
-    "Backup Admin pays statutory dues",
+    "President pays statutory dues",
   );
   assert.equal(
     canSubmitDues(["executive"]),
@@ -38,18 +38,18 @@ test("dues review: non-officers cannot review dues requests", () => {
     targetRoles: [],
   });
   assert.equal(result.allowed, false);
-  assert.match(result.reason, /Only an Executive, Admin, or Backup Admin/i);
+  assert.match(result.reason, /Only an Executive or President/i);
 });
 
-test("dues review: target Admin is exempt from dues", () => {
+test("dues review: a system administrator cannot review dues", () => {
   const result = canReviewDuesRequest({
     approverId: "admin-1",
     approverRoles: ["admin"],
-    targetMemberId: "admin-2",
-    targetRoles: ["admin"],
+    targetMemberId: "member-1",
+    targetRoles: [],
   });
   assert.equal(result.allowed, false);
-  assert.match(result.reason, /Admins are exempt from paying dues/i);
+  assert.match(result.reason, /Only an Executive or President/i);
 });
 
 test("dues review: Officers CANNOT approve their own dues", () => {
@@ -63,23 +63,23 @@ test("dues review: Officers CANNOT approve their own dues", () => {
   assert.equal(execSelf.allowed, false);
   assert.match(execSelf.reason, /Officers cannot approve their own dues/i);
 
-  // Backup Admin approving own dues
-  const backupSelf = canReviewDuesRequest({
-    approverId: "backup-1",
-    approverRoles: ["backup_admin"],
-    targetMemberId: "backup-1",
-    targetRoles: ["backup_admin"],
+  // President approving own dues
+  const presidentSelf = canReviewDuesRequest({
+    approverId: "president-1",
+    approverRoles: ["president"],
+    targetMemberId: "president-1",
+    targetRoles: ["president"],
   });
-  assert.equal(backupSelf.allowed, false);
-  assert.match(backupSelf.reason, /Officers cannot approve their own dues/i);
+  assert.equal(presidentSelf.allowed, false);
+  assert.match(presidentSelf.reason, /Officers cannot approve their own dues/i);
 });
 
-test("dues review: Executive CAN approve Backup Admin dues", () => {
+test("dues review: Executive CAN approve President dues", () => {
   const result = canReviewDuesRequest({
     approverId: "exec-1",
     approverRoles: ["executive"],
-    targetMemberId: "backup-1",
-    targetRoles: ["backup_admin"],
+    targetMemberId: "president-1",
+    targetRoles: ["president"],
   });
   assert.equal(result.allowed, true);
   assert.equal(result.reason, null);
@@ -105,11 +105,11 @@ test("dues review: Executive CAN approve ordinary member dues and other executiv
   assert.equal(otherExecResult.allowed, true);
 });
 
-test("dues review: Backup Admin CAN approve ordinary member and executive dues", () => {
+test("dues review: President CAN approve ordinary member and executive dues", () => {
   // Ordinary member
   const memberResult = canReviewDuesRequest({
-    approverId: "backup-1",
-    approverRoles: ["backup_admin"],
+    approverId: "president-1",
+    approverRoles: ["president"],
     targetMemberId: "member-1",
     targetRoles: [],
   });
@@ -117,62 +117,40 @@ test("dues review: Backup Admin CAN approve ordinary member and executive dues",
 
   // Executive
   const execResult = canReviewDuesRequest({
-    approverId: "backup-1",
-    approverRoles: ["backup_admin"],
+    approverId: "president-1",
+    approverRoles: ["president"],
     targetMemberId: "exec-1",
     targetRoles: ["executive"],
   });
   assert.equal(execResult.allowed, true);
 });
 
-test("dues review: Backup Admin CANNOT approve Backup Admin dues", () => {
-  // Another Backup Admin
+test("dues review: President CANNOT approve President dues", () => {
+  // Another President
   const result = canReviewDuesRequest({
-    approverId: "backup-1",
-    approverRoles: ["backup_admin"],
-    targetMemberId: "backup-2",
-    targetRoles: ["backup_admin"],
+    approverId: "president-1",
+    approverRoles: ["president"],
+    targetMemberId: "president-2",
+    targetRoles: ["president"],
   });
   assert.equal(result.allowed, false);
   assert.match(
     result.reason,
-    /Backup Admin dues payments can only be approved by an Admin or Executive/i,
+    /President dues payments can only be approved by an Executive/i,
   );
 });
 
-test("dues review: Admin CAN approve all users dues including Backup Admin", () => {
-  // Ordinary member
-  assert.equal(
-    canReviewDuesRequest({
+test("dues review: a system administrator cannot approve any dues", () => {
+  for (const targetRoles of [[], ["executive"], ["president"]]) {
+    const result = canReviewDuesRequest({
       approverId: "admin-1",
       approverRoles: ["admin"],
       targetMemberId: "member-1",
-      targetRoles: [],
-    }).allowed,
-    true,
-  );
-
-  // Executive
-  assert.equal(
-    canReviewDuesRequest({
-      approverId: "admin-1",
-      approverRoles: ["admin"],
-      targetMemberId: "exec-1",
-      targetRoles: ["executive"],
-    }).allowed,
-    true,
-  );
-
-  // Backup Admin
-  assert.equal(
-    canReviewDuesRequest({
-      approverId: "admin-1",
-      approverRoles: ["admin"],
-      targetMemberId: "backup-1",
-      targetRoles: ["backup_admin"],
-    }).allowed,
-    true,
-  );
+      targetRoles,
+    });
+    assert.equal(result.allowed, false, targetRoles.join(",") || "member");
+    assert.match(result.reason, /Only an Executive or President/i);
+  }
 });
 
 test("formatCoveredMonthsDisplay formats single, multiple, and bounded ranges", () => {
