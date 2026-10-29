@@ -84,32 +84,32 @@ export function TabOverview({
   return (
     <div className="space-y-6">
       {/* Page Heading & Status */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-[#E5DDD3]">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 sm:border-b border-[#E5DDD3]">
         <div>
-          <span className="text-xs font-semibold text-[#174C37] uppercase tracking-wider">
+          <span className="text-[12px] sm:text-xs font-bold sm:font-semibold text-[#2B4C3B] sm:text-[#174C37] uppercase tracking-[0.08em] sm:tracking-wider">
             Event Overview & Budget Allocation
           </span>
-          <h2 className="text-xl sm:text-3xl font-bold text-[#3D291F] tracking-tight mt-1">
+          <h2 className="mt-1 text-[22px] sm:text-3xl leading-snug font-bold text-[#231F1D] sm:text-[#3D291F] tracking-[-0.015em] sm:tracking-tight">
             <span className="sm:hidden">Financial Overview &amp; Budget</span>
             <span className="hidden sm:inline">
               {event.title} — Event Finance
             </span>
           </h2>
-          <p className="text-sm text-[#7A685D] mt-1">
+          <p className="mt-1.5 text-[14.5px] sm:text-sm leading-[1.5] text-[#68736C] sm:text-[#7A685D]">
             Financial reconciliation, ticket inventory, and operational cost
             accounting for Carpenters Family Social Club.
           </p>
         </div>
 
         {/* Budget Target Capsule */}
-        <div className="bg-white border border-[#E5DDD3] rounded-2xl p-3.5 sm:text-right shrink-0">
+        <div className="mt-2 sm:mt-0 rounded-[18px] sm:rounded-2xl border border-[#E5DDD3] bg-white p-4 sm:p-3.5 sm:text-right shadow-[0_1px_2px_rgba(0,0,0,0.02)] shrink-0">
           <div className="flex items-center justify-between sm:justify-end gap-3">
-            <span className="text-xs text-[#7A685D] block">
+            <span className="text-[13.5px] sm:text-xs text-[#68736C] sm:text-[#7A685D] block">
               Approved Club Budget Ceiling
             </span>
             {canManageCategories && onOpenBudgetCeilingModal && (
               <button
-                className="text-[11px] font-semibold text-[#174C37] hover:underline cursor-pointer"
+                className="text-[13.5px] sm:text-[11px] font-semibold text-[#174C37] hover:underline cursor-pointer"
                 id="btn-overview-budget-ceiling"
                 onClick={onOpenBudgetCeilingModal}
                 type="button"
@@ -118,11 +118,11 @@ export function TabOverview({
               </button>
             )}
           </div>
-          <span className="text-xl sm:text-2xl font-bold text-[#3D291F] tabular-nums font-mono">
+          <span className="text-[28px] sm:text-2xl font-bold text-[#231F1D] sm:text-[#3D291F] tabular-nums font-mono block mt-2 sm:mt-0">
             {formatNaira(budgetCeiling)}
           </span>
-          <div className="flex items-center gap-2 text-xs text-[#174C37] font-medium justify-start sm:justify-end mt-0.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#174C37]" />
+          <div className="flex items-center gap-2 text-[13.5px] sm:text-xs text-[#3B4A41] sm:text-[#174C37] font-medium justify-start sm:justify-end mt-2.5 sm:mt-0.5">
+            <CheckCircle2 className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-[#174C37] shrink-0" />
             <span>Fully Funded & Authorized by Trustees</span>
           </div>
         </div>

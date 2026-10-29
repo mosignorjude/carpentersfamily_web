@@ -1,4 +1,6 @@
 import {
+  createSimplePdf,
+  getWATDate,
   MAX_REPORT_EXPORT_BYTES,
   MAX_REPORT_ROWS,
   toCsvRows,
@@ -346,6 +348,62 @@ export async function GET(
       "This report contains too many rows. Select a narrower date range.",
     );
   }
+
+  const format = url.searchParams.get("format") === "pdf" ? "pdf" : "csv";
+
+  if (format === "pdf") {
+    const lines: string[] = [
+      `Event Title: ${event.title}`,
+      `Period: ${start ?? "All dates"} to ${end ?? "All dates"}`,
+      `Generated: ${getWATDate()}`,
+      "",
+      "--- FINANCIAL SUMMARY ---",
+      `Paid other income: NGN ${reportSummary.paid_income_ngn}`,
+      `Pending other income: NGN ${reportSummary.pending_income_ngn}`,
+      `Unpaid other income: NGN ${reportSummary.unpaid_income_ngn}`,
+      `Paid & deposit expenses: NGN ${reportSummary.actual_expense_ngn}`,
+      `Expense commitments: NGN ${reportSummary.committed_expense_ngn}`,
+      `Ticket income net of refunds: NGN ${reportSummary.ticket_income_ngn}`,
+      `Net ticket quantity: ${reportSummary.tickets_sold}`,
+      `Net event result: NGN ${reportSummary.net_result_ngn}`,
+      "",
+      "--- TRANSACTIONS & TICKET RELEASES ---",
+    ];
+
+    for (const row of transactionRows) {
+      if (!row) continue;
+      lines.push(
+        `${row[0]} | ${row[1]} | NGN ${row[6]} | ${row[5]} | ${row[4] || "No description"} | ${row[10] || "No counterparty"}`,
+      );
+    }
+    for (const row of ticketRows) {
+      lines.push(
+        `${row[0]} | ${row[1]} (${row[3]}) | Qty: ${row[6]} | NGN ${row[5]} | ${row[8]} | ${row[9] || "Anonymous"}`,
+      );
+    }
+
+    const pdfData = createSimplePdf(
+      "Carpenters Family Social Club | Event Finance Report",
+      event.title,
+      lines,
+    );
+    if (!pdfData) {
+      return errorResponse(
+        413,
+        "This report is too large. Select a narrower date range.",
+      );
+    }
+    const pdfBuffer = new ArrayBuffer(pdfData.byteLength);
+    new Uint8Array(pdfBuffer).set(pdfData);
+    return new Response(pdfBuffer, {
+      headers: {
+        ...privateHeaders,
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="event-finance-${eventId}.pdf"`,
+      },
+    });
+  }
+
   const csv = toCsvRows(rows);
   if (new TextEncoder().encode(csv).byteLength > MAX_REPORT_EXPORT_BYTES) {
     return errorResponse(

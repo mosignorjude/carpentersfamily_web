@@ -111,6 +111,7 @@ const DEFERRED_CLOSE_BUTTONS = [
   "src/components/communications/poll-edit-modal.tsx",
   "src/components/events/attendance/attendance-roster-table.tsx",
   "src/components/events/dashboard/modals/correct-transaction-modal.tsx",
+  "src/components/events/dashboard/modals/download-report-modal.tsx",
   "src/components/events/dashboard/modals/event-budget-ceiling-modal.tsx",
   "src/components/events/dashboard/modals/event-category-management-modal.tsx",
   "src/components/events/dashboard/modals/event-ticket-tier-modal.tsx",

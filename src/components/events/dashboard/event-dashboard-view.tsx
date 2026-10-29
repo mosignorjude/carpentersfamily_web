@@ -4,11 +4,12 @@ import {
   ArrowLeft,
   BarChart3,
   Calendar,
+  ChevronDown,
   Clock,
   DollarSign,
   Download,
   FileText,
-  Layers,
+  Gauge,
   Lock,
   MapPin,
   Plus,
@@ -43,10 +44,8 @@ import type {
   EventFinanceCategoryItem,
   TransactionType,
 } from "./dashboard-types";
-import {
-  MobileTabBottomSheet,
-  type MobileTabItem,
-} from "./mobile-tab-bottom-sheet";
+import type { MobileTabItem } from "./mobile-tab-bottom-sheet";
+import { DownloadReportModal } from "./modals/download-report-modal";
 import { EventBudgetCeilingModal } from "./modals/event-budget-ceiling-modal";
 import { EventCategoryManagementModal } from "./modals/event-category-management-modal";
 import { EventTicketTierModal } from "./modals/event-ticket-tier-modal";
@@ -168,6 +167,31 @@ export function EventDashboardView({
   >("create");
   const [selectedTierForEdit, setSelectedTierForEdit] =
     useState<DashboardTicketTier | null>(null);
+
+  // Download report modal state
+  const [isDownloadReportModalOpen, setIsDownloadReportModalOpen] =
+    useState(false);
+
+  // Mobile 'more' dropdown state
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        moreMenuRef.current &&
+        !moreMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsMoreOpen(false);
+      }
+    }
+
+    if (isMoreOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isMoreOpen]);
 
   useSuccessNotice(() => {
     setIsRecordModalOpen(false);
@@ -397,7 +421,7 @@ export function EventDashboardView({
       id: "overview",
       label: "Overview",
       subtitle: "Financial summary, budget ceiling & variances",
-      icon: Layers,
+      icon: Gauge,
     },
     {
       id: "tickets",
@@ -443,6 +467,16 @@ export function EventDashboardView({
     },
   ];
 
+  const moreTabs = tabs.filter((t) =>
+    ["budget", "reports", "team_roles", "audit_log"].includes(t.id),
+  );
+  const isMoreActive = [
+    "budget",
+    "reports",
+    "team_roles",
+    "audit_log",
+  ].includes(activeTab);
+
   const statusBadgeClass = event.archivedAt
     ? "text-[#7A685D] bg-[#FAF6F0] border-[#E5DDD3]"
     : event.status === "scheduled"
@@ -454,21 +488,21 @@ export function EventDashboardView({
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
       {/* Top Scoped Header Card */}
-      <section className="bg-white rounded-2xl border border-[#E5DDD3] p-6 shadow-xs space-y-4">
+      <section className="bg-white rounded-[20px] sm:rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-4">
         {/* Navigation Breadcrumb & Back Link */}
-        <div className="flex items-center justify-between gap-4 pb-3 border-b border-[#E5DDD3]">
+        <div className="flex items-center justify-between gap-2 sm:gap-4 pb-3.5 border-b border-[#E5DDD3]">
           <Link
-            className="inline-flex items-center gap-2 text-xs font-semibold text-[#174C37] hover:underline min-h-[44px]"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#174C37] hover:underline min-h-[44px]"
             href="/events"
           >
-            <ArrowLeft className="w-4 h-4 text-[#174C37]" />
+            <ArrowLeft className="w-4 h-4 text-[#174C37] shrink-0" />
             <span>Back to Events and planning</span>
           </Link>
 
           <div className="flex items-center gap-2">
             {(event.attendanceEnabled || event.minutesEnabled) && (
               <Link
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] hover:border-[#174C37]/40 text-xs font-semibold text-[#174C37] transition-colors min-h-[44px]"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] hover:border-[#174C37]/40 text-xs font-semibold text-[#174C37] transition-colors min-h-[44px]"
                 href={`/attendance?event=${encodeURIComponent(event.id)}`}
               >
                 <FileText className="w-3.5 h-3.5 text-[#174C37]" />
@@ -476,7 +510,7 @@ export function EventDashboardView({
               </Link>
             )}
             <span
-              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold capitalize border ${statusBadgeClass}`}
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize border ${statusBadgeClass}`}
             >
               {event.archivedAt ? "Archived" : event.status}
             </span>
@@ -486,7 +520,7 @@ export function EventDashboardView({
         {/* Title & Metadata */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs text-[#7A685D] mb-1">
+            <div className="hidden sm:flex items-center gap-2 text-xs text-[#7A685D] mb-1">
               <span className="font-bold text-[#174C37] uppercase">
                 {event.type} Event Dashboard
               </span>
@@ -496,48 +530,50 @@ export function EventDashboardView({
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#3D291F] tracking-tight">
+            <h1 className="text-[26px] sm:text-3xl font-extrabold sm:font-bold text-[#231F1D] sm:text-[#3D291F] tracking-tight leading-tight">
               {event.title}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#5C4638] mt-2">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-[#174C37]" />
+            {/* Date & Time Row */}
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[14.5px] sm:text-xs text-[#4A524D] sm:text-[#5C4638] font-medium sm:font-normal">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-[#174C37] shrink-0" />
                 <span>{event.dateFormatted}</span>
               </div>
-              <span aria-hidden="true" className="text-[#E5DDD3]">
-                ·
+              <span
+                aria-hidden="true"
+                className="text-stone-300 select-none sm:text-[#E5DDD3]"
+              >
+                •
               </span>
               <div className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-[#174C37]" />
+                <Clock className="w-4 h-4 text-[#174C37] shrink-0" />
                 <span className="font-mono">{event.timeWAT}</span>
               </div>
-              <span aria-hidden="true" className="text-[#E5DDD3]">
-                ·
-              </span>
-              <div className="flex items-center gap-1.5 truncate">
-                <MapPin className="w-3.5 h-3.5 text-[#174C37]" />
-                <span className="truncate">{event.location}</span>
-              </div>
+            </div>
+
+            {/* Location Row */}
+            <div className="mt-1.5 flex items-center gap-2 text-[14.5px] sm:text-xs text-[#4A524D] sm:text-[#5C4638] font-medium sm:font-normal">
+              <MapPin className="w-4 h-4 text-[#174C37] shrink-0" />
+              <span className="truncate">{event.location}</span>
             </div>
           </div>
 
-          {/* Quick Actions (Export CSV, Record Ticket Sale, Record Transaction) */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {/* Quick Actions (Desktop View) */}
+          <div className="hidden sm:flex flex-wrap items-center gap-2 shrink-0">
             <button
-              className="px-3.5 py-2 text-xs font-medium text-[#3D291F] bg-white border border-[#E5DDD3] rounded-xl hover:bg-[#FAF6F0] min-h-[44px] flex items-center gap-1.5 transition-colors cursor-pointer"
-              id="btn-export-csv"
-              onClick={() => downloadLedgerCSV(transactions)}
-              title="Download Ledger CSV"
+              className="px-3.5 py-2 text-xs font-semibold text-[#231F1D] bg-white border border-[#CFD5D0] rounded-xl hover:bg-[#FAF6F0] min-h-[44px] flex items-center gap-1.5 transition-colors cursor-pointer"
+              id="btn-export-report-desktop"
+              onClick={() => setIsDownloadReportModalOpen(true)}
+              title="Download Report (PDF / CSV)"
               type="button"
             >
               <Download className="w-3.5 h-3.5 text-[#174C37]" />
-              <span className="hidden sm:inline">Export CSV</span>
+              <span>Download Report</span>
             </button>
 
             {canRecord && (
               <>
-                {/* Direct Ticket Sale Action */}
                 <button
                   className="px-3.5 py-2 text-xs font-semibold text-[#174C37] bg-[#174C37]/10 hover:bg-[#174C37]/20 border border-[#174C37]/30 rounded-xl min-h-[44px] flex items-center gap-1.5 transition-colors cursor-pointer"
                   id="btn-record-ticket-sale"
@@ -552,7 +588,6 @@ export function EventDashboardView({
                   <span>Record Ticket Sale</span>
                 </button>
 
-                {/* Standard Record Transaction */}
                 <button
                   className="px-4 py-2 text-xs font-semibold text-white bg-[#174C37] hover:bg-[#103D2B] border border-[#174C37] rounded-xl min-h-[44px] flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                   id="btn-record-transaction"
@@ -567,6 +602,49 @@ export function EventDashboardView({
                   <span>Record Transaction</span>
                 </button>
               </>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Action Section (Mobile View: 2-Button Grid) */}
+        <div className="sm:hidden pt-1">
+          <h2 className="text-[15px] font-semibold text-[#231F1D] mb-2.5">
+            Quick Action
+          </h2>
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              className="w-full py-3 px-3 min-h-[48px] rounded-[14px] bg-white border border-[#CFD5D0] text-[#231F1D] font-semibold text-[14px] flex items-center justify-center gap-2 hover:bg-stone-50 active:scale-[0.98] transition shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer"
+              id="btn-download-report-mobile"
+              onClick={() => setIsDownloadReportModalOpen(true)}
+              type="button"
+            >
+              <Download className="w-[17px] h-[17px] text-[#174C37] shrink-0" />
+              <span className="truncate">Download Report</span>
+            </button>
+
+            {canRecord ? (
+              <button
+                className="w-full py-3 px-3 min-h-[48px] rounded-[14px] bg-[#174C37] text-white font-semibold text-[14px] flex items-center justify-center gap-2 hover:bg-[#103D2B] active:scale-[0.98] transition shadow-xs cursor-pointer"
+                id="btn-record-transaction-mobile"
+                onClick={() => {
+                  setRecordInitialType("revenue");
+                  setRecordInitialCategory(undefined);
+                  setIsRecordModalOpen(true);
+                }}
+                type="button"
+              >
+                <Plus className="w-[17px] h-[17px] text-[#85B89A] shrink-0" />
+                <span className="truncate">Record Transaction</span>
+              </button>
+            ) : (
+              <button
+                className="w-full py-3 px-3 min-h-[48px] rounded-[14px] bg-stone-100 border border-stone-200 text-stone-400 font-semibold text-[14px] flex items-center justify-center gap-2 cursor-not-allowed"
+                disabled
+                type="button"
+              >
+                <Lock className="w-[17px] h-[17px] text-stone-400 shrink-0" />
+                <span className="truncate">Record-Only Admin</span>
+              </button>
             )}
           </div>
         </div>
@@ -587,217 +665,416 @@ export function EventDashboardView({
             </div>
           </div>
         )}
-
-        {/* Mobile Interactive Bottom Sheet Picker (Option B) */}
-        <div className="pt-2 border-t border-[#E5DDD3] sm:hidden">
-          <MobileTabBottomSheet
-            activeTab={activeTab}
-            onSelectTab={selectTab}
-            tabs={tabs}
-          />
-        </div>
-
-        {/* 8 Horizontal Pill Tabs (Tablet & Desktop) */}
-        <div className="hidden sm:block pt-2 border-t border-[#E5DDD3]">
-          <TableScroll className="rounded-xl" label="Dashboard sections">
-            <div className="flex w-max items-center gap-2 p-1.5 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-
-                return (
-                  <button
-                    aria-current={isActive ? "page" : undefined}
-                    className={`px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex items-center gap-1.5 min-h-[48px] cursor-pointer border-0 ${
-                      isActive
-                        ? "bg-[#174C37] text-white shadow-xs font-semibold"
-                        : "bg-transparent text-[#5C4638] hover:text-[#174C37] hover:bg-white/80"
-                    }`}
-                    key={tab.id}
-                    onClick={() => selectTab(tab.id)}
-                    type="button"
-                  >
-                    <Icon
-                      className={`w-4 h-4 ${
-                        isActive ? "text-[#D6A23A]" : "text-[#7A685D]"
-                      }`}
-                    />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </TableScroll>
-          <p className="mt-1.5 text-xs text-[#7A685D] lg:hidden">
-            Swipe left for more sections
-          </p>
-        </div>
       </section>
 
-      {/* Render Active Tab Component */}
-      <div
-        id={`event-finance-${activeTab}`}
-        className="scroll-target tab-panel-focus event-finance-panel space-y-6 min-w-0 max-w-full"
-        tabIndex={-1}
-      >
-        {activeTab === "overview" && (
-          <TabOverview
-            budgetCeiling={event.budgetCeiling}
-            canManageCategories={canManageCategories}
-            canRecord={canRecord}
-            committedExpenses={committedExpenses}
-            costCenters={costCenters}
-            event={event}
-            onNavigateTab={(tab) => selectTab(tab as DashboardTab)}
-            onOpenBudgetCeilingModal={() => setIsBudgetCeilingModalOpen(true)}
-            onOpenRecordModal={(type) => {
-              if (type === "ticket") {
-                setRecordInitialType("revenue");
-                setRecordInitialCategory("ticket_sales");
-              } else if (type === "expense") {
-                setRecordInitialType("expense");
-                setRecordInitialCategory(undefined);
-              } else {
-                setRecordInitialType("revenue");
-                setRecordInitialCategory(undefined);
+      {/* 2. Joined Content Card: Tab Navigation & Active Tab Content */}
+      <section className="bg-white rounded-[20px] sm:rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs relative">
+        <nav aria-label="Event Sections" className="relative">
+          {/* Mobile 5-Tab Bar (sm:hidden) */}
+          <div className="sm:hidden grid grid-cols-5 items-start gap-1">
+            {/* Tab 1: Overview */}
+            <button
+              className="group flex flex-col items-center focus:outline-none cursor-pointer min-h-[48px]"
+              id="tab-btn-overview"
+              onClick={() => {
+                selectTab("overview");
+                setIsMoreOpen(false);
+              }}
+              type="button"
+            >
+              <div
+                className={`w-full py-2.5 px-1 rounded-[14px] flex flex-col items-center justify-center gap-1.5 transition-colors ${
+                  activeTab === "overview"
+                    ? "bg-[#EEEADD] text-[#174C37] font-semibold"
+                    : "bg-transparent text-[#231F1D] font-medium hover:bg-stone-100/70"
+                }`}
+              >
+                <Gauge className="w-[22px] h-[22px] text-[#174C37]" />
+                <span className="text-[12.5px] leading-none tracking-[-0.01em]">
+                  Overview
+                </span>
+              </div>
+              <span
+                className={`mt-1.5 w-3.5 h-[4.5px] rounded-full bg-[#174C37] transition-opacity ${
+                  activeTab === "overview" ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            </button>
+
+            {/* Tab 2: Tickets */}
+            <button
+              className="group flex flex-col items-center focus:outline-none cursor-pointer min-h-[48px]"
+              id="tab-btn-tickets"
+              onClick={() => {
+                selectTab("tickets");
+                setIsMoreOpen(false);
+              }}
+              type="button"
+            >
+              <div
+                className={`w-full py-2.5 px-1 rounded-[14px] flex flex-col items-center justify-center gap-1.5 transition-colors ${
+                  activeTab === "tickets"
+                    ? "bg-[#EEEADD] text-[#174C37] font-semibold"
+                    : "bg-transparent text-[#231F1D] font-medium hover:bg-stone-100/70"
+                }`}
+              >
+                <Ticket className="w-[22px] h-[22px] text-[#174C37]" />
+                <span className="text-[12.5px] leading-none tracking-[-0.01em]">
+                  Tickets
+                </span>
+              </div>
+              <span
+                className={`mt-1.5 w-3.5 h-[4.5px] rounded-full bg-[#174C37] transition-opacity ${
+                  activeTab === "tickets" ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            </button>
+
+            {/* Tab 3: Expense */}
+            <button
+              className="group flex flex-col items-center focus:outline-none cursor-pointer min-h-[48px]"
+              id="tab-btn-expenses"
+              onClick={() => {
+                selectTab("expenses");
+                setIsMoreOpen(false);
+              }}
+              type="button"
+            >
+              <div
+                className={`w-full py-2.5 px-1 rounded-[14px] flex flex-col items-center justify-center gap-1.5 transition-colors ${
+                  activeTab === "expenses"
+                    ? "bg-[#EEEADD] text-[#174C37] font-semibold"
+                    : "bg-transparent text-[#231F1D] font-medium hover:bg-stone-100/70"
+                }`}
+              >
+                <Wallet className="w-[22px] h-[22px] text-[#174C37]" />
+                <span className="text-[12.5px] leading-none tracking-[-0.01em]">
+                  Expense
+                </span>
+              </div>
+              <span
+                className={`mt-1.5 w-3.5 h-[4.5px] rounded-full bg-[#174C37] transition-opacity ${
+                  activeTab === "expenses" ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            </button>
+
+            {/* Tab 4: Revenue */}
+            <button
+              className="group flex flex-col items-center focus:outline-none cursor-pointer min-h-[48px]"
+              id="tab-btn-revenue"
+              onClick={() => {
+                selectTab("revenue");
+                setIsMoreOpen(false);
+              }}
+              type="button"
+            >
+              <div
+                className={`w-full py-2.5 px-1 rounded-[14px] flex flex-col items-center justify-center gap-1.5 transition-colors ${
+                  activeTab === "revenue"
+                    ? "bg-[#EEEADD] text-[#174C37] font-semibold"
+                    : "bg-transparent text-[#231F1D] font-medium hover:bg-stone-100/70"
+                }`}
+              >
+                <BarChart3 className="w-[22px] h-[22px] text-[#174C37]" />
+                <span className="text-[12.5px] leading-none tracking-[-0.01em]">
+                  Revenue
+                </span>
+              </div>
+              <span
+                className={`mt-1.5 w-3.5 h-[4.5px] rounded-full bg-[#174C37] transition-opacity ${
+                  activeTab === "revenue" ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            </button>
+
+            {/* Tab 5: more ⌄ */}
+            <div
+              className="relative flex flex-col items-center"
+              ref={moreMenuRef}
+            >
+              <button
+                className="w-full focus:outline-none flex flex-col items-center cursor-pointer min-h-[48px]"
+                id="tab-btn-more"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMoreOpen((prev) => !prev);
+                }}
+                type="button"
+              >
+                <div
+                  className={`w-full h-[64px] px-1 rounded-[14px] flex items-center justify-center gap-1 pt-2 transition-colors ${
+                    isMoreActive
+                      ? "bg-[#EEEADD] text-[#174C37] font-semibold"
+                      : "bg-transparent text-[#231F1D] font-medium hover:bg-stone-100/70"
+                  }`}
+                >
+                  <span className="text-[13px] leading-none">more</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 mt-0.5 ${
+                      isMoreOpen ? "rotate-180" : ""
+                    } ${isMoreActive ? "text-[#174C37]" : "text-[#231F1D]"}`}
+                  />
+                </div>
+                <span
+                  className={`mt-1.5 w-3.5 h-[4.5px] rounded-full bg-[#174C37] transition-opacity ${
+                    isMoreActive ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown Menu for Remaining 4 of 8 Sections */}
+              {isMoreOpen && (
+                <div
+                  className="absolute right-0 top-[72px] w-56 bg-white rounded-2xl border border-[#E5DDD3] shadow-lg py-1.5 z-40 animate-in fade-in zoom-in-95 duration-100"
+                  id="moreDropdown"
+                  role="menu"
+                >
+                  <div className="px-3.5 py-2 text-[11px] font-bold uppercase tracking-wider text-[#7A685D] border-b border-[#E5DDD3]">
+                    More Event Sections (4)
+                  </div>
+                  {moreTabs.map((tab) => {
+                    const isTabActive = activeTab === tab.id;
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        className={`w-full px-3.5 py-2.5 text-left text-[13.5px] min-h-[44px] flex items-center justify-between transition-colors cursor-pointer ${
+                          isTabActive
+                            ? "bg-[#EEEADD] text-[#174C37] font-semibold"
+                            : "text-[#231F1D] font-medium hover:bg-[#FAF6F0]"
+                        }`}
+                        key={tab.id}
+                        onClick={() => {
+                          selectTab(tab.id);
+                          setIsMoreOpen(false);
+                        }}
+                        role="menuitem"
+                        type="button"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Icon
+                            className={`w-4 h-4 ${
+                              isTabActive ? "text-[#174C37]" : "text-[#7A685D]"
+                            }`}
+                          />
+                          <span>{tab.label}</span>
+                        </div>
+                        {isTabActive && (
+                          <span className="w-2 h-2 rounded-full bg-[#174C37] shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Desktop 8-Pill Tab Bar (hidden sm:block) */}
+          <div className="hidden sm:block">
+            <TableScroll className="rounded-xl" label="Dashboard sections">
+              <div className="flex w-max items-center gap-2 p-1.5 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+
+                  return (
+                    <button
+                      aria-current={isActive ? "page" : undefined}
+                      className={`px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex items-center gap-1.5 min-h-[48px] cursor-pointer border-0 ${
+                        isActive
+                          ? "bg-[#174C37] text-white shadow-xs font-semibold"
+                          : "bg-transparent text-[#5C4638] hover:text-[#174C37] hover:bg-white/80"
+                      }`}
+                      key={tab.id}
+                      onClick={() => selectTab(tab.id)}
+                      type="button"
+                    >
+                      <Icon
+                        className={`w-4 h-4 ${
+                          isActive ? "text-[#D6A23A]" : "text-[#7A685D]"
+                        }`}
+                      />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </TableScroll>
+            <p className="mt-1.5 text-xs text-[#7A685D] lg:hidden">
+              Swipe left for more sections
+            </p>
+          </div>
+
+          {/* Subtle horizontal divider separating the tab bar from the active tab content */}
+          <div className="my-3.5 sm:my-5 border-b border-[#E5DDD3]" />
+        </nav>
+
+        {/* Render Active Tab Component */}
+        <div
+          id={`event-finance-${activeTab}`}
+          className="scroll-target tab-panel-focus event-finance-panel space-y-6 min-w-0 max-w-full"
+          tabIndex={-1}
+        >
+          {activeTab === "overview" && (
+            <TabOverview
+              budgetCeiling={event.budgetCeiling}
+              canManageCategories={canManageCategories}
+              canRecord={canRecord}
+              committedExpenses={committedExpenses}
+              costCenters={costCenters}
+              event={event}
+              onNavigateTab={(tab) => selectTab(tab as DashboardTab)}
+              onOpenBudgetCeilingModal={() => setIsBudgetCeilingModalOpen(true)}
+              onOpenRecordModal={(type) => {
+                if (type === "ticket") {
+                  setRecordInitialType("revenue");
+                  setRecordInitialCategory("ticket_sales");
+                } else if (type === "expense") {
+                  setRecordInitialType("expense");
+                  setRecordInitialCategory(undefined);
+                } else {
+                  setRecordInitialType("revenue");
+                  setRecordInitialCategory(undefined);
+                }
+                setIsRecordModalOpen(true);
+              }}
+              ticketTiers={ticketTiers}
+              totalExpenses={totalExpenses}
+              totalRevenue={totalRevenue}
+              totalTicketRevenue={totalTicketRevenue}
+              totalTicketsCapacity={totalTicketsCapacity}
+              totalTicketsSold={totalTicketsSold}
+              transactions={transactions}
+            />
+          )}
+
+          {activeTab === "tickets" && (
+            <TabTickets
+              canManage={canManageCategories}
+              currentUserId={currentUserId}
+              eventId={event.id}
+              onOpenCreateTierModal={() => {
+                setSelectedTierForEdit(null);
+                setTierModalMode("create");
+                setIsTierModalOpen(true);
+              }}
+              onOpenEditTierModal={(tier) => {
+                setSelectedTierForEdit(tier);
+                setTierModalMode("edit");
+                setIsTierModalOpen(true);
+              }}
+              onOpenRecordTicketModal={
+                canRecord
+                  ? (_tierId) => {
+                      setRecordInitialType("revenue");
+                      setRecordInitialCategory("ticket_sales");
+                      setIsRecordModalOpen(true);
+                    }
+                  : undefined
               }
-              setIsRecordModalOpen(true);
-            }}
-            ticketTiers={ticketTiers}
-            totalExpenses={totalExpenses}
-            totalRevenue={totalRevenue}
-            totalTicketRevenue={totalTicketRevenue}
-            totalTicketsCapacity={totalTicketsCapacity}
-            totalTicketsSold={totalTicketsSold}
-            transactions={transactions}
-          />
-        )}
+              onOpenRetireTierModal={(tier) => {
+                setSelectedTierForEdit(tier);
+                setTierModalMode("retire");
+                setIsTierModalOpen(true);
+              }}
+              ticketSalesTransactions={transactions.filter(
+                (t) => t.category === "ticket_sales",
+              )}
+              tiers={ticketTiers}
+              userRole={userRole}
+            />
+          )}
 
-        {activeTab === "tickets" && (
-          <TabTickets
-            canManage={canManageCategories}
-            currentUserId={currentUserId}
-            eventId={event.id}
-            onOpenCreateTierModal={() => {
-              setSelectedTierForEdit(null);
-              setTierModalMode("create");
-              setIsTierModalOpen(true);
-            }}
-            onOpenEditTierModal={(tier) => {
-              setSelectedTierForEdit(tier);
-              setTierModalMode("edit");
-              setIsTierModalOpen(true);
-            }}
-            onOpenRecordTicketModal={
-              canRecord
-                ? (_tierId) => {
-                    setRecordInitialType("revenue");
-                    setRecordInitialCategory("ticket_sales");
-                    setIsRecordModalOpen(true);
-                  }
-                : undefined
-            }
-            onOpenRetireTierModal={(tier) => {
-              setSelectedTierForEdit(tier);
-              setTierModalMode("retire");
-              setIsTierModalOpen(true);
-            }}
-            ticketSalesTransactions={transactions.filter(
-              (t) => t.category === "ticket_sales",
-            )}
-            tiers={ticketTiers}
-            userRole={userRole}
-          />
-        )}
+          {activeTab === "expenses" && (
+            <TabExpenses
+              budgetCeiling={event.budgetCeiling}
+              canRecord={canRecord}
+              costCenters={costCenters}
+              currentUserId={currentUserId}
+              eventId={event.id}
+              expenseTransactions={transactions.filter(
+                (t) => t.type === "expense",
+              )}
+              onRecordExpense={(cat) => {
+                setRecordInitialType("expense");
+                setRecordInitialCategory(cat);
+                setIsRecordModalOpen(true);
+              }}
+              userRole={userRole}
+            />
+          )}
 
-        {activeTab === "expenses" && (
-          <TabExpenses
-            budgetCeiling={event.budgetCeiling}
-            canRecord={canRecord}
-            costCenters={costCenters}
-            currentUserId={currentUserId}
-            eventId={event.id}
-            expenseTransactions={transactions.filter(
-              (t) => t.type === "expense",
-            )}
-            onRecordExpense={(cat) => {
-              setRecordInitialType("expense");
-              setRecordInitialCategory(cat);
-              setIsRecordModalOpen(true);
-            }}
-            userRole={userRole}
-          />
-        )}
+          {activeTab === "budget" && (
+            <TabBudgetAllocations
+              budgetCeiling={event.budgetCeiling}
+              canManageCategories={canManageCategories}
+              costCenters={costCenters}
+              onManageCategories={() => {
+                setCategoryModalType("budget_allocation");
+                setIsCategoryModalOpen(true);
+              }}
+              onOpenBudgetCeilingModal={() => setIsBudgetCeilingModalOpen(true)}
+              revenueStreams={revenueStreams}
+            />
+          )}
 
-        {activeTab === "budget" && (
-          <TabBudgetAllocations
-            budgetCeiling={event.budgetCeiling}
-            canManageCategories={canManageCategories}
-            costCenters={costCenters}
-            onManageCategories={() => {
-              setCategoryModalType("budget_allocation");
-              setIsCategoryModalOpen(true);
-            }}
-            onOpenBudgetCeilingModal={() => setIsBudgetCeilingModalOpen(true)}
-            revenueStreams={revenueStreams}
-          />
-        )}
+          {activeTab === "revenue" && (
+            <TabRevenue
+              canManageCategories={canManageCategories}
+              canRecord={canRecord}
+              currentUserId={currentUserId}
+              eventId={event.id}
+              onManageCategories={() => {
+                setCategoryModalType("revenue");
+                setIsCategoryModalOpen(true);
+              }}
+              onRecordRevenue={(cat) => {
+                setRecordInitialType("revenue");
+                setRecordInitialCategory(cat);
+                setIsRecordModalOpen(true);
+              }}
+              revenueTransactions={transactions.filter(
+                (t) => t.type === "revenue" && t.category !== "ticket_sales",
+              )}
+              streams={revenueStreams}
+              userRole={userRole}
+            />
+          )}
 
-        {activeTab === "revenue" && (
-          <TabRevenue
-            canManageCategories={canManageCategories}
-            canRecord={canRecord}
-            currentUserId={currentUserId}
-            eventId={event.id}
-            onManageCategories={() => {
-              setCategoryModalType("revenue");
-              setIsCategoryModalOpen(true);
-            }}
-            onRecordRevenue={(cat) => {
-              setRecordInitialType("revenue");
-              setRecordInitialCategory(cat);
-              setIsRecordModalOpen(true);
-            }}
-            revenueTransactions={transactions.filter(
-              (t) => t.type === "revenue" && t.category !== "ticket_sales",
-            )}
-            streams={revenueStreams}
-            userRole={userRole}
-          />
-        )}
+          {activeTab === "reports" && (
+            <TabReports
+              budgetCeiling={event.budgetCeiling}
+              costCenters={costCenters}
+              event={event}
+              revenueStreams={revenueStreams}
+              totalExpenses={totalExpenses}
+              totalRevenue={totalRevenue}
+              transactions={transactions}
+            />
+          )}
 
-        {activeTab === "reports" && (
-          <TabReports
-            budgetCeiling={event.budgetCeiling}
-            costCenters={costCenters}
-            event={event}
-            revenueStreams={revenueStreams}
-            totalExpenses={totalExpenses}
-            totalRevenue={totalRevenue}
-            transactions={transactions}
-          />
-        )}
+          {activeTab === "team_roles" && (
+            <TabTeamRoles event={event} team={teamMembers} />
+          )}
 
-        {activeTab === "team_roles" && (
-          <TabTeamRoles event={event} team={teamMembers} />
-        )}
-
-        {activeTab === "audit_log" && (
-          <TabAuditLog
-            activityLogs={activityLogs}
-            onInitiateVoid={(txn) => {
-              setTransactionToVoid(txn);
-              setIsVoidModalOpen(true);
-            }}
-            onViewTransaction={(txn) => {
-              setSelectedTransaction(txn);
-              setIsDetailModalOpen(true);
-            }}
-            transactions={transactions}
-            userRole={userRole}
-          />
-        )}
-      </div>
+          {activeTab === "audit_log" && (
+            <TabAuditLog
+              activityLogs={activityLogs}
+              onInitiateVoid={(txn) => {
+                setTransactionToVoid(txn);
+                setIsVoidModalOpen(true);
+              }}
+              onViewTransaction={(txn) => {
+                setSelectedTransaction(txn);
+                setIsDetailModalOpen(true);
+              }}
+              transactions={transactions}
+              userRole={userRole}
+            />
+          )}
+        </div>
+      </section>
 
       {/* Global Modals */}
       <RecordTransactionModal
@@ -866,6 +1143,14 @@ export function EventDashboardView({
           setSelectedTierForEdit(null);
         }}
         tier={selectedTierForEdit}
+      />
+
+      <DownloadReportModal
+        eventId={event.id}
+        eventTitle={event.title}
+        isOpen={isDownloadReportModalOpen}
+        onClose={() => setIsDownloadReportModalOpen(false)}
+        onExportCsv={() => downloadLedgerCSV(transactions)}
       />
     </div>
   );
