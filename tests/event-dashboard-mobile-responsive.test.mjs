@@ -3,18 +3,27 @@ import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
 const budgetSource = readFileSync(
-  new URL("../src/components/events/dashboard/tab-budget-allocations.tsx", import.meta.url),
-  "utf8"
+  new URL(
+    "../src/components/events/dashboard/tab-budget-allocations.tsx",
+    import.meta.url,
+  ),
+  "utf8",
 );
 
 const reportSource = readFileSync(
-  new URL("../src/components/events/dashboard/tab-reports.tsx", import.meta.url),
-  "utf8"
+  new URL(
+    "../src/components/events/dashboard/tab-reports.tsx",
+    import.meta.url,
+  ),
+  "utf8",
 );
 
 const auditSource = readFileSync(
-  new URL("../src/components/events/dashboard/tab-audit-log.tsx", import.meta.url),
-  "utf8"
+  new URL(
+    "../src/components/events/dashboard/tab-audit-log.tsx",
+    import.meta.url,
+  ),
+  "utf8",
 );
 
 describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
@@ -23,12 +32,12 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       assert.doesNotMatch(
         budgetSource,
         />\s*Edit Ceiling\s*</,
-        "TabBudgetAllocations must remove redundant Edit Ceiling button"
+        "TabBudgetAllocations must remove redundant Edit Ceiling button",
       );
       assert.match(
         budgetSource,
         /Edit Budget Total/,
-        "TabBudgetAllocations must retain primary Edit Budget Total button"
+        "TabBudgetAllocations must retain primary Edit Budget Total button",
       );
     });
 
@@ -36,7 +45,7 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       assert.match(
         budgetSource,
         /overflow-x-auto/,
-        "Chart switcher must include overflow-x-auto to prevent mobile blowout"
+        "Chart switcher must include overflow-x-auto to prevent mobile blowout",
       );
     });
 
@@ -44,7 +53,7 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       assert.match(
         budgetSource,
         /<table[^>]*min-w-\[580px\]/,
-        "Budget matrix table must specify min-w-[580px] to preserve column geometry during horizontal scroll"
+        "Budget matrix table must specify min-w-[580px] to preserve column geometry during horizontal scroll",
       );
     });
 
@@ -53,6 +62,19 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       assert.match(budgetSource, />\s*Revenue Mix\s*</);
       assert.match(budgetSource, />\s*Cash Velocity\s*</);
     });
+
+    it("renders touch-friendly mobile cards and hides wide table on mobile", () => {
+      assert.match(
+        budgetSource,
+        /sm:hidden/,
+        "TabBudgetAllocations must render mobile cards on narrow screens",
+      );
+      assert.match(
+        budgetSource,
+        /hidden\s+sm:block/,
+        "TabBudgetAllocations must hide wide matrix table on mobile viewports",
+      );
+    });
   });
 
   describe("TabReports", () => {
@@ -60,7 +82,7 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       assert.match(
         reportSource,
         /grid-cols-2\s+sm:flex/,
-        "Report top action buttons must use responsive grid-cols-2 on mobile"
+        "Report top action buttons must use responsive grid-cols-2 on mobile",
       );
     });
 
@@ -68,7 +90,7 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       assert.match(
         reportSource,
         /flex\s+flex-col\s+sm:flex-row\s+sm:items-center\s+justify-between/,
-        "Statement section headers must stack on mobile and flex on desktop"
+        "Statement section headers must stack on mobile and flex on desktop",
       );
     });
 
@@ -76,12 +98,33 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       assert.match(
         reportSource,
         /<table[^>]*min-w-\[500px\]/,
-        "Revenue statement table must specify min-w-[500px]"
+        "Revenue statement table must specify min-w-[500px]",
       );
       assert.match(
         reportSource,
         /<table[^>]*min-w-\[540px\]/,
-        "Disbursements statement table must specify min-w-[540px]"
+        "Disbursements statement table must specify min-w-[540px]",
+      );
+    });
+
+    it("renders touch-friendly mobile cards and hides wide tables on mobile", () => {
+      assert.match(
+        reportSource,
+        /sm:hidden/,
+        "TabReports must render mobile cards on narrow screens",
+      );
+      assert.match(
+        reportSource,
+        /hidden\s+sm:block/,
+        "TabReports must hide wide statement tables on mobile viewports",
+      );
+    });
+
+    it("uses responsive 2x2 grid on mobile for P&L summary metrics", () => {
+      assert.match(
+        reportSource,
+        /grid-cols-2\s+sm:grid-cols-4/,
+        "P&L summary must use grid-cols-2 sm:grid-cols-4",
       );
     });
   });
@@ -91,7 +134,7 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       assert.doesNotMatch(
         auditSource,
         /min-w-\[200px\]/,
-        "Audit log search container must not enforce rigid min-w-[200px]"
+        "Audit log search container must not enforce rigid min-w-[200px]",
       );
     });
 
@@ -99,7 +142,7 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       assert.match(
         auditSource,
         /flex\s+flex-col\s+sm:flex-row\s+items-stretch\s+sm:items-center/,
-        "Category dropdown and search must stack on mobile"
+        "Category dropdown and search must stack on mobile",
       );
     });
 
@@ -107,7 +150,7 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       assert.match(
         auditSource,
         /flex\s+flex-col\s+sm:flex-row\s+sm:items-center\s+justify-between/,
-        "Section 2 header must stack on mobile to prevent 460px blowout"
+        "Section 2 header must stack on mobile to prevent 460px blowout",
       );
     });
 
@@ -115,7 +158,7 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       assert.match(
         auditSource,
         /flex-wrap/,
-        "Mobile journal card footer must allow flex-wrap on narrow screens"
+        "Mobile journal card footer must allow flex-wrap on narrow screens",
       );
     });
   });

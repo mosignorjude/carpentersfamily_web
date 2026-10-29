@@ -74,7 +74,7 @@ export function TabBudgetAllocations({
   ];
 
   return (
-    <section className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-6">
+    <section className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-6 min-w-0 overflow-hidden">
       {/* Chart Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
         <div>
@@ -90,44 +90,46 @@ export function TabBudgetAllocations({
         </div>
 
         {/* Header Controls: Budget Total, Categories button and Chart Switcher */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {canManageCategories && onOpenBudgetCeilingModal && (
-            <button
-              className="px-3 py-1.5 bg-[#174C37] text-white hover:bg-[#123B2B] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[36px] shadow-xs shrink-0 cursor-pointer"
-              id="btn-set-budget-total"
-              onClick={onOpenBudgetCeilingModal}
-              type="button"
-            >
-              {budgetCeiling > 0 ? (
-                <>
-                  <Pencil className="w-3.5 h-3.5" />
-                  <span>Edit Budget Total</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Set Budget Total</span>
-                </>
-              )}
-            </button>
-          )}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+          <div className="flex items-center gap-2">
+            {canManageCategories && onOpenBudgetCeilingModal && (
+              <button
+                className="flex-1 sm:flex-initial px-3 py-1.5 bg-[#174C37] text-white hover:bg-[#123B2B] rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 min-h-[36px] shadow-xs cursor-pointer"
+                id="btn-set-budget-total"
+                onClick={onOpenBudgetCeilingModal}
+                type="button"
+              >
+                {budgetCeiling > 0 ? (
+                  <>
+                    <Pencil className="w-3.5 h-3.5" />
+                    <span>Edit Budget Total</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Set Budget Total</span>
+                  </>
+                )}
+              </button>
+            )}
 
-          {canManageCategories && onManageCategories && (
-            <button
-              className="px-3 py-1.5 bg-white text-[#174C37] border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[36px] shadow-xs shrink-0 cursor-pointer"
-              id="btn-manage-budget-categories"
-              onClick={onManageCategories}
-              type="button"
-            >
-              <Tags className="w-3.5 h-3.5 text-[#174C37]" />
-              <span>Categories</span>
-            </button>
-          )}
+            {canManageCategories && onManageCategories && (
+              <button
+                className="px-3 py-1.5 bg-white text-[#174C37] border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 min-h-[36px] shadow-xs cursor-pointer"
+                id="btn-manage-budget-categories"
+                onClick={onManageCategories}
+                type="button"
+              >
+                <Tags className="w-3.5 h-3.5 text-[#174C37]" />
+                <span>Categories</span>
+              </button>
+            )}
+          </div>
 
           {/* Chart View Switcher */}
-          <div className="flex items-center gap-1 p-1 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] max-w-full overflow-x-auto">
+          <div className="flex items-center gap-1 p-1 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] w-full sm:w-auto min-w-0 overflow-x-auto">
             <button
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors min-h-[36px] cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap text-center transition-colors min-h-[36px] cursor-pointer ${
                 activeChartTab === "allocation"
                   ? "bg-[#174C37] text-white shadow-xs font-semibold border-0"
                   : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
@@ -138,7 +140,7 @@ export function TabBudgetAllocations({
               Spending
             </button>
             <button
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors min-h-[36px] cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap text-center transition-colors min-h-[36px] cursor-pointer ${
                 activeChartTab === "revenue_mix"
                   ? "bg-[#174C37] text-white shadow-xs font-semibold border-0"
                   : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
@@ -149,7 +151,7 @@ export function TabBudgetAllocations({
               Revenue Mix
             </button>
             <button
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors min-h-[36px] cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap text-center transition-colors min-h-[36px] cursor-pointer ${
                 activeChartTab === "cash_velocity"
                   ? "bg-[#174C37] text-white shadow-xs font-semibold border-0"
                   : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
@@ -191,8 +193,8 @@ export function TabBudgetAllocations({
               )}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
+            <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-5 min-w-0 max-w-full overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-[#E5DDD3]">
                 <div>
                   <h4 className="text-base font-bold text-[#3D291F]">
                     Capital Allocation & Burn Rate Matrix
@@ -231,96 +233,194 @@ export function TabBudgetAllocations({
                 </div>
               </div>
 
-              {/* Matrix Table */}
-              <TableScroll label="Budget allocations">
-                <table className="w-full text-left text-xs border-collapse min-w-[580px]">
-                  <thead>
-                    <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
-                      <th className="py-2.5 px-3.5">Cost Center</th>
-                      <th className="py-2.5 px-3.5">Allocated</th>
-                      <th className="py-2.5 px-3.5">Disbursed</th>
-                      <th className="py-2.5 px-3.5">Committed</th>
-                      <th className="py-2.5 px-3.5">Burn Rate</th>
-                      <th className="py-2.5 px-3.5 text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#EBE5DC]">
-                    {costCenters.map((center) => {
-                      const totalUtilized = center.spent + center.committed;
-                      const percent = Math.min(
-                        100,
-                        (totalUtilized / (center.allocated || 1)) * 100,
-                      );
-                      const variance = center.allocated - totalUtilized;
-                      const isOverBudget = variance < 0;
+              {/* Mobile Allocation Cards (sm:hidden) */}
+              <div className="sm:hidden space-y-3">
+                {costCenters.map((center) => {
+                  const totalUtilized = center.spent + center.committed;
+                  const percent = Math.min(
+                    100,
+                    (totalUtilized / (center.allocated || 1)) * 100,
+                  );
+                  const variance = center.allocated - totalUtilized;
+                  const isOverBudget = variance < 0;
 
-                      return (
-                        <tr
-                          key={center.id}
-                          className="hover:bg-[#FAF6F0]/50 transition-colors"
-                        >
-                          <td className="py-3 px-3.5 font-bold text-[#3D291F]">
+                  return (
+                    <div
+                      className="bg-[#FAF6F0] p-3.5 rounded-xl border border-[#E5DDD3] space-y-2.5"
+                      key={`mobile-alloc-${center.id}`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="font-bold text-sm text-[#3D291F] block">
                             {center.name}
-                          </td>
-                          <td className="py-3 px-3.5 whitespace-nowrap font-mono font-semibold text-[#3D291F]">
-                            {formatNaira(center.allocated)}{" "}
-                            <span className="text-[11px] font-normal text-[#7A685D]">
-                              (
-                              {formatPercent(
-                                center.percentage !== undefined
-                                  ? center.percentage
-                                  : budgetCeiling > 0
-                                    ? (center.allocated / budgetCeiling) * 100
-                                    : 0,
-                              )}
-                              )
-                            </span>
-                          </td>
-                          <td className="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-[#BA3C2A]">
+                          </span>
+                          <span className="text-[11px] text-[#7A685D]">
+                            {center.items.length} item
+                            {center.items.length === 1 ? "" : "s"}
+                          </span>
+                        </div>
+                        {isOverBudget ? (
+                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
+                            {formatNaira(Math.abs(variance))} Deficit
+                          </span>
+                        ) : percent > 85 ? (
+                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
+                            Near Cap (+{formatNaira(variance)})
+                          </span>
+                        ) : (
+                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
+                            Healthy (+{formatNaira(variance)})
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 3-Col Stats: Allocated, Disbursed, Committed */}
+                      <div className="grid grid-cols-3 gap-2 p-2 rounded-lg bg-white border border-[#E5DDD3] text-center text-xs">
+                        <div className="min-w-0">
+                          <span className="text-[10px] text-[#7A685D] block">
+                            Allocated
+                          </span>
+                          <span className="font-mono font-bold text-[#3D291F] block text-xs truncate">
+                            {formatNaira(center.allocated)}
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-[10px] text-[#7A685D] block">
+                            Disbursed
+                          </span>
+                          <span className="font-mono font-bold text-[#BA3C2A] block text-xs truncate">
                             {formatNaira(center.spent)}
-                          </td>
-                          <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#D6A23A]">
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-[10px] text-[#7A685D] block">
+                            Committed
+                          </span>
+                          <span className="font-mono font-bold text-[#D6A23A] block text-xs truncate">
                             {formatNaira(center.committed)}
-                          </td>
-                          <td className="py-3 px-3.5 whitespace-nowrap min-w-[140px]">
-                            <div className="flex items-baseline justify-between font-mono text-xs">
-                              <span className="font-semibold text-[#3D291F]">
-                                {formatPercent(percent)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Burn Rate Bar */}
+                      <div>
+                        <div className="flex items-baseline justify-between text-xs font-mono">
+                          <span className="text-[11px] text-[#7A685D]">
+                            Burn Rate
+                          </span>
+                          <span className="font-semibold text-[#3D291F]">
+                            {formatPercent(percent)}
+                          </span>
+                        </div>
+                        <div className="w-full bg-[#E5DDD3] rounded-full h-1.5 mt-1 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              isOverBudget
+                                ? "bg-[#BA3C2A]"
+                                : percent > 85
+                                  ? "bg-[#D6A23A]"
+                                  : "bg-[#174C37]"
+                            } ${percentWidthClass(percent)}`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Matrix Table (hidden sm:block) */}
+              <div className="hidden sm:block">
+                <TableScroll label="Budget allocations">
+                  <table className="w-full text-left text-xs border-collapse min-w-[580px]">
+                    <thead>
+                      <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
+                        <th className="py-2.5 px-3.5">Cost Center</th>
+                        <th className="py-2.5 px-3.5">Allocated</th>
+                        <th className="py-2.5 px-3.5">Disbursed</th>
+                        <th className="py-2.5 px-3.5">Committed</th>
+                        <th className="py-2.5 px-3.5">Burn Rate</th>
+                        <th className="py-2.5 px-3.5 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EBE5DC]">
+                      {costCenters.map((center) => {
+                        const totalUtilized = center.spent + center.committed;
+                        const percent = Math.min(
+                          100,
+                          (totalUtilized / (center.allocated || 1)) * 100,
+                        );
+                        const variance = center.allocated - totalUtilized;
+                        const isOverBudget = variance < 0;
+
+                        return (
+                          <tr
+                            key={center.id}
+                            className="hover:bg-[#FAF6F0]/50 transition-colors"
+                          >
+                            <td className="py-3 px-3.5 font-bold text-[#3D291F]">
+                              {center.name}
+                            </td>
+                            <td className="py-3 px-3.5 whitespace-nowrap font-mono font-semibold text-[#3D291F]">
+                              {formatNaira(center.allocated)}{" "}
+                              <span className="text-[11px] font-normal text-[#7A685D]">
+                                (
+                                {formatPercent(
+                                  center.percentage !== undefined
+                                    ? center.percentage
+                                    : budgetCeiling > 0
+                                      ? (center.allocated / budgetCeiling) * 100
+                                      : 0,
+                                )}
+                                )
                               </span>
-                            </div>
-                            <div className="w-full bg-[#E5DDD3] rounded-full h-1.5 mt-1.5 overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all duration-300 ${
-                                  isOverBudget
-                                    ? "bg-[#BA3C2A]"
-                                    : percent > 85
-                                      ? "bg-[#D6A23A]"
-                                      : "bg-[#174C37]"
-                                } ${percentWidthClass(percent)}`}
-                              />
-                            </div>
-                          </td>
-                          <td className="py-3 px-3.5 text-right whitespace-nowrap">
-                            {isOverBudget ? (
-                              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
-                                {formatNaira(Math.abs(variance))} Deficit
-                              </span>
-                            ) : percent > 85 ? (
-                              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
-                                Near Cap (+{formatNaira(variance)})
-                              </span>
-                            ) : (
-                              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
-                                Healthy (+{formatNaira(variance)})
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </TableScroll>
+                            </td>
+                            <td className="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-[#BA3C2A]">
+                              {formatNaira(center.spent)}
+                            </td>
+                            <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#D6A23A]">
+                              {formatNaira(center.committed)}
+                            </td>
+                            <td className="py-3 px-3.5 whitespace-nowrap min-w-[140px]">
+                              <div className="flex items-baseline justify-between font-mono text-xs">
+                                <span className="font-semibold text-[#3D291F]">
+                                  {formatPercent(percent)}
+                                </span>
+                              </div>
+                              <div className="w-full bg-[#E5DDD3] rounded-full h-1.5 mt-1.5 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-300 ${
+                                    isOverBudget
+                                      ? "bg-[#BA3C2A]"
+                                      : percent > 85
+                                        ? "bg-[#D6A23A]"
+                                        : "bg-[#174C37]"
+                                  } ${percentWidthClass(percent)}`}
+                                />
+                              </div>
+                            </td>
+                            <td className="py-3 px-3.5 text-right whitespace-nowrap">
+                              {isOverBudget ? (
+                                <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
+                                  {formatNaira(Math.abs(variance))} Deficit
+                                </span>
+                              ) : percent > 85 ? (
+                                <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
+                                  Near Cap (+{formatNaira(variance)})
+                                </span>
+                              ) : (
+                                <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
+                                  Healthy (+{formatNaira(variance)})
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </TableScroll>
+              </div>
             </div>
           )}
         </div>

@@ -637,7 +637,7 @@ export function EventDashboardView({
       {/* Render Active Tab Component */}
       <div
         id={`event-finance-${activeTab}`}
-        className="scroll-target tab-panel-focus event-finance-panel space-y-6"
+        className="scroll-target tab-panel-focus event-finance-panel space-y-6 min-w-0 max-w-full overflow-hidden"
         tabIndex={-1}
       >
         {activeTab === "overview" && (
