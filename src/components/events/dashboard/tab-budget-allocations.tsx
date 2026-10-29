@@ -74,27 +74,26 @@ export function TabBudgetAllocations({
   ];
 
   return (
-    <section className="bg-white rounded-2xl border border-[#E5DDD3] p-6 shadow-xs space-y-6">
+    <section className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-6">
       {/* Chart Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
         <div>
           <div className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-[#174C37]" />
             <h3 className="text-lg font-bold text-[#3D291F]">
-              Budget Allocation & Financial Analytics
+              Budget & Analytics
             </h3>
           </div>
           <p className="text-xs text-[#7A685D] mt-1">
-            Visual distribution of approved capital allocations, revenue
-            diversification, and cash velocity.
+            Capital allocation, revenue mix, and cash velocity.
           </p>
         </div>
 
         {/* Header Controls: Budget Total, Categories button and Chart Switcher */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           {canManageCategories && onOpenBudgetCeilingModal && (
             <button
-              className="px-3.5 py-1.5 bg-[#174C37] text-white hover:bg-[#123B2B] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[36px] shadow-xs shrink-0 cursor-pointer"
+              className="px-3 py-1.5 bg-[#174C37] text-white hover:bg-[#123B2B] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[36px] shadow-xs shrink-0 cursor-pointer"
               id="btn-set-budget-total"
               onClick={onOpenBudgetCeilingModal}
               type="button"
@@ -115,7 +114,7 @@ export function TabBudgetAllocations({
 
           {canManageCategories && onManageCategories && (
             <button
-              className="px-3.5 py-1.5 bg-white text-[#174C37] border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[36px] shadow-xs shrink-0 cursor-pointer"
+              className="px-3 py-1.5 bg-white text-[#174C37] border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[36px] shadow-xs shrink-0 cursor-pointer"
               id="btn-manage-budget-categories"
               onClick={onManageCategories}
               type="button"
@@ -126,9 +125,9 @@ export function TabBudgetAllocations({
           )}
 
           {/* Chart View Switcher */}
-          <div className="flex items-center gap-1.5 p-1 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
+          <div className="flex items-center gap-1 p-1 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] max-w-full overflow-x-auto">
             <button
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors min-h-[36px] cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors min-h-[36px] cursor-pointer ${
                 activeChartTab === "allocation"
                   ? "bg-[#174C37] text-white shadow-xs font-semibold border-0"
                   : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
@@ -136,10 +135,10 @@ export function TabBudgetAllocations({
               onClick={() => setActiveChartTab("allocation")}
               type="button"
             >
-              Cost Center Spending
+              Spending
             </button>
             <button
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors min-h-[36px] cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors min-h-[36px] cursor-pointer ${
                 activeChartTab === "revenue_mix"
                   ? "bg-[#174C37] text-white shadow-xs font-semibold border-0"
                   : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
@@ -147,10 +146,10 @@ export function TabBudgetAllocations({
               onClick={() => setActiveChartTab("revenue_mix")}
               type="button"
             >
-              Revenue Composition
+              Revenue Mix
             </button>
             <button
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors min-h-[36px] cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors min-h-[36px] cursor-pointer ${
                 activeChartTab === "cash_velocity"
                   ? "bg-[#174C37] text-white shadow-xs font-semibold border-0"
                   : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
@@ -158,7 +157,7 @@ export function TabBudgetAllocations({
               onClick={() => setActiveChartTab("cash_velocity")}
               type="button"
             >
-              Cash Velocity Timeline
+              Cash Velocity
             </button>
           </div>
         </div>
@@ -192,21 +191,20 @@ export function TabBudgetAllocations({
               )}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-[#E5DDD3] p-5 sm:p-6 shadow-xs space-y-5">
+            <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
                 <div>
                   <h4 className="text-base font-bold text-[#3D291F]">
                     Capital Allocation & Burn Rate Matrix
                   </h4>
                   <p className="text-xs text-[#7A685D] mt-0.5">
-                    Authorized ceiling allocations, actual disbursements, and
-                    operational commitments.
+                    Approved ceilings, actual disbursements, and commitments.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3 w-full sm:w-auto">
                   <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
                     <span className="text-[11px] text-[#7A685D] block">
-                      Total Ceiling
+                      Ceiling
                     </span>
                     <span className="font-bold text-[#174C37] text-sm tabular-nums font-mono">
                       {formatNaira(budgetCeiling)}
@@ -214,7 +212,7 @@ export function TabBudgetAllocations({
                   </div>
                   <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
                     <span className="text-[11px] text-[#7A685D] block">
-                      Overall Burn Rate
+                      Burn Rate
                     </span>
                     <span className="font-bold text-[#3D291F] text-sm tabular-nums font-mono">
                       {formatPercent(
@@ -230,34 +228,20 @@ export function TabBudgetAllocations({
                       )}
                     </span>
                   </div>
-                  {canManageCategories && onOpenBudgetCeilingModal && (
-                    <button
-                      className="px-3.5 py-2 bg-white text-[#174C37] border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[40px] shadow-xs cursor-pointer"
-                      onClick={onOpenBudgetCeilingModal}
-                      type="button"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                      <span>
-                        {budgetCeiling > 0 ? "Edit Ceiling" : "Set Ceiling"}
-                      </span>
-                    </button>
-                  )}
                 </div>
               </div>
 
               {/* Matrix Table */}
               <TableScroll label="Budget allocations">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="w-full text-left text-xs border-collapse min-w-[580px]">
                   <thead>
                     <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
                       <th className="py-2.5 px-3.5">Cost Center</th>
-                      <th className="py-2.5 px-3.5">Allocated Ceiling</th>
-                      <th className="py-2.5 px-3.5">Disbursed Spend</th>
-                      <th className="py-2.5 px-3.5">Committed POs</th>
-                      <th className="py-2.5 px-3.5">Burn Rate Bar</th>
-                      <th className="py-2.5 px-3.5 text-right">
-                        Buffer Status
-                      </th>
+                      <th className="py-2.5 px-3.5">Allocated</th>
+                      <th className="py-2.5 px-3.5">Disbursed</th>
+                      <th className="py-2.5 px-3.5">Committed</th>
+                      <th className="py-2.5 px-3.5">Burn Rate</th>
+                      <th className="py-2.5 px-3.5 text-right">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#EBE5DC]">
@@ -385,12 +369,9 @@ export function TabBudgetAllocations({
             })}
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#5C4638]">
+          <div className="p-3.5 rounded-2xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#5C4638]">
             <p>
-              <strong>Revenue Composition Analysis: </strong>
-              Ticketing represents the core driver of club event finance,
-              supplemented by corporate brand sponsorships and on-site
-              concessions. All streams are audited weekly under club policy.
+              Audited weekly across ticketing, brand sponsors, and concessions.
             </p>
           </div>
         </div>
@@ -437,13 +418,10 @@ export function TabBudgetAllocations({
             ))}
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-[#E5DDD3] text-xs text-[#5C4638]">
+          <div className="p-3.5 rounded-2xl bg-white border border-[#E5DDD3] text-xs text-[#5C4638]">
             <p>
-              <strong>Treasury Velocity Note: </strong>
-              Cash outflows peak during initial venue lease and headline talent
-              deposit commitments (Weeks 1 & 2), and are swiftly balanced by
-              ticket settlement inflows and corporate partner disbursements
-              (Weeks 3 & 4).
+              Outflows peak in Weeks 1–2 (deposits); inflows balance in Weeks
+              3–4 (tickets & sponsors).
             </p>
           </div>
         </div>

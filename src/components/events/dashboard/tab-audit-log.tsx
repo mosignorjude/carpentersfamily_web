@@ -68,7 +68,7 @@ export function TabAuditLog({
       {/* Section 1: Transaction Ledger Journal */}
       <section
         aria-labelledby="ledger-heading"
-        className="bg-white rounded-2xl border border-[#E5DDD3] p-6 shadow-xs space-y-6"
+        className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-6"
       >
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
@@ -79,20 +79,11 @@ export function TabAuditLog({
                 className="text-lg font-bold text-[#3D291F]"
                 id="ledger-heading"
               >
-                <span className="hidden sm:inline">
-                  Financial Ledger & Transaction Journal
-                </span>
-                <span className="sm:hidden">Transaction Journal</span>
+                Transaction Journal
               </h3>
             </div>
             <p className="text-xs text-[#6B5D53] mt-1">
-              <span className="hidden sm:inline">
-                Complete verifiable record of all receipts, disbursements,
-                authorizations, and retained audit adjustments.
-              </span>
-              <span className="sm:hidden">
-                Verifiable receipts, disbursements & journal.
-              </span>
+              Verifiable record of receipts, disbursements, and audits.
             </p>
           </div>
 
@@ -100,11 +91,11 @@ export function TabAuditLog({
             <button
               className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 rounded-xl hover:bg-[#174C37] hover:text-white transition-colors min-h-[44px] cursor-pointer"
               onClick={() => downloadLedgerCSV(filteredTransactions)}
-              title="Download CSV export of currently visible ledger rows"
+              title="Download CSV export"
               type="button"
             >
               <Download className="w-4 h-4" />
-              <span>Download Ledger CSV</span>
+              <span>Export CSV</span>
             </button>
           </div>
         </div>
@@ -114,15 +105,10 @@ export function TabAuditLog({
           <div className="p-2.5 sm:p-3 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] text-xs text-[#5C4638] flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-[#174C37] shrink-0">
-                <span className="hidden sm:inline">Club Governance Rule:</span>
-                <span className="sm:hidden">Governance:</span>
+                Governance:
               </span>
-              <span className="hidden sm:inline">
-                Executive and Admin can record entries; only Admin can void
-                entries. Permanent deletion is prohibited under security policy.
-              </span>
-              <span className="sm:hidden text-[11px] text-[#6B5D53]">
-                Admin/Exec record · Admin voids · Immutable
+              <span className="text-[11px] sm:text-xs text-[#6B5D53]">
+                Admin & Exec record · Admin voids · Immutable audit trail
               </span>
             </div>
             <span className="text-[10px] sm:text-[11px] font-mono text-[#6B5D53] shrink-0">
@@ -132,7 +118,7 @@ export function TabAuditLog({
 
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
             {/* Segmented Filter Buttons */}
-            <div className="flex items-center gap-1.5 p-1 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-x-auto">
+            <div className="flex items-center gap-1.5 p-1 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] max-w-full overflow-x-auto min-w-0">
               <button
                 className={`px-3.5 py-1.5 text-xs font-medium rounded-xl whitespace-nowrap transition-colors min-h-[38px] cursor-pointer ${
                   filterType === "all"
@@ -142,7 +128,7 @@ export function TabAuditLog({
                 onClick={() => setFilterType("all")}
                 type="button"
               >
-                All Records ({transactions.length})
+                All ({transactions.length})
               </button>
               <button
                 className={`px-3.5 py-1.5 text-xs font-medium rounded-xl whitespace-nowrap transition-colors min-h-[38px] cursor-pointer ${
@@ -153,7 +139,7 @@ export function TabAuditLog({
                 onClick={() => setFilterType("revenue")}
                 type="button"
               >
-                Inflows / Revenue
+                Revenue
               </button>
               <button
                 className={`px-3.5 py-1.5 text-xs font-medium rounded-xl whitespace-nowrap transition-colors min-h-[38px] cursor-pointer ${
@@ -164,7 +150,7 @@ export function TabAuditLog({
                 onClick={() => setFilterType("expense")}
                 type="button"
               >
-                Outflows / Expenses
+                Expenses
               </button>
               <button
                 className={`px-3.5 py-1.5 text-xs font-medium rounded-xl whitespace-nowrap transition-colors min-h-[38px] cursor-pointer ${
@@ -175,14 +161,14 @@ export function TabAuditLog({
                 onClick={() => setFilterType("voided")}
                 type="button"
               >
-                Retained / Voided
+                Voided
               </button>
             </div>
 
             {/* Category Dropdown and Search */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
               <select
-                className="h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+                className="h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] w-full sm:w-auto"
                 onChange={(e) => setFilterCategory(e.target.value)}
                 value={filterCategory}
               >
@@ -194,12 +180,12 @@ export function TabAuditLog({
                 ))}
               </select>
 
-              <div className="relative min-w-[200px] flex-1">
+              <div className="relative flex-1 min-w-0">
                 <Search className="w-4 h-4 text-[#7A685D] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   className="w-full h-10 pl-9 pr-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#7A685D] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search reference, payee..."
+                  placeholder="Search..."
                   type="text"
                   value={searchQuery}
                 />
@@ -320,7 +306,7 @@ export function TabAuditLog({
                       </div>
 
                       {/* Footer: Receipt & Actions */}
-                      <div className="flex items-center justify-between pt-2.5 border-t border-[#F2ECE4] text-xs">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-[#F2ECE4] text-xs">
                         <div>
                           {txn.receiptFileName ? (
                             <button
@@ -383,11 +369,9 @@ export function TabAuditLog({
                   <thead className="bg-[#FAF6F0] text-[#7A685D] uppercase font-semibold border-b border-[#E5DDD3]">
                     <tr>
                       <th className="py-3 px-3.5">Ref / Date</th>
-                      <th className="py-3 px-3.5">
-                        Description & Counterparty
-                      </th>
+                      <th className="py-3 px-3.5">Description &amp; Party</th>
                       <th className="py-3 px-3.5">Category</th>
-                      <th className="py-3 px-3.5 text-right">Amount (NGN)</th>
+                      <th className="py-3 px-3.5 text-right">Amount</th>
                       <th className="py-3 px-3.5">Recorded/Auth by</th>
                       <th className="py-3 px-3.5 text-center">Receipt</th>
                       <th className="py-3 px-3.5 text-right">Action</th>
@@ -572,24 +556,24 @@ export function TabAuditLog({
       </section>
 
       {/* Section 2: Chronological System Activity Audit Trail */}
-      <section className="bg-white rounded-2xl border border-[#E5DDD3] p-6 space-y-4 text-xs">
-        <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD3]">
+      <section className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 space-y-4 text-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-[#E5DDD3]">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-[#174C37]/10 text-[#174C37] flex items-center justify-center">
               <Shield className="w-4 h-4 text-[#D6A23A]" />
             </div>
             <div>
               <h4 className="text-base font-bold text-[#3D291F]">
-                Chronological Officer Activity Audit Log
+                Officer Audit Trail
               </h4>
               <p className="text-xs text-[#7A685D]">
-                Immutable system audit trail verifying all officer operations.
+                Immutable log of officer operations.
               </p>
             </div>
           </div>
 
-          <span className="text-xs font-mono font-bold text-[#174C37] bg-[#FAF6F0] px-3 py-1 rounded-xl border border-[#E5DDD3]">
-            {activityLogs.length} Logged Audit Events
+          <span className="text-xs font-mono font-bold text-[#174C37] bg-[#FAF6F0] px-3 py-1 rounded-xl border border-[#E5DDD3] self-start sm:self-auto">
+            {activityLogs.length} Events
           </span>
         </div>
 

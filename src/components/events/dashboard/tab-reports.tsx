@@ -35,149 +35,144 @@ export function TabReports({
   return (
     <div className="space-y-6">
       {/* Top Actions Bar for Reports */}
-      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="text-[11px] font-bold uppercase tracking-wider text-[#174C37] block">
-            Executive Financial Reporting
+            Financial Report
           </span>
           <h3 className="text-xl font-bold text-[#3D291F]">
-            {event.title} — Statement of Comprehensive Income
+            {event.title} — Income Statement
           </h3>
           <p className="text-xs text-[#7A685D]">
-            Reconciled ledger balance for the Carpenters Family Social Club
-            executive committee.
+            Reconciled ledger balance statement.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="w-full sm:w-auto grid grid-cols-2 sm:flex items-center gap-2">
           <button
-            className="px-3.5 py-2 text-xs font-medium text-[#3D291F] bg-white border border-[#E5DDD3] rounded-xl hover:bg-[#FAF6F0] min-h-[40px] flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-3.5 py-2 text-xs font-medium text-[#3D291F] bg-white border border-[#E5DDD3] rounded-xl hover:bg-[#FAF6F0] min-h-[40px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             onClick={() => window.print()}
             type="button"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>Print Statement</span>
+            <span>Print</span>
           </button>
 
           <button
-            className="px-4 py-2 text-xs font-semibold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl min-h-[40px] flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+            className="px-4 py-2 text-xs font-semibold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl min-h-[40px] flex items-center justify-center gap-1.5 transition-colors shadow-xs cursor-pointer"
             onClick={() => downloadLedgerCSV(transactions)}
             type="button"
           >
             <Download className="w-3.5 h-3.5 text-[#D6A23A]" />
-            <span>Download CSV</span>
+            <span>Export CSV</span>
           </button>
         </div>
       </div>
 
       {/* Embedded Official Financial Statement */}
-      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-6 sm:p-8 space-y-6 text-xs text-[#3D291F]">
+      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 lg:p-8 space-y-6 text-xs text-[#3D291F]">
         {/* Letterhead */}
         <div className="border-b-2 border-[#174C37] pb-5 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
           <div>
             <span className="text-[11px] font-bold uppercase tracking-widest text-[#D6A23A] block">
-              Official Club Accounting Document
+              Accounting Statement
             </span>
             <h2 className="text-2xl font-bold text-[#0C3325] uppercase tracking-tight mt-0.5">
               Carpenters Family Social Club
             </h2>
             <p className="text-xs text-[#7A685D]">
-              Club Secretariat · Nnebisi Road, Asaba, Delta State, Nigeria ·
-              Est. 1988
+              Asaba, Delta State · Est. 1988
             </p>
           </div>
 
           <div className="text-left sm:text-right font-mono text-[11px] text-[#7A685D] space-y-0.5">
             <div>
-              Document Ref:{" "}
+              Ref:{" "}
               <strong>CFSC-{event.id.slice(0, 6).toUpperCase()}-FIN-01</strong>
             </div>
             <div>
-              Reporting Standard:{" "}
-              <strong>Reconciled Institutional Ledger</strong>
+              Standard: <strong>Reconciled Ledger</strong>
             </div>
             <div>
-              Audit Status:{" "}
-              <span className="text-[#174C37] font-bold">RECONCILED</span>
+              Status:{" "}
+              <span className="text-[#174C37] font-bold">Reconciled</span>
             </div>
           </div>
         </div>
 
         {/* P&L Executive Summary Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
-          <div>
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
+          <div className="min-w-0">
             <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
-              Gross Revenue
+              Revenue
             </span>
-            <span className="text-lg font-bold font-mono text-[#174C37] block mt-0.5">
+            <span className="text-lg font-bold font-mono text-[#174C37] block mt-0.5 tabular-nums">
               {formatNaira(totalRevenue)}
             </span>
-            <span className="text-[10px] text-[#7A685D]">
+            <span className="text-[10px] text-[#7A685D] block truncate">
               {budgetCeiling > 0
-                ? `${formatPercent((totalRevenue / safeBudget) * 100)} of ${formatNaira(budgetCeiling)} Target`
+                ? `${formatPercent((totalRevenue / safeBudget) * 100)} of Target`
                 : "Reconciled Inflows"}
             </span>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
-              Total Expenditures
+              Expenses
             </span>
-            <span className="text-lg font-bold font-mono text-[#BA3C2A] block mt-0.5">
+            <span className="text-lg font-bold font-mono text-[#BA3C2A] block mt-0.5 tabular-nums">
               {formatNaira(totalExpenses)}
             </span>
-            <span className="text-[10px] text-[#7A685D]">
+            <span className="text-[10px] text-[#7A685D] block truncate">
               {budgetCeiling > 0
-                ? `${formatPercent((totalExpenses / safeBudget) * 100)} of Budget Ceiling`
+                ? `${formatPercent((totalExpenses / safeBudget) * 100)} of Ceiling`
                 : "Reconciled Outflows"}
             </span>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
-              Net Operating Surplus
+              Net Surplus
             </span>
-            <span className="text-lg font-bold font-mono text-[#174C37] block mt-0.5">
+            <span className="text-lg font-bold font-mono text-[#174C37] block mt-0.5 tabular-nums">
               {formatNaira(netSurplus)}
             </span>
-            <span className="text-[10px] text-[#174C37] font-semibold">
-              {netSurplus >= 0 ? "Positive Cash Flow" : "Net Deficit"}
+            <span className="text-[10px] text-[#174C37] font-semibold block truncate">
+              {netSurplus >= 0 ? "Positive Flow" : "Net Deficit"}
             </span>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
-              Net Profit Margin
+              Profit Margin
             </span>
-            <span className="text-lg font-bold font-mono text-[#3D291F] block mt-0.5">
+            <span className="text-lg font-bold font-mono text-[#3D291F] block mt-0.5 tabular-nums">
               {totalRevenue > 0
                 ? formatPercent((netSurplus / totalRevenue) * 100)
                 : "0.0%"}
             </span>
-            <span className="text-[10px] text-[#7A685D]">
-              Post-tax / Non-profit
+            <span className="text-[10px] text-[#7A685D] block truncate">
+              Non-profit
             </span>
           </div>
         </div>
 
         {/* Statement of Revenues Table */}
         <div className="space-y-3">
-          <h4 className="text-sm font-bold text-[#0C3325] uppercase tracking-wider border-b border-[#E5DDD3] pb-1.5 flex items-center justify-between">
-            <span>
-              1. Statement of Event Revenues ({revenueStreams.length} Streams)
-            </span>
+          <h4 className="text-sm font-bold text-[#0C3325] uppercase tracking-wider border-b border-[#E5DDD3] pb-1.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+            <span>1. Revenues ({revenueStreams.length} Streams)</span>
             <span className="font-mono text-xs text-[#174C37] font-bold">
               {formatNaira(totalRevenue)}
             </span>
           </h4>
 
           <TableScroll label="Financial report">
-            <table className="w-full text-left">
+            <table className="w-full text-left min-w-[500px]">
               <thead>
                 <tr className="border-b border-[#E5DDD3] text-[10px] text-[#7A685D] uppercase tracking-wider">
-                  <th className="py-2">Revenue Category</th>
+                  <th className="py-2">Category</th>
                   <th className="py-2 text-right">Target (₦)</th>
-                  <th className="py-2 text-right">Actual Realized (₦)</th>
+                  <th className="py-2 text-right">Actual (₦)</th>
                   <th className="py-2 text-right">Variance</th>
                 </tr>
               </thead>
@@ -227,23 +222,20 @@ export function TabReports({
 
         {/* Statement of Expenses Table */}
         <div className="space-y-3 pt-2">
-          <h4 className="text-sm font-bold text-[#0C3325] uppercase tracking-wider border-b border-[#E5DDD3] pb-1.5 flex items-center justify-between">
-            <span>
-              2. Statement of Cost Center Disbursements ({costCenters.length}{" "}
-              Centers)
-            </span>
+          <h4 className="text-sm font-bold text-[#0C3325] uppercase tracking-wider border-b border-[#E5DDD3] pb-1.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+            <span>2. Disbursements ({costCenters.length} Centers)</span>
             <span className="font-mono text-xs text-[#BA3C2A] font-bold">
               {formatNaira(totalExpenses)}
             </span>
           </h4>
 
           <TableScroll label="Report summary">
-            <table className="w-full text-left">
+            <table className="w-full text-left min-w-[540px]">
               <thead>
                 <tr className="border-b border-[#E5DDD3] text-[10px] text-[#7A685D] uppercase tracking-wider">
                   <th className="py-2">Cost Center</th>
                   <th className="py-2 text-right">Allocated (₦)</th>
-                  <th className="py-2 text-right">Spent to Date (₦)</th>
+                  <th className="py-2 text-right">Spent (₦)</th>
                   <th className="py-2 text-right">Committed (₦)</th>
                   <th className="py-2 text-right">Remaining (₦)</th>
                 </tr>
@@ -298,24 +290,16 @@ export function TabReports({
         <div className="pt-6 border-t border-[#E5DDD3] space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-2 text-xs">
             <div className="border-t border-[#3D291F] pt-2">
-              <span className="font-bold text-[#3D291F] block">
-                Club Treasury
-              </span>
-              <span className="text-[#7A685D]">
-                Treasurer & Financial Secretary
-              </span>
+              <span className="font-bold text-[#3D291F] block">Treasury</span>
+              <span className="text-[#7A685D]">Treasurer</span>
               <span className="text-[10px] text-[#174C37] block mt-0.5 font-mono">
                 Sign-off: Verified
               </span>
             </div>
 
             <div className="border-t border-[#3D291F] pt-2">
-              <span className="font-bold text-[#3D291F] block">
-                Event Planning Lead
-              </span>
-              <span className="text-[#7A685D]">
-                Event Director · {event.title}
-              </span>
+              <span className="font-bold text-[#3D291F] block">Event Lead</span>
+              <span className="text-[#7A685D]">Event Director</span>
               <span className="text-[10px] text-[#174C37] block mt-0.5 font-mono">
                 Sign-off: Approved
               </span>
@@ -323,11 +307,11 @@ export function TabReports({
 
             <div className="border-t border-[#3D291F] pt-2">
               <span className="font-bold text-[#3D291F] block">
-                Internal Audit Committee
+                Audit Committee
               </span>
-              <span className="text-[#7A685D]">Club Audit & Compliance</span>
+              <span className="text-[#7A685D]">Compliance</span>
               <span className="text-[10px] text-[#174C37] block mt-0.5 font-mono">
-                Sign-off: Verified &amp; Compliant
+                Sign-off: Verified
               </span>
             </div>
           </div>
