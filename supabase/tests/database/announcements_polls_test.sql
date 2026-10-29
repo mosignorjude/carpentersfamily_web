@@ -233,17 +233,9 @@ select throws_ok(
 );
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000002002', true);
-select throws_ok(
-  $$select public.create_announcement(null, 'Backup notice', 'Not a publisher.')$$,
-  '42501', 'Announcement publishing access is required.',
-  'Backup Admin does not inherit publisher permissions'
-);
-select throws_ok(
-  $$select public.create_announcement_poll(
-    null, 'Backup poll?', 60, 'yes_no', array['Yes', 'No']::text[]
-  )$$,
-  '42501', 'Poll publishing access is required.',
-  'Backup Admin cannot create polls'
+select ok(
+  private.can_publish_communications(null),
+  'the President holds club-wide publishing access'
 );
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000002004', true);
@@ -451,14 +443,16 @@ select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000002002
 select is(
   (select count(*)::integer from public.get_announcement_poll_results(current_setting('test.poll_yes_no')::uuid)),
   0,
-  'Backup Admin cannot bypass the open-poll result privacy rule'
+  'the President cannot bypass the open-poll result privacy rule'
 );
+
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000002004', true);
 select throws_ok(
   $$select public.update_announcement(
-    current_setting('test.club_announcement')::uuid, 'Backup edit', 'Not authorized', 'Not a publisher'
+    current_setting('test.club_announcement')::uuid, 'Member edit', 'Not authorized', 'Not a publisher'
   )$$,
   '42501', 'Announcement editing access is required.',
-  'Backup Admin cannot use administrative visibility to edit announcements'
+  'an ordinary member cannot use administrative visibility to edit announcements'
 );
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000002008', true);

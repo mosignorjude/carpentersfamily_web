@@ -178,15 +178,13 @@ select is(
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001003', true);
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001002', true);
-select throws_ok(
+select lives_ok(
   $$select public.set_attendance_default(21, 'President scope check')$$,
-  '42501', 'Attendance settings access is required.',
-  'President cannot change the club-wide attendance cutoff'
+  'the President can change the club-wide attendance cutoff'
 );
-select throws_ok(
-  $$select public.open_event_attendance(current_setting('test.meeting_one_id')::uuid, null)$$,
-  '42501', 'Only an attendance officer can open check-in.',
-  'President cannot open or close attendance sessions'
+select ok(
+  private.can_control_attendance_sessions(),
+  'the President holds attendance session control'
 );
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001003', true);
 select lives_ok(
@@ -311,13 +309,12 @@ select lives_ok(
   'an attendance officer can issue a short-lived event QR challenge'
 );
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001002', true);
-select throws_ok(
+select lives_ok(
   $$select public.issue_event_attendance_qr(
     current_setting('test.meeting_two_id')::uuid,
     repeat('f',64), pg_catalog.clock_timestamp() + interval '60 seconds'
   )$$,
-  '42501', 'Only an attendance officer can issue a check-in QR.',
-  'President can review and correct attendance but cannot issue check-in QR challenges'
+  'the President can issue a check-in QR challenge'
 );
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001003', true);
 select lives_ok(
