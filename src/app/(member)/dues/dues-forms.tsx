@@ -107,9 +107,9 @@ export function DuesPaymentForm({
         </p>
       </label>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full min-w-0">
         <label
-          className="block text-xs font-bold text-[#54433A] space-y-1.5"
+          className="block text-xs font-bold text-[#54433A] space-y-1.5 w-full min-w-0 max-w-full"
           htmlFor="dues-payment-amount"
         >
           <span>Exact Payment Amount in Whole Naira (₦)</span>
@@ -122,11 +122,15 @@ export function DuesPaymentForm({
           />
         </label>
 
-        <label className="block text-xs font-bold text-[#54433A] space-y-1.5">
+        <label
+          className="block text-xs font-bold text-[#54433A] space-y-1.5 w-full min-w-0 max-w-full"
+          htmlFor="dues-payment-date"
+        >
           <span>Payment Date</span>
           <input
-            className="w-full max-w-full min-w-0 rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+            className="block w-full max-w-full min-w-0 rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden appearance-none"
             defaultValue={today}
+            id="dues-payment-date"
             max={today}
             name="payment_date"
             required
@@ -322,9 +326,9 @@ export function DuesPaymentCorrectionForm({
           </label>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full min-w-0">
           <label
-            className="block text-xs font-bold text-[#54433A] space-y-1"
+            className="block text-xs font-bold text-[#54433A] space-y-1 w-full min-w-0 max-w-full"
             htmlFor="dues-correct-amount"
           >
             <span>Corrected Amount in Whole Naira (₦)</span>
@@ -337,11 +341,15 @@ export function DuesPaymentCorrectionForm({
             />
           </label>
 
-          <label className="block text-xs font-bold text-[#54433A] space-y-1">
+          <label
+            className="block text-xs font-bold text-[#54433A] space-y-1 w-full min-w-0 max-w-full"
+            htmlFor="dues-correct-date"
+          >
             <span>Corrected Payment Date</span>
             <input
-              className="w-full max-w-full min-w-0 rounded-lg border border-[#E5DDD3] bg-white p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+              className="block w-full max-w-full min-w-0 rounded-lg border border-[#E5DDD3] bg-white p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden appearance-none"
               defaultValue={payment.payment_date}
+              id="dues-correct-date"
               name="payment_date"
               required
               type="date"
@@ -389,12 +397,16 @@ export function DuesRateForm({ nextMonth }: { nextMonth: string }) {
         }
       }}
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        <label className="block text-xs font-bold text-[#54433A] space-y-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full min-w-0">
+        <label
+          className="block text-xs font-bold text-[#54433A] space-y-1 w-full min-w-0 max-w-full"
+          htmlFor="dues-effective-month"
+        >
           <span>Effective Month (Next month only)</span>
           <input
-            className="w-full max-w-full min-w-0 rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] font-mono focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+            className="block w-full max-w-full min-w-0 rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] font-mono focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden appearance-none"
             defaultValue={nextMonth}
+            id="dues-effective-month"
             name="effective_month"
             required
             type="month"
@@ -402,7 +414,7 @@ export function DuesRateForm({ nextMonth }: { nextMonth: string }) {
         </label>
 
         <label
-          className="block text-xs font-bold text-[#54433A] space-y-1"
+          className="block text-xs font-bold text-[#54433A] space-y-1 w-full min-w-0 max-w-full"
           htmlFor="dues-monthly-amount"
         >
           <span>New Monthly Rate in Whole Naira (₦)</span>
