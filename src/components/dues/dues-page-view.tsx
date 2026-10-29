@@ -259,23 +259,6 @@ export function DuesPageView({
         </div>
       </section>
 
-      {/* Admin Exemption Dignified Notice (hidden on mobile to prevent duplication with top badge) */}
-      {isAdmin && (
-        <div className="hidden sm:flex p-4 rounded-xl bg-[#FAF6F0] border border-[#174C37]/30 items-center gap-3 text-xs text-[#174C37] font-medium shadow-2xs">
-          <ShieldCheck className="w-5 h-5 text-[#174C37] shrink-0" />
-          <div>
-            <strong className="font-bold block">
-              Club Administrator Exemption
-            </strong>
-            <span>
-              Club Administrators are exempt from statutory membership dues
-              obligations under club financial policy. No dues obligations
-              accrue for this account.
-            </span>
-          </div>
-        </div>
-      )}
-
       {invalidSelection && (
         <div className="p-4 rounded-xl bg-[#FFF9F8] border border-[#F5C2C2] text-xs font-bold text-[#BA3C2A] flex items-center gap-2 shadow-2xs">
           <AlertCircle className="w-4 h-4 text-[#BA3C2A] shrink-0" />
@@ -476,24 +459,42 @@ export function DuesPageView({
         </div>
       )}
 
-      {/* Dignified Club Footer */}
-      <footer className="pt-8 pb-6 border-t border-[#E5DDD3] text-xs text-[#54433A] flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>
-          <p className="font-bold text-[#3D291F]">
-            {clubBrand.name} — {clubBrand.location}, Nigeria
-          </p>
-          <p className="text-xs text-[#54433A] mt-1">
-            Private Members Portal · Nnebisi Road Secretariat · Est. 1988
-          </p>
-        </div>
+      {/* Dignified Club Footer & Policy */}
+      <footer className="pt-6 pb-6 border-t border-[#E5DDD3] space-y-4 text-xs text-[#54433A]">
+        {isAdmin && (
+          <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#174C37]/30 flex items-start gap-3 text-xs text-[#174C37] font-medium shadow-2xs">
+            <ShieldCheck className="w-5 h-5 text-[#174C37] shrink-0 mt-0.5" />
+            <div className="leading-relaxed">
+              <strong className="font-bold block text-[#3D291F]">
+                Club Administrator Exemption Policy
+              </strong>
+              <span>
+                Club Administrators are exempt from statutory membership dues
+                obligations under club financial policy. No dues obligations
+                accrue for this account.
+              </span>
+            </div>
+          </div>
+        )}
 
-        <div className="flex items-center gap-4 text-xs font-medium">
-          <Link
-            className="text-[#174C37] font-bold hover:underline"
-            href="/finances"
-          >
-            Club Finances
-          </Link>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
+          <div>
+            <p className="font-bold text-[#3D291F]">
+              {clubBrand.name} — {clubBrand.location}, Nigeria
+            </p>
+            <p className="text-xs text-[#54433A] mt-1">
+              Private Members Portal · Nnebisi Road Secretariat · Est. 1988
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 text-xs font-medium">
+            <Link
+              className="text-[#174C37] font-bold hover:underline"
+              href="/finances"
+            >
+              Club Finances
+            </Link>
+          </div>
         </div>
       </footer>
 

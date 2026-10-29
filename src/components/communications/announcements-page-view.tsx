@@ -79,9 +79,6 @@ export function AnnouncementsPageView({
         </span>
       </div>
 
-      {/* Privacy Banner */}
-      <CommunicationsPrivacyBanner view="announcements" />
-
       {/* Error or History Unavailable Banners */}
       {errorMessage && (
         <div
@@ -176,6 +173,11 @@ export function AnnouncementsPageView({
           ))}
         </div>
       )}
+
+      {/* Page Footer Policy */}
+      <footer className="pt-4 border-t border-[#E5DDD3]/75 space-y-4">
+        <CommunicationsPrivacyBanner view="announcements" />
+      </footer>
     </div>
   );
 }

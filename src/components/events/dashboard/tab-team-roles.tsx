@@ -85,22 +85,32 @@ export function TabTeamRoles({ event, team }: TabTeamRolesProps) {
           </div>
         )}
 
-        {/* Governance note */}
-        <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1.5 mt-2">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#174C37]" />
-            <span className="font-bold text-[#3D291F] text-xs">
-              Carpenters Family Social Club — Financial Governance Rules
+        {/* Financial Governance Footer Disclosure */}
+        <details className="p-3.5 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#7A685D] group mt-3">
+          <summary className="flex items-center justify-between cursor-pointer list-none select-none min-h-[32px]">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#174C37]" />
+              <span className="font-bold text-[#3D291F] text-xs">
+                Financial Governance Rules
+              </span>
+            </div>
+            <span className="text-[11px] font-semibold text-[#174C37] group-open:hidden shrink-0">
+              View Rules ▾
             </span>
+            <span className="text-[11px] font-semibold text-[#7A685D] hidden group-open:inline shrink-0">
+              Hide ▴
+            </span>
+          </summary>
+          <div className="mt-2.5 pt-2.5 border-t border-[#E5DDD3] text-xs text-[#7A685D] leading-relaxed animate-in fade-in duration-150">
+            <p>
+              All transactions above ₦500,000 require dual executive sign-off
+              from the Treasurer and Event Director. Ledger modifications are
+              strictly immutable: entries can only be voided with a stated
+              reason, retaining their chronological row position with
+              strike-through styling to guarantee audit integrity.
+            </p>
           </div>
-          <p className="text-xs text-[#7A685D] leading-relaxed">
-            All transactions above ₦500,000 require dual executive sign-off from
-            the Treasurer and Event Director. Ledger modifications are strictly
-            immutable: entries can only be voided with a stated reason,
-            retaining their chronological row position with strike-through
-            styling to guarantee audit integrity.
-          </p>
-        </div>
+        </details>
       </div>
     </div>
   );

@@ -232,21 +232,6 @@ export function FinancesPageView({
             </div>
           </div>
         </div>
-
-        {/* Privacy & Shared Ledger Mandate Banner (hidden on mobile, summarized inline above) */}
-        <div className="hidden sm:flex p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#5C4638] items-start gap-3">
-          <Shield className="w-4 h-4 text-[#174C37] shrink-0 mt-0.5" />
-          <div className="leading-relaxed">
-            <strong className="text-[#3D291F] font-bold">
-              Privacy & Shared Ledger Mandate:{" "}
-            </strong>
-            <span>
-              Members can review recorded club income and expenses, including
-              payer or payee details. Individual dues records stay private to
-              the member and authorized officers.
-            </span>
-          </div>
-        </div>
       </section>
 
       {roleError && (
@@ -341,24 +326,53 @@ export function FinancesPageView({
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="pt-8 pb-4 border-t border-[#E5DDD3] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#7A685D]">
-        <div>
-          <p className="font-bold text-[#3D291F]">
-            Carpenters Family Social Club — Asaba, Delta State, Nigeria
-          </p>
-          <p className="text-[11px] text-[#7A685D]">
-            Private Members Portal · Nnebisi Road Secretariat · Est. 1988
-          </p>
-        </div>
+      {/* Footer Policy & Credentials */}
+      <footer className="pt-6 pb-4 border-t border-[#E5DDD3] space-y-4 text-xs text-[#7A685D]">
+        <details className="bg-white rounded-xl border border-[#E5DDD3] p-3.5 sm:p-4 text-xs text-[#7A685D] shadow-2xs group">
+          <summary className="flex items-center justify-between cursor-pointer list-none select-none min-h-[36px]">
+            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] flex items-center justify-center text-[#174C37] shrink-0">
+                <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#174C37]" />
+              </div>
+              <span className="font-bold text-[#3D291F] truncate">
+                Privacy &amp; Shared Ledger Mandate
+              </span>
+            </div>
+            <span className="text-[11px] font-semibold text-[#174C37] group-open:hidden shrink-0">
+              View Policy ▾
+            </span>
+            <span className="text-[11px] font-semibold text-[#7A685D] hidden group-open:inline shrink-0">
+              Hide ▴
+            </span>
+          </summary>
+          <div className="mt-2.5 pt-2.5 border-t border-[#E5DDD3] space-y-1 animate-in fade-in duration-150 text-[#5C4638] leading-relaxed">
+            <p>
+              Members can review recorded club income and expenses, including
+              payer or payee details. Individual member dues records and
+              personal debt collections remain strictly private to the member
+              and authorized club officers.
+            </p>
+          </div>
+        </details>
 
-        <div className="flex items-center gap-4 text-xs font-medium">
-          <Link
-            className="text-[#174C37] font-bold hover:underline"
-            href="/dues"
-          >
-            Member Dues & Contributions
-          </Link>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+          <div>
+            <p className="font-bold text-[#3D291F]">
+              Carpenters Family Social Club — Asaba, Delta State, Nigeria
+            </p>
+            <p className="text-[11px] text-[#7A685D]">
+              Private Members Portal · Nnebisi Road Secretariat · Est. 1988
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 text-xs font-medium">
+            <Link
+              className="text-[#174C37] font-bold hover:underline"
+              href="/dues"
+            >
+              Member Dues &amp; Contributions
+            </Link>
+          </div>
         </div>
       </footer>
 

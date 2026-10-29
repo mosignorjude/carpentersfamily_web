@@ -190,24 +190,6 @@ export function EventCard({
         </div>
       </div>
 
-      {/* Governance Note for Completed, Cancelled, or Retained Archive */}
-      {isLocked && (
-        <div className="p-3.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#5C4638] space-y-1">
-          <div className="flex items-center gap-2 font-bold text-[#3D291F]">
-            <Lock className="w-3.5 h-3.5 text-[#7A685D] shrink-0" />
-            <span>Governance Note:</span>
-            <span className="font-normal text-[#5C4638]">
-              {statusConfig.desc}
-            </span>
-          </div>
-          {event.archived_at && (
-            <p className="text-[11px] text-[#7A685D] font-mono">
-              Archived at: {dateFormatter.format(new Date(event.archived_at))}
-            </p>
-          )}
-        </div>
-      )}
-
       {/* Enabled Features Summary Strip */}
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#7A685D] pt-1">
         <span className="font-bold text-[#3D291F]">Features:</span>
@@ -341,6 +323,13 @@ export function EventCard({
                 <p className="font-medium text-[#3D291F]">
                   Created {dateFormatter.format(new Date(event.created_at))}
                 </p>
+                {isLocked && (
+                  <p className="text-[11px] text-[#7A685D] mt-1">
+                    {statusConfig.desc}
+                    {event.archived_at &&
+                      ` · Archived: ${dateFormatter.format(new Date(event.archived_at))}`}
+                  </p>
+                )}
               </div>
             </div>
           </div>

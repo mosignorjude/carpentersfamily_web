@@ -61,9 +61,6 @@ export function PollsPageView({
         </span>
       </div>
 
-      {/* Privacy Banner */}
-      <CommunicationsPrivacyBanner view="polls" />
-
       {/* Live Refresh Component */}
       <PollLiveRefresh activePolls={openPolls.length > 0} />
 
@@ -184,6 +181,11 @@ export function PollsPageView({
           </section>
         </div>
       )}
+
+      {/* Page Footer Policy */}
+      <footer className="pt-4 border-t border-[#E5DDD3]/75 space-y-4">
+        <CommunicationsPrivacyBanner view="polls" />
+      </footer>
     </div>
   );
 }

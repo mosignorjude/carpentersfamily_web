@@ -266,20 +266,16 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
 
   return (
     <div className="space-y-8">
-      {/* 3. PAGE HEADER & PERMISSION GUIDE */}
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#3D291F] tracking-tight">
-            Member administration
-          </h1>
-          <p className="text-sm text-[#7A685D] mt-1 max-w-3xl">
-            Review incoming membership applications, maintain member account
-            statuses, assign club executive responsibilities, and staff
-            scheduled events.
-          </p>
-        </div>
-
-        <MemberAdminPermissionGuide />
+      {/* 3. PAGE HEADER */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#3D291F] tracking-tight">
+          Member administration
+        </h1>
+        <p className="text-sm text-[#7A685D] mt-1 max-w-3xl">
+          Review incoming membership applications, maintain member account
+          statuses, assign club executive responsibilities, and staff scheduled
+          events.
+        </p>
       </div>
 
       {/* 4. SECTION 1: MEMBERSHIP REQUESTS */}
@@ -346,7 +342,12 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
         <MemberAdminAuditSection auditLog={auditLog} />
       </div>
 
-      {/* 8. MODAL DIALOGS */}
+      {/* 8. GOVERNANCE & PERMISSION RULES (PAGE FOOTER) */}
+      <footer className="pt-4 border-t border-[#E5DDD3]/75 space-y-4">
+        <MemberAdminPermissionGuide />
+      </footer>
+
+      {/* 9. MODAL DIALOGS */}
       <MemberAdminModals
         activeModal={activeModal}
         isPending={isPending}
