@@ -125,7 +125,7 @@ export function DuesPaymentForm({
         <label className="block text-xs font-bold text-[#54433A] space-y-1.5">
           <span>Payment Date</span>
           <input
-            className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+            className="w-full max-w-full min-w-0 rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
             defaultValue={today}
             max={today}
             name="payment_date"
@@ -277,7 +277,7 @@ export function DuesPaymentCorrectionForm({
 
       <form
         action={correctDuesPaymentAction}
-        className="p-4 border-t border-[#E5DDD3] bg-[#FAF6F0] space-y-3.5"
+        className="mt-3 pt-3 border-t border-[#E5DDD3] space-y-3.5"
         onSubmit={(event) => {
           if (
             !window.confirm(
@@ -340,7 +340,7 @@ export function DuesPaymentCorrectionForm({
           <label className="block text-xs font-bold text-[#54433A] space-y-1">
             <span>Corrected Payment Date</span>
             <input
-              className="w-full rounded-lg border border-[#E5DDD3] bg-white p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+              className="w-full max-w-full min-w-0 rounded-lg border border-[#E5DDD3] bg-white p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
               defaultValue={payment.payment_date}
               name="payment_date"
               required
@@ -393,7 +393,7 @@ export function DuesRateForm({ nextMonth }: { nextMonth: string }) {
         <label className="block text-xs font-bold text-[#54433A] space-y-1">
           <span>Effective Month (Next month only)</span>
           <input
-            className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] font-mono focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
+            className="w-full max-w-full min-w-0 rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] font-mono focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
             defaultValue={nextMonth}
             name="effective_month"
             required

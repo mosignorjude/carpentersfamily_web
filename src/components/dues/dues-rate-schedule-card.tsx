@@ -103,20 +103,22 @@ export function DuesRateScheduleCard({
 
         {/* Change Next Month's Rate Section (Admin only) */}
         {canChangeRate && (
-          <div className="p-4 sm:p-5 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] space-y-3">
+          <div className="space-y-3 pt-4 border-t border-[#E5DDD3]">
             <div className="flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-[#D6A23A]" />
               <h3 className="text-sm font-bold text-[#3D291F]">
                 Schedule Next Month&apos;s Dues Rate
               </h3>
             </div>
-            <p className="text-xs text-[#54433A] leading-relaxed">
-              Only Club Administrators or Backup Administrators can schedule a
-              rate change. Effective rates for past months cannot be modified;
-              any already-paid future months preserve their recorded receipt
-              value.
-            </p>
-            <div className="pt-2">
+            <div className="flex items-start gap-2.5 bg-[#FAF6F0] p-3 rounded-xl border border-[#E5DDD3] text-xs text-[#54433A]">
+              <p className="leading-relaxed">
+                Only Club Administrators or Backup Administrators can schedule a
+                rate change. Effective rates for past months cannot be modified;
+                any already-paid future months preserve their recorded receipt
+                value.
+              </p>
+            </div>
+            <div className="pt-1">
               <DuesRateForm nextMonth={nextMonth} />
             </div>
           </div>

@@ -77,6 +77,19 @@
   box-sizing: border-box;
 }
 
+input[type="date"],
+input[type="month"] {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+input[type="date"]::-webkit-date-and-time-value,
+input[type="month"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
 :root {
   color-scheme: light;
 

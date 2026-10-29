@@ -60,6 +60,10 @@ const payModal = readFileSync(
   new URL("../src/components/dues/pay-dues-modal.tsx", import.meta.url),
   "utf8"
 );
+const globalsCss = readFileSync(
+  new URL("../src/app/globals.css", import.meta.url),
+  "utf8"
+);
 
 describe("Mobile Dues Form Alignment & Width Unification", () => {
   it("flattens nested form containers in dues-forms.tsx to eliminate squeezed form widths", () => {
@@ -82,6 +86,20 @@ describe("Mobile Dues Form Alignment & Width Unification", () => {
       duesForms,
       /action=\{setDuesRateAction\}[\s\S]*?className="[^"]*p-4\s+rounded-xl\s+border/,
       "DuesRateForm must not have redundant nested card padding and border"
+    );
+
+    // DuesRateScheduleCard rate change container must not have nested p-4 sm:p-5 pinching form width
+    assert.doesNotMatch(
+      ratesCard,
+      /canChangeRate\s*&&[\s\S]*?<div\s+className="p-4\s+sm:p-5\s+rounded-xl\s+border/,
+      "DuesRateScheduleCard rate change container must not have nested padding pinching form width"
+    );
+
+    // DuesPaymentCorrectionForm must not have nested p-4 padding
+    assert.doesNotMatch(
+      duesForms,
+      /action=\{correctDuesPaymentAction\}[\s\S]*?className="[^"]*p-4\s+border-t/,
+      "DuesPaymentCorrectionForm must not have nested p-4 padding"
     );
   });
 
@@ -164,6 +182,36 @@ describe("Mobile Dues Form Alignment & Width Unification", () => {
       payModal,
       /flex-col-reverse\s+sm:flex-row/,
       "Pay dues modal footer must stack buttons on mobile"
+    );
+  });
+
+  it("unifies date and month input width constraints across dues forms and global styles", () => {
+    // DuesPaymentForm payment_date input
+    assert.match(
+      duesForms,
+      /className="[^"]*w-full\s+max-w-full\s+min-w-0[^"]*"[\s\S]*?name="payment_date"[\s\S]*?type="date"/,
+      "DuesPaymentForm payment_date input must enforce max-w-full min-w-0"
+    );
+
+    // DuesRateForm effective_month input
+    assert.match(
+      duesForms,
+      /className="[^"]*w-full\s+max-w-full\s+min-w-0[^"]*"[\s\S]*?name="effective_month"[\s\S]*?type="month"/,
+      "DuesRateForm effective_month input must enforce max-w-full min-w-0"
+    );
+
+    // DuesPaymentCorrectionForm payment_date input
+    assert.match(
+      duesForms,
+      /className="[^"]*w-full\s+max-w-full\s+min-w-0[^"]*"[\s\S]*?defaultValue=\{payment\.payment_date\}[\s\S]*?name="payment_date"/,
+      "DuesPaymentCorrectionForm payment_date input must enforce max-w-full min-w-0"
+    );
+
+    // globals.css bounding rules for date and month inputs
+    assert.match(
+      globalsCss,
+      /input\[type="date"\],\s*input\[type="month"\]\s*\{[\s\S]*?max-width:\s*100%;[\s\S]*?min-width:\s*0;/,
+      "globals.css must bound date and month inputs to 100% max-width and min-width 0"
     );
   });
 });
