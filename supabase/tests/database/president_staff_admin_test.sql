@@ -38,6 +38,12 @@ select has_function(
   'the staff predicate exists'
 );
 
+select has_trigger(
+  'public', 'member_profiles',
+  'member_profiles_preserve_last_active_staff',
+  'the last active staff administrator is protected'
+);
+
 select has_function(
   'public', 'staff_approve_member', array['uuid', 'text'],
   'the staff approve RPC exists'
@@ -172,7 +178,6 @@ where id between '00000000-0000-0000-0000-000000000001'::uuid
 
 insert into public.member_role_assignments (member_id, role, assigned_by, grant_reason) values
   ('00000000-0000-0000-0000-000000000001', 'admin', '00000000-0000-0000-0000-000000000001', 'Initial test administrator'),
-  ('00000000-0000-0000-0000-000000000002', 'president', '00000000-0000-0000-0000-000000000001', 'Initial test president'),
   ('00000000-0000-0000-0000-000000000003', 'executive', '00000000-0000-0000-0000-000000000001', 'Initial test executive');
 
 select set_config('app.notification_insert_write', 'on', true);
@@ -199,16 +204,6 @@ select throws_ok(
   'staff cannot be given a club role by direct insert'
 );
 
-select throws_ok(
-  $$insert into public.member_role_assignments
-      (member_id, role, assigned_by, grant_reason)
-    values ('00000000-0000-0000-0000-000000000003', 'president',
-            '00000000-0000-0000-0000-000000000001', 'Second president attempt')$$,
-  '23505',
-  'duplicate key value violates unique constraint "member_role_assignments_one_current_president_uidx"',
-  'only one current president is allowed'
-);
-
 -- Staff isolation as seen by the staff session.
 set local role authenticated;
 select set_config('request.jwt.claim.sub',
@@ -230,9 +225,11 @@ select is(
   'staff hold no club role'
 );
 select is(
-  (select count(*) from public.member_profiles),
+  (select count(*) from public.member_profiles
+   where id between '00000000-0000-0000-0000-000000000001'::uuid
+                and '00000000-0000-0000-0000-000000000008'::uuid),
   8::bigint,
-  'staff can read the full member directory including disabled staff'
+  'staff can read every fixture profile including pending and disabled staff'
 );
 select is(
   (select count(*) from public.notifications),
@@ -246,6 +243,27 @@ select throws_ok(
   'permission denied for table member_profiles',
   'staff cannot update profiles directly'
 );
+
+-- President fixture is inserted after the staff block so the staff
+-- assertions run even before the president role exists.
+reset role;
+insert into public.member_role_assignments (member_id, role, assigned_by, grant_reason)
+values ('00000000-0000-0000-0000-000000000002', 'president',
+        '00000000-0000-0000-0000-000000000001', 'Initial test president');
+
+select throws_ok(
+  $$insert into public.member_role_assignments
+      (member_id, role, assigned_by, grant_reason)
+    values ('00000000-0000-0000-0000-000000000003', 'president',
+            '00000000-0000-0000-0000-000000000001', 'Second president attempt')$$,
+  '23505',
+  'duplicate key value violates unique constraint "member_role_assignments_one_current_president_uidx"',
+  'only one current president is allowed'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub',
+                  '00000000-0000-0000-0000-000000000006', true);
 
 select throws_ok(
   $$select public.staff_set_disabled('00000000-0000-0000-0000-000000000006', true, 'Self-disable')$$,
