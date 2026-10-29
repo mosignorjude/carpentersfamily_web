@@ -65,6 +65,12 @@
   --color-terracotta: #ba3c2a;
   --color-muted: #7a685d;
   --color-body: #5c4638;
+
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 56rem;
+  --breakpoint-xl: 64rem;
+  --breakpoint-2xl: 80rem;
 }
 
 * {
@@ -3959,6 +3965,7 @@ textarea:focus-visible {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.65rem 1.5rem;
+  padding-top: max(0.65rem, env(safe-area-inset-top, 0.65rem));
   background: rgb(247 246 242 / 97%);
   /* No backdrop-filter here, deliberately: the mobile menu's scrim and panel are
      position:fixed descendants of this header, and a non-none backdrop-filter would
@@ -3976,7 +3983,21 @@ textarea:focus-visible {
 @media (max-width: 48rem) {
   .app-sticky-header {
     padding: 0.5rem 0.85rem;
-    min-height: 3.5rem;
+    padding-top: max(0.5rem, env(safe-area-inset-top, 0.5rem));
+    min-height: calc(3.5rem + env(safe-area-inset-top, 0px));
+  }
+}
+
+/* Mobile input safety: Prevent iOS auto-zoom on focus and guarantee 44px touch targets.
+   Safari automatically zooms and pans the page whenever any form field font-size is < 16px.
+   Enforcing 16px on mobile viewports eliminates this zoom without affecting desktop layout. */
+@media (max-width: 48rem) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    /* biome-ignore lint/complexity/noImportantStyles: Safari auto-zoom prevention requires overriding utility classes */
+    font-size: 16px !important;
+    min-height: 44px;
   }
 }
 

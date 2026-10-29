@@ -85,11 +85,11 @@ export function EventEditModal({
     <div
       aria-labelledby="event-edit-title"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0C3325]/75 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex sm:items-center items-end justify-center p-0 sm:p-4 bg-[#0C3325]/75 backdrop-blur-xs"
       ref={dialogRef}
       role="dialog"
     >
-      <div className="bg-white rounded-2xl border border-[#E5DDD3] w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-[#E5DDD3] w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">

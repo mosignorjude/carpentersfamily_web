@@ -150,16 +150,16 @@ export function DuesPageView({
       {/* Main Dues Hero Banner */}
       <section
         aria-labelledby="dues-hero-heading"
-        className="bg-white rounded-2xl border border-[#E5DDD3] p-6 sm:p-8 shadow-xs"
+        className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-8 shadow-xs"
       >
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
+          <div className="space-y-2 sm:space-y-3">
             <div className="flex items-center gap-2 text-xs font-bold text-[#174C37] uppercase tracking-wider">
               <span>Club Treasury</span>
             </div>
 
             <h1
-              className="text-2xl sm:text-3xl font-extrabold text-[#3D291F] tracking-tight"
+              className="text-xl sm:text-3xl font-extrabold text-[#3D291F] tracking-tight"
               id="dues-hero-heading"
             >
               {member.id === targetMemberId && !isOfficer
@@ -167,7 +167,7 @@ export function DuesPageView({
                 : `Member Dues: ${member.full_name}`}
             </h1>
 
-            <p className="text-xs sm:text-sm text-[#443A33] max-w-2xl leading-relaxed font-normal">
+            <p className="hidden sm:block text-xs sm:text-sm text-[#443A33] max-w-2xl leading-relaxed font-normal">
               Statutory monthly contributions supporting club governance, member
               welfare, benevolent grants, and official gatherings.
             </p>
@@ -179,7 +179,7 @@ export function DuesPageView({
                 <strong className="text-[#3D291F] font-bold">
                   {member.full_name}
                 </strong>{" "}
-                <span className="text-[#7A685D]">(@{member.username})</span>
+                <span className="text-[#6B5D53]">(@{member.username})</span>
               </div>
               <span aria-hidden="true" className="text-[#B8ACA0]">
                 ·

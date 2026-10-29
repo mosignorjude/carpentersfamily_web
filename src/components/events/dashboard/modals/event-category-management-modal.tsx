@@ -203,7 +203,7 @@ export function EventCategoryManagementModal({
     <div
       aria-labelledby="category-modal-title"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3D291F]/40 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex sm:items-center items-end justify-center p-0 sm:p-4 bg-[#3D291F]/40 backdrop-blur-xs animate-in fade-in duration-150"
       role="dialog"
     >
       <button
@@ -213,7 +213,7 @@ export function EventCategoryManagementModal({
         type="button"
       />
 
-      <div className="relative bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden z-10 animate-in zoom-in-95 duration-150">
+      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl border border-[#E5DDD3] shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden z-10 animate-in zoom-in-95 duration-150">
         {/* Modal Header */}
         <div className="flex items-center justify-between p-5 border-b border-[#E5DDD3] bg-[#FAF6F0]">
           <div>

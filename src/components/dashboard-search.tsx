@@ -14,10 +14,14 @@ export default function DashboardSearch({
   announcements,
   events,
   navigation,
+  id = "dashboard-search-input",
+  autoFocus = false,
 }: {
   announcements: { id: string; title: string }[];
   events: { id: string; title: string }[];
   navigation: { href: string; label: string }[];
+  id?: string;
+  autoFocus?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -70,12 +74,14 @@ export default function DashboardSearch({
   return (
     <div className="dashboard-search" ref={containerRef}>
       <ClubIcon className="dashboard-search-icon" name="search" />
-      <label className="visually-hidden" htmlFor="dashboard-search-input">
+      <label className="visually-hidden" htmlFor={id}>
         Search pages, events, announcements, and polls
       </label>
       <input
         autoComplete="off"
-        id="dashboard-search-input"
+        // biome-ignore lint/a11y/noAutofocus: Autofocus is intentionally opt-in for user-toggled mobile search drawer
+        autoFocus={autoFocus}
+        id={id}
         onChange={(event) => {
           setQuery(event.target.value);
           setIsOpen(true);

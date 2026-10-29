@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, ShieldCheck } from "lucide-react";
+import { Bell, Search, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { signOutAction } from "@/app/actions";
@@ -48,6 +48,7 @@ export default function AppHeader({
   userProfile,
 }: AppHeaderProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [notifications, setNotifications] =
     useState<AppNotification[]>(initialNotifications);
@@ -267,12 +268,25 @@ export default function AppHeader({
           />
         </div>
 
-        {/* Right Side: Security Badge and Notification Bell */}
+        {/* Right Side: Security Badge, Mobile Search, and Notification Bell */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div className="hidden xl:flex items-center gap-1.5 text-xs font-semibold text-[#174C37] bg-white/75 px-3 py-1.5 rounded-lg border border-[#E5DDD3] shadow-2xs">
             <ShieldCheck className="w-3.5 h-3.5 text-[#174C37]" />
             <span>Private Portal</span>
           </div>
+
+          {/* Mobile Search Toggle Button */}
+          <button
+            aria-expanded={isMobileSearchOpen}
+            aria-label={
+              isMobileSearchOpen ? "Close search bar" : "Open search bar"
+            }
+            className="md:hidden relative p-2.5 text-[#3D291F] hover:text-[#174C37] hover:bg-white border border-[#E5DDD3] rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center transition-all bg-white/75 shadow-2xs cursor-pointer focus-visible:outline-2 focus-visible:outline-[#174C37]"
+            onClick={() => setIsMobileSearchOpen((prev) => !prev)}
+            type="button"
+          >
+            <Search className="w-4 h-4 text-[#3D291F]" />
+          </button>
 
           {/* Interactive Fixed Notification Bell Button */}
           <button
@@ -296,6 +310,22 @@ export default function AppHeader({
           {userProfile && <UserProfileBadge user={userProfile} />}
         </div>
       </header>
+
+      {/* Mobile Search Bar Dropdown */}
+      {isMobileSearchOpen && (
+        <search
+          aria-label="Mobile site search"
+          className="md:hidden sticky top-[calc(3.5rem+env(safe-area-inset-top,0px))] z-30 px-3 py-2 bg-[#FAF6F0] border-b border-[#E5DDD3] shadow-xs"
+        >
+          <DashboardSearch
+            announcements={searchData?.announcements ?? []}
+            autoFocus
+            events={searchData?.events ?? []}
+            id="dashboard-search-input-mobile"
+            navigation={memberNavigationItems}
+          />
+        </search>
+      )}
 
       {/* Slide-over Notification Drawer */}
       <NotificationsDrawer

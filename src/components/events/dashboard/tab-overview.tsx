@@ -128,38 +128,37 @@ export function TabOverview({
         </div>
       </div>
 
-      {/* 4-Metric Financial Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* 4-Metric Financial Overview Cards: 2x2 grid on mobile, 4-col on desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-4">
         {/* 1. Ticket Sales (Prominently Featured) */}
-        <div className="bg-white rounded-2xl border-2 border-[#174C37] p-5 shadow-xs relative overflow-hidden">
-          <div className="absolute top-0 right-0 bg-[#174C37] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-bl-lg">
+        <div className="bg-white rounded-2xl border-2 border-[#174C37] p-3.5 sm:p-5 shadow-xs relative overflow-hidden">
+          <div className="absolute top-0 right-0 bg-[#174C37] text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-bl-lg">
             Core Driver
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#174C37] uppercase tracking-wide">
-              Ticket Sales Revenue
+            <span className="text-[11px] sm:text-xs font-semibold text-[#174C37] uppercase tracking-wide truncate max-w-[110px] sm:max-w-none">
+              Ticket Sales
             </span>
-            <div className="w-8 h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#174C37]">
-              <Ticket className="w-4 h-4 text-[#D6A23A]" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#174C37] shrink-0">
+              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D6A23A]" />
             </div>
           </div>
 
-          <div className="mt-3">
-            <div className="text-2xl sm:text-3xl font-bold text-[#3D291F] tabular-nums font-mono">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-lg sm:text-3xl font-bold text-[#3D291F] tabular-nums font-mono truncate">
               {formatNaira(totalTicketRevenue)}
             </div>
-            <p className="text-xs text-[#7A685D] mt-1">
+            <p className="text-[11px] sm:text-xs text-[#6B5D53] mt-0.5 sm:mt-1 truncate">
               <span className="font-semibold text-[#174C37] tabular-nums">
                 {totalTicketsSold}
               </span>{" "}
-              of {totalTicketsCapacity} passes sold across {ticketTiers.length}{" "}
-              tier{ticketTiers.length === 1 ? "" : "s"}
+              of {totalTicketsCapacity} sold
             </p>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#E5DDD3] flex items-center justify-between text-xs">
-            <span className="text-[#7A685D]">Share of Gross Revenue</span>
+          <div className="hidden sm:flex mt-4 pt-3 border-t border-[#E5DDD3] items-center justify-between text-xs">
+            <span className="text-[#6B5D53]">Share of Gross Revenue</span>
             <span className="font-semibold text-[#174C37] tabular-nums font-mono">
               {formatPercent(ticketPercentageOfRevenue)}
             </span>
@@ -167,32 +166,32 @@ export function TabOverview({
         </div>
 
         {/* 2. Total Gross Revenue */}
-        <div className="bg-white rounded-2xl border border-[#E5DDD3] p-5 shadow-xs">
+        <div className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-5 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#7A685D] uppercase tracking-wide">
-              Total Realized Revenue
+            <span className="text-[11px] sm:text-xs font-semibold text-[#6B5D53] uppercase tracking-wide truncate max-w-[110px] sm:max-w-none">
+              Realized Revenue
             </span>
-            <div className="w-8 h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#174C37]">
-              <TrendingUp className="w-4 h-4" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#174C37] shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
 
-          <div className="mt-3">
-            <div className="text-2xl sm:text-3xl font-bold text-[#3D291F] tabular-nums font-mono">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-lg sm:text-3xl font-bold text-[#3D291F] tabular-nums font-mono truncate">
               {formatNaira(totalRevenue)}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-[#174C37] mt-1 font-medium">
-              <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>
+            <div className="flex items-center gap-1 text-[11px] sm:text-xs text-[#174C37] mt-0.5 sm:mt-1 font-medium truncate">
+              <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">
                 {budgetCeiling > 0
-                  ? `${formatPercent(revenueAgainstBudget)} of ${formatNaira(budgetCeiling)} target`
-                  : "Reconciled inflows"}
+                  ? `${formatPercent(revenueAgainstBudget)} of target`
+                  : "Inflows reconciled"}
               </span>
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#E5DDD3] flex items-center justify-between text-xs">
-            <span className="text-[#7A685D]">Active Inflow Streams</span>
+          <div className="hidden sm:flex mt-4 pt-3 border-t border-[#E5DDD3] items-center justify-between text-xs">
+            <span className="text-[#6B5D53]">Active Inflow Streams</span>
             <span className="font-semibold text-[#3D291F]">
               100% Reconciled
             </span>
@@ -200,34 +199,32 @@ export function TabOverview({
         </div>
 
         {/* 3. Total Expenses */}
-        <div className="bg-white rounded-2xl border border-[#E5DDD3] p-5 shadow-xs">
+        <div className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-5 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#7A685D] uppercase tracking-wide">
-              Total Incurred Expenses
+            <span className="text-[11px] sm:text-xs font-semibold text-[#6B5D53] uppercase tracking-wide truncate max-w-[110px] sm:max-w-none">
+              Total Expenses
             </span>
-            <div className="w-8 h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#BA3C2A]">
-              <Wallet className="w-4 h-4" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#BA3C2A] shrink-0">
+              <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
 
-          <div className="mt-3">
-            <div className="text-2xl sm:text-3xl font-bold text-[#3D291F] tabular-nums font-mono">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-lg sm:text-3xl font-bold text-[#3D291F] tabular-nums font-mono truncate">
               {formatNaira(totalExpenses)}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-[#7A685D] mt-1">
+            <div className="flex items-center gap-1 text-[11px] sm:text-xs text-[#6B5D53] mt-0.5 sm:mt-1 truncate">
               <span className="text-[#BA3C2A] font-semibold tabular-nums">
                 {formatPercent(budgetUtilization)}
               </span>
-              <span>
-                {budgetCeiling > 0
-                  ? `of ${formatNaira(budgetCeiling)} disbursed`
-                  : "disbursed to date"}
+              <span className="truncate">
+                {budgetCeiling > 0 ? "of ceiling" : "disbursed"}
               </span>
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#E5DDD3] flex items-center justify-between text-xs">
-            <span className="text-[#7A685D]">Committed POs</span>
+          <div className="hidden sm:flex mt-4 pt-3 border-t border-[#E5DDD3] items-center justify-between text-xs">
+            <span className="text-[#6B5D53]">Committed POs</span>
             <span className="font-semibold text-[#3D291F] tabular-nums font-mono">
               {formatNaira(committedExpenses)}
             </span>
@@ -235,23 +232,23 @@ export function TabOverview({
         </div>
 
         {/* 4. Net Operating Margin / Remaining Buffer */}
-        <div className="bg-[#0C3325] text-white rounded-2xl border border-[#174C37] p-5 shadow-xs">
+        <div className="bg-[#0C3325] text-white rounded-2xl border border-[#174C37] p-3.5 sm:p-5 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#D6A23A] uppercase tracking-wide">
-              Net Surplus & Remaining Buffer
+            <span className="text-[11px] sm:text-xs font-semibold text-[#D6A23A] uppercase tracking-wide truncate max-w-[110px] sm:max-w-none">
+              Net Surplus
             </span>
-            <div className="w-8 h-8 rounded-lg bg-[#174C37] flex items-center justify-center text-[#D6A23A]">
-              <PiggyBank className="w-4 h-4" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#174C37] flex items-center justify-center text-[#D6A23A] shrink-0">
+              <PiggyBank className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
 
-          <div className="mt-3">
-            <div className="text-2xl sm:text-3xl font-bold text-white tabular-nums font-mono">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-lg sm:text-3xl font-bold text-white tabular-nums font-mono truncate">
               {formatNaira(netSurplus)}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-[#D6A23A] mt-1 font-medium">
-              <span>
-                Operating Margin:{" "}
+            <div className="flex items-center gap-1 text-[11px] sm:text-xs text-[#D6A23A] mt-0.5 sm:mt-1 font-medium truncate">
+              <span className="truncate">
+                Margin:{" "}
                 {totalRevenue > 0
                   ? `${netSurplus >= 0 ? "+" : ""}${formatPercent((netSurplus / totalRevenue) * 100)}`
                   : "0.0%"}
@@ -259,7 +256,7 @@ export function TabOverview({
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#174C37] flex items-center justify-between text-xs text-[#E5DDD3]">
+          <div className="hidden sm:flex mt-4 pt-3 border-t border-[#174C37] items-center justify-between text-xs text-[#E5DDD3]">
             <span>Uncommitted Buffer</span>
             <span className="font-semibold text-white tabular-nums font-mono">
               {formatNaira(remainingBudget)}

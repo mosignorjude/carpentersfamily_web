@@ -378,7 +378,7 @@ export function RecordTransactionModal({
     <div
       aria-labelledby="record-modal-title"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0C3325]/75 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex sm:items-center items-end justify-center p-0 sm:p-4 bg-[#0C3325]/75 backdrop-blur-xs animate-in fade-in duration-150"
       role="dialog"
     >
       <button
@@ -387,7 +387,7 @@ export function RecordTransactionModal({
         onClick={onClose}
         type="button"
       />
-      <div className="relative z-10 bg-white rounded-2xl border border-[#E5DDD3] w-full max-w-xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="relative z-10 bg-white rounded-t-2xl sm:rounded-2xl border border-[#E5DDD3] w-full max-w-xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between">
           <div className="flex items-center gap-2.5">

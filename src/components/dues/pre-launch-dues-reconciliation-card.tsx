@@ -256,7 +256,8 @@ export function PreLaunchDuesReconciliationCard({
   members,
   isAdmin,
 }: PreLaunchDuesReconciliationCardProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Collapsed by default on mobile to eliminate 1,900px vertical scroll burden
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   // If not admin, render clean read-only administrative advisory
   if (!isAdmin) {
@@ -312,14 +313,15 @@ export function PreLaunchDuesReconciliationCard({
         <button
           aria-expanded={!isCollapsed}
           aria-label={isCollapsed ? "Expand workspace" : "Collapse workspace"}
-          className="p-1.5 rounded-lg border border-[#E5DDD3] bg-white text-[#7A685D] hover:text-[#3D291F] hover:bg-[#FAF6F0] transition-colors cursor-pointer shrink-0"
+          className="px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-white text-[#174C37] hover:bg-[#FAF6F0] transition-colors cursor-pointer shrink-0 min-h-[38px] flex items-center gap-1.5 text-xs font-bold shadow-2xs"
           onClick={() => setIsCollapsed((prev) => !prev)}
           type="button"
         >
+          <span>{isCollapsed ? "Expand" : "Collapse"}</span>
           {isCollapsed ? (
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDown className="w-4 h-4 text-[#174C37]" />
           ) : (
-            <ChevronUp className="w-4 h-4" />
+            <ChevronUp className="w-4 h-4 text-[#174C37]" />
           )}
         </button>
       </div>
