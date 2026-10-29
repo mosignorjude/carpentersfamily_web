@@ -223,8 +223,7 @@ export function EventDomainLedger({
             const isRejected = status === "rejected";
             const isPending = status === "recorded";
             const isApproved = status === "approved";
-            const isExpense =
-              domain === "expenses" || txn.type === "expense";
+            const isExpense = domain === "expenses" || txn.type === "expense";
 
             const isSelfReview =
               Boolean(currentUserId) &&
@@ -383,204 +382,204 @@ export function EventDomainLedger({
       <div className="hidden md:block">
         <TableScroll label="Ledger transactions">
           <table className="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
-              <th className="py-3 px-4">Ref & Date</th>
-              <th className="py-3 px-4">Description & Counterparty</th>
-              <th className="py-3 px-4">Category</th>
-              <th className="py-3 px-4 text-right">Amount (NGN)</th>
-              <th className="py-3 px-4 text-center">Voucher Evidence</th>
-              <th className="py-3 px-4 text-center">Review Status</th>
-              <th className="py-3 px-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#EBE5DC]">
-            {pageTransactions.length === 0 ? (
-              <tr>
-                <td
-                  className="py-12 px-4 text-center text-[#7A685D]"
-                  colSpan={7}
-                >
-                  <AlertCircle className="w-6 h-6 mx-auto mb-2 text-[#D6A23A]" />
-                  <p className="font-semibold text-sm text-[#3D291F]">
-                    No domain transactions found
-                  </p>
-                  <p className="text-xs mt-1">
-                    {searchQuery
-                      ? "No records match your search criteria."
-                      : `No ${statusFilter === "all" ? "" : statusFilter} entries recorded for this event.`}
-                  </p>
-                </td>
+            <thead>
+              <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
+                <th className="py-3 px-4">Ref & Date</th>
+                <th className="py-3 px-4">Description & Counterparty</th>
+                <th className="py-3 px-4">Category</th>
+                <th className="py-3 px-4 text-right">Amount (NGN)</th>
+                <th className="py-3 px-4 text-center">Voucher Evidence</th>
+                <th className="py-3 px-4 text-center">Review Status</th>
+                <th className="py-3 px-4 text-right">Actions</th>
               </tr>
-            ) : (
-              pageTransactions.map((txn) => {
-                const status = resolveStatus(txn);
-                const isRejected = status === "rejected";
-                const isPending = status === "recorded";
-                const isApproved = status === "approved";
-                const isExpense =
-                  domain === "expenses" || txn.type === "expense";
-
-                const isSelfReview =
-                  Boolean(currentUserId) &&
-                  Boolean(txn.createdBy) &&
-                  txn.createdBy === currentUserId;
-
-                return (
-                  <tr
-                    className={`hover:bg-[#FAF6F0]/60 transition-colors ${
-                      isRejected ? "bg-[#FAF6F0]/30 opacity-75" : ""
-                    }`}
-                    key={txn.id}
+            </thead>
+            <tbody className="divide-y divide-[#EBE5DC]">
+              {pageTransactions.length === 0 ? (
+                <tr>
+                  <td
+                    className="py-12 px-4 text-center text-[#7A685D]"
+                    colSpan={7}
                   >
-                    {/* Ref & Date */}
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <span
-                        className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F] block w-fit cursor-help"
-                        title={`Full Transaction ID: ${txn.id}`}
-                      >
-                        #{txn.paymentRef || txn.id.slice(0, 8).toUpperCase()}
-                      </span>
-                      <span className="text-[11px] text-[#7A685D] block mt-0.5 font-mono">
-                        {txn.date}
-                      </span>
-                    </td>
+                    <AlertCircle className="w-6 h-6 mx-auto mb-2 text-[#D6A23A]" />
+                    <p className="font-semibold text-sm text-[#3D291F]">
+                      No domain transactions found
+                    </p>
+                    <p className="text-xs mt-1">
+                      {searchQuery
+                        ? "No records match your search criteria."
+                        : `No ${statusFilter === "all" ? "" : statusFilter} entries recorded for this event.`}
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                pageTransactions.map((txn) => {
+                  const status = resolveStatus(txn);
+                  const isRejected = status === "rejected";
+                  const isPending = status === "recorded";
+                  const isApproved = status === "approved";
+                  const isExpense =
+                    domain === "expenses" || txn.type === "expense";
 
-                    {/* Description & Counterparty */}
-                    <td className="py-3 px-4 max-w-[280px]">
-                      <div
-                        className="font-semibold text-[#3D291F] truncate"
-                        title={txn.description}
-                      >
-                        {txn.description}
-                      </div>
-                      <div className="text-[11px] text-[#7A685D] truncate mt-0.5">
-                        Party:{" "}
-                        <span className="font-medium text-[#5C4638]">
-                          {txn.payerPayee}
-                        </span>
-                      </div>
-                      {isRejected && txn.rejectionReason && (
-                        <div className="mt-1 text-[10px] text-[#BA3C2A] bg-[#FDF0EE] p-1.5 rounded-md border border-[#F5C7C0]">
-                          <strong>Reversed:</strong> {txn.rejectionReason}
-                        </div>
-                      )}
-                    </td>
+                  const isSelfReview =
+                    Boolean(currentUserId) &&
+                    Boolean(txn.createdBy) &&
+                    txn.createdBy === currentUserId;
 
-                    {/* Category */}
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <span className="font-medium text-[#3D291F] block">
-                        {txn.categoryLabel || "General"}
-                      </span>
-                      <span className="text-[11px] text-[#7A685D]">
-                        {txn.paymentMethod}
-                      </span>
-                    </td>
-
-                    {/* Amount */}
-                    <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <span
-                        className={`text-sm font-bold font-mono tabular-nums ${
-                          isRejected
-                            ? "line-through text-[#7A685D]"
-                            : isExpense
-                              ? "text-[#BA3C2A]"
-                              : "text-[#174C37]"
-                        }`}
-                      >
-                        {isRejected ? "" : isExpense ? "-" : "+"}
-                        {formatNaira(txn.amount)}
-                      </span>
-                      {isRejected && (
-                        <span className="block text-[10px] font-bold uppercase text-[#BA3C2A]">
-                          Reversed
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Receipt Voucher */}
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
-                      <div className="flex items-center justify-center">
-                        <ReceiptCell
-                          isLegacy={txn.isLegacy}
-                          paymentMethod={txn.paymentMethod}
-                          paymentStatus={txn.paymentStatus}
-                          receipt={txn.receipt ?? null}
-                        />
-                      </div>
-                    </td>
-
-                    {/* Status Badge */}
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
-                      {isPending && (
-                        <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
-                          Recorded (Pending)
-                        </span>
-                      )}
-                      {isApproved && (
-                        <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
-                          Approved
-                        </span>
-                      )}
-                      {isRejected && (
-                        <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
-                          Rejected
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          className="px-2.5 py-1 text-[11px] font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-lg transition-colors flex items-center gap-1 min-h-[30px] cursor-pointer"
-                          onClick={() => onInspect(txn)}
-                          type="button"
+                  return (
+                    <tr
+                      className={`hover:bg-[#FAF6F0]/60 transition-colors ${
+                        isRejected ? "bg-[#FAF6F0]/30 opacity-75" : ""
+                      }`}
+                      key={txn.id}
+                    >
+                      {/* Ref & Date */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <span
+                          className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F] block w-fit cursor-help"
+                          title={`Full Transaction ID: ${txn.id}`}
                         >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>Inspect</span>
-                        </button>
+                          #{txn.paymentRef || txn.id.slice(0, 8).toUpperCase()}
+                        </span>
+                        <span className="text-[11px] text-[#7A685D] block mt-0.5 font-mono">
+                          {txn.date}
+                        </span>
+                      </td>
 
-                        {/* Quick Approve / Reject for Officers */}
-                        {isOfficer &&
-                          isPending &&
-                          (isExecutive && isSelfReview ? (
-                            <span className="text-[10px] font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-2 py-1 rounded-lg">
-                              Awaiting Independent Officer Review
-                            </span>
-                          ) : (
-                            <>
-                              {onApprove && (
-                                <button
-                                  className="p-1 text-[#174C37] hover:bg-[#E9F4EE] rounded-lg transition-colors border border-[#174C37]/30 cursor-pointer"
-                                  onClick={() => onApprove(txn)}
-                                  title="Quick Approve Record"
-                                  type="button"
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                              {onReject && (
-                                <button
-                                  className="p-1 text-[#BA3C2A] hover:bg-[#FDF0EE] rounded-lg transition-colors border border-[#BA3C2A]/30 cursor-pointer"
-                                  onClick={() => onReject(txn)}
-                                  title="Reject and Reverse Transaction"
-                                  type="button"
-                                >
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                            </>
-                          ))}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </TableScroll>
+                      {/* Description & Counterparty */}
+                      <td className="py-3 px-4 max-w-[280px]">
+                        <div
+                          className="font-semibold text-[#3D291F] truncate"
+                          title={txn.description}
+                        >
+                          {txn.description}
+                        </div>
+                        <div className="text-[11px] text-[#7A685D] truncate mt-0.5">
+                          Party:{" "}
+                          <span className="font-medium text-[#5C4638]">
+                            {txn.payerPayee}
+                          </span>
+                        </div>
+                        {isRejected && txn.rejectionReason && (
+                          <div className="mt-1 text-[10px] text-[#BA3C2A] bg-[#FDF0EE] p-1.5 rounded-md border border-[#F5C7C0]">
+                            <strong>Reversed:</strong> {txn.rejectionReason}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Category */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <span className="font-medium text-[#3D291F] block">
+                          {txn.categoryLabel || "General"}
+                        </span>
+                        <span className="text-[11px] text-[#7A685D]">
+                          {txn.paymentMethod}
+                        </span>
+                      </td>
+
+                      {/* Amount */}
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        <span
+                          className={`text-sm font-bold font-mono tabular-nums ${
+                            isRejected
+                              ? "line-through text-[#7A685D]"
+                              : isExpense
+                                ? "text-[#BA3C2A]"
+                                : "text-[#174C37]"
+                          }`}
+                        >
+                          {isRejected ? "" : isExpense ? "-" : "+"}
+                          {formatNaira(txn.amount)}
+                        </span>
+                        {isRejected && (
+                          <span className="block text-[10px] font-bold uppercase text-[#BA3C2A]">
+                            Reversed
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Receipt Voucher */}
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center">
+                          <ReceiptCell
+                            isLegacy={txn.isLegacy}
+                            paymentMethod={txn.paymentMethod}
+                            paymentStatus={txn.paymentStatus}
+                            receipt={txn.receipt ?? null}
+                          />
+                        </div>
+                      </td>
+
+                      {/* Status Badge */}
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                        {isPending && (
+                          <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
+                            Recorded (Pending)
+                          </span>
+                        )}
+                        {isApproved && (
+                          <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
+                            Approved
+                          </span>
+                        )}
+                        {isRejected && (
+                          <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
+                            Rejected
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            className="px-2.5 py-1 text-[11px] font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-lg transition-colors flex items-center gap-1 min-h-[30px] cursor-pointer"
+                            onClick={() => onInspect(txn)}
+                            type="button"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Inspect</span>
+                          </button>
+
+                          {/* Quick Approve / Reject for Officers */}
+                          {isOfficer &&
+                            isPending &&
+                            (isExecutive && isSelfReview ? (
+                              <span className="text-[10px] font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-2 py-1 rounded-lg">
+                                Awaiting Independent Officer Review
+                              </span>
+                            ) : (
+                              <>
+                                {onApprove && (
+                                  <button
+                                    className="p-1 text-[#174C37] hover:bg-[#E9F4EE] rounded-lg transition-colors border border-[#174C37]/30 cursor-pointer"
+                                    onClick={() => onApprove(txn)}
+                                    title="Quick Approve Record"
+                                    type="button"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                                {onReject && (
+                                  <button
+                                    className="p-1 text-[#BA3C2A] hover:bg-[#FDF0EE] rounded-lg transition-colors border border-[#BA3C2A]/30 cursor-pointer"
+                                    onClick={() => onReject(txn)}
+                                    title="Reject and Reverse Transaction"
+                                    type="button"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </>
+                            ))}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </TableScroll>
       </div>
 
       {/* Pagination Footer */}

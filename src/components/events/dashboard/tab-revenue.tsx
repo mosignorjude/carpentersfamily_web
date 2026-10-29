@@ -74,13 +74,20 @@ export function TabRevenue({
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-[#174C37]" />
               <h3 className="text-lg font-bold text-[#3D291F]">
-                <span className="hidden sm:inline">Revenue Streams & Inflow Matrix</span>
+                <span className="hidden sm:inline">
+                  Revenue Streams & Inflow Matrix
+                </span>
                 <span className="sm:hidden">Revenue Streams</span>
               </h3>
             </div>
             <p className="text-xs text-[#6B5D53] mt-1">
-              <span className="hidden sm:inline">Reconciled receipts vs target projections across authorized club revenue channels.</span>
-              <span className="sm:hidden">Target projections & revenue streams.</span>
+              <span className="hidden sm:inline">
+                Reconciled receipts vs target projections across authorized club
+                revenue channels.
+              </span>
+              <span className="sm:hidden">
+                Target projections & revenue streams.
+              </span>
             </p>
           </div>
 
@@ -226,104 +233,104 @@ export function TabRevenue({
             <div className="hidden sm:block">
               <TableScroll label="Revenue streams by source">
                 <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
-                  <th className="py-2.5 px-3.5">Stream Name</th>
-                  <th className="py-2.5 px-3.5">Target</th>
-                  <th className="py-2.5 px-3.5">Reconciled Inflow</th>
-                  <th className="py-2.5 px-3.5">Pending Receivables</th>
-                  <th className="py-2.5 px-3.5">Fulfillment %</th>
-                  <th className="py-2.5 px-3.5 text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EBE5DC]">
-                {streams.map((stream) => {
-                  const Icon = streamIcons[stream.id] || TrendingUp;
-                  const percentage = Math.min(
-                    100,
-                    (stream.actual / (stream.target || 1)) * 100,
-                  );
-                  const isAchieved =
-                    stream.actual >= stream.target && stream.target > 0;
-
-                  return (
-                    <tr
-                      key={stream.id}
-                      className="hover:bg-[#FAF6F0]/50 transition-colors"
-                    >
-                      {/* Name & Icon */}
-                      <td className="py-3 px-3.5 max-w-[220px]">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] flex items-center justify-center text-[#174C37] shrink-0">
-                            <Icon className="w-3.5 h-3.5" />
-                          </div>
-                          <div>
-                            <span className="font-bold text-[#3D291F] block text-sm">
-                              {stream.name}
-                            </span>
-                            <span className="text-[11px] text-[#7A685D] line-clamp-1">
-                              {stream.description}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Target */}
-                      <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#5C4638]">
-                        {formatNaira(stream.target)}
-                      </td>
-
-                      {/* Reconciled Inflow */}
-                      <td className="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-sm text-[#174C37]">
-                        {formatNaira(stream.actual)}
-                      </td>
-
-                      {/* Pending Receivables */}
-                      <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#D6A23A]">
-                        {formatNaira(stream.pending)}
-                      </td>
-
-                      {/* Fulfillment Progress */}
-                      <td className="py-3 px-3.5 whitespace-nowrap min-w-[140px]">
-                        <div className="flex items-baseline justify-between font-mono text-xs">
-                          <span className="font-semibold text-[#3D291F]">
-                            {formatPercent(percentage)}
-                          </span>
-                        </div>
-                        <div className="w-full bg-[#E5DDD3] rounded-full h-1.5 mt-1.5 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              isAchieved ? "bg-[#174C37]" : "bg-[#D6A23A]"
-                            } ${percentWidthClass(percentage)}`}
-                          />
-                        </div>
-                      </td>
-
-                      {/* Status Badge */}
-                      <td className="py-3 px-3.5 text-right whitespace-nowrap">
-                        {isAchieved ? (
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
-                            Target Reached
-                          </span>
-                        ) : stream.actual > 0 ? (
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
-                            In Progress
-                          </span>
-                        ) : (
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-medium bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]">
-                            Pending
-                          </span>
-                        )}
-                      </td>
+                  <thead>
+                    <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
+                      <th className="py-2.5 px-3.5">Stream Name</th>
+                      <th className="py-2.5 px-3.5">Target</th>
+                      <th className="py-2.5 px-3.5">Reconciled Inflow</th>
+                      <th className="py-2.5 px-3.5">Pending Receivables</th>
+                      <th className="py-2.5 px-3.5">Fulfillment %</th>
+                      <th className="py-2.5 px-3.5 text-right">Status</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </TableScroll>
-        </div>
-      </>
-    )}
+                  </thead>
+                  <tbody className="divide-y divide-[#EBE5DC]">
+                    {streams.map((stream) => {
+                      const Icon = streamIcons[stream.id] || TrendingUp;
+                      const percentage = Math.min(
+                        100,
+                        (stream.actual / (stream.target || 1)) * 100,
+                      );
+                      const isAchieved =
+                        stream.actual >= stream.target && stream.target > 0;
+
+                      return (
+                        <tr
+                          key={stream.id}
+                          className="hover:bg-[#FAF6F0]/50 transition-colors"
+                        >
+                          {/* Name & Icon */}
+                          <td className="py-3 px-3.5 max-w-[220px]">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] flex items-center justify-center text-[#174C37] shrink-0">
+                                <Icon className="w-3.5 h-3.5" />
+                              </div>
+                              <div>
+                                <span className="font-bold text-[#3D291F] block text-sm">
+                                  {stream.name}
+                                </span>
+                                <span className="text-[11px] text-[#7A685D] line-clamp-1">
+                                  {stream.description}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Target */}
+                          <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#5C4638]">
+                            {formatNaira(stream.target)}
+                          </td>
+
+                          {/* Reconciled Inflow */}
+                          <td className="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-sm text-[#174C37]">
+                            {formatNaira(stream.actual)}
+                          </td>
+
+                          {/* Pending Receivables */}
+                          <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#D6A23A]">
+                            {formatNaira(stream.pending)}
+                          </td>
+
+                          {/* Fulfillment Progress */}
+                          <td className="py-3 px-3.5 whitespace-nowrap min-w-[140px]">
+                            <div className="flex items-baseline justify-between font-mono text-xs">
+                              <span className="font-semibold text-[#3D291F]">
+                                {formatPercent(percentage)}
+                              </span>
+                            </div>
+                            <div className="w-full bg-[#E5DDD3] rounded-full h-1.5 mt-1.5 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-300 ${
+                                  isAchieved ? "bg-[#174C37]" : "bg-[#D6A23A]"
+                                } ${percentWidthClass(percentage)}`}
+                              />
+                            </div>
+                          </td>
+
+                          {/* Status Badge */}
+                          <td className="py-3 px-3.5 text-right whitespace-nowrap">
+                            {isAchieved ? (
+                              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
+                                Target Reached
+                              </span>
+                            ) : stream.actual > 0 ? (
+                              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
+                                In Progress
+                              </span>
+                            ) : (
+                              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-medium bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]">
+                                Pending
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </TableScroll>
+            </div>
+          </>
+        )}
       </section>
 
       {/* 2. Embedded Revenue Inflow Ledger */}

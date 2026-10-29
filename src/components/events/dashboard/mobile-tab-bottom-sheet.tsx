@@ -122,12 +122,14 @@ export function MobileTabBottomSheet({
             tabIndex={-1}
           >
             {/* Drag Handle Bar */}
-            <div
+            <button
+              aria-label="Close dashboard sections"
               className="pt-3 pb-1 flex justify-center cursor-pointer"
               onClick={handleClose}
+              type="button"
             >
               <div className="w-12 h-1.5 bg-[#D8CEBE] rounded-full" />
-            </div>
+            </button>
 
             {/* Sheet Header */}
             <div className="px-5 py-3 border-b border-[#F2ECE4] flex items-center justify-between">

@@ -193,10 +193,6 @@ export function AttendanceHubView({
   const lateCount = attendance.filter(
     (a) => a.attendance_status === "late",
   ).length;
-  const absentCount = attendance.filter(
-    (a) => a.attendance_status === "absent",
-  ).length;
-
   return (
     <div className="space-y-6">
       {/* Top Header Card */}

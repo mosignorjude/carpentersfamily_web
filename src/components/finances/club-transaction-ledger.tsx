@@ -368,189 +368,189 @@ export function ClubTransactionLedger({
           {/* Desktop Table (hidden md:block) */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-[#E5DDD3] bg-[#FAF6F0]/60 text-[11px] font-bold text-[#54433A] uppercase tracking-wider">
-                <th className="py-3 px-4 sm:px-6">Date</th>
-                <th className="py-3 px-4">Transaction / Justification</th>
-                <th className="py-3 px-4">Cost Center</th>
-                <th className="py-3 px-4">Payer / Payee</th>
-                <th className="py-3 px-4 text-right">Amount (₦)</th>
-                <th className="py-3 px-4 text-center">Receipts</th>
-                {canCorrect && (
-                  <th className="py-3 px-4 sm:px-6 text-right">Actions</th>
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5DDD3]">
-              {filteredTransactions.map((transaction) => {
-                const linkedReceipts =
-                  receiptsByTransaction.get(transaction.id) ?? [];
-                const isVoided = Boolean(transaction.voided_at);
+              <thead>
+                <tr className="border-b border-[#E5DDD3] bg-[#FAF6F0]/60 text-[11px] font-bold text-[#54433A] uppercase tracking-wider">
+                  <th className="py-3 px-4 sm:px-6">Date</th>
+                  <th className="py-3 px-4">Transaction / Justification</th>
+                  <th className="py-3 px-4">Cost Center</th>
+                  <th className="py-3 px-4">Payer / Payee</th>
+                  <th className="py-3 px-4 text-right">Amount (₦)</th>
+                  <th className="py-3 px-4 text-center">Receipts</th>
+                  {canCorrect && (
+                    <th className="py-3 px-4 sm:px-6 text-right">Actions</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E5DDD3]">
+                {filteredTransactions.map((transaction) => {
+                  const linkedReceipts =
+                    receiptsByTransaction.get(transaction.id) ?? [];
+                  const isVoided = Boolean(transaction.voided_at);
 
-                return (
-                  <tr
-                    className={`hover:bg-[#FAF6F0]/40 transition-colors ${
-                      isVoided ? "bg-[#FAF6F0]/40 opacity-75" : ""
-                    }`}
-                    key={transaction.id}
-                  >
-                    {/* Date */}
-                    <td className="py-3.5 px-4 sm:px-6 whitespace-nowrap text-[#54433A]">
-                      <div className="font-semibold text-[#3D291F]">
-                        {formatDate(transaction.transaction_date)}
-                      </div>
-                      <div className="text-[10px] text-[#7A685D] font-mono">
-                        {formatTimestamp(transaction.created_at)}
-                      </div>
-                    </td>
+                  return (
+                    <tr
+                      className={`hover:bg-[#FAF6F0]/40 transition-colors ${
+                        isVoided ? "bg-[#FAF6F0]/40 opacity-75" : ""
+                      }`}
+                      key={transaction.id}
+                    >
+                      {/* Date */}
+                      <td className="py-3.5 px-4 sm:px-6 whitespace-nowrap text-[#54433A]">
+                        <div className="font-semibold text-[#3D291F]">
+                          {formatDate(transaction.transaction_date)}
+                        </div>
+                        <div className="text-[10px] text-[#7A685D] font-mono">
+                          {formatTimestamp(transaction.created_at)}
+                        </div>
+                      </td>
 
-                    {/* Title & Description */}
-                    <td className="py-3.5 px-4 max-w-xs">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
-                            isVoided
-                              ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3] line-through"
+                      {/* Title & Description */}
+                      <td className="py-3.5 px-4 max-w-xs">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                              isVoided
+                                ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3] line-through"
+                                : transaction.is_opening_balance
+                                  ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]"
+                                  : transaction.kind === "income"
+                                    ? "bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20"
+                                    : "bg-[#BA3C2A]/10 text-[#BA3C2A] border border-[#BA3C2A]/20"
+                            }`}
+                          >
+                            {isVoided
+                              ? "Voided"
                               : transaction.is_opening_balance
-                                ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]"
+                                ? "Opening Balance"
                                 : transaction.kind === "income"
-                                  ? "bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20"
-                                  : "bg-[#BA3C2A]/10 text-[#BA3C2A] border border-[#BA3C2A]/20"
+                                  ? "Non-Dues Income"
+                                  : "Disbursement"}
+                          </span>
+                          {isVoided && (
+                            <span className="text-[10px] text-[#BA3C2A] font-semibold italic truncate">
+                              Reason: {transaction.void_reason}
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          className={`font-bold text-[#3D291F] leading-snug ${
+                            isVoided ? "line-through text-[#7A685D]" : ""
                           }`}
                         >
-                          {isVoided
-                            ? "Voided"
-                            : transaction.is_opening_balance
-                              ? "Opening Balance"
-                              : transaction.kind === "income"
-                                ? "Non-Dues Income"
-                                : "Disbursement"}
-                        </span>
-                        {isVoided && (
-                          <span className="text-[10px] text-[#BA3C2A] font-semibold italic truncate">
-                            Reason: {transaction.void_reason}
-                          </span>
-                        )}
-                      </div>
-                      <div
-                        className={`font-bold text-[#3D291F] leading-snug ${
-                          isVoided ? "line-through text-[#7A685D]" : ""
-                        }`}
-                      >
-                        {transaction.kind === "income"
-                          ? transaction.source_note
-                          : transaction.description}
-                      </div>
-                    </td>
-
-                    {/* Cost Center / Category */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      {transaction.category_name_snapshot ? (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#FAF6F0] text-[#3D291F] border border-[#E5DDD3]">
-                          <Tag className="w-3 h-3 text-[#7A685D]" />
-                          <span>{transaction.category_name_snapshot}</span>
+                          {transaction.kind === "income"
+                            ? transaction.source_note
+                            : transaction.description}
                         </div>
-                      ) : (
-                        <span className="text-[11px] text-[#7A685D] italic">
-                          {transaction.is_opening_balance
-                            ? "Opening Reserve"
-                            : transaction.kind === "income"
-                              ? "Treasury Inflow"
-                              : "General"}
-                        </span>
-                      )}
-                    </td>
+                      </td>
 
-                    {/* Payer / Payee */}
-                    <td className="py-3.5 px-4 text-[#54433A] whitespace-nowrap">
-                      {transaction.payer_payee ? (
-                        <span className="font-semibold text-[#3D291F]">
-                          {transaction.payer_payee}
-                        </span>
-                      ) : (
-                        <span className="text-[#B8ACA0] italic">—</span>
-                      )}
-                    </td>
-
-                    {/* Amount */}
-                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      <span
-                        className={`font-mono font-bold text-sm tabular-nums ${
-                          isVoided
-                            ? "line-through text-[#7A685D]"
-                            : transaction.kind === "income"
-                              ? "text-[#174C37]"
-                              : "text-[#BA3C2A]"
-                        }`}
-                      >
-                        {transaction.kind === "income" ? "+" : "-"}
-                        {formatNaira(transaction.amount_ngn)}
-                      </span>
-                    </td>
-
-                    {/* Receipts Button */}
-                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                      <button
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          linkedReceipts.length > 0
-                            ? "bg-[#174C37]/10 text-[#174C37] hover:bg-[#174C37] hover:text-white"
-                            : isOfficer && !isVoided
-                              ? "bg-[#FAF6F0] text-[#7A685D] hover:bg-white hover:text-[#3D291F] border border-[#E5DDD3]"
-                              : "text-[#B8ACA0] cursor-default"
-                        }`}
-                        onClick={() => onViewReceipt(transaction)}
-                        type="button"
-                      >
-                        <Paperclip className="w-3.5 h-3.5" />
-                        <span>
-                          {linkedReceipts.length > 0
-                            ? `${linkedReceipts.length} ${linkedReceipts.length === 1 ? "Receipt" : "Receipts"}`
-                            : isOfficer && !isVoided
-                              ? "Attach"
-                              : "None"}
-                        </span>
-                      </button>
-                    </td>
-
-                    {/* Officer Actions */}
-                    {canCorrect && (
-                      <td className="py-3.5 px-4 sm:px-6 text-right whitespace-nowrap">
-                        {!isVoided ? (
-                          <div className="inline-flex items-center gap-1.5">
-                            <button
-                              aria-label={`Correct transaction ${transaction.id}`}
-                              className="p-1.5 text-[#54433A] hover:text-[#174C37] hover:bg-[#FAF6F0] rounded-lg transition-colors cursor-pointer"
-                              onClick={() => onInitiateCorrect(transaction)}
-                              title="Correct Record"
-                              type="button"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              aria-label={`Void transaction ${transaction.id}`}
-                              className="p-1.5 text-[#BA3C2A] hover:bg-[#FDF2F2] rounded-lg transition-colors cursor-pointer"
-                              onClick={() => onInitiateVoid(transaction)}
-                              title="Void Record"
-                              type="button"
-                            >
-                              <AlertTriangle className="w-3.5 h-3.5" />
-                            </button>
+                      {/* Cost Center / Category */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        {transaction.category_name_snapshot ? (
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#FAF6F0] text-[#3D291F] border border-[#E5DDD3]">
+                            <Tag className="w-3 h-3 text-[#7A685D]" />
+                            <span>{transaction.category_name_snapshot}</span>
                           </div>
                         ) : (
                           <span className="text-[11px] text-[#7A685D] italic">
-                            Retained
+                            {transaction.is_opening_balance
+                              ? "Opening Reserve"
+                              : transaction.kind === "income"
+                                ? "Treasury Inflow"
+                                : "General"}
                           </span>
                         )}
                       </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </>
-    )}
+
+                      {/* Payer / Payee */}
+                      <td className="py-3.5 px-4 text-[#54433A] whitespace-nowrap">
+                        {transaction.payer_payee ? (
+                          <span className="font-semibold text-[#3D291F]">
+                            {transaction.payer_payee}
+                          </span>
+                        ) : (
+                          <span className="text-[#B8ACA0] italic">—</span>
+                        )}
+                      </td>
+
+                      {/* Amount */}
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <span
+                          className={`font-mono font-bold text-sm tabular-nums ${
+                            isVoided
+                              ? "line-through text-[#7A685D]"
+                              : transaction.kind === "income"
+                                ? "text-[#174C37]"
+                                : "text-[#BA3C2A]"
+                          }`}
+                        >
+                          {transaction.kind === "income" ? "+" : "-"}
+                          {formatNaira(transaction.amount_ngn)}
+                        </span>
+                      </td>
+
+                      {/* Receipts Button */}
+                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                        <button
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            linkedReceipts.length > 0
+                              ? "bg-[#174C37]/10 text-[#174C37] hover:bg-[#174C37] hover:text-white"
+                              : isOfficer && !isVoided
+                                ? "bg-[#FAF6F0] text-[#7A685D] hover:bg-white hover:text-[#3D291F] border border-[#E5DDD3]"
+                                : "text-[#B8ACA0] cursor-default"
+                          }`}
+                          onClick={() => onViewReceipt(transaction)}
+                          type="button"
+                        >
+                          <Paperclip className="w-3.5 h-3.5" />
+                          <span>
+                            {linkedReceipts.length > 0
+                              ? `${linkedReceipts.length} ${linkedReceipts.length === 1 ? "Receipt" : "Receipts"}`
+                              : isOfficer && !isVoided
+                                ? "Attach"
+                                : "None"}
+                          </span>
+                        </button>
+                      </td>
+
+                      {/* Officer Actions */}
+                      {canCorrect && (
+                        <td className="py-3.5 px-4 sm:px-6 text-right whitespace-nowrap">
+                          {!isVoided ? (
+                            <div className="inline-flex items-center gap-1.5">
+                              <button
+                                aria-label={`Correct transaction ${transaction.id}`}
+                                className="p-1.5 text-[#54433A] hover:text-[#174C37] hover:bg-[#FAF6F0] rounded-lg transition-colors cursor-pointer"
+                                onClick={() => onInitiateCorrect(transaction)}
+                                title="Correct Record"
+                                type="button"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                aria-label={`Void transaction ${transaction.id}`}
+                                className="p-1.5 text-[#BA3C2A] hover:bg-[#FDF2F2] rounded-lg transition-colors cursor-pointer"
+                                onClick={() => onInitiateVoid(transaction)}
+                                title="Void Record"
+                                type="button"
+                              >
+                                <AlertTriangle className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-[#7A685D] italic">
+                              Retained
+                            </span>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       {/* Pagination Bar */}
       {!financeUnavailable && transactionCount > pageSize && (

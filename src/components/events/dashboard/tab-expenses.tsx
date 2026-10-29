@@ -75,12 +75,17 @@ export function TabExpenses({
             <div className="flex items-center gap-2">
               <Wallet className="w-5 h-5 text-[#174C37]" />
               <h3 className="text-lg font-bold text-[#3D291F]">
-                <span className="hidden sm:inline">Operational Cost Centers & Budget Matrix</span>
+                <span className="hidden sm:inline">
+                  Operational Cost Centers & Budget Matrix
+                </span>
                 <span className="sm:hidden">Event Expenses</span>
               </h3>
             </div>
             <p className="text-xs text-[#6B5D53] mt-1">
-              <span className="hidden sm:inline">Reconciliation of operational cost centers and authorized disbursements.</span>
+              <span className="hidden sm:inline">
+                Reconciliation of operational cost centers and authorized
+                disbursements.
+              </span>
               <span className="sm:hidden">Cost centers & disbursements.</span>
             </p>
           </div>
@@ -230,105 +235,107 @@ export function TabExpenses({
             <div className="hidden sm:block">
               <TableScroll label="Expenses by cost center">
                 <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
-                  <th className="py-2.5 px-3.5">Cost Center</th>
-                  <th className="py-2.5 px-3.5">Budget Ceiling</th>
-                  <th className="py-2.5 px-3.5">Disbursed Spend</th>
-                  <th className="py-2.5 px-3.5">Committed POs</th>
-                  <th className="py-2.5 px-3.5">Utilization Bar</th>
-                  <th className="py-2.5 px-3.5 text-right">Available Buffer</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EBE5DC]">
-                {costCenters.map((center) => {
-                  const Icon = centerIcons[center.id] || Wallet;
-                  const totalUtilized = center.spent + center.committed;
-                  const percentUtilized = Math.min(
-                    100,
-                    (totalUtilized / (center.allocated || 1)) * 100,
-                  );
-                  const variance = center.allocated - totalUtilized;
-                  const isOverBudget = variance < 0;
-
-                  return (
-                    <tr
-                      key={center.id}
-                      className="hover:bg-[#FAF6F0]/50 transition-colors"
-                    >
-                      {/* Name & Icon */}
-                      <td className="py-3 px-3.5 max-w-[220px]">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] flex items-center justify-center text-[#174C37] shrink-0">
-                            <Icon className="w-3.5 h-3.5" />
-                          </div>
-                          <div>
-                            <span className="font-bold text-[#3D291F] block text-sm">
-                              {center.name}
-                            </span>
-                            <span className="text-[11px] text-[#7A685D]">
-                              {center.items.length} line items
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Budget Ceiling */}
-                      <td className="py-3 px-3.5 whitespace-nowrap font-mono font-semibold text-[#3D291F]">
-                        {formatNaira(center.allocated)}
-                      </td>
-
-                      {/* Disbursed Spend */}
-                      <td className="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-sm text-[#BA3C2A]">
-                        {formatNaira(center.spent)}
-                      </td>
-
-                      {/* Committed POs */}
-                      <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#D6A23A]">
-                        {formatNaira(center.committed)}
-                      </td>
-
-                      {/* Utilization Bar */}
-                      <td className="py-3 px-3.5 whitespace-nowrap min-w-[140px]">
-                        <div className="flex items-baseline justify-between font-mono text-xs">
-                          <span className="font-semibold text-[#3D291F]">
-                            {formatPercent(percentUtilized)}
-                          </span>
-                        </div>
-                        <div className="w-full bg-[#E5DDD3] rounded-full h-1.5 mt-1.5 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              isOverBudget
-                                ? "bg-[#BA3C2A]"
-                                : percentUtilized > 85
-                                  ? "bg-[#D6A23A]"
-                                  : "bg-[#174C37]"
-                            } ${percentWidthClass(percentUtilized)}`}
-                          />
-                        </div>
-                      </td>
-
-                      {/* Available Buffer */}
-                      <td className="py-3 px-3.5 text-right whitespace-nowrap">
-                        {isOverBudget ? (
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
-                            {formatNaira(Math.abs(variance))} Deficit
-                          </span>
-                        ) : (
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
-                            +{formatNaira(variance)} Buffer
-                          </span>
-                        )}
-                      </td>
+                  <thead>
+                    <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
+                      <th className="py-2.5 px-3.5">Cost Center</th>
+                      <th className="py-2.5 px-3.5">Budget Ceiling</th>
+                      <th className="py-2.5 px-3.5">Disbursed Spend</th>
+                      <th className="py-2.5 px-3.5">Committed POs</th>
+                      <th className="py-2.5 px-3.5">Utilization Bar</th>
+                      <th className="py-2.5 px-3.5 text-right">
+                        Available Buffer
+                      </th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </TableScroll>
-        </div>
-      </>
-    )}
+                  </thead>
+                  <tbody className="divide-y divide-[#EBE5DC]">
+                    {costCenters.map((center) => {
+                      const Icon = centerIcons[center.id] || Wallet;
+                      const totalUtilized = center.spent + center.committed;
+                      const percentUtilized = Math.min(
+                        100,
+                        (totalUtilized / (center.allocated || 1)) * 100,
+                      );
+                      const variance = center.allocated - totalUtilized;
+                      const isOverBudget = variance < 0;
+
+                      return (
+                        <tr
+                          key={center.id}
+                          className="hover:bg-[#FAF6F0]/50 transition-colors"
+                        >
+                          {/* Name & Icon */}
+                          <td className="py-3 px-3.5 max-w-[220px]">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] flex items-center justify-center text-[#174C37] shrink-0">
+                                <Icon className="w-3.5 h-3.5" />
+                              </div>
+                              <div>
+                                <span className="font-bold text-[#3D291F] block text-sm">
+                                  {center.name}
+                                </span>
+                                <span className="text-[11px] text-[#7A685D]">
+                                  {center.items.length} line items
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Budget Ceiling */}
+                          <td className="py-3 px-3.5 whitespace-nowrap font-mono font-semibold text-[#3D291F]">
+                            {formatNaira(center.allocated)}
+                          </td>
+
+                          {/* Disbursed Spend */}
+                          <td className="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-sm text-[#BA3C2A]">
+                            {formatNaira(center.spent)}
+                          </td>
+
+                          {/* Committed POs */}
+                          <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#D6A23A]">
+                            {formatNaira(center.committed)}
+                          </td>
+
+                          {/* Utilization Bar */}
+                          <td className="py-3 px-3.5 whitespace-nowrap min-w-[140px]">
+                            <div className="flex items-baseline justify-between font-mono text-xs">
+                              <span className="font-semibold text-[#3D291F]">
+                                {formatPercent(percentUtilized)}
+                              </span>
+                            </div>
+                            <div className="w-full bg-[#E5DDD3] rounded-full h-1.5 mt-1.5 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-300 ${
+                                  isOverBudget
+                                    ? "bg-[#BA3C2A]"
+                                    : percentUtilized > 85
+                                      ? "bg-[#D6A23A]"
+                                      : "bg-[#174C37]"
+                                } ${percentWidthClass(percentUtilized)}`}
+                              />
+                            </div>
+                          </td>
+
+                          {/* Available Buffer */}
+                          <td className="py-3 px-3.5 text-right whitespace-nowrap">
+                            {isOverBudget ? (
+                              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
+                                {formatNaira(Math.abs(variance))} Deficit
+                              </span>
+                            ) : (
+                              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
+                                +{formatNaira(variance)} Buffer
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </TableScroll>
+            </div>
+          </>
+        )}
       </section>
 
       {/* 2. Embedded Disbursement Ledger */}

@@ -66,13 +66,20 @@ export function TabTickets({
             <div className="flex items-center gap-2">
               <Ticket className="w-5 h-5 text-[#174C37]" />
               <h3 className="text-lg font-bold text-[#3D291F]">
-                <span className="hidden sm:inline">Admission Tiers & Inventory Matrix</span>
+                <span className="hidden sm:inline">
+                  Admission Tiers & Inventory Matrix
+                </span>
                 <span className="sm:hidden">Ticket Tiers</span>
               </h3>
             </div>
             <p className="text-xs text-[#6B5D53] mt-1">
-              <span className="hidden sm:inline">Reconciled ticketing tallies across all authorized admission tiers.</span>
-              <span className="sm:hidden">Tier inventory & revenue tallies.</span>
+              <span className="hidden sm:inline">
+                Reconciled ticketing tallies across all authorized admission
+                tiers.
+              </span>
+              <span className="sm:hidden">
+                Tier inventory & revenue tallies.
+              </span>
             </p>
           </div>
 
@@ -304,168 +311,172 @@ export function TabTickets({
             <div className="hidden sm:block">
               <TableScroll label="Ticket sales">
                 <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
-                  <th className="py-2.5 px-3.5">Admission Tier</th>
-                  <th className="py-2.5 px-3.5">Unit Price</th>
-                  <th className="py-2.5 px-3.5">Passes Issued / Capacity</th>
-                  <th className="py-2.5 px-3.5">Gross Inflow</th>
-                  <th className="py-2.5 px-3.5 text-right">Tier Controls</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EBE5DC]">
-                {tiers.map((tier) => {
-                  const revenue = tier.sold * tier.price;
-                  const percentageFilled = Math.min(
-                    100,
-                    (tier.sold / (tier.capacity || 1)) * 100,
-                  );
-                  const remaining = tier.capacity - tier.sold;
-                  const isExpanded = expandedTier === tier.id;
-
-                  const statusBadge =
-                    tier.status === "sold_out" || tier.sold >= tier.capacity
-                      ? {
-                          label: "Sold Out",
-                          bg: "bg-[#BA3C2A]/10 text-[#BA3C2A] border-[#BA3C2A]/20",
-                        }
-                      : tier.status === "limited" || remaining <= 10
-                        ? {
-                            label: `${remaining} Left`,
-                            bg: "bg-[#D6A23A]/15 text-[#3D291F] border-[#D6A23A]/40",
-                          }
-                        : {
-                            label: "Active",
-                            bg: "bg-[#174C37]/10 text-[#174C37] border-[#174C37]/20",
-                          };
-
-                  return (
-                    <tr
-                      key={tier.id}
-                      className="hover:bg-[#FAF6F0]/50 transition-colors"
-                    >
-                      {/* Name & Perks */}
-                      <td className="py-3 px-3.5 max-w-[240px]">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-[#3D291F] text-sm">
-                            {tier.name}
-                          </span>
-                          <span
-                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${statusBadge.bg}`}
-                          >
-                            {statusBadge.label}
-                          </span>
-                        </div>
-                        {tier.description && (
-                          <p className="text-[11px] text-[#7A685D] mt-0.5 line-clamp-1">
-                            {tier.description}
-                          </p>
-                        )}
-                        {tier.benefits && tier.benefits.length > 0 && (
-                          <button
-                            className="mt-1 text-[11px] text-[#174C37] font-medium hover:underline flex items-center gap-0.5 cursor-pointer"
-                            onClick={() =>
-                              setExpandedTier(isExpanded ? null : tier.id)
-                            }
-                            type="button"
-                          >
-                            <span>
-                              {isExpanded ? "Hide perks" : "View perks"}
-                            </span>
-                            <ChevronDown
-                              className={`w-3 h-3 transition-transform ${
-                                isExpanded ? "rotate-180" : ""
-                              }`}
-                            />
-                          </button>
-                        )}
-                        {isExpanded && tier.benefits && (
-                          <ul className="mt-1.5 space-y-0.5 pl-3 list-disc text-[11px] text-[#5C4638]">
-                            {tier.benefits.map((b) => (
-                              <li key={b}>{b}</li>
-                            ))}
-                          </ul>
-                        )}
-                      </td>
-
-                      {/* Unit Price */}
-                      <td className="py-3 px-3.5 whitespace-nowrap">
-                        <span className="font-mono font-bold text-sm text-[#174C37]">
-                          {formatNaira(tier.price)}
-                        </span>
-                      </td>
-
-                      {/* Capacity Progress */}
-                      <td className="py-3 px-3.5 whitespace-nowrap min-w-[160px]">
-                        <div className="flex items-baseline justify-between text-xs font-mono">
-                          <span className="font-semibold text-[#3D291F]">
-                            {tier.sold} / {tier.capacity}
-                          </span>
-                          <span className="text-[11px] text-[#7A685D]">
-                            ({formatPercent(percentageFilled)})
-                          </span>
-                        </div>
-                        <div className="w-full bg-[#E5DDD3] rounded-full h-1.5 mt-1.5 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${percentWidthClass(
-                              percentageFilled,
-                            )} ${
-                              tier.status === "sold_out" ||
-                              tier.sold >= tier.capacity
-                                ? "bg-[#BA3C2A]"
-                                : "bg-[#174C37]"
-                            }`}
-                          />
-                        </div>
-                      </td>
-
-                      {/* Gross Inflow */}
-                      <td className="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-sm text-[#3D291F]">
-                        {formatNaira(revenue)}
-                      </td>
-
-                      {/* Tier Row Actions: Edit & Retire Only */}
-                      <td className="py-3 px-3.5 text-right whitespace-nowrap">
-                        {canManage ? (
-                          <div className="flex items-center justify-end gap-1.5">
-                            {onOpenEditTierModal && (
-                              <button
-                                className="px-2.5 py-1 text-xs font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-lg transition-colors flex items-center gap-1 cursor-pointer min-h-[30px]"
-                                id={`btn-edit-tier-${tier.id}`}
-                                onClick={() => onOpenEditTierModal(tier)}
-                                type="button"
-                              >
-                                <Pencil className="w-3 h-3" />
-                                <span>Edit</span>
-                              </button>
-                            )}
-                            {onOpenRetireTierModal && (
-                              <button
-                                className="px-2.5 py-1 text-xs font-semibold text-[#BA3C2A] bg-white border border-[#BA3C2A]/30 hover:bg-[#FDF0EE] rounded-lg transition-colors flex items-center gap-1 cursor-pointer min-h-[30px]"
-                                id={`btn-retire-tier-${tier.id}`}
-                                onClick={() => onOpenRetireTierModal(tier)}
-                                type="button"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                                <span>Retire</span>
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-[11px] text-[#7A685D]">
-                            Active Quota
-                          </span>
-                        )}
-                      </td>
+                  <thead>
+                    <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
+                      <th className="py-2.5 px-3.5">Admission Tier</th>
+                      <th className="py-2.5 px-3.5">Unit Price</th>
+                      <th className="py-2.5 px-3.5">
+                        Passes Issued / Capacity
+                      </th>
+                      <th className="py-2.5 px-3.5">Gross Inflow</th>
+                      <th className="py-2.5 px-3.5 text-right">
+                        Tier Controls
+                      </th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </TableScroll>
-        </div>
-      </>
-    )}
+                  </thead>
+                  <tbody className="divide-y divide-[#EBE5DC]">
+                    {tiers.map((tier) => {
+                      const revenue = tier.sold * tier.price;
+                      const percentageFilled = Math.min(
+                        100,
+                        (tier.sold / (tier.capacity || 1)) * 100,
+                      );
+                      const remaining = tier.capacity - tier.sold;
+                      const isExpanded = expandedTier === tier.id;
+
+                      const statusBadge =
+                        tier.status === "sold_out" || tier.sold >= tier.capacity
+                          ? {
+                              label: "Sold Out",
+                              bg: "bg-[#BA3C2A]/10 text-[#BA3C2A] border-[#BA3C2A]/20",
+                            }
+                          : tier.status === "limited" || remaining <= 10
+                            ? {
+                                label: `${remaining} Left`,
+                                bg: "bg-[#D6A23A]/15 text-[#3D291F] border-[#D6A23A]/40",
+                              }
+                            : {
+                                label: "Active",
+                                bg: "bg-[#174C37]/10 text-[#174C37] border-[#174C37]/20",
+                              };
+
+                      return (
+                        <tr
+                          key={tier.id}
+                          className="hover:bg-[#FAF6F0]/50 transition-colors"
+                        >
+                          {/* Name & Perks */}
+                          <td className="py-3 px-3.5 max-w-[240px]">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-[#3D291F] text-sm">
+                                {tier.name}
+                              </span>
+                              <span
+                                className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${statusBadge.bg}`}
+                              >
+                                {statusBadge.label}
+                              </span>
+                            </div>
+                            {tier.description && (
+                              <p className="text-[11px] text-[#7A685D] mt-0.5 line-clamp-1">
+                                {tier.description}
+                              </p>
+                            )}
+                            {tier.benefits && tier.benefits.length > 0 && (
+                              <button
+                                className="mt-1 text-[11px] text-[#174C37] font-medium hover:underline flex items-center gap-0.5 cursor-pointer"
+                                onClick={() =>
+                                  setExpandedTier(isExpanded ? null : tier.id)
+                                }
+                                type="button"
+                              >
+                                <span>
+                                  {isExpanded ? "Hide perks" : "View perks"}
+                                </span>
+                                <ChevronDown
+                                  className={`w-3 h-3 transition-transform ${
+                                    isExpanded ? "rotate-180" : ""
+                                  }`}
+                                />
+                              </button>
+                            )}
+                            {isExpanded && tier.benefits && (
+                              <ul className="mt-1.5 space-y-0.5 pl-3 list-disc text-[11px] text-[#5C4638]">
+                                {tier.benefits.map((b) => (
+                                  <li key={b}>{b}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </td>
+
+                          {/* Unit Price */}
+                          <td className="py-3 px-3.5 whitespace-nowrap">
+                            <span className="font-mono font-bold text-sm text-[#174C37]">
+                              {formatNaira(tier.price)}
+                            </span>
+                          </td>
+
+                          {/* Capacity Progress */}
+                          <td className="py-3 px-3.5 whitespace-nowrap min-w-[160px]">
+                            <div className="flex items-baseline justify-between text-xs font-mono">
+                              <span className="font-semibold text-[#3D291F]">
+                                {tier.sold} / {tier.capacity}
+                              </span>
+                              <span className="text-[11px] text-[#7A685D]">
+                                ({formatPercent(percentageFilled)})
+                              </span>
+                            </div>
+                            <div className="w-full bg-[#E5DDD3] rounded-full h-1.5 mt-1.5 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${percentWidthClass(
+                                  percentageFilled,
+                                )} ${
+                                  tier.status === "sold_out" ||
+                                  tier.sold >= tier.capacity
+                                    ? "bg-[#BA3C2A]"
+                                    : "bg-[#174C37]"
+                                }`}
+                              />
+                            </div>
+                          </td>
+
+                          {/* Gross Inflow */}
+                          <td className="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-sm text-[#3D291F]">
+                            {formatNaira(revenue)}
+                          </td>
+
+                          {/* Tier Row Actions: Edit & Retire Only */}
+                          <td className="py-3 px-3.5 text-right whitespace-nowrap">
+                            {canManage ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                {onOpenEditTierModal && (
+                                  <button
+                                    className="px-2.5 py-1 text-xs font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-lg transition-colors flex items-center gap-1 cursor-pointer min-h-[30px]"
+                                    id={`btn-edit-tier-${tier.id}`}
+                                    onClick={() => onOpenEditTierModal(tier)}
+                                    type="button"
+                                  >
+                                    <Pencil className="w-3 h-3" />
+                                    <span>Edit</span>
+                                  </button>
+                                )}
+                                {onOpenRetireTierModal && (
+                                  <button
+                                    className="px-2.5 py-1 text-xs font-semibold text-[#BA3C2A] bg-white border border-[#BA3C2A]/30 hover:bg-[#FDF0EE] rounded-lg transition-colors flex items-center gap-1 cursor-pointer min-h-[30px]"
+                                    id={`btn-retire-tier-${tier.id}`}
+                                    onClick={() => onOpenRetireTierModal(tier)}
+                                    type="button"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                    <span>Retire</span>
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-[11px] text-[#7A685D]">
+                                Active Quota
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </TableScroll>
+            </div>
+          </>
+        )}
       </section>
 
       {/* 2. Embedded Ticket Sales Ledger */}

@@ -360,10 +360,10 @@ export function EventCard({
               <span>Open Event Dashboard</span>
               <ArrowRight className="w-4 h-4 text-[#D6A23A]" />
             </Link>
-          ) : (event.budget_enabled ||
-              event.income_enabled ||
-              event.expenses_enabled ||
-              event.ticketing_enabled) ? (
+          ) : event.budget_enabled ||
+            event.income_enabled ||
+            event.expenses_enabled ||
+            event.ticketing_enabled ? (
             <Link
               className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[48px] no-underline"
               href={`/events/${event.id}/finance`}
@@ -372,9 +372,9 @@ export function EventCard({
               <span>Open Event Finances</span>
               <ArrowRight className="w-4 h-4 text-[#D6A23A]" />
             </Link>
-          ) : (event.event_type === "meeting" ||
-              event.minutes_enabled ||
-              event.attendance_enabled) ? (
+          ) : event.event_type === "meeting" ||
+            event.minutes_enabled ||
+            event.attendance_enabled ? (
             <Link
               className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[48px] no-underline"
               href={`/attendance?event=${encodeURIComponent(event.id)}`}
@@ -427,19 +427,21 @@ export function EventCard({
                 <span className="flex items-center gap-2">
                   <span className="font-bold text-[#3D291F]">Manage Event</span>
                   <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#FAF6F0] border border-[#E5DDD3] text-[#7A685D]">
-                    {[
-                      canEdit && mutable && onOpenEdit,
-                      canSetStatus && mutable && onOpenLifecycle, // complete
-                      canSetStatus && mutable && onOpenLifecycle, // cancel
-                      canReopen &&
-                        !event.archived_at &&
-                        (isCompleted || isCancelled) &&
-                        onOpenLifecycle,
-                      isManager &&
-                        !event.archived_at &&
-                        (isCompleted || isCancelled) &&
-                        onOpenLifecycle,
-                    ].filter(Boolean).length}
+                    {
+                      [
+                        canEdit && mutable && onOpenEdit,
+                        canSetStatus && mutable && onOpenLifecycle, // complete
+                        canSetStatus && mutable && onOpenLifecycle, // cancel
+                        canReopen &&
+                          !event.archived_at &&
+                          (isCompleted || isCancelled) &&
+                          onOpenLifecycle,
+                        isManager &&
+                          !event.archived_at &&
+                          (isCompleted || isCancelled) &&
+                          onOpenLifecycle,
+                      ].filter(Boolean).length
+                    }
                   </span>
                 </span>
                 <ChevronDown

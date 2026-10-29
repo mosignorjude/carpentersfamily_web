@@ -79,13 +79,20 @@ export function TabAuditLog({
                 className="text-lg font-bold text-[#3D291F]"
                 id="ledger-heading"
               >
-                <span className="hidden sm:inline">Financial Ledger & Transaction Journal</span>
+                <span className="hidden sm:inline">
+                  Financial Ledger & Transaction Journal
+                </span>
                 <span className="sm:hidden">Transaction Journal</span>
               </h3>
             </div>
             <p className="text-xs text-[#6B5D53] mt-1">
-              <span className="hidden sm:inline">Complete verifiable record of all receipts, disbursements, authorizations, and retained audit adjustments.</span>
-              <span className="sm:hidden">Verifiable receipts, disbursements & journal.</span>
+              <span className="hidden sm:inline">
+                Complete verifiable record of all receipts, disbursements,
+                authorizations, and retained audit adjustments.
+              </span>
+              <span className="sm:hidden">
+                Verifiable receipts, disbursements & journal.
+              </span>
             </p>
           </div>
 
@@ -369,194 +376,199 @@ export function TabAuditLog({
                 className="rounded-xl border border-[#E5DDD3]"
                 label="Audit log entries"
               >
-            <table
-              aria-label="Transaction journal"
-              className="w-full text-xs text-left"
-            >
-              <thead className="bg-[#FAF6F0] text-[#7A685D] uppercase font-semibold border-b border-[#E5DDD3]">
-                <tr>
-                  <th className="py-3 px-3.5">Ref / Date</th>
-                  <th className="py-3 px-3.5">Description & Counterparty</th>
-                  <th className="py-3 px-3.5">Category</th>
-                  <th className="py-3 px-3.5 text-right">Amount (NGN)</th>
-                  <th className="py-3 px-3.5">Recorded/Auth by</th>
-                  <th className="py-3 px-3.5 text-center">Receipt</th>
-                  <th className="py-3 px-3.5 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E5DDD3]">
-                {filteredTransactions.length === 0 ? (
-                  <tr>
-                    <td
-                      className="py-8 text-center text-sm text-[#7A685D]"
-                      colSpan={7}
-                    >
-                      No transactions match the selected filters.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredTransactions.map((txn) => {
-                    const isVoided = txn.status === "voided";
-                    const isRevenue = txn.type === "revenue";
-
-                    return (
-                      <tr
-                        className={`hover:bg-[#FAF6F0]/80 transition-colors ${
-                          isVoided ? "bg-[#FAF6F0]/50 text-[#7A685D]" : ""
-                        }`}
-                        key={txn.id}
-                      >
-                        {/* Ref & Date */}
-                        <td className="py-3.5 px-3.5 whitespace-nowrap">
-                          <span
-                            className="font-mono font-bold text-[#174C37] bg-[#FAF6F0] px-2 py-0.5 rounded border border-[#E5DDD3] inline-block text-xs hover:border-[#174C37] transition-colors cursor-default"
-                            title={`Full Transaction ID: ${txn.id}`}
-                          >
-                            #
-                            {txn.paymentRef || txn.id.slice(0, 8).toUpperCase()}
-                          </span>
-                          <span className="text-[11px] text-[#7A685D] block mt-0.5">
-                            {txn.date}
-                          </span>
-                        </td>
-
-                        {/* Description & Counterparty */}
-                        <td className="py-3.5 px-3.5 max-w-xs">
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className={`font-semibold text-xs leading-snug ${
-                                isVoided
-                                  ? "line-through text-[#7A685D]"
-                                  : "text-[#3D291F]"
-                              }`}
-                            >
-                              {txn.description}
-                            </span>
-                          </div>
-                          <div className="text-[11px] text-[#7A685D] mt-0.5 truncate">
-                            Party:{" "}
-                            <strong className="text-[#5C4638]">
-                              {txn.payerPayee}
-                            </strong>
-                          </div>
-
-                          {/* Visible Retained History wording if voided */}
-                          {isVoided && txn.voidReason && (
-                            <div className="mt-1.5 p-2 rounded-md bg-[#BA3C2A]/10 border border-[#BA3C2A]/20 text-[11px] text-[#BA3C2A] space-y-0.5">
-                              <p className="font-semibold">{txn.voidReason}</p>
-                              <p className="text-[10px] text-[#7A685D]">
-                                Voided by {txn.voidedBy} · {txn.voidedAt}
-                              </p>
-                            </div>
-                          )}
-                        </td>
-
-                        {/* Category */}
-                        <td className="py-3.5 px-3.5 whitespace-nowrap">
-                          <span className="font-medium text-[#3D291F] text-xs block">
-                            {txn.categoryLabel}
-                          </span>
-                          <span className="text-[11px] text-[#7A685D]">
-                            {txn.paymentMethod}
-                          </span>
-                        </td>
-
-                        {/* Amount */}
-                        <td className="py-3.5 px-3.5 text-right whitespace-nowrap">
-                          <span
-                            className={`text-sm font-bold font-mono tabular-nums ${
-                              isVoided
-                                ? "line-through text-[#7A685D]"
-                                : isRevenue
-                                  ? "text-[#174C37]"
-                                  : "text-[#BA3C2A]"
-                            }`}
-                          >
-                            {isVoided ? "" : isRevenue ? "+" : "-"}
-                            {formatNaira(txn.amount)}
-                          </span>
-                          {isVoided && (
-                            <span className="block text-[10px] uppercase font-bold text-[#BA3C2A]">
-                              Voided (Preserved)
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Recorded / Authorized by */}
-                        <td className="py-3.5 px-3.5 whitespace-nowrap text-xs">
-                          <span className="font-mono text-[#3D291F] font-semibold block">
-                            {txn.authorizedBy}
-                          </span>
-                          {txn.authorizerRole && (
-                            <span className="text-[10px] text-[#7A685D] block">
-                              {txn.authorizerRole}
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Receipt Indicator */}
-                        <td className="py-3.5 px-3.5 text-center whitespace-nowrap">
-                          <div className="flex items-center justify-center">
-                            {txn.receipt ? (
-                              <ReceiptCell
-                                isLegacy={txn.isLegacy}
-                                paymentMethod={txn.paymentMethod}
-                                paymentStatus={txn.paymentStatus}
-                                receipt={txn.receipt}
-                              />
-                            ) : txn.receiptFileName ? (
-                              <button
-                                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-[#174C37] bg-[#FAF6F0] rounded-md hover:bg-[#174C37] hover:text-white transition-colors cursor-pointer"
-                                onClick={() => onViewTransaction(txn)}
-                                title={`View receipt voucher: ${txn.receiptFileName}`}
-                                type="button"
-                              >
-                                <Paperclip className="w-3.5 h-3.5" />
-                                <span>Receipt</span>
-                              </button>
-                            ) : (
-                              <ReceiptCell
-                                isLegacy={txn.isLegacy}
-                                paymentMethod={txn.paymentMethod}
-                                paymentStatus={txn.paymentStatus}
-                                receipt={null}
-                              />
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-3.5 px-3.5 text-right whitespace-nowrap space-x-1">
-                          <button
-                            className="px-2.5 py-1.5 text-[11px] font-medium text-[#3D291F] bg-white border border-[#E5DDD3] rounded-md hover:bg-[#FAF6F0] transition-colors cursor-pointer"
-                            onClick={() => onViewTransaction(txn)}
-                            title="View audit voucher"
-                            type="button"
-                          >
-                            Inspect
-                          </button>
-
-                          {!isVoided && isAdmin && (
-                            <button
-                              className="px-2.5 py-1.5 text-[11px] font-medium text-[#BA3C2A] bg-white border border-[#BA3C2A]/30 rounded-md hover:bg-[#BA3C2A] hover:text-white transition-colors cursor-pointer"
-                              onClick={() => onInitiateVoid(txn)}
-                              title="Void record"
-                              type="button"
-                            >
-                              Void
-                            </button>
-                          )}
+                <table
+                  aria-label="Transaction journal"
+                  className="w-full text-xs text-left"
+                >
+                  <thead className="bg-[#FAF6F0] text-[#7A685D] uppercase font-semibold border-b border-[#E5DDD3]">
+                    <tr>
+                      <th className="py-3 px-3.5">Ref / Date</th>
+                      <th className="py-3 px-3.5">
+                        Description & Counterparty
+                      </th>
+                      <th className="py-3 px-3.5">Category</th>
+                      <th className="py-3 px-3.5 text-right">Amount (NGN)</th>
+                      <th className="py-3 px-3.5">Recorded/Auth by</th>
+                      <th className="py-3 px-3.5 text-center">Receipt</th>
+                      <th className="py-3 px-3.5 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E5DDD3]">
+                    {filteredTransactions.length === 0 ? (
+                      <tr>
+                        <td
+                          className="py-8 text-center text-sm text-[#7A685D]"
+                          colSpan={7}
+                        >
+                          No transactions match the selected filters.
                         </td>
                       </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </TableScroll>
-        </div>
-      </>
-    )}
+                    ) : (
+                      filteredTransactions.map((txn) => {
+                        const isVoided = txn.status === "voided";
+                        const isRevenue = txn.type === "revenue";
+
+                        return (
+                          <tr
+                            className={`hover:bg-[#FAF6F0]/80 transition-colors ${
+                              isVoided ? "bg-[#FAF6F0]/50 text-[#7A685D]" : ""
+                            }`}
+                            key={txn.id}
+                          >
+                            {/* Ref & Date */}
+                            <td className="py-3.5 px-3.5 whitespace-nowrap">
+                              <span
+                                className="font-mono font-bold text-[#174C37] bg-[#FAF6F0] px-2 py-0.5 rounded border border-[#E5DDD3] inline-block text-xs hover:border-[#174C37] transition-colors cursor-default"
+                                title={`Full Transaction ID: ${txn.id}`}
+                              >
+                                #
+                                {txn.paymentRef ||
+                                  txn.id.slice(0, 8).toUpperCase()}
+                              </span>
+                              <span className="text-[11px] text-[#7A685D] block mt-0.5">
+                                {txn.date}
+                              </span>
+                            </td>
+
+                            {/* Description & Counterparty */}
+                            <td className="py-3.5 px-3.5 max-w-xs">
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className={`font-semibold text-xs leading-snug ${
+                                    isVoided
+                                      ? "line-through text-[#7A685D]"
+                                      : "text-[#3D291F]"
+                                  }`}
+                                >
+                                  {txn.description}
+                                </span>
+                              </div>
+                              <div className="text-[11px] text-[#7A685D] mt-0.5 truncate">
+                                Party:{" "}
+                                <strong className="text-[#5C4638]">
+                                  {txn.payerPayee}
+                                </strong>
+                              </div>
+
+                              {/* Visible Retained History wording if voided */}
+                              {isVoided && txn.voidReason && (
+                                <div className="mt-1.5 p-2 rounded-md bg-[#BA3C2A]/10 border border-[#BA3C2A]/20 text-[11px] text-[#BA3C2A] space-y-0.5">
+                                  <p className="font-semibold">
+                                    {txn.voidReason}
+                                  </p>
+                                  <p className="text-[10px] text-[#7A685D]">
+                                    Voided by {txn.voidedBy} · {txn.voidedAt}
+                                  </p>
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Category */}
+                            <td className="py-3.5 px-3.5 whitespace-nowrap">
+                              <span className="font-medium text-[#3D291F] text-xs block">
+                                {txn.categoryLabel}
+                              </span>
+                              <span className="text-[11px] text-[#7A685D]">
+                                {txn.paymentMethod}
+                              </span>
+                            </td>
+
+                            {/* Amount */}
+                            <td className="py-3.5 px-3.5 text-right whitespace-nowrap">
+                              <span
+                                className={`text-sm font-bold font-mono tabular-nums ${
+                                  isVoided
+                                    ? "line-through text-[#7A685D]"
+                                    : isRevenue
+                                      ? "text-[#174C37]"
+                                      : "text-[#BA3C2A]"
+                                }`}
+                              >
+                                {isVoided ? "" : isRevenue ? "+" : "-"}
+                                {formatNaira(txn.amount)}
+                              </span>
+                              {isVoided && (
+                                <span className="block text-[10px] uppercase font-bold text-[#BA3C2A]">
+                                  Voided (Preserved)
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Recorded / Authorized by */}
+                            <td className="py-3.5 px-3.5 whitespace-nowrap text-xs">
+                              <span className="font-mono text-[#3D291F] font-semibold block">
+                                {txn.authorizedBy}
+                              </span>
+                              {txn.authorizerRole && (
+                                <span className="text-[10px] text-[#7A685D] block">
+                                  {txn.authorizerRole}
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Receipt Indicator */}
+                            <td className="py-3.5 px-3.5 text-center whitespace-nowrap">
+                              <div className="flex items-center justify-center">
+                                {txn.receipt ? (
+                                  <ReceiptCell
+                                    isLegacy={txn.isLegacy}
+                                    paymentMethod={txn.paymentMethod}
+                                    paymentStatus={txn.paymentStatus}
+                                    receipt={txn.receipt}
+                                  />
+                                ) : txn.receiptFileName ? (
+                                  <button
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-[#174C37] bg-[#FAF6F0] rounded-md hover:bg-[#174C37] hover:text-white transition-colors cursor-pointer"
+                                    onClick={() => onViewTransaction(txn)}
+                                    title={`View receipt voucher: ${txn.receiptFileName}`}
+                                    type="button"
+                                  >
+                                    <Paperclip className="w-3.5 h-3.5" />
+                                    <span>Receipt</span>
+                                  </button>
+                                ) : (
+                                  <ReceiptCell
+                                    isLegacy={txn.isLegacy}
+                                    paymentMethod={txn.paymentMethod}
+                                    paymentStatus={txn.paymentStatus}
+                                    receipt={null}
+                                  />
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Actions */}
+                            <td className="py-3.5 px-3.5 text-right whitespace-nowrap space-x-1">
+                              <button
+                                className="px-2.5 py-1.5 text-[11px] font-medium text-[#3D291F] bg-white border border-[#E5DDD3] rounded-md hover:bg-[#FAF6F0] transition-colors cursor-pointer"
+                                onClick={() => onViewTransaction(txn)}
+                                title="View audit voucher"
+                                type="button"
+                              >
+                                Inspect
+                              </button>
+
+                              {!isVoided && isAdmin && (
+                                <button
+                                  className="px-2.5 py-1.5 text-[11px] font-medium text-[#BA3C2A] bg-white border border-[#BA3C2A]/30 rounded-md hover:bg-[#BA3C2A] hover:text-white transition-colors cursor-pointer"
+                                  onClick={() => onInitiateVoid(txn)}
+                                  title="Void record"
+                                  type="button"
+                                >
+                                  Void
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </TableScroll>
+            </div>
+          </>
+        )}
       </section>
 
       {/* Section 2: Chronological System Activity Audit Trail */}

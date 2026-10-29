@@ -149,7 +149,8 @@ export function FinancesPageView({
 
             <p className="text-xs sm:text-sm text-[#443A33] leading-relaxed font-normal">
               <span className="sm:hidden">
-                Consolidated income, institutional balances, and verified disbursements.
+                Consolidated income, institutional balances, and verified
+                disbursements.
               </span>
               <span className="hidden sm:inline">
                 Shared club-level financial ledger. Members can review

@@ -219,106 +219,106 @@ export function AttendanceRosterTable({
           {/* Desktop Table (hidden sm:block) */}
           <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5DDD3]">
             <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-[#FAF6F0] border-b border-[#E5DDD3] text-[#54433A] font-bold text-[11px] uppercase tracking-wider">
-                <th className="py-3 px-4">Member Name</th>
-                <th className="py-3 px-4">Attendance Status</th>
-                <th className="py-3 px-4">Verification Method & Time</th>
-                <th className="py-3 px-4">Audit / Correction</th>
-                {canCorrect && (
-                  <th className="py-3 px-4 text-right">Actions</th>
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5DDD3] bg-white">
-              {filteredAttendance.map((row) => {
-                const person = members.get(row.member_id);
-                const statusBadge =
-                  statusStyles[row.attendance_status] ??
-                  "text-[#3D291F] bg-[#FAF6F0] border-[#E5DDD3]";
+              <thead>
+                <tr className="bg-[#FAF6F0] border-b border-[#E5DDD3] text-[#54433A] font-bold text-[11px] uppercase tracking-wider">
+                  <th className="py-3 px-4">Member Name</th>
+                  <th className="py-3 px-4">Attendance Status</th>
+                  <th className="py-3 px-4">Verification Method & Time</th>
+                  <th className="py-3 px-4">Audit / Correction</th>
+                  {canCorrect && (
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E5DDD3] bg-white">
+                {filteredAttendance.map((row) => {
+                  const person = members.get(row.member_id);
+                  const statusBadge =
+                    statusStyles[row.attendance_status] ??
+                    "text-[#3D291F] bg-[#FAF6F0] border-[#E5DDD3]";
 
-                return (
-                  <tr
-                    key={row.member_id}
-                    className="hover:bg-[#FAF6F0]/40 transition-colors"
-                  >
-                    {/* Member */}
-                    <td className="py-3 px-4">
-                      <div className="font-bold text-[#3D291F]">
-                        {person ? person.full_name : "Former Club Member"}
-                      </div>
-                      <div className="text-[11px] font-mono text-[#7A685D]">
-                        @{person?.username ?? "unknown"}
-                      </div>
-                    </td>
-
-                    {/* Status */}
-                    <td className="py-3 px-4">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${statusBadge}`}
-                      >
-                        {statusLabels[row.attendance_status] ??
-                          row.attendance_status}
-                      </span>
-                    </td>
-
-                    {/* Method & Time */}
-                    <td className="py-3 px-4 text-[#5C4638]">
-                      {row.checked_in_at ? (
-                        <div>
-                          <span className="font-semibold text-[#3D291F]">
-                            {row.check_in_method === "qr"
-                              ? "QR Scan"
-                              : "Self Check-In"}
-                          </span>
-                          <span className="text-[11px] text-[#7A685D] block font-mono">
-                            {watShortDateTime.format(
-                              new Date(row.checked_in_at),
-                            )}{" "}
-                            WAT
-                          </span>
+                  return (
+                    <tr
+                      key={row.member_id}
+                      className="hover:bg-[#FAF6F0]/40 transition-colors"
+                    >
+                      {/* Member */}
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-[#3D291F]">
+                          {person ? person.full_name : "Former Club Member"}
                         </div>
-                      ) : (
-                        <span className="text-[#7A685D] italic">
-                          Session Default (No Check-in)
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Audit note */}
-                    <td className="py-3 px-4 text-[11px]">
-                      {row.correction_reason ? (
-                        <div className="p-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] text-[#BA3C2A]">
-                          <span className="font-bold block">Corrected:</span>
-                          <span className="italic">
-                            {row.correction_reason}
-                          </span>
+                        <div className="text-[11px] font-mono text-[#7A685D]">
+                          @{person?.username ?? "unknown"}
                         </div>
-                      ) : (
-                        <span className="text-[#7A685D]">—</span>
-                      )}
-                    </td>
-
-                    {/* Actions */}
-                    {canCorrect && (
-                      <td className="py-3 px-4 text-right">
-                        <button
-                          className="px-2.5 py-1 text-xs font-semibold text-[#174C37] bg-transparent border-0 hover:bg-[#174C37]/10 rounded-md transition-colors cursor-pointer min-h-[30px]"
-                          onClick={() => setCorrectingRecord(row)}
-                          type="button"
-                        >
-                          Correct
-                        </button>
                       </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </>
-    ) : (
+
+                      {/* Status */}
+                      <td className="py-3 px-4">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${statusBadge}`}
+                        >
+                          {statusLabels[row.attendance_status] ??
+                            row.attendance_status}
+                        </span>
+                      </td>
+
+                      {/* Method & Time */}
+                      <td className="py-3 px-4 text-[#5C4638]">
+                        {row.checked_in_at ? (
+                          <div>
+                            <span className="font-semibold text-[#3D291F]">
+                              {row.check_in_method === "qr"
+                                ? "QR Scan"
+                                : "Self Check-In"}
+                            </span>
+                            <span className="text-[11px] text-[#7A685D] block font-mono">
+                              {watShortDateTime.format(
+                                new Date(row.checked_in_at),
+                              )}{" "}
+                              WAT
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-[#7A685D] italic">
+                            Session Default (No Check-in)
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Audit note */}
+                      <td className="py-3 px-4 text-[11px]">
+                        {row.correction_reason ? (
+                          <div className="p-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] text-[#BA3C2A]">
+                            <span className="font-bold block">Corrected:</span>
+                            <span className="italic">
+                              {row.correction_reason}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-[#7A685D]">—</span>
+                        )}
+                      </td>
+
+                      {/* Actions */}
+                      {canCorrect && (
+                        <td className="py-3 px-4 text-right">
+                          <button
+                            className="px-2.5 py-1 text-xs font-semibold text-[#174C37] bg-transparent border-0 hover:bg-[#174C37]/10 rounded-md transition-colors cursor-pointer min-h-[30px]"
+                            onClick={() => setCorrectingRecord(row)}
+                            type="button"
+                          >
+                            Correct
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : (
         <div className="p-8 rounded-xl bg-[#FAF6F0]/40 border border-[#E5DDD3] text-center space-y-2">
           <Users className="w-6 h-6 text-[#7A685D] mx-auto opacity-60" />
           <h3 className="text-xs font-bold text-[#3D291F]">

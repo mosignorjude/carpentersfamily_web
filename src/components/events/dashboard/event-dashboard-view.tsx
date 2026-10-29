@@ -18,7 +18,6 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import type React from "react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
   recordEventFinancialTransactionAction,
@@ -44,6 +43,10 @@ import type {
   EventFinanceCategoryItem,
   TransactionType,
 } from "./dashboard-types";
+import {
+  MobileTabBottomSheet,
+  type MobileTabItem,
+} from "./mobile-tab-bottom-sheet";
 import { EventBudgetCeilingModal } from "./modals/event-budget-ceiling-modal";
 import { EventCategoryManagementModal } from "./modals/event-category-management-modal";
 import { EventTicketTierModal } from "./modals/event-ticket-tier-modal";
@@ -61,10 +64,6 @@ import { TabReports } from "./tab-reports";
 import { TabRevenue } from "./tab-revenue";
 import { TabTeamRoles } from "./tab-team-roles";
 import { TabTickets } from "./tab-tickets";
-import {
-  MobileTabBottomSheet,
-  type MobileTabItem,
-} from "./mobile-tab-bottom-sheet";
 
 function mapDbPaymentMethod(label: string): string {
   const normalized = label.toLowerCase();
