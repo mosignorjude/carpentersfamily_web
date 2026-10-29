@@ -55,7 +55,7 @@ export function DuesPaymentForm({
   return (
     <form
       action={recordDuesPaymentAction}
-      className="space-y-4 bg-white p-5 rounded-xl border border-[#E5DDD3] shadow-2xs"
+      className="space-y-4"
       encType="multipart/form-data"
     >
       <input name="member_id" type="hidden" value={memberId} />
@@ -163,7 +163,7 @@ export function DuesPaymentForm({
             />
           </label>
         ) : (
-          <div className="flex items-center text-xs text-[#7A685D] pt-6">
+          <div className="flex items-center text-xs text-[#7A685D] pt-1 sm:pt-6">
             <span>No receipt attachment required for cash transaction.</span>
           </div>
         )}
@@ -171,7 +171,7 @@ export function DuesPaymentForm({
 
       <div className="pt-2">
         <button
-          className="inline-flex items-center justify-center px-5 py-2.5 rounded-[10px] bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-xs cursor-pointer min-h-[42px]"
+          className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-[10px] bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-xs cursor-pointer min-h-[44px]"
           type="submit"
         >
           Record Dues Payment
@@ -201,7 +201,7 @@ export function DuesWriteOffForm({
   return (
     <form
       action={writeOffDuesAction}
-      className="space-y-4 bg-white p-5 rounded-xl border border-[#F5C2C2] shadow-2xs"
+      className="space-y-4"
       onSubmit={(event) => {
         if (
           !window.confirm(
@@ -249,7 +249,7 @@ export function DuesWriteOffForm({
 
       <div className="pt-2">
         <button
-          className="inline-flex items-center justify-center px-5 py-2.5 rounded-[10px] bg-[#BA3C2A] text-white text-xs font-bold hover:bg-[#a33222] transition-colors shadow-xs cursor-pointer min-h-[42px]"
+          className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-[10px] bg-[#BA3C2A] text-white text-xs font-bold hover:bg-[#a33222] transition-colors shadow-xs cursor-pointer min-h-[44px]"
           type="submit"
         >
           Confirm Statutory Write-Off
@@ -363,7 +363,7 @@ export function DuesPaymentCorrectionForm({
 
         <div className="pt-1">
           <button
-            className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[38px]"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[44px] sm:min-h-[38px]"
             type="submit"
           >
             Save Payment Correction
@@ -378,7 +378,7 @@ export function DuesRateForm({ nextMonth }: { nextMonth: string }) {
   return (
     <form
       action={setDuesRateAction}
-      className="space-y-3.5 bg-white p-4 rounded-xl border border-[#E5DDD3] shadow-2xs text-xs"
+      className="space-y-3.5 text-xs"
       onSubmit={(event) => {
         if (
           !window.confirm(
@@ -430,7 +430,7 @@ export function DuesRateForm({ nextMonth }: { nextMonth: string }) {
 
       <div className="pt-1">
         <button
-          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[38px]"
+          className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[44px] sm:min-h-[38px]"
           type="submit"
         >
           Schedule Dues Rate

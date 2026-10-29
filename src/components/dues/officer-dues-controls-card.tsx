@@ -40,10 +40,10 @@ export function OfficerDuesControlsCard({
   return (
     <section
       aria-labelledby="officer-actions-heading"
-      className="bg-white rounded-xl border border-[#E5DDD3] overflow-hidden shadow-xs space-y-4"
+      className="bg-white rounded-2xl border border-[#E5DDD3] overflow-hidden shadow-xs space-y-4"
     >
       {/* Header */}
-      <div className="p-5 sm:p-6 border-b border-[#E5DDD3] bg-[#FAF6F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="p-4 sm:p-6 border-b border-[#E5DDD3] bg-[#FAF6F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-[#174C37]" />
@@ -95,7 +95,7 @@ export function OfficerDuesControlsCard({
       </div>
 
       {/* Tab Panels */}
-      <div className="p-5 sm:p-6 space-y-4 pt-0">
+      <div className="p-4 sm:p-6 space-y-4 pt-0">
         {activeTab === "record" && canRecord && (
           <div className="space-y-3">
             <div className="flex items-start gap-2.5 bg-[#FAF6F0] p-3 rounded-xl border border-[#E5DDD3] text-xs text-[#54433A]">

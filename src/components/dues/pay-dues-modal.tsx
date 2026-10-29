@@ -540,9 +540,9 @@ export function PayDuesModal({
           </div>
 
           {/* Pinned Footer */}
-          <div className="p-4 border-t border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between gap-3">
+          <div className="p-4 border-t border-[#E5DDD3] bg-[#FAF6F0] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
             <button
-              className="px-5 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#3D291F] text-xs font-bold hover:bg-[#F5EFEB] transition-colors cursor-pointer min-h-[44px]"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#3D291F] text-xs font-bold hover:bg-[#F5EFEB] transition-colors cursor-pointer min-h-[44px]"
               onClick={onClose}
               type="button"
             >
@@ -551,7 +551,7 @@ export function PayDuesModal({
 
             {!isAdmin && availableMonths.length > 0 && (
               <FormSubmitButton
-                className="px-5 py-2.5"
+                className="w-full sm:w-auto px-5 py-2.5 min-h-[44px]"
                 disabled={
                   selectedMonths.length === 0 ||
                   selectedAmountNgn <= 0 ||

@@ -229,7 +229,11 @@ function MemberReconciliationRow({ member }: MemberRowProps) {
           </span>
         </div>
 
-        <form action={backfillMemberHistoricalDuesAction} method="post">
+        <form
+          action={backfillMemberHistoricalDuesAction}
+          className="w-full sm:w-auto"
+          method="post"
+        >
           <input name="member_id" type="hidden" value={member.id} />
           {activeSelectedMonths.map((m) => (
             <input key={m} name="covered_months" type="hidden" value={m} />
@@ -240,7 +244,7 @@ function MemberReconciliationRow({ member }: MemberRowProps) {
             value="Pre-launch dues reconciliation (Feb-Sep 2026)"
           />
           <FormSubmitButton
-            className="w-full sm:w-auto min-h-[38px] px-4 py-2 text-xs font-bold"
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-[38px] px-4 py-2 text-xs font-bold"
             disabled={activeSelectedMonths.length === 0}
             loadingText="Reconciling..."
           >

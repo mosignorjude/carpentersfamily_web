@@ -104,7 +104,7 @@ export function MyDuesRequestsCard({ requests = [] }: MyDuesRequestsCardProps) {
   return (
     <section
       aria-labelledby="my-requests-heading"
-      className="bg-white rounded-2xl border border-[#E5DDD3] p-6 sm:p-8 shadow-xs space-y-4"
+      className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-4"
     >
       <div className="flex items-center justify-between border-b border-[#E5DDD3] pb-3">
         <div className="flex items-center gap-2">

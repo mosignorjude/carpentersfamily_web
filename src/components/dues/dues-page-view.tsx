@@ -317,7 +317,7 @@ export function DuesPageView({
       {isOfficer && (
         <section
           aria-labelledby="officer-picker-heading"
-          className="bg-white rounded-xl border border-[#E5DDD3] p-5 shadow-xs"
+          className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs"
         >
           <form
             action="/dues"
@@ -348,7 +348,7 @@ export function DuesPageView({
             </div>
 
             <button
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[40px]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[44px] sm:min-h-[40px]"
               type="submit"
             >
               Load Ledger

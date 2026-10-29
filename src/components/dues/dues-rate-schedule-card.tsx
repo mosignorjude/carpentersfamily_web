@@ -34,10 +34,10 @@ export function DuesRateScheduleCard({
   return (
     <section
       aria-labelledby="rate-history-heading"
-      className="bg-white rounded-xl border border-[#E5DDD3] overflow-hidden shadow-xs space-y-4"
+      className="bg-white rounded-2xl border border-[#E5DDD3] overflow-hidden shadow-xs space-y-4"
     >
       {/* Header */}
-      <div className="p-5 sm:p-6 border-b border-[#E5DDD3] bg-[#FAF6F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="p-4 sm:p-6 border-b border-[#E5DDD3] bg-[#FAF6F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <History className="w-5 h-5 text-[#174C37]" />
@@ -59,7 +59,7 @@ export function DuesRateScheduleCard({
         </div>
       </div>
 
-      <div className="p-5 sm:p-6 space-y-5 pt-0">
+      <div className="p-4 sm:p-6 space-y-5 pt-0">
         {/* Rates Timeline */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {rates.map((rate, idx) => {
@@ -103,7 +103,7 @@ export function DuesRateScheduleCard({
 
         {/* Change Next Month's Rate Section (Admin only) */}
         {canChangeRate && (
-          <div className="p-5 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] space-y-3">
+          <div className="p-4 sm:p-5 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] space-y-3">
             <div className="flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-[#D6A23A]" />
               <h3 className="text-sm font-bold text-[#3D291F]">

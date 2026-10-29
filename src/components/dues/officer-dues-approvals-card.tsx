@@ -272,11 +272,11 @@ export function OfficerDuesApprovalsCard({
                     )}
                   </div>
                 ) : (
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2 border-t border-[#E5DDD3]">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-2 border-t border-[#E5DDD3]">
                     {!isRejectOpen ? (
                       <>
                         <button
-                          className="px-4 py-2 rounded-lg border border-[#E5DDD3] bg-white text-[#BA3C2A] text-xs font-bold hover:bg-[#FFF9F8] transition-colors cursor-pointer min-h-[38px] flex items-center justify-center gap-1.5"
+                          className="w-full sm:w-auto px-4 py-2 rounded-lg border border-[#E5DDD3] bg-white text-[#BA3C2A] text-xs font-bold hover:bg-[#FFF9F8] transition-colors cursor-pointer min-h-[44px] sm:min-h-[38px] flex items-center justify-center gap-1.5"
                           onClick={() => {
                             setRejectingId(req.id);
                             setRejectReason("");
@@ -289,7 +289,7 @@ export function OfficerDuesApprovalsCard({
 
                         <form
                           action={approveDuesPaymentRequestAction}
-                          className="inline-block"
+                          className="w-full sm:w-auto"
                         >
                           <input
                             name="request_id"
@@ -298,7 +298,7 @@ export function OfficerDuesApprovalsCard({
                           />
                           <FormSubmitButton
                             id={`btn-approve-dues-${req.id}`}
-                            className="btn-approve-dues-action w-full sm:w-auto px-5 py-2 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs min-h-[38px] flex items-center justify-center gap-1.5"
+                            className="btn-approve-dues-action w-full sm:w-auto px-5 py-2 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs min-h-[44px] sm:min-h-[38px] flex items-center justify-center gap-1.5"
                             leftIcon={CheckCircle2}
                             loadingText="Settling..."
                           >
