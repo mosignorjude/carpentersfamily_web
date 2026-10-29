@@ -17,13 +17,13 @@ test("ordinary members see the shared finance ledger but not officer-only areas"
   assert.ok(links.includes("/announcements"));
   assert.ok(!links.includes("/notifications"));
   assert.ok(links.includes("/finances"));
-  assert.ok(!links.includes("/admin/members"));
+  assert.ok(!links.includes("/officers/members"));
 });
 
 test("executives receive officer links without changing their role identity", () => {
   const links = hrefs(["executive"]);
   assert.ok(links.includes("/finances"));
-  assert.ok(links.includes("/admin/members"));
+  assert.ok(links.includes("/officers/members"));
 });
 
 test("Admin and President receive the same navigation links", () => {
@@ -35,13 +35,13 @@ test("event roles receive member links without implying club officer access", ()
     const links = hrefs([role]);
     assert.ok(links.includes("/events"));
     assert.ok(links.includes("/finances"));
-    assert.ok(!links.includes("/admin/members"));
+    assert.ok(!links.includes("/officers/members"));
   }
 });
 
 test("role lookup failures retain shared finances and fail closed for member administration", () => {
   assert.ok(hrefs([]).includes("/finances"));
-  assert.ok(!hrefs([]).includes("/admin/members"));
+  assert.ok(!hrefs([]).includes("/officers/members"));
 });
 
 test("pending and deactivated members do not receive the private shell", () => {
@@ -53,5 +53,5 @@ test("active status gates role links, and role lookup errors omit officer links"
   const links = getActiveMemberNavigationItems("active", ["admin"], true);
   assert.ok(links);
   assert.ok(links.some((item) => item.href === "/finances"));
-  assert.ok(!links.some((item) => item.href === "/admin/members"));
+  assert.ok(!links.some((item) => item.href === "/officers/members"));
 });

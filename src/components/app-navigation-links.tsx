@@ -7,7 +7,7 @@ import { ClubIcon, type ClubIconName } from "@/components/club-icon";
 type NavigationItem = { href: string; label: string };
 const navigationIcons: Record<string, ClubIconName> = {
   "/": "home",
-  "/admin/members": "users",
+  "/officers/members": "users",
   "/announcements": "megaphone",
   "/polls": "poll",
   "/dues": "wallet",

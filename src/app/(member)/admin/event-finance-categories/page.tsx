@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function EventFinanceCategoriesPage() {
-  redirect("/events");
+export default function LegacyAdminEventFinanceCategoriesPage() {
+  redirect("/officers/event-finance-categories");
 }

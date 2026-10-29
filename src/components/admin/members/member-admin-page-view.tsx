@@ -234,7 +234,7 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
         `Assigned as ${role} per event staffing schedule.`,
       ),
     );
-    formData.set("return_to", "admin-members");
+    formData.set("return_to", "officer-members");
     startTransition(() => {
       void assignEventRoleAction(formData);
     });
@@ -255,7 +255,7 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
       "reason",
       sanitizeAuditReason(reason, "Removed from event staffing assignment."),
     );
-    formData.set("return_to", "admin-members");
+    formData.set("return_to", "officer-members");
     startTransition(() => {
       void revokeEventRoleAction(formData);
     });

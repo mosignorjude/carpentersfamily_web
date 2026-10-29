@@ -9,19 +9,19 @@ import {
 } from "../src/lib/member-administration-presentation.mjs";
 
 const page = readFileSync(
-  new URL("../src/app/(member)/admin/members/page.tsx", import.meta.url),
+  new URL("../src/app/(member)/officers/members/page.tsx", import.meta.url),
   "utf8",
 );
 const lifecycleForm = readFileSync(
   new URL(
-    "../src/app/(member)/admin/members/lifecycle-form.tsx",
+    "../src/app/(member)/officers/members/lifecycle-form.tsx",
     import.meta.url,
   ),
   "utf8",
 );
 const clubRoleForm = readFileSync(
   new URL(
-    "../src/app/(member)/admin/members/club-role-form.tsx",
+    "../src/app/(member)/officers/members/club-role-form.tsx",
     import.meta.url,
   ),
   "utf8",
@@ -219,7 +219,7 @@ test("roster query failure withholds every member row and lifecycle form", () =>
   );
   assert.match(page, /!membersError && members\.length > 0/);
   assert.match(page, /No member details or actions are\s*available/);
-  assert.match(page, /href="\/admin\/members">Try again/);
+  assert.match(page, /href="\/officers\/members">Try again/);
 });
 
 test("member names and usernames render as React text without unsafe HTML", () => {

@@ -104,7 +104,7 @@ test("notification href routes accurately to domain areas and section anchors", 
   );
   assert.equal(
     getNotificationHref({ category: "officer_member" }),
-    "/admin/members#member-roster",
+    "/officers/members#member-roster",
   );
   assert.equal(getNotificationHref({ category: "officer_event" }), "/events");
   assert.equal(
@@ -155,7 +155,7 @@ test("notification href routes accurately to domain areas and section anchors", 
       category: "officer_member",
       body: "Your role changed to Executive.",
     }),
-    "/admin/members#member-roster",
+    "/officers/members#member-roster",
   );
   assert.equal(
     getNotificationHref({

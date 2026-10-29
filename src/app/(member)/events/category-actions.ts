@@ -3,4 +3,4 @@ export {
   renameEventFinanceCategoryAction,
   retireEventFinanceCategoryAction,
   saveEventBudgetAllocationCategoryAction,
-} from "@/app/(member)/admin/event-finance-categories/actions";
+} from "@/app/(member)/officers/event-finance-categories/actions";

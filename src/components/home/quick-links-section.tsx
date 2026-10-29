@@ -78,7 +78,7 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
             title: "Member Administration",
             description:
               "Officer review of pending memberships, account status, and role grants.",
-            href: "/admin/members",
+            href: "/officers/members",
             icon: Users,
             actionLabel: "Open Administration",
           },

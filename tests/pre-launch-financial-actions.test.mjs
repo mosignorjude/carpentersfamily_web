@@ -106,7 +106,7 @@ describe("updateClubPaymentSettingsAction structure and authorization", () => {
     );
   });
 
-  it("revalidates /dues, /finances, and /admin/members on successful update", () => {
+  it("revalidates /dues, /finances, and /officers/members on successful update", () => {
     assert.ok(body !== null, "Action must exist");
     assert.match(
       body,
@@ -120,8 +120,8 @@ describe("updateClubPaymentSettingsAction structure and authorization", () => {
     );
     assert.match(
       body,
-      /revalidatePath\("\/admin\/members"\)/,
-      "Must revalidate /admin/members path",
+      /revalidatePath\("\/officers\/members"\)/,
+      "Must revalidate /officers/members path",
     );
     assert.match(
       body,
