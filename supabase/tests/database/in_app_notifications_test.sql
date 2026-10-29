@@ -76,7 +76,7 @@ where id in (
 insert into public.member_role_assignments (member_id, role, assigned_by, grant_reason)
 values
   ('00000000-0000-0000-0000-000000002101', 'admin', '00000000-0000-0000-0000-000000002101', 'Notification security test'),
-  ('00000000-0000-0000-0000-000000002102', 'backup_admin', '00000000-0000-0000-0000-000000002101', 'Notification security test'),
+  ('00000000-0000-0000-0000-000000002102', 'president', '00000000-0000-0000-0000-000000002101', 'Notification security test'),
   ('00000000-0000-0000-0000-000000002103', 'executive', '00000000-0000-0000-0000-000000002101', 'Notification security test');
 
 set local role authenticated;

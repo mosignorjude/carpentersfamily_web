@@ -165,10 +165,7 @@ set full_name = case id
       ) then 'staff'
       else 'pending'
     end,
-    profile_completed_at = case
-      when id = '00000000-0000-0000-0000-000000000005' then null
-      else now()
-    end,
+    profile_completed_at = now(),
     staff_disabled_at = case
       when id = '00000000-0000-0000-0000-000000000008' then now()
       else null

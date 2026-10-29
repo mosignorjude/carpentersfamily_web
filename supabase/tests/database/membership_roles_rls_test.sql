@@ -1,6 +1,6 @@
 begin;
 
-select plan(54);
+select plan(53);
 
 -- Structural checks: all public tables have deliberate grants and forced RLS.
 select has_table('public', 'member_profiles', 'member profiles table exists');
@@ -78,8 +78,8 @@ select has_index(
   'usernames are unique case-insensitively'
 );
 select has_index(
-  'public', 'member_role_assignments', 'member_role_assignments_one_current_backup_admin_uidx',
-  'there is at most one active Backup Admin'
+  'public', 'member_role_assignments', 'member_role_assignments_one_current_president_uidx',
+  'there is at most one active President'
 );
 
 -- Temporary fixtures are inserted as the migration test owner and rolled back.
@@ -88,7 +88,7 @@ insert into auth.users (
   raw_app_meta_data, raw_user_meta_data, email_confirmed_at
 ) values
   ('00000000-0000-0000-0000-000000000001', 'authenticated', 'authenticated', 'admin@example.test', '', '{}'::jsonb, '{}'::jsonb, now()),
-  ('00000000-0000-0000-0000-000000000002', 'authenticated', 'authenticated', 'backup@example.test', '', '{}'::jsonb, '{}'::jsonb, now()),
+  ('00000000-0000-0000-0000-000000000002', 'authenticated', 'authenticated', 'president@example.test', '', '{}'::jsonb, '{}'::jsonb, now()),
   ('00000000-0000-0000-0000-000000000003', 'authenticated', 'authenticated', 'executive@example.test', '', '{}'::jsonb, '{}'::jsonb, now()),
   ('00000000-0000-0000-0000-000000000004', 'authenticated', 'authenticated', 'member-one@example.test', '', '{}'::jsonb, '{}'::jsonb, now()),
   ('00000000-0000-0000-0000-000000000005', 'authenticated', 'authenticated', 'member-two@example.test', '', '{}'::jsonb, '{}'::jsonb, now()),
@@ -98,7 +98,7 @@ insert into auth.users (
 update public.member_profiles
 set full_name = case id
       when '00000000-0000-0000-0000-000000000001' then 'Admin One'
-      when '00000000-0000-0000-0000-000000000002' then 'Backup One'
+      when '00000000-0000-0000-0000-000000000002' then 'President One'
       when '00000000-0000-0000-0000-000000000003' then 'Executive One'
       when '00000000-0000-0000-0000-000000000004' then 'Member One'
       when '00000000-0000-0000-0000-000000000005' then 'Member Two'
@@ -107,7 +107,7 @@ set full_name = case id
     end,
     username = case id
       when '00000000-0000-0000-0000-000000000001' then 'admin_one'
-      when '00000000-0000-0000-0000-000000000002' then 'backup_one'
+      when '00000000-0000-0000-0000-000000000002' then 'president_one'
       when '00000000-0000-0000-0000-000000000003' then 'executive_one'
       when '00000000-0000-0000-0000-000000000004' then 'member_one'
       when '00000000-0000-0000-0000-000000000005' then 'member_two'
@@ -138,7 +138,7 @@ where id between '00000000-0000-0000-0000-000000000001'::uuid
 
 insert into public.member_role_assignments (member_id, role, assigned_by, grant_reason) values
   ('00000000-0000-0000-0000-000000000001', 'admin', '00000000-0000-0000-0000-000000000001', 'Initial test administrator'),
-  ('00000000-0000-0000-0000-000000000002', 'backup_admin', '00000000-0000-0000-0000-000000000001', 'Initial test backup administrator'),
+  ('00000000-0000-0000-0000-000000000002', 'president', '00000000-0000-0000-0000-000000000001', 'Initial test president'),
   ('00000000-0000-0000-0000-000000000003', 'executive', '00000000-0000-0000-0000-000000000001', 'Initial test executive');
 
 select throws_ok(
@@ -163,14 +163,27 @@ select throws_ok(
 -- Active ordinary members see only the active directory and their own role history.
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000004', true);
-select is((select count(*) from public.member_profiles), 5::bigint, 'active member sees active roster only');
-select is((select count(*) from public.member_profiles where status <> 'active'), 0::bigint, 'active member cannot see pending or deactivated status');
+select is(
+  (select count(*) from public.member_profiles
+   where id between '00000000-0000-0000-0000-000000000001'::uuid
+                and '00000000-0000-0000-0000-000000000007'::uuid),
+  5::bigint,
+  'active member sees the active fixtures only'
+);
+select is(
+  (select count(*) from public.member_profiles
+   where id between '00000000-0000-0000-0000-000000000001'::uuid
+                and '00000000-0000-0000-0000-000000000007'::uuid
+     and status <> 'active'),
+  0::bigint,
+  'active member cannot see pending or deactivated status'
+);
 select is((select count(*) from public.member_profiles where id = auth.uid()), 1::bigint, 'member can read own profile');
 select is((select count(*) from public.member_role_assignments), 0::bigint, 'member cannot read other members’ role history');
 select throws_ok(
   $$select public.grant_club_role('00000000-0000-0000-0000-000000000005', 'executive', 'Forged member promotion')$$,
   '42501',
-  'Only Admin or Backup Admin may grant or remove Executive status.',
+  'Only Admin or President may grant or remove Executive status.',
   'ordinary member cannot grant Executive status'
 );
 select throws_ok(
@@ -181,13 +194,19 @@ select throws_ok(
 );
 reset role;
 
--- Backup Admin may manage Executive status but cannot appoint either admin role.
+-- The President may manage Executive status but primary roles are staff-appointed.
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000002', true);
-select is((select count(*) from public.member_profiles), 7::bigint, 'Backup Admin may inspect member profiles');
+select is(
+  (select count(*) from public.member_profiles
+   where id between '00000000-0000-0000-0000-000000000001'::uuid
+                and '00000000-0000-0000-0000-000000000007'::uuid),
+  7::bigint,
+  'President may inspect every fixture profile state'
+);
 select lives_ok(
   $$select public.grant_club_role('00000000-0000-0000-0000-000000000005', 'executive', 'Appointed to the event committee')$$,
-  'Backup Admin can grant Executive status'
+  'President can grant Executive status'
 );
 select throws_ok(
   $$select public.grant_club_role('00000000-0000-0000-0000-000000000005', 'executive', 'Duplicate executive assignment')$$,
@@ -200,7 +219,7 @@ select is(
    where member_id = '00000000-0000-0000-0000-000000000005'
      and role = 'executive' and revoked_at is null),
   1::bigint,
-  'Backup Admin grant takes effect once'
+  'President grant takes effect once'
 );
 select throws_ok(
   $$select public.grant_club_role('00000000-0000-0000-0000-000000000005', 'executive', '   ')$$,
@@ -222,7 +241,7 @@ select throws_ok(
 );
 select lives_ok(
   $$select public.revoke_club_role('00000000-0000-0000-0000-000000000005', 'executive', 'Executive term ended')$$,
-  'Backup Admin can revoke Executive status'
+  'President can revoke Executive status'
 );
 select is(
   (select count(*) from public.member_role_assignments
@@ -233,15 +252,40 @@ select is(
 );
 select throws_ok(
   $$select public.grant_club_role('00000000-0000-0000-0000-000000000005', 'admin', 'Attempted primary-admin appointment')$$,
-  '42501',
-  'Only a primary Admin may grant or replace Admin or Backup Admin roles.',
-  'Backup Admin cannot appoint a primary Admin'
+  '22023',
+  'Invalid member or club role.',
+  'member-facing role RPCs no longer appoint primary admins'
 );
 select throws_ok(
-  $$select public.grant_club_role('00000000-0000-0000-0000-000000000004', 'backup_admin', 'Attempted backup-admin appointment')$$,
+  $$select public.grant_club_role('00000000-0000-0000-0000-000000000004', 'president', 'Attempted president appointment')$$,
+  '22023',
+  'Invalid member or club role.',
+  'member-facing role RPCs no longer appoint presidents'
+);
+
+-- set_club_role is the replacement path and is limited to member and Executive.
+select lives_ok(
+  $$select public.set_club_role('00000000-0000-0000-0000-000000000004', 'executive', 'Appointed by the President')$$,
+  'President can set Executive status through the replacement RPC'
+);
+select is(
+  (select count(*) from public.member_role_assignments
+   where member_id = '00000000-0000-0000-0000-000000000004'
+     and role = 'executive' and revoked_at is null),
+  1::bigint,
+  'replacement RPC records exactly one active Executive role'
+);
+select throws_ok(
+  $$select public.set_club_role('00000000-0000-0000-0000-000000000002', 'member', 'Attempted self demotion')$$,
   '42501',
-  'Only a primary Admin may grant or replace Admin or Backup Admin roles.',
-  'Backup Admin cannot appoint another Backup Admin'
+  'Administrators cannot change their own club role.',
+  'roles cannot be changed on the caller account'
+);
+select throws_ok(
+  $$select public.set_club_role('00000000-0000-0000-0000-000000000004', 'admin', 'Attempted admin promotion')$$,
+  '22023',
+  'Invalid member or club role.',
+  'replacement RPC rejects primary-role targets'
 );
 reset role;
 
@@ -252,75 +296,73 @@ select ok((select count(*) > 0 from public.audit_log), 'Executive can read audit
 select throws_ok(
   $$select public.grant_club_role('00000000-0000-0000-0000-000000000004', 'executive', 'Attempted role assignment')$$,
   '42501',
-  'Only Admin or Backup Admin may grant or remove Executive status.',
+  'Only Admin or President may grant or remove Executive status.',
   'Executive cannot grant Executive status'
 );
 reset role;
 
--- A Primary Admin can appoint a successor, then the successor removes the prior role.
-set local role authenticated;
-select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
-select lives_ok(
-  $$select public.revoke_club_role('00000000-0000-0000-0000-000000000002', 'backup_admin', 'Backup administrator replacement')$$,
-  'primary Admin can revoke the current Backup Admin'
-);
-select lives_ok(
-  $$select public.grant_club_role('00000000-0000-0000-0000-000000000004', 'backup_admin', 'Appointed as the new Backup Admin')$$,
-  'primary Admin can appoint a replacement Backup Admin'
-);
-select is(
-  (select count(*) from public.member_role_assignments
-   where role = 'backup_admin' and revoked_at is null),
-  1::bigint,
-  'replacement preserves exactly one active Backup Admin'
-);
-select lives_ok(
-  $$select public.grant_club_role('00000000-0000-0000-0000-000000000005', 'admin', 'Primary administrator succession')$$,
-  'primary Admin can appoint a new primary Admin'
-);
+-- Primary roles stay single-valued at the database level.
+select set_config('request.jwt.claim.sub', '', true);
 select throws_ok(
-  $$select public.grant_club_role('00000000-0000-0000-0000-000000000003', 'backup_admin', 'Attempted second Backup Admin')$$,
+  $$
+    insert into public.member_role_assignments (member_id, role, assigned_by, grant_reason)
+    values (
+      '00000000-0000-0000-0000-000000000003', 'president',
+      '00000000-0000-0000-0000-000000000001', 'Second president'
+    );
+  $$,
   '23505',
-  'duplicate key value violates unique constraint "member_role_assignments_one_current_backup_admin_uidx"',
-  'primary Admin cannot create a second active Backup Admin'
+  'duplicate key value violates unique constraint "member_role_assignments_one_current_president_uidx"',
+  'database permits at most one active President'
 );
-select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000005', true);
-select lives_ok(
-  $$select public.revoke_club_role('00000000-0000-0000-0000-000000000001', 'admin', 'Transferred primary administration')$$,
-  'a different primary Admin can remove the former Admin role'
+select throws_ok(
+  $$
+    insert into public.member_role_assignments (member_id, role, assigned_by, grant_reason)
+    values (
+      '00000000-0000-0000-0000-000000000002', 'admin',
+      '00000000-0000-0000-0000-000000000001', 'Admin beside president'
+    );
+  $$,
+  '23505',
+  'duplicate key value violates unique constraint "member_role_assignments_one_admin_identity_per_member_uidx"',
+  'database permits one primary identity per member'
 );
-select is(
-  (select count(*) from public.member_role_assignments as mra
-   join public.member_profiles as mp on mp.id = mra.member_id
-   where mra.role = 'admin' and mra.revoked_at is null and mp.status = 'active'),
-  1::bigint,
-  'a primary Admin remains active after transfer'
-);
-reset role;
 
--- New sole primary Admin cannot remove or deactivate the last active Admin.
-set local role authenticated;
-select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000005', true);
-select throws_ok(
-  $$select public.revoke_club_role('00000000-0000-0000-0000-000000000005', 'admin', 'Attempted last-admin removal')$$,
-  '23514',
-  'At least one active primary Admin must remain active.',
-  'database blocks revocation of the last active primary Admin'
+-- The last-active-primary-admin guard still protects legacy Admin rows.
+select lives_ok(
+  $$
+    update public.member_role_assignments
+    set revoked_at = pg_catalog.clock_timestamp(),
+        revoked_by = '00000000-0000-0000-0000-000000000001',
+        revoke_reason = 'Test isolation for the final-admin guard'
+    where role = 'admin'
+      and revoked_at is null
+      and member_id <> '00000000-0000-0000-0000-000000000001';
+  $$,
+  'the fixture administrator is the only active primary Admin'
 );
-select is((select count(*) from public.member_profiles), 7::bigint, 'active Admin sees all profile states');
-reset role;
 select throws_ok(
-  $$update public.member_profiles set status = 'deactivated' where id = '00000000-0000-0000-0000-000000000005'$$,
+  $$update public.member_profiles set status = 'deactivated' where id = '00000000-0000-0000-0000-000000000001'$$,
   '23514',
   'At least one active primary Admin must remain active.',
   'database trigger blocks deactivation of the last active primary Admin'
 );
-
--- A deactivated user with a still-valid JWT loses effective privileges immediately.
+select lives_ok(
+  $$
+    insert into public.member_role_assignments (member_id, role, assigned_by, grant_reason)
+    values (
+      '00000000-0000-0000-0000-000000000004', 'admin',
+      '00000000-0000-0000-0000-000000000001', 'Successor administrator'
+    );
+  $$,
+  'a second active primary Admin can be recorded'
+);
 select lives_ok(
   $$update public.member_profiles set status = 'deactivated' where id = '00000000-0000-0000-0000-000000000001'$$,
   'non-final former Admin may be deactivated'
 );
+
+-- A deactivated user with a still-valid JWT loses effective privileges immediately.
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
 select is((select count(*) from public.member_profiles), 1::bigint, 'deactivated account sees only its own profile despite a stale JWT');
@@ -336,11 +378,11 @@ reset role;
 select ok(
   exists (
     select 1 from public.audit_log
-    where actor_id = '00000000-0000-0000-0000-000000000001'
+    where actor_id = '00000000-0000-0000-0000-000000000002'
       and target_member_id = '00000000-0000-0000-0000-000000000005'
       and action = 'club_role_granted'
-      and reason = 'Primary administrator succession'
-      and after_data = '{"role": "admin", "active": true}'::jsonb
+      and reason = 'Appointed to the event committee'
+      and after_data = '{"role": "executive", "active": true}'::jsonb
   ),
   'role audit captures actor, target, prior/new values and reason'
 );

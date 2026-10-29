@@ -70,7 +70,7 @@ update public.member_profiles set status = 'deactivated'
 where id = '00000000-0000-0000-0000-000000000809';
 insert into public.member_role_assignments (member_id, role, assigned_by, grant_reason) values
   ('00000000-0000-0000-0000-000000000801', 'admin', '00000000-0000-0000-0000-000000000801', 'Event finance test primary Admin'),
-  ('00000000-0000-0000-0000-000000000802', 'backup_admin', '00000000-0000-0000-0000-000000000801', 'Event finance test Backup Admin'),
+  ('00000000-0000-0000-0000-000000000802', 'president', '00000000-0000-0000-0000-000000000801', 'Event finance test Backup Admin'),
   ('00000000-0000-0000-0000-000000000803', 'executive', '00000000-0000-0000-0000-000000000801', 'Event finance test Executive');
 
 set local role authenticated;

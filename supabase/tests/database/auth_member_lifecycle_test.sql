@@ -77,7 +77,7 @@ where id in (
 
 insert into public.member_role_assignments (member_id, role, assigned_by, grant_reason) values
   ('00000000-0000-0000-0000-000000000101', 'admin', '00000000-0000-0000-0000-000000000101', 'Lifecycle test primary administrator'),
-  ('00000000-0000-0000-0000-000000000102', 'backup_admin', '00000000-0000-0000-0000-000000000101', 'Lifecycle test backup administrator'),
+  ('00000000-0000-0000-0000-000000000102', 'president', '00000000-0000-0000-0000-000000000101', 'Lifecycle test president role'),
   ('00000000-0000-0000-0000-000000000103', 'executive', '00000000-0000-0000-0000-000000000101', 'Lifecycle test executive');
 
 -- Ordinary members see only themselves plus the active name directory. They
@@ -95,7 +95,7 @@ select throws_ok(
 select throws_ok(
   $$select public.approve_member('00000000-0000-0000-0000-000000000108', 'Forged approval')$$,
   '42501',
-  'Only an active Executive, Admin, or Backup Admin may approve members.',
+  'Only an active Executive, Admin, or President may approve members.',
   'ordinary member cannot approve an applicant'
 );
 reset role;
@@ -118,13 +118,13 @@ select throws_ok(
 select throws_ok(
   $$select public.deactivate_member('00000000-0000-0000-0000-000000000107', 'Attempted executive deactivation')$$,
   '42501',
-  'Only an active Admin or Backup Admin may deactivate members.',
+  'Only an active Admin or President may deactivate members.',
   'Executive cannot deactivate a member'
 );
 select throws_ok(
   $$select public.reactivate_member('00000000-0000-0000-0000-000000000107', 'Attempted executive reactivation')$$,
   '42501',
-  'Only an active Admin or Backup Admin may reactivate members.',
+  'Only an active Admin or President may reactivate members.',
   'Executive cannot reactivate a member'
 );
 reset role;
@@ -177,12 +177,12 @@ where id = '00000000-0000-0000-0000-000000000106';
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000102', true);
 select lives_ok(
-  $$select public.approve_member('00000000-0000-0000-0000-000000000108', 'Backup Admin verified applicant')$$,
-  'Backup Admin can approve a confirmed applicant'
+  $$select public.approve_member('00000000-0000-0000-0000-000000000108', 'President verified applicant')$$,
+  'President can approve a confirmed applicant'
 );
 reset role;
 
--- Only Admin/Backup Admin can change an active account. A deactivated account
+-- Only Admin/President can change an active account. A deactivated account
 -- loses effective privilege despite a still-valid JWT; reactivation retains
 -- historical role assignments but the account status remains authoritative.
 insert into public.member_role_assignments (member_id, role, assigned_by, grant_reason)
@@ -204,11 +204,11 @@ select throws_ok(
   $$select public.deactivate_member('00000000-0000-0000-0000-000000000101', 'Last primary Admin')$$,
   '23514',
   'At least one active primary Admin must remain active.',
-  'Backup Admin cannot deactivate the last active primary Admin'
+  'President cannot deactivate the last active primary Admin'
 );
 select lives_ok(
   $$select public.deactivate_member('00000000-0000-0000-0000-000000000107', 'Member access review')$$,
-  'Backup Admin can deactivate another active member'
+  'President can deactivate another active member'
 );
 reset role;
 
@@ -218,7 +218,7 @@ select is((select count(*) from public.member_profiles where status = 'active'),
 select throws_ok(
   $$select public.approve_member('00000000-0000-0000-0000-000000000108', 'Attempted action after deactivation')$$,
   '42501',
-  'Only an active Executive, Admin, or Backup Admin may approve members.',
+  'Only an active Executive, Admin, or President may approve members.',
   'deactivated Executive cannot perform privileged actions with stale JWT'
 );
 select throws_ok(
