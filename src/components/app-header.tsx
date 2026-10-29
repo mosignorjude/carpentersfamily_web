@@ -252,7 +252,7 @@ export default function AppHeader({
               width={18}
             />
             <span className="flex flex-col">
-              <span className="text-sm font-bold tracking-tight text-[#3D291F] leading-tight">
+              <span className="hidden min-[24rem]:inline text-sm font-bold tracking-tight text-[#3D291F] leading-tight">
                 {clubBrand.shortName}
               </span>
             </span>
