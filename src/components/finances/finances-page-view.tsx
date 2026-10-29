@@ -141,13 +141,21 @@ export function FinancesPageView({
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#3D291F] tracking-tight">
-              Club Finances & Institutional Ledger
+              <span className="sm:hidden">Club Finances</span>
+              <span className="hidden sm:inline">
+                Club Finances &amp; Institutional Ledger
+              </span>
             </h1>
 
             <p className="text-xs sm:text-sm text-[#443A33] leading-relaxed font-normal">
-              Shared club-level financial ledger. Members can review
-              consolidated club income, institutional balances, and verified
-              disbursements.
+              <span className="sm:hidden">
+                Consolidated income, institutional balances, and verified disbursements.
+              </span>
+              <span className="hidden sm:inline">
+                Shared club-level financial ledger. Members can review
+                consolidated club income, institutional balances, and verified
+                disbursements.
+              </span>
             </p>
 
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-2 border-t border-[#E5DDD3] text-xs font-medium text-[#4F3E35]">
@@ -164,6 +172,13 @@ export function FinancesPageView({
                 {isOfficer
                   ? "Officer Management Desk Active"
                   : "Member Verification Active"}
+              </div>
+              <span aria-hidden="true" className="sm:hidden text-[#B8ACA0]">
+                ·
+              </span>
+              <div className="sm:hidden text-[#7A685D] flex items-center gap-1">
+                <Shield className="w-3.5 h-3.5 text-[#174C37]" />
+                <span>Dues privacy enforced</span>
               </div>
             </div>
           </div>
@@ -217,8 +232,8 @@ export function FinancesPageView({
           </div>
         </div>
 
-        {/* Privacy & Shared Ledger Mandate Banner */}
-        <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#5C4638] flex items-start gap-3">
+        {/* Privacy & Shared Ledger Mandate Banner (hidden on mobile, summarized inline above) */}
+        <div className="hidden sm:flex p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#5C4638] items-start gap-3">
           <Shield className="w-4 h-4 text-[#174C37] shrink-0 mt-0.5" />
           <div className="leading-relaxed">
             <strong className="text-[#3D291F] font-bold">

@@ -79,12 +79,13 @@ export function TabAuditLog({
                 className="text-lg font-bold text-[#3D291F]"
                 id="ledger-heading"
               >
-                Financial Ledger & Transaction Journal
+                <span className="hidden sm:inline">Financial Ledger & Transaction Journal</span>
+                <span className="sm:hidden">Transaction Journal</span>
               </h3>
             </div>
-            <p className="text-xs text-[#7A685D] mt-1">
-              Complete verifiable record of all receipts, disbursements,
-              authorizations, and retained audit adjustments.
+            <p className="text-xs text-[#6B5D53] mt-1">
+              <span className="hidden sm:inline">Complete verifiable record of all receipts, disbursements, authorizations, and retained audit adjustments.</span>
+              <span className="sm:hidden">Verifiable receipts, disbursements & journal.</span>
             </p>
           </div>
 
@@ -103,18 +104,22 @@ export function TabAuditLog({
 
         {/* Role Notice & Filter Controls */}
         <div className="space-y-3">
-          <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] text-xs text-[#5C4638] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="p-2.5 sm:p-3 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] text-xs text-[#5C4638] flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-[#174C37]">
-                Club Governance Rule:
+              <span className="font-semibold text-[#174C37] shrink-0">
+                <span className="hidden sm:inline">Club Governance Rule:</span>
+                <span className="sm:hidden">Governance:</span>
               </span>
-              <span>
+              <span className="hidden sm:inline">
                 Executive and Admin can record entries; only Admin can void
                 entries. Permanent deletion is prohibited under security policy.
               </span>
+              <span className="sm:hidden text-[11px] text-[#6B5D53]">
+                Admin/Exec record · Admin voids · Immutable
+              </span>
             </div>
-            <span className="text-[11px] font-mono text-[#7A685D] shrink-0">
-              Current: {userRole.toUpperCase()}
+            <span className="text-[10px] sm:text-[11px] font-mono text-[#6B5D53] shrink-0">
+              Role: {userRole.toUpperCase()}
             </span>
           </div>
 
@@ -122,7 +127,7 @@ export function TabAuditLog({
             {/* Segmented Filter Buttons */}
             <div className="flex items-center gap-1.5 p-1 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-x-auto">
               <button
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors min-h-[36px] cursor-pointer ${
+                className={`px-3.5 py-1.5 text-xs font-medium rounded-xl whitespace-nowrap transition-colors min-h-[38px] cursor-pointer ${
                   filterType === "all"
                     ? "bg-[#174C37] text-white shadow-xs font-semibold border-0"
                     : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
@@ -133,7 +138,7 @@ export function TabAuditLog({
                 All Records ({transactions.length})
               </button>
               <button
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors min-h-[36px] cursor-pointer ${
+                className={`px-3.5 py-1.5 text-xs font-medium rounded-xl whitespace-nowrap transition-colors min-h-[38px] cursor-pointer ${
                   filterType === "revenue"
                     ? "bg-[#174C37] text-white shadow-xs font-semibold border-0"
                     : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
@@ -144,7 +149,7 @@ export function TabAuditLog({
                 Inflows / Revenue
               </button>
               <button
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors min-h-[36px] cursor-pointer ${
+                className={`px-3.5 py-1.5 text-xs font-medium rounded-xl whitespace-nowrap transition-colors min-h-[38px] cursor-pointer ${
                   filterType === "expense"
                     ? "bg-[#174C37] text-white shadow-xs font-semibold border-0"
                     : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
@@ -155,7 +160,7 @@ export function TabAuditLog({
                 Outflows / Expenses
               </button>
               <button
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors min-h-[36px] cursor-pointer ${
+                className={`px-3.5 py-1.5 text-xs font-medium rounded-xl whitespace-nowrap transition-colors min-h-[38px] cursor-pointer ${
                   filterType === "voided"
                     ? "bg-[#BA3C2A] text-white shadow-xs font-semibold border-0"
                     : "bg-transparent border-0 text-[#5C4638] hover:text-[#BA3C2A]"
@@ -205,10 +210,165 @@ export function TabAuditLog({
             title="No Historical Audits"
           />
         ) : (
-          <TableScroll
-            className="rounded-xl border border-[#E5DDD3]"
-            label="Audit log entries"
-          >
+          <>
+            {/* Mobile Journal Cards (md:hidden) */}
+            <div className="md:hidden divide-y divide-[#EBE5DC]">
+              {filteredTransactions.length === 0 ? (
+                <div className="py-8 text-center text-sm text-[#6B5D53]">
+                  No transactions match the selected filters.
+                </div>
+              ) : (
+                filteredTransactions.map((txn) => {
+                  const isVoided = txn.status === "voided";
+                  const isRevenue = txn.type === "revenue";
+
+                  return (
+                    <div
+                      className={`p-4 space-y-3 ${
+                        isVoided ? "bg-[#FAF6F0]/50 opacity-80" : "bg-white"
+                      }`}
+                      key={`mobile-audit-${txn.id}`}
+                    >
+                      {/* Top: Ref & Date & Amount */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F]"
+                              title={`Full Transaction ID: ${txn.id}`}
+                            >
+                              #{txn.paymentRef || txn.id.slice(0, 8)}
+                            </span>
+                            <span
+                              className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${
+                                isVoided
+                                  ? "bg-[#FAF6F0] text-[#6B5D53] border-[#E5DDD3] line-through"
+                                  : isRevenue
+                                    ? "bg-[#174C37]/10 text-[#174C37] border-[#174C37]/20"
+                                    : "bg-[#BA3C2A]/10 text-[#BA3C2A] border-[#BA3C2A]/20"
+                              }`}
+                            >
+                              {isVoided
+                                ? "Voided"
+                                : isRevenue
+                                  ? "Revenue"
+                                  : "Expense"}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-[#6B5D53] font-mono mt-1 block">
+                            {txn.date}
+                          </span>
+                        </div>
+
+                        <div className="text-right">
+                          <span
+                            className={`text-base font-bold font-mono tabular-nums ${
+                              isVoided
+                                ? "line-through text-[#6B5D53]"
+                                : isRevenue
+                                  ? "text-[#174C37]"
+                                  : "text-[#BA3C2A]"
+                            }`}
+                          >
+                            {isVoided ? "" : isRevenue ? "+" : "-"}
+                            {formatNaira(txn.amount)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Description & Counterparty */}
+                      <div>
+                        <h4
+                          className={`font-semibold text-sm text-[#3D291F] ${
+                            isVoided ? "line-through text-[#6B5D53]" : ""
+                          }`}
+                        >
+                          {txn.description}
+                        </h4>
+                        <div className="text-xs text-[#6B5D53] mt-0.5 flex flex-wrap items-center gap-x-2">
+                          <span>
+                            Party:{" "}
+                            <strong className="font-medium text-[#3D291F]">
+                              {txn.payerPayee}
+                            </strong>
+                          </span>
+                          <span>
+                            · Category:{" "}
+                            <strong className="font-medium text-[#3D291F]">
+                              {txn.categoryLabel}
+                            </strong>
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-[#6B5D53] mt-1">
+                          Recorded/Auth by:{" "}
+                          <span className="font-medium text-[#3D291F]">
+                            {txn.authorizedBy || "System"}
+                          </span>
+                          {txn.authorizerRole && (
+                            <span className="text-[10px] text-[#6B5D53] block">
+                              {txn.authorizerRole}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Footer: Receipt & Actions */}
+                      <div className="flex items-center justify-between pt-2.5 border-t border-[#F2ECE4] text-xs">
+                        <div>
+                          {txn.receiptFileName ? (
+                            <button
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 rounded-lg hover:bg-[#174C37] hover:text-white transition-colors cursor-pointer min-h-[36px]"
+                              onClick={() => onViewTransaction(txn)}
+                              title={`View receipt voucher: ${txn.receiptFileName}`}
+                              type="button"
+                            >
+                              <Paperclip className="w-3.5 h-3.5" />
+                              <span>Receipt</span>
+                            </button>
+                          ) : (
+                            <ReceiptCell
+                              isLegacy={txn.isLegacy}
+                              paymentMethod={txn.paymentMethod}
+                              paymentStatus={txn.paymentStatus}
+                              receipt={null}
+                            />
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="px-3 py-1.5 text-xs font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-xl transition-colors cursor-pointer min-h-[44px]"
+                            onClick={() => onViewTransaction(txn)}
+                            title="View audit voucher"
+                            type="button"
+                          >
+                            Inspect
+                          </button>
+
+                          {!isVoided && isAdmin && (
+                            <button
+                              className="px-3 py-1.5 text-xs font-semibold text-[#BA3C2A] bg-white border border-[#BA3C2A]/30 hover:bg-[#BA3C2A] hover:text-white rounded-xl transition-colors cursor-pointer min-h-[44px]"
+                              onClick={() => onInitiateVoid(txn)}
+                              title="Void record"
+                              type="button"
+                            >
+                              Void
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Desktop Table (hidden md:block) */}
+            <div className="hidden md:block">
+              <TableScroll
+                className="rounded-xl border border-[#E5DDD3]"
+                label="Audit log entries"
+              >
             <table
               aria-label="Transaction journal"
               className="w-full text-xs text-left"
@@ -394,7 +554,9 @@ export function TabAuditLog({
               </tbody>
             </table>
           </TableScroll>
-        )}
+        </div>
+      </>
+    )}
       </section>
 
       {/* Section 2: Chronological System Activity Audit Trail */}

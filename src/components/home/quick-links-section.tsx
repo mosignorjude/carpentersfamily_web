@@ -98,34 +98,34 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
         <span className="text-xs text-[#7A685D]">Carpenters Family Portal</span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {links.map((link) => {
           const Icon = link.icon;
 
           return (
             <Link
-              className="p-4 rounded-xl border border-[#E5DDD3] bg-white hover:border-[#174C37]/40 hover:bg-[#FAF6F0]/50 text-left flex flex-col justify-between transition-all min-h-[120px] shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+              className="p-3 sm:p-4 rounded-xl border border-[#E5DDD3] bg-white hover:border-[#174C37]/40 hover:bg-[#FAF6F0]/50 text-left flex flex-col justify-between transition-all min-h-[96px] sm:min-h-[120px] shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
               href={link.href}
               key={link.id}
             >
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#FAF6F0] text-[#174C37] border border-[#E5DDD3]">
-                    <Icon className="w-4 h-4" />
+                <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-[#FAF6F0] text-[#174C37] border border-[#E5DDD3]">
+                    <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
 
-                  <ArrowRight className="w-4 h-4 text-[#7A685D]" />
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7A685D]" />
                 </div>
 
-                <h4 className="text-sm font-bold text-[#3D291F] leading-snug">
+                <h4 className="text-xs sm:text-sm font-bold text-[#3D291F] leading-snug">
                   {link.title}
                 </h4>
-                <p className="text-[11px] text-[#7A685D] mt-1 leading-relaxed">
+                <p className="hidden sm:block text-[11px] text-[#7A685D] mt-1 leading-relaxed">
                   {link.description}
                 </p>
               </div>
 
-              <div className="mt-3 pt-2 border-t border-[#E5DDD3]/60 text-xs font-semibold text-[#174C37]">
+              <div className="mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-[#E5DDD3]/60 text-[11px] sm:text-xs font-semibold text-[#174C37]">
                 {link.actionLabel}
               </div>
             </Link>

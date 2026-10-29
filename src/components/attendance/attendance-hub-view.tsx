@@ -262,7 +262,7 @@ export function AttendanceHubView({
             </div>
             <div className="relative">
               <select
-                className="w-full h-10 pl-3 pr-8 bg-white border border-[#E5DDD3] rounded-lg text-xs font-bold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] cursor-pointer"
+                className="w-full h-10 pl-3 pr-10 bg-white border border-[#E5DDD3] rounded-lg text-xs font-bold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] cursor-pointer truncate"
                 id="meeting-selector-input"
                 onChange={(e) => handleEventChange(e.target.value)}
                 value={selectedEvent?.id ?? ""}
@@ -285,13 +285,13 @@ export function AttendanceHubView({
 
         {/* Selected Event Details Banner */}
         {selectedEvent && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
             <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <span className="text-xs font-extrabold text-[#174C37]">
                   Active Context:
                 </span>
-                <span className="text-sm font-bold text-[#3D291F]">
+                <span className="text-xs sm:text-sm font-bold text-[#3D291F] truncate max-w-[220px] sm:max-w-none">
                   {selectedEvent.title}
                 </span>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-white text-[#5C4638] border border-[#E5DDD3]">
@@ -309,7 +309,7 @@ export function AttendanceHubView({
                   {selectedEvent.status}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-[#5C4638]">
+              <div className="flex items-center gap-2 text-xs text-[#6B5D53]">
                 <Calendar className="w-3.5 h-3.5 text-[#174C37]" />
                 <span>
                   {watDateTime.format(new Date(selectedEvent.starts_at))} WAT
@@ -339,63 +339,63 @@ export function AttendanceHubView({
           </div>
         )}
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* KPI Cards: 2x2 matrix on mobile, 4-col on desktop */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
           {/* Card 1: Live Session Status */}
-          <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
-            <div className="flex items-center justify-between text-xs text-[#7A685D]">
+          <div className="p-3 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
+            <div className="flex items-center justify-between text-xs text-[#6B5D53]">
               <span className="font-bold">Live Check-In</span>
               <Clock className="w-4 h-4 text-[#174C37]" />
             </div>
-            <div className="text-xl font-extrabold text-[#3D291F]">
+            <div className="text-base sm:text-xl font-extrabold text-[#3D291F]">
               {sessionOpen ? "Session Open" : "Session Inactive"}
             </div>
-            <p className="text-[11px] text-[#5C4638]">
+            <p className="text-[10px] sm:text-[11px] text-[#6B5D53] truncate">
               {sessionOpen
-                ? `Cutoff: ${session?.late_after_minutes}m from start`
-                : "Awaiting officer activation"}
+                ? `Cutoff: ${session?.late_after_minutes}m`
+                : "Awaiting activation"}
             </p>
           </div>
 
           {/* Card 2: Personal Attendance Standing */}
-          <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
-            <div className="flex items-center justify-between text-xs text-[#7A685D]">
+          <div className="p-3 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
+            <div className="flex items-center justify-between text-xs text-[#6B5D53]">
               <span className="font-bold">My Standing</span>
               <UserCheck className="w-4 h-4 text-[#D6A23A]" />
             </div>
-            <div className="text-xl font-extrabold text-[#174C37]">
+            <div className="text-base sm:text-xl font-extrabold text-[#174C37]">
               {attendanceRate}%
             </div>
-            <p className="text-[11px] text-[#5C4638]">
-              {attendedCount} of {totalTrackedMeetings} assemblies attended
+            <p className="text-[10px] sm:text-[11px] text-[#6B5D53] truncate">
+              {attendedCount} of {totalTrackedMeetings} attended
             </p>
           </div>
 
           {/* Card 3: Secretariat Minutes */}
-          <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
-            <div className="flex items-center justify-between text-xs text-[#7A685D]">
+          <div className="p-3 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
+            <div className="flex items-center justify-between text-xs text-[#6B5D53]">
               <span className="font-bold">Secretariat Record</span>
               <FileText className="w-4 h-4 text-[#174C37]" />
             </div>
-            <div className="text-xl font-extrabold text-[#3D291F]">
+            <div className="text-base sm:text-xl font-extrabold text-[#3D291F]">
               {minutes ? `Rev. ${minutes.revision_number}` : "Pending"}
             </div>
-            <p className="text-[11px] text-[#5C4638]">
-              {minutes ? "Ratified & Transcribed" : "No transcription yet"}
+            <p className="text-[10px] sm:text-[11px] text-[#6B5D53] truncate">
+              {minutes ? "Ratified" : "No transcription yet"}
             </p>
           </div>
 
           {/* Card 4: Meeting Roll Call */}
-          <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
-            <div className="flex items-center justify-between text-xs text-[#7A685D]">
+          <div className="p-3 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
+            <div className="flex items-center justify-between text-xs text-[#6B5D53]">
               <span className="font-bold">Roll Call Tally</span>
               <Users className="w-4 h-4 text-[#174C37]" />
             </div>
-            <div className="text-xl font-extrabold text-[#3D291F]">
+            <div className="text-base sm:text-xl font-extrabold text-[#3D291F]">
               {attendance.length} Total
             </div>
-            <p className="text-[11px] text-[#5C4638]">
-              {presentCount} Present · {lateCount} Late · {absentCount} Absent
+            <p className="text-[10px] sm:text-[11px] text-[#6B5D53] truncate">
+              {presentCount} Present · {lateCount} Late
             </p>
           </div>
         </div>

@@ -30,7 +30,7 @@ export default function MobileAppMenu({
         aria-controls="mobile-primary-navigation"
         aria-expanded={isOpen}
         aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
-        className="button-secondary app-menu-toggle"
+        className="button-secondary app-menu-toggle relative z-80"
         onClick={() => setIsOpen((open) => !open)}
         onKeyDown={closeOnEscape}
         type="button"

@@ -129,9 +129,9 @@ export function EventDomainLedger({
 
       {/* Filter Pills Bar */}
       <div className="px-4 py-2.5 border-b border-[#E5DDD3] bg-[#FDFBF8] flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-1.5 overflow-x-auto">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
           <button
-            className={`px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer min-h-[32px] ${
+            className={`px-3.5 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] ${
               statusFilter === "all"
                 ? "bg-[#174C37] text-white font-semibold"
                 : "text-[#5C4638] hover:bg-[#FAF6F0]"
@@ -145,7 +145,7 @@ export function EventDomainLedger({
             All ({transactions.length})
           </button>
           <button
-            className={`px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer min-h-[32px] flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] flex items-center gap-1.5 ${
               statusFilter === "recorded"
                 ? "bg-[#D6A23A] text-[#3D291F] font-bold"
                 : "text-[#B27D16] hover:bg-[#FFF4E5]"
@@ -160,7 +160,7 @@ export function EventDomainLedger({
             Pending Review ({pendingCount})
           </button>
           <button
-            className={`px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer min-h-[32px] flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] flex items-center gap-1.5 ${
               statusFilter === "approved"
                 ? "bg-[#174C37] text-white font-semibold"
                 : "text-[#174C37] hover:bg-[#E9F4EE]"
@@ -175,7 +175,7 @@ export function EventDomainLedger({
             Approved ({approvedCount})
           </button>
           <button
-            className={`px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer min-h-[32px] flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] flex items-center gap-1.5 ${
               statusFilter === "rejected"
                 ? "bg-[#BA3C2A] text-white font-semibold"
                 : "text-[#BA3C2A] hover:bg-[#FDF0EE]"
@@ -203,9 +203,186 @@ export function EventDomainLedger({
         </div>
       </div>
 
-      {/* Ledger Table */}
-      <TableScroll label="Ledger transactions">
-        <table className="w-full text-left text-xs border-collapse">
+      {/* Mobile Transaction Cards (md:hidden) */}
+      <div className="md:hidden divide-y divide-[#EBE5DC]">
+        {pageTransactions.length === 0 ? (
+          <div className="py-12 px-4 text-center text-[#6B5D53]">
+            <AlertCircle className="w-6 h-6 mx-auto mb-2 text-[#D6A23A]" />
+            <p className="font-semibold text-sm text-[#3D291F]">
+              No domain transactions found
+            </p>
+            <p className="text-xs mt-1">
+              {searchQuery
+                ? "No records match your search criteria."
+                : `No ${statusFilter === "all" ? "" : statusFilter} entries recorded for this event.`}
+            </p>
+          </div>
+        ) : (
+          pageTransactions.map((txn) => {
+            const status = resolveStatus(txn);
+            const isRejected = status === "rejected";
+            const isPending = status === "recorded";
+            const isApproved = status === "approved";
+            const isExpense =
+              domain === "expenses" || txn.type === "expense";
+
+            const isSelfReview =
+              Boolean(currentUserId) &&
+              Boolean(txn.createdBy) &&
+              txn.createdBy === currentUserId;
+
+            return (
+              <div
+                className={`p-4 space-y-3 ${
+                  isRejected ? "bg-[#FAF6F0]/40 opacity-80" : "bg-white"
+                }`}
+                key={`mobile-${txn.id}`}
+              >
+                {/* Header: Ref & Date & Amount */}
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F]"
+                        title={`Full Transaction ID: ${txn.id}`}
+                      >
+                        #{txn.paymentRef || txn.id.slice(0, 8).toUpperCase()}
+                      </span>
+                      {txn.categoryLabel && (
+                        <span className="text-[11px] font-semibold text-[#6B5D53] bg-[#FAF6F0] px-2 py-0.5 rounded-md border border-[#E5DDD3]">
+                          {txn.categoryLabel}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[11px] text-[#6B5D53] font-mono mt-1 block">
+                      {txn.date}
+                    </span>
+                  </div>
+
+                  <div className="text-right">
+                    <span
+                      className={`text-base font-bold font-mono tabular-nums ${
+                        isRejected
+                          ? "line-through text-[#6B5D53]"
+                          : isExpense
+                            ? "text-[#BA3C2A]"
+                            : "text-[#174C37]"
+                      }`}
+                    >
+                      {isRejected ? "" : isExpense ? "-" : "+"}
+                      {formatNaira(txn.amount)}
+                    </span>
+                    {isRejected && (
+                      <span className="block text-[10px] font-bold uppercase text-[#BA3C2A]">
+                        Reversed
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description & Counterparty */}
+                <div>
+                  <h4 className="font-semibold text-sm text-[#3D291F]">
+                    {txn.description}
+                  </h4>
+                  <p className="text-xs text-[#6B5D53] mt-0.5">
+                    Party:{" "}
+                    <span className="font-medium text-[#3D291F]">
+                      {txn.payerPayee}
+                    </span>
+                    {txn.paymentMethod ? ` · ${txn.paymentMethod}` : ""}
+                  </p>
+                  {isRejected && txn.rejectionReason && (
+                    <div className="mt-1.5 text-xs text-[#BA3C2A] bg-[#FDF0EE] p-2 rounded-lg border border-[#F5C7C0]">
+                      <strong>Reversed:</strong> {txn.rejectionReason}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer: Voucher, Status, Actions */}
+                <div className="flex items-center justify-between pt-2.5 border-t border-[#F2ECE4] gap-2">
+                  <div className="flex items-center gap-2">
+                    {/* Status Badge */}
+                    {isPending && (
+                      <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
+                        Recorded (Pending)
+                      </span>
+                    )}
+                    {isApproved && (
+                      <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
+                        Approved
+                      </span>
+                    )}
+                    {isRejected && (
+                      <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
+                        Rejected
+                      </span>
+                    )}
+
+                    {/* Voucher Evidence */}
+                    <ReceiptCell
+                      isLegacy={txn.isLegacy}
+                      paymentMethod={txn.paymentMethod}
+                      paymentStatus={txn.paymentStatus}
+                      receipt={txn.receipt ?? null}
+                    />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="px-3 py-2 text-xs font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-xl transition-colors flex items-center gap-1.5 min-h-[44px] cursor-pointer"
+                      onClick={() => onInspect(txn)}
+                      type="button"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span>Inspect</span>
+                    </button>
+
+                    {isOfficer &&
+                      isPending &&
+                      (isExecutive && isSelfReview ? (
+                        <span className="text-[10px] font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-2.5 py-1.5 rounded-lg text-center">
+                          Awaiting Independent Officer Review
+                        </span>
+                      ) : (
+                        <>
+                          {onApprove && (
+                            <button
+                              aria-label="Quick Approve Record"
+                              className="p-2.5 text-[#174C37] bg-[#E9F4EE] hover:bg-[#D4ECE0] rounded-xl transition-colors border border-[#174C37]/30 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+                              onClick={() => onApprove(txn)}
+                              title="Quick Approve Record"
+                              type="button"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                          )}
+                          {onReject && (
+                            <button
+                              aria-label="Reject and Reverse Transaction"
+                              className="p-2.5 text-[#BA3C2A] bg-[#FDF0EE] hover:bg-[#F8D7D2] rounded-xl transition-colors border border-[#BA3C2A]/30 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+                              onClick={() => onReject(txn)}
+                              title="Reject and Reverse Transaction"
+                              type="button"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </>
+                      ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Ledger Table (hidden md:block) */}
+      <div className="hidden md:block">
+        <TableScroll label="Ledger transactions">
+          <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
               <th className="py-3 px-4">Ref & Date</th>
@@ -404,6 +581,7 @@ export function EventDomainLedger({
           </tbody>
         </table>
       </TableScroll>
+      </div>
 
       {/* Pagination Footer */}
       {totalPages > 1 && (

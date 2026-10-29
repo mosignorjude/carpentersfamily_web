@@ -89,8 +89,11 @@ export function TabOverview({
           <span className="text-xs font-semibold text-[#174C37] uppercase tracking-wider">
             Event Overview & Budget Allocation
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#3D291F] tracking-tight mt-1">
-            {event.title} — Event Finance
+          <h2 className="text-xl sm:text-3xl font-bold text-[#3D291F] tracking-tight mt-1">
+            <span className="sm:hidden">Financial Overview &amp; Budget</span>
+            <span className="hidden sm:inline">
+              {event.title} — Event Finance
+            </span>
           </h2>
           <p className="text-sm text-[#7A685D] mt-1">
             Financial reconciliation, ticket inventory, and operational cost

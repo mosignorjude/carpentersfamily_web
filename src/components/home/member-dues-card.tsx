@@ -183,8 +183,61 @@ export function MemberDuesCard({
         </div>
       </div>
 
-      {/* Summary Highlight Strip */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Mobile Consolidated Summary Strip (sm:hidden) */}
+      <div className="sm:hidden grid grid-cols-3 gap-2 p-3.5 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
+        <div className="text-center space-y-0.5">
+          <span className="text-[10px] font-bold text-[#7A685D] uppercase tracking-wider block">
+            Paid ({currentYear})
+          </span>
+          <span className="font-mono font-bold text-base text-[#174C37] block">
+            {formatNaira(totalPaidAmount)}
+          </span>
+          <span className="text-[10px] text-[#7A685D] block">
+            {paidMonthsCount}/{scheduledMonthsCount} mo
+          </span>
+        </div>
+
+        <div className="text-center space-y-0.5 border-x border-[#E5DDD3] px-1">
+          <span className="text-[10px] font-bold text-[#7A685D] uppercase tracking-wider block">
+            Due Now
+          </span>
+          <span
+            className={`font-mono font-bold text-base block ${
+              activeObligationRow ? "text-[#BA3C2A]" : "text-[#174C37]"
+            }`}
+          >
+            {activeObligationRow
+              ? formatNaira(activeObligationRow.amountNgn)
+              : "₦0"}
+          </span>
+          <span className="text-[10px] text-[#7A685D] block">
+            {activeObligationRow
+              ? activeObligationRow.isOverdue
+                ? "Overdue"
+                : "Current"
+              : "Cleared"}
+          </span>
+        </div>
+
+        <div className="text-center space-y-0.5">
+          <span className="text-[10px] font-bold text-[#7A685D] uppercase tracking-wider block">
+            Status
+          </span>
+          <span className="font-bold text-xs text-[#174C37] block mt-1">
+            {activeObligationRow
+              ? "Action Req."
+              : scheduledMonthsCount > 0
+                ? "Good Standing"
+                : "Pending"}
+          </span>
+          <span className="text-[10px] text-[#7A685D] block">
+            {currentYear} Schedule
+          </span>
+        </div>
+      </div>
+
+      {/* Desktop Summary Highlight Strip (hidden sm:grid) */}
+      <div className="hidden sm:grid sm:grid-cols-3 gap-4">
         {/* 1. Settled to Date */}
         <div className="p-4 sm:p-5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1.5 shadow-2xs">
           <span className="text-[11px] font-medium text-[#7A685D] block">

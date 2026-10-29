@@ -61,6 +61,10 @@ import { TabReports } from "./tab-reports";
 import { TabRevenue } from "./tab-revenue";
 import { TabTeamRoles } from "./tab-team-roles";
 import { TabTickets } from "./tab-tickets";
+import {
+  MobileTabBottomSheet,
+  type MobileTabItem,
+} from "./mobile-tab-bottom-sheet";
 
 function mapDbPaymentMethod(label: string): string {
   const normalized = label.toLowerCase();
@@ -389,19 +393,55 @@ export function EventDashboardView({
   };
 
   // 8 Exact Tabs Configuration (User requested separate Expenses from Budget & Allocations)
-  const tabs: {
-    id: DashboardTab;
-    label: string;
-    icon: React.ComponentType<{ className?: string }>;
-  }[] = [
-    { id: "overview", label: "Overview", icon: Layers },
-    { id: "tickets", label: "Tickets", icon: Ticket },
-    { id: "expenses", label: "Expenses", icon: Wallet },
-    { id: "budget", label: "Budget & Allocations", icon: BarChart3 },
-    { id: "revenue", label: "Revenue", icon: DollarSign },
-    { id: "reports", label: "Reports", icon: BarChart3 },
-    { id: "team_roles", label: "Team & Roles", icon: Users },
-    { id: "audit_log", label: "Audit Log", icon: Shield },
+  const tabs: MobileTabItem[] = [
+    {
+      id: "overview",
+      label: "Overview",
+      subtitle: "Financial summary, budget ceiling & variances",
+      icon: Layers,
+    },
+    {
+      id: "tickets",
+      label: "Tickets",
+      subtitle: "Tier inventory, sales tallies & pass holders",
+      icon: Ticket,
+    },
+    {
+      id: "expenses",
+      label: "Expenses",
+      subtitle: "Operational cost centers & vendor receipts",
+      icon: Wallet,
+    },
+    {
+      id: "budget",
+      label: "Budget & Allocations",
+      subtitle: "Departmental limits & statutory caps",
+      icon: BarChart3,
+    },
+    {
+      id: "revenue",
+      label: "Revenue",
+      subtitle: "Sponsorships, donations & external inflows",
+      icon: DollarSign,
+    },
+    {
+      id: "reports",
+      label: "Reports",
+      subtitle: "Financial statements, P&L & PDF export",
+      icon: BarChart3,
+    },
+    {
+      id: "team_roles",
+      label: "Team & Roles",
+      subtitle: "Committee desks & authorized officers",
+      icon: Users,
+    },
+    {
+      id: "audit_log",
+      label: "Audit Log",
+      subtitle: "Immutable transaction journal & void logs",
+      icon: Shield,
+    },
   ];
 
   const statusBadgeClass = event.archivedAt
@@ -549,8 +589,17 @@ export function EventDashboardView({
           </div>
         )}
 
-        {/* 8 Horizontal Pill Tabs */}
-        <div className="pt-2 border-t border-[#E5DDD3]">
+        {/* Mobile Interactive Bottom Sheet Picker (Option B) */}
+        <div className="pt-2 border-t border-[#E5DDD3] sm:hidden">
+          <MobileTabBottomSheet
+            activeTab={activeTab}
+            onSelectTab={selectTab}
+            tabs={tabs}
+          />
+        </div>
+
+        {/* 8 Horizontal Pill Tabs (Tablet & Desktop) */}
+        <div className="hidden sm:block pt-2 border-t border-[#E5DDD3]">
           <TableScroll className="rounded-xl" label="Dashboard sections">
             <div className="flex w-max items-center gap-2 p-1.5 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
               {tabs.map((tab) => {
@@ -581,7 +630,7 @@ export function EventDashboardView({
             </div>
           </TableScroll>
           <p className="mt-1.5 text-xs text-[#7A685D] lg:hidden">
-            Swipe right for more sections
+            Swipe left for more sections
           </p>
         </div>
       </section>

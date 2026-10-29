@@ -132,9 +132,9 @@ export function ClubTransactionLedger({
         {/* Filter Tabs & Search Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-2">
           {/* Filter Pills */}
-          <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-[#E5DDD3] text-xs shadow-2xs self-start">
+          <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-[#E5DDD3] text-xs shadow-2xs self-start overflow-x-auto">
             <button
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer min-h-[38px] ${
                 filterType === "all"
                   ? "bg-[#174C37] text-white shadow-2xs"
                   : "text-[#54433A] hover:bg-[#FAF6F0]"
@@ -145,7 +145,7 @@ export function ClubTransactionLedger({
               All Records
             </button>
             <button
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer min-h-[38px] ${
                 filterType === "income"
                   ? "bg-[#174C37] text-white shadow-2xs"
                   : "text-[#54433A] hover:bg-[#FAF6F0]"
@@ -156,7 +156,7 @@ export function ClubTransactionLedger({
               Inflows
             </button>
             <button
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer min-h-[38px] ${
                 filterType === "expense"
                   ? "bg-[#BA3C2A] text-white shadow-2xs"
                   : "text-[#54433A] hover:bg-[#FAF6F0]"
@@ -167,7 +167,7 @@ export function ClubTransactionLedger({
               Disbursements
             </button>
             <button
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer min-h-[38px] ${
                 filterType === "voided"
                   ? "bg-[#7A685D] text-white shadow-2xs"
                   : "text-[#54433A] hover:bg-[#FAF6F0]"
@@ -212,8 +212,162 @@ export function ClubTransactionLedger({
           title="No Transactions Found"
         />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+        <>
+          {/* Mobile Transaction Cards (md:hidden) */}
+          <div className="md:hidden divide-y divide-[#E5DDD3]">
+            {filteredTransactions.map((transaction) => {
+              const linkedReceipts =
+                receiptsByTransaction.get(transaction.id) ?? [];
+              const isVoided = Boolean(transaction.voided_at);
+
+              return (
+                <div
+                  className={`p-4 space-y-3 ${
+                    isVoided ? "bg-[#FAF6F0]/40 opacity-75" : "bg-white"
+                  }`}
+                  key={`mobile-club-txn-${transaction.id}`}
+                >
+                  {/* Top: Date & Amount */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                            isVoided
+                              ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3] line-through"
+                              : transaction.is_opening_balance
+                                ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]"
+                                : transaction.kind === "income"
+                                  ? "bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20"
+                                  : "bg-[#BA3C2A]/10 text-[#BA3C2A] border border-[#BA3C2A]/20"
+                          }`}
+                        >
+                          {isVoided
+                            ? "Voided"
+                            : transaction.is_opening_balance
+                              ? "Opening Balance"
+                              : transaction.kind === "income"
+                                ? "Non-Dues Income"
+                                : "Disbursement"}
+                        </span>
+                        {transaction.category_name_snapshot && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#FAF6F0] text-[#3D291F] border border-[#E5DDD3]">
+                            <Tag className="w-2.5 h-2.5 text-[#6B5D53]" />
+                            <span>{transaction.category_name_snapshot}</span>
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-[#6B5D53] font-mono mt-1 block">
+                        {formatDate(transaction.transaction_date)}
+                      </span>
+                    </div>
+
+                    <div className="text-right">
+                      <span
+                        className={`font-mono font-bold text-base tabular-nums ${
+                          isVoided
+                            ? "line-through text-[#6B5D53]"
+                            : transaction.kind === "income"
+                              ? "text-[#174C37]"
+                              : "text-[#BA3C2A]"
+                        }`}
+                      >
+                        {transaction.kind === "income" ? "+" : "-"}
+                        {formatNaira(transaction.amount_ngn)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Description & Payer/Payee */}
+                  <div>
+                    <h4
+                      className={`font-bold text-sm text-[#3D291F] leading-snug ${
+                        isVoided ? "line-through text-[#6B5D53]" : ""
+                      }`}
+                    >
+                      {transaction.kind === "income"
+                        ? transaction.source_note
+                        : transaction.description}
+                    </h4>
+                    {transaction.payer_payee && (
+                      <p className="text-xs text-[#6B5D53] mt-0.5">
+                        Party:{" "}
+                        <span className="font-semibold text-[#3D291F]">
+                          {transaction.payer_payee}
+                        </span>
+                      </p>
+                    )}
+                    {isVoided && transaction.void_reason && (
+                      <div className="mt-1.5 text-xs text-[#BA3C2A] bg-[#FDF0EE] p-2 rounded-lg border border-[#F5C7C0]">
+                        <strong>Voided:</strong> {transaction.void_reason}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer: Receipts & Action */}
+                  <div className="flex items-center justify-between pt-2.5 border-t border-[#F2ECE4] text-xs">
+                    <div>
+                      <button
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer min-h-[38px] ${
+                          linkedReceipts.length > 0
+                            ? "bg-[#174C37]/10 text-[#174C37] hover:bg-[#174C37] hover:text-white"
+                            : isOfficer && !isVoided
+                              ? "bg-[#FAF6F0] text-[#7A685D] hover:bg-white hover:text-[#3D291F] border border-[#E5DDD3]"
+                              : "text-[#B8ACA0] cursor-default"
+                        }`}
+                        onClick={() => onViewReceipt(transaction)}
+                        type="button"
+                      >
+                        <Paperclip className="w-3.5 h-3.5" />
+                        <span>
+                          {linkedReceipts.length > 0
+                            ? `${linkedReceipts.length} ${linkedReceipts.length === 1 ? "Receipt" : "Receipts"}`
+                            : isOfficer && !isVoided
+                              ? "Attach"
+                              : "None"}
+                        </span>
+                      </button>
+                    </div>
+
+                    {canCorrect && (
+                      <div className="flex items-center gap-1.5">
+                        {!isVoided ? (
+                          <>
+                            <button
+                              aria-label={`Correct transaction ${transaction.id}`}
+                              className="px-2.5 py-1.5 text-xs font-semibold text-[#54433A] bg-white border border-[#E5DDD3] hover:bg-[#FAF6F0] rounded-xl transition-colors cursor-pointer min-h-[38px] inline-flex items-center gap-1"
+                              onClick={() => onInitiateCorrect(transaction)}
+                              type="button"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              aria-label={`Void transaction ${transaction.id}`}
+                              className="px-2.5 py-1.5 text-xs font-semibold text-[#BA3C2A] bg-white border border-[#BA3C2A]/30 hover:bg-[#BA3C2A] hover:text-white rounded-xl transition-colors cursor-pointer min-h-[38px] inline-flex items-center gap-1"
+                              onClick={() => onInitiateVoid(transaction)}
+                              type="button"
+                            >
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                              <span>Void</span>
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-[11px] text-[#6B5D53] italic">
+                            Retained
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table (hidden md:block) */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-[#E5DDD3] bg-[#FAF6F0]/60 text-[11px] font-bold text-[#54433A] uppercase tracking-wider">
                 <th className="py-3 px-4 sm:px-6">Date</th>
@@ -395,7 +549,8 @@ export function ClubTransactionLedger({
             </tbody>
           </table>
         </div>
-      )}
+      </>
+    )}
 
       {/* Pagination Bar */}
       {!financeUnavailable && transactionCount > pageSize && (

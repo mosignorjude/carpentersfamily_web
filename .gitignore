@@ -70,8 +70,10 @@ next-env.d.ts
 
 # Temporary testing screenshots & test run outputs
 /test-*.png
+/screenshots/
 /scripts/test-*.cmd
 /scripts/test-*.ps1
+/scripts/capture-*.cmd
 /scripts/debug-*.cmd
 /scripts/inspect-*.cmd
 /scripts/run-*-test.cmd

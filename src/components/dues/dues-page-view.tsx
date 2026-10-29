@@ -259,9 +259,9 @@ export function DuesPageView({
         </div>
       </section>
 
-      {/* Admin Exemption Dignified Notice */}
+      {/* Admin Exemption Dignified Notice (hidden on mobile to prevent duplication with top badge) */}
       {isAdmin && (
-        <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#174C37]/30 flex items-center gap-3 text-xs text-[#174C37] font-medium shadow-2xs">
+        <div className="hidden sm:flex p-4 rounded-xl bg-[#FAF6F0] border border-[#174C37]/30 items-center gap-3 text-xs text-[#174C37] font-medium shadow-2xs">
           <ShieldCheck className="w-5 h-5 text-[#174C37] shrink-0" />
           <div>
             <strong className="font-bold block">

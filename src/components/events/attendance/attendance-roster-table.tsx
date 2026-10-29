@@ -117,12 +117,12 @@ export function AttendanceRosterTable({
             { id: "absent", label: "Absent" },
           ].map((statusItem) => (
             <button
-              key={statusItem.id}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-colors min-h-[34px] cursor-pointer ${
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl whitespace-nowrap transition-colors min-h-[38px] cursor-pointer ${
                 selectedStatus === statusItem.id
                   ? "bg-[#174C37] text-white shadow-xs border-0"
                   : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
               }`}
+              key={statusItem.id}
               onClick={() => setSelectedStatus(statusItem.id)}
               type="button"
             >
@@ -144,10 +144,81 @@ export function AttendanceRosterTable({
         </div>
       </div>
 
-      {/* Roster Table */}
+      {/* Roster Table & Cards */}
       {filteredAttendance.length ? (
-        <div className="overflow-x-auto rounded-xl border border-[#E5DDD3]">
-          <table className="w-full text-left border-collapse text-xs">
+        <>
+          {/* Mobile Attendance Cards (sm:hidden) */}
+          <div className="sm:hidden divide-y divide-[#E5DDD3] rounded-xl border border-[#E5DDD3] bg-white overflow-hidden shadow-2xs">
+            {filteredAttendance.map((row) => {
+              const person = members.get(row.member_id);
+              const statusBadge =
+                statusStyles[row.attendance_status] ??
+                "text-[#3D291F] bg-[#FAF6F0] border-[#E5DDD3]";
+
+              return (
+                <div
+                  className="p-3.5 space-y-2.5 bg-white"
+                  key={`mobile-attendance-${row.member_id}`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="font-bold text-sm text-[#3D291F]">
+                        {person ? person.full_name : "Former Club Member"}
+                      </h4>
+                      <span className="text-[11px] font-mono text-[#6B5D53]">
+                        @{person?.username ?? "unknown"}
+                      </span>
+                    </div>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${statusBadge}`}
+                    >
+                      {statusLabels[row.attendance_status] ??
+                        row.attendance_status}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-[#6B5D53] pt-1">
+                    <div>
+                      <span className="block font-medium text-[#3D291F]">
+                        {row.checked_in_at
+                          ? row.check_in_method === "qr"
+                            ? "QR Scan"
+                            : "Self Check-In"
+                          : "Session Default (No Check-in)"}
+                      </span>
+                      {row.checked_in_at && (
+                        <span className="text-[11px] font-mono text-[#6B5D53]">
+                          {watShortDateTime.format(new Date(row.checked_in_at))}{" "}
+                          WAT
+                        </span>
+                      )}
+                    </div>
+
+                    {canCorrect && (
+                      <button
+                        className="px-3 py-1.5 text-xs font-semibold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-lg transition-colors cursor-pointer min-h-[38px]"
+                        onClick={() => setCorrectingRecord(row)}
+                        type="button"
+                      >
+                        Correct
+                      </button>
+                    )}
+                  </div>
+
+                  {row.correction_reason && (
+                    <div className="p-2 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#BA3C2A]">
+                      <span className="font-bold block">Corrected:</span>
+                      <span className="italic">{row.correction_reason}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table (hidden sm:block) */}
+          <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#E5DDD3]">
+            <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-[#FAF6F0] border-b border-[#E5DDD3] text-[#54433A] font-bold text-[11px] uppercase tracking-wider">
                 <th className="py-3 px-4">Member Name</th>
@@ -246,7 +317,8 @@ export function AttendanceRosterTable({
             </tbody>
           </table>
         </div>
-      ) : (
+      </>
+    ) : (
         <div className="p-8 rounded-xl bg-[#FAF6F0]/40 border border-[#E5DDD3] text-center space-y-2">
           <Users className="w-6 h-6 text-[#7A685D] mx-auto opacity-60" />
           <h3 className="text-xs font-bold text-[#3D291F]">

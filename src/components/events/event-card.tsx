@@ -54,6 +54,7 @@ export function EventCard({
   onOpenLifecycle,
 }: EventCardProps) {
   const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
 
   const roleSet = new Set(roles);
   const eventRoleSet = new Set(eventRoles);
@@ -347,26 +348,54 @@ export function EventCard({
       </div>
 
       {/* Action Buttons & Dedicated Workspace Links */}
-      <div className="pt-3 border-t border-[#E5DDD3] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Workspace Destination Links */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Party Dashboard Link */}
-          {event.event_type === "party" && (
+      <div className="pt-3 border-t border-[#E5DDD3]">
+        {/* Mobile View (sm:hidden): Consolidated Primary CTA + Secondary Link + Manage Event Accordion */}
+        <div className="sm:hidden space-y-2">
+          {/* Primary CTA */}
+          {event.event_type === "party" ? (
             <Link
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[44px] no-underline"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[48px] no-underline"
               href={`/events/${event.id}/dashboard`}
             >
-              <span className="text-white">Open Event Dashboard</span>
-              <ArrowRight className="w-3.5 h-3.5 text-[#D6A23A]" />
+              <span>Open Event Dashboard</span>
+              <ArrowRight className="w-4 h-4 text-[#D6A23A]" />
             </Link>
-          )}
-
-          {/* Minutes & Attendance */}
-          {(event.event_type === "meeting" ||
-            event.minutes_enabled ||
-            event.attendance_enabled) && (
+          ) : (event.budget_enabled ||
+              event.income_enabled ||
+              event.expenses_enabled ||
+              event.ticketing_enabled) ? (
             <Link
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-xl transition-colors min-h-[44px] no-underline"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[48px] no-underline"
+              href={`/events/${event.id}/finance`}
+            >
+              <DollarSign className="w-4 h-4 text-[#D6A23A]" />
+              <span>Open Event Finances</span>
+              <ArrowRight className="w-4 h-4 text-[#D6A23A]" />
+            </Link>
+          ) : (event.event_type === "meeting" ||
+              event.minutes_enabled ||
+              event.attendance_enabled) ? (
+            <Link
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[48px] no-underline"
+              href={`/attendance?event=${encodeURIComponent(event.id)}`}
+            >
+              <FileText className="w-4 h-4 text-[#D6A23A]" />
+              <span>Minutes & Attendance</span>
+              <ArrowRight className="w-4 h-4 text-[#D6A23A]" />
+            </Link>
+          ) : null}
+
+          {/* Secondary Link (Minutes & Attendance when party or finances is primary) */}
+          {((event.event_type === "party" &&
+            (event.minutes_enabled || event.attendance_enabled)) ||
+            (event.event_type !== "party" &&
+              (event.budget_enabled ||
+                event.income_enabled ||
+                event.expenses_enabled ||
+                event.ticketing_enabled) &&
+              (event.minutes_enabled || event.attendance_enabled))) && (
+            <Link
+              className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-xl transition-colors min-h-[44px] no-underline"
               href={`/attendance?event=${encodeURIComponent(event.id)}`}
             >
               <FileText className="w-4 h-4" />
@@ -374,88 +403,245 @@ export function EventCard({
             </Link>
           )}
 
-          {/* Meeting / Other: Event Finances */}
-          {event.event_type !== "party" &&
-            (event.budget_enabled ||
-              event.income_enabled ||
-              event.expenses_enabled ||
-              event.ticketing_enabled) && (
-              <Link
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold text-[#3D291F] bg-white border border-[#E5DDD3] hover:bg-[#FAF6F0] rounded-xl transition-colors min-h-[44px] no-underline"
-                href={`/events/${event.id}/finance`}
+          {/* Management Actions Disclosure on Mobile */}
+          {[
+            canEdit && mutable && onOpenEdit,
+            canSetStatus && mutable && onOpenLifecycle,
+            canReopen &&
+              !event.archived_at &&
+              (isCompleted || isCancelled) &&
+              onOpenLifecycle,
+            isManager &&
+              !event.archived_at &&
+              (isCompleted || isCancelled) &&
+              onOpenLifecycle,
+          ].filter(Boolean).length > 0 && (
+            <div>
+              <button
+                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-[#E5DDD3] bg-white text-xs font-semibold text-[#5C4638] hover:bg-[#FAF6F0] min-h-[44px] cursor-pointer"
+                onClick={() => setMobileActionsOpen(!mobileActionsOpen)}
+                type="button"
+                aria-expanded={mobileActionsOpen}
+                aria-label="Manage event options"
               >
-                <DollarSign className="w-4 h-4 text-[#174C37]" />
-                <span>Event Finances</span>
-              </Link>
-            )}
+                <span className="flex items-center gap-2">
+                  <span className="font-bold text-[#3D291F]">Manage Event</span>
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#FAF6F0] border border-[#E5DDD3] text-[#7A685D]">
+                    {[
+                      canEdit && mutable && onOpenEdit,
+                      canSetStatus && mutable && onOpenLifecycle, // complete
+                      canSetStatus && mutable && onOpenLifecycle, // cancel
+                      canReopen &&
+                        !event.archived_at &&
+                        (isCompleted || isCancelled) &&
+                        onOpenLifecycle,
+                      isManager &&
+                        !event.archived_at &&
+                        (isCompleted || isCancelled) &&
+                        onOpenLifecycle,
+                    ].filter(Boolean).length}
+                  </span>
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 text-[#7A685D] transition-transform ${
+                    mobileActionsOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {mobileActionsOpen && (
+                <div className="mt-2 p-2 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1.5 animate-in fade-in duration-150">
+                  {canEdit && mutable && onOpenEdit && (
+                    <button
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white border border-[#E5DDD3] hover:bg-[#FAF6F0] text-xs font-semibold text-[#3D291F] min-h-[44px] cursor-pointer text-left"
+                      onClick={() => {
+                        setMobileActionsOpen(false);
+                        onOpenEdit(event);
+                      }}
+                      type="button"
+                    >
+                      <Edit3 className="w-4 h-4 text-[#5C4638] shrink-0" />
+                      <span>Edit Event Details</span>
+                    </button>
+                  )}
+
+                  {canSetStatus && mutable && onOpenLifecycle && (
+                    <button
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white border border-[#174C37]/30 hover:bg-[#174C37]/10 text-xs font-bold text-[#174C37] min-h-[44px] cursor-pointer text-left"
+                      onClick={() => {
+                        setMobileActionsOpen(false);
+                        onOpenLifecycle(event, "complete");
+                      }}
+                      type="button"
+                    >
+                      <span>Complete Event</span>
+                    </button>
+                  )}
+
+                  {canSetStatus && mutable && onOpenLifecycle && (
+                    <button
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white border border-[#BA3C2A]/30 hover:bg-[#BA3C2A]/10 text-xs font-bold text-[#BA3C2A] min-h-[44px] cursor-pointer text-left"
+                      onClick={() => {
+                        setMobileActionsOpen(false);
+                        onOpenLifecycle(event, "cancel");
+                      }}
+                      type="button"
+                    >
+                      <span>Cancel Event</span>
+                    </button>
+                  )}
+
+                  {canReopen &&
+                    !event.archived_at &&
+                    (isCompleted || isCancelled) &&
+                    onOpenLifecycle && (
+                      <button
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white border border-[#174C37]/30 hover:bg-[#174C37]/10 text-xs font-bold text-[#174C37] min-h-[44px] cursor-pointer text-left"
+                        onClick={() => {
+                          setMobileActionsOpen(false);
+                          onOpenLifecycle(event, "reopen");
+                        }}
+                        title="Only Admin or Backup Admin can reopen concluded/cancelled records"
+                        type="button"
+                      >
+                        <RotateCcw className="w-4 h-4 shrink-0" />
+                        <span>Reopen Planning</span>
+                      </button>
+                    )}
+
+                  {isManager &&
+                    !event.archived_at &&
+                    (isCompleted || isCancelled) &&
+                    onOpenLifecycle && (
+                      <button
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white border border-[#E5DDD3] hover:bg-[#FAF6F0] text-xs font-semibold text-[#5C4638] min-h-[44px] cursor-pointer text-left"
+                        onClick={() => {
+                          setMobileActionsOpen(false);
+                          onOpenLifecycle(event, "archive");
+                        }}
+                        type="button"
+                      >
+                        <Archive className="w-4 h-4 shrink-0" />
+                        <span>Archive Event</span>
+                      </button>
+                    )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Management Action Pills */}
-        <div className="flex flex-wrap items-center gap-1.5 self-end sm:self-center">
-          {/* Edit Details */}
-          {canEdit && mutable && onOpenEdit && (
-            <button
-              className="cf-btn cf-btn--neutral min-h-[44px] px-3.5 py-2 cursor-pointer"
-              onClick={() => onOpenEdit(event)}
-              type="button"
-            >
-              <Edit3 className="w-3.5 h-3.5 text-[#5C4638]" />
-              <span>Edit Details</span>
-            </button>
-          )}
-
-          {/* Complete */}
-          {canSetStatus && mutable && onOpenLifecycle && (
-            <button
-              className="cf-btn cf-btn--neutral cf-btn--accent min-h-[44px] px-3.5 py-2 cursor-pointer"
-              onClick={() => onOpenLifecycle(event, "complete")}
-              type="button"
-            >
-              Complete
-            </button>
-          )}
-
-          {/* Cancel */}
-          {canSetStatus && mutable && onOpenLifecycle && (
-            <button
-              className="cf-btn cf-btn--neutral cf-btn--danger-text min-h-[44px] px-3.5 py-2 cursor-pointer"
-              onClick={() => onOpenLifecycle(event, "cancel")}
-              type="button"
-            >
-              Cancel
-            </button>
-          )}
-
-          {/* Reopen */}
-          {canReopen &&
-            !event.archived_at &&
-            (isCompleted || isCancelled) &&
-            onOpenLifecycle && (
-              <button
-                className="cf-btn cf-btn--neutral cf-btn--accent min-h-[44px] px-3.5 py-2 cursor-pointer"
-                onClick={() => onOpenLifecycle(event, "reopen")}
-                title="Only Admin or Backup Admin can reopen concluded/cancelled records"
-                type="button"
+        {/* Desktop View (hidden sm:flex): Preserved original side-by-side layout */}
+        <div className="hidden sm:flex sm:items-center sm:justify-between gap-3">
+          {/* Workspace Destination Links */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Party Dashboard Link */}
+            {event.event_type === "party" && (
+              <Link
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[44px] no-underline"
+                href={`/events/${event.id}/dashboard`}
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reopen Planning</span>
-              </button>
+                <span className="text-white">Open Event Dashboard</span>
+                <ArrowRight className="w-3.5 h-3.5 text-[#D6A23A]" />
+              </Link>
             )}
 
-          {/* Archive */}
-          {isManager &&
-            !event.archived_at &&
-            (isCompleted || isCancelled) &&
-            onOpenLifecycle && (
+            {/* Minutes & Attendance */}
+            {(event.event_type === "meeting" ||
+              event.minutes_enabled ||
+              event.attendance_enabled) && (
+              <Link
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-xl transition-colors min-h-[44px] no-underline"
+                href={`/attendance?event=${encodeURIComponent(event.id)}`}
+              >
+                <FileText className="w-4 h-4" />
+                <span>Minutes & Attendance</span>
+              </Link>
+            )}
+
+            {/* Meeting / Other: Event Finances */}
+            {event.event_type !== "party" &&
+              (event.budget_enabled ||
+                event.income_enabled ||
+                event.expenses_enabled ||
+                event.ticketing_enabled) && (
+                <Link
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold text-[#3D291F] bg-white border border-[#E5DDD3] hover:bg-[#FAF6F0] rounded-xl transition-colors min-h-[44px] no-underline"
+                  href={`/events/${event.id}/finance`}
+                >
+                  <DollarSign className="w-4 h-4 text-[#174C37]" />
+                  <span>Event Finances</span>
+                </Link>
+              )}
+          </div>
+
+          {/* Management Action Pills */}
+          <div className="flex flex-wrap items-center gap-1.5 self-end sm:self-center">
+            {/* Edit Details */}
+            {canEdit && mutable && onOpenEdit && (
               <button
                 className="cf-btn cf-btn--neutral min-h-[44px] px-3.5 py-2 cursor-pointer"
-                onClick={() => onOpenLifecycle(event, "archive")}
+                onClick={() => onOpenEdit(event)}
                 type="button"
               >
-                <Archive className="w-3.5 h-3.5" />
-                <span>Archive</span>
+                <Edit3 className="w-3.5 h-3.5 text-[#5C4638]" />
+                <span>Edit Details</span>
               </button>
             )}
+
+            {/* Complete */}
+            {canSetStatus && mutable && onOpenLifecycle && (
+              <button
+                className="cf-btn cf-btn--neutral cf-btn--accent min-h-[44px] px-3.5 py-2 cursor-pointer"
+                onClick={() => onOpenLifecycle(event, "complete")}
+                type="button"
+              >
+                Complete
+              </button>
+            )}
+
+            {/* Cancel */}
+            {canSetStatus && mutable && onOpenLifecycle && (
+              <button
+                className="cf-btn cf-btn--neutral cf-btn--danger-text min-h-[44px] px-3.5 py-2 cursor-pointer"
+                onClick={() => onOpenLifecycle(event, "cancel")}
+                type="button"
+              >
+                Cancel
+              </button>
+            )}
+
+            {/* Reopen */}
+            {canReopen &&
+              !event.archived_at &&
+              (isCompleted || isCancelled) &&
+              onOpenLifecycle && (
+                <button
+                  className="cf-btn cf-btn--neutral cf-btn--accent min-h-[44px] px-3.5 py-2 cursor-pointer"
+                  onClick={() => onOpenLifecycle(event, "reopen")}
+                  title="Only Admin or Backup Admin can reopen concluded/cancelled records"
+                  type="button"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reopen Planning</span>
+                </button>
+              )}
+
+            {/* Archive */}
+            {isManager &&
+              !event.archived_at &&
+              (isCompleted || isCancelled) &&
+              onOpenLifecycle && (
+                <button
+                  className="cf-btn cf-btn--neutral min-h-[44px] px-3.5 py-2 cursor-pointer"
+                  onClick={() => onOpenLifecycle(event, "archive")}
+                  type="button"
+                >
+                  <Archive className="w-3.5 h-3.5" />
+                  <span>Archive</span>
+                </button>
+              )}
+          </div>
         </div>
       </div>
     </article>

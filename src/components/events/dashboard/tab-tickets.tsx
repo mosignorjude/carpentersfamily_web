@@ -66,12 +66,13 @@ export function TabTickets({
             <div className="flex items-center gap-2">
               <Ticket className="w-5 h-5 text-[#174C37]" />
               <h3 className="text-lg font-bold text-[#3D291F]">
-                Admission Tiers & Inventory Matrix
+                <span className="hidden sm:inline">Admission Tiers & Inventory Matrix</span>
+                <span className="sm:hidden">Ticket Tiers</span>
               </h3>
             </div>
-            <p className="text-xs text-[#7A685D] mt-1">
-              Reconciled ticketing tallies across all authorized admission
-              tiers.
+            <p className="text-xs text-[#6B5D53] mt-1">
+              <span className="hidden sm:inline">Reconciled ticketing tallies across all authorized admission tiers.</span>
+              <span className="sm:hidden">Tier inventory & revenue tallies.</span>
             </p>
           </div>
 
@@ -177,8 +178,132 @@ export function TabTickets({
             )}
           </div>
         ) : (
-          <TableScroll label="Ticket sales">
-            <table className="w-full text-left text-xs border-collapse">
+          <>
+            {/* Mobile Tier Cards (sm:hidden) */}
+            <div className="sm:hidden space-y-3 p-3">
+              {tiers.map((tier) => {
+                const revenue = tier.sold * tier.price;
+                const percentageFilled = Math.min(
+                  100,
+                  (tier.sold / (tier.capacity || 1)) * 100,
+                );
+                const remaining = tier.capacity - tier.sold;
+
+                const statusBadge =
+                  tier.status === "sold_out" || tier.sold >= tier.capacity
+                    ? {
+                        label: "Sold Out",
+                        bg: "bg-[#BA3C2A]/10 text-[#BA3C2A] border-[#BA3C2A]/20",
+                      }
+                    : tier.status === "limited" || remaining <= 10
+                      ? {
+                          label: `${remaining} Left`,
+                          bg: "bg-[#D6A23A]/15 text-[#3D291F] border-[#D6A23A]/40",
+                        }
+                      : {
+                          label: "Active",
+                          bg: "bg-[#174C37]/10 text-[#174C37] border-[#174C37]/20",
+                        };
+
+                return (
+                  <div
+                    className="bg-white p-3.5 rounded-xl border border-[#E5DDD3] shadow-2xs space-y-2.5"
+                    key={`mobile-tier-${tier.id}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-[#3D291F] text-sm">
+                            {tier.name}
+                          </span>
+                          <span
+                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${statusBadge.bg}`}
+                          >
+                            {statusBadge.label}
+                          </span>
+                        </div>
+                        {tier.description && (
+                          <p className="text-[11px] text-[#6B5D53] mt-0.5">
+                            {tier.description}
+                          </p>
+                        )}
+                      </div>
+                      <span className="font-mono font-bold text-sm text-[#174C37]">
+                        {formatNaira(tier.price)}
+                      </span>
+                    </div>
+
+                    {/* Capacity Progress Bar */}
+                    <div>
+                      <div className="flex items-baseline justify-between text-xs font-mono">
+                        <span className="text-[#6B5D53]">
+                          Passes:{" "}
+                          <strong className="text-[#3D291F]">
+                            {tier.sold} / {tier.capacity}
+                          </strong>
+                        </span>
+                        <span className="text-[11px] font-semibold text-[#174C37]">
+                          {formatPercent(percentageFilled)}
+                        </span>
+                      </div>
+                      <div className="w-full bg-[#E5DDD3] rounded-full h-2 mt-1 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${percentWidthClass(
+                            percentageFilled,
+                          )} ${
+                            tier.status === "sold_out" ||
+                            tier.sold >= tier.capacity
+                              ? "bg-[#BA3C2A]"
+                              : "bg-[#174C37]"
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-[#F2ECE4] text-xs">
+                      <div>
+                        <span className="text-[#6B5D53]">Gross Inflow: </span>
+                        <span className="font-mono font-bold text-[#3D291F]">
+                          {formatNaira(revenue)}
+                        </span>
+                      </div>
+
+                      {canManage && (
+                        <div className="flex items-center gap-2">
+                          {onOpenEditTierModal && (
+                            <button
+                              className="px-3 py-1.5 text-xs font-semibold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-lg transition-colors min-h-[38px] flex items-center gap-1 cursor-pointer"
+                              id={`btn-mobile-edit-tier-${tier.id}`}
+                              onClick={() => onOpenEditTierModal(tier)}
+                              type="button"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                              <span>Edit</span>
+                            </button>
+                          )}
+                          {onOpenRetireTierModal && (
+                            <button
+                              className="px-3 py-1.5 text-xs font-semibold text-[#BA3C2A] bg-[#FAF6F0] border border-[#BA3C2A]/30 hover:bg-[#BA3C2A] hover:text-white rounded-lg transition-colors min-h-[38px] flex items-center gap-1 cursor-pointer"
+                              id={`btn-mobile-retire-tier-${tier.id}`}
+                              onClick={() => onOpenRetireTierModal(tier)}
+                              type="button"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Retire</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Tiers Table (hidden sm:block) */}
+            <div className="hidden sm:block">
+              <TableScroll label="Ticket sales">
+                <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
                   <th className="py-2.5 px-3.5">Admission Tier</th>
@@ -338,7 +463,9 @@ export function TabTickets({
               </tbody>
             </table>
           </TableScroll>
-        )}
+        </div>
+      </>
+    )}
       </section>
 
       {/* 2. Embedded Ticket Sales Ledger */}
