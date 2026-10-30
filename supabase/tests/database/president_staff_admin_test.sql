@@ -233,6 +233,12 @@ select is(
   0::bigint,
   'staff cannot read member notifications even when rows exist'
 );
+select ok(
+  has_column_privilege(
+    'authenticated', 'public.club_attendance_settings', 'changed_at', 'SELECT'
+  ),
+  'the staff settings page can read the attendance settings change time'
+);
 
 select throws_ok(
   $$update public.member_profiles set full_name = 'Renamed' where id = auth.uid()$$,
