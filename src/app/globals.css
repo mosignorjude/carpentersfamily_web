@@ -12345,3 +12345,204 @@ textarea:focus-visible {
   background: rgba(12, 51, 37, 0.75);
   backdrop-filter: blur(4px);
 }
+
+/* ---- Staff administration shell ---- */
+
+.staff-shell {
+  min-height: 100dvh;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+.staff-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.staff-header-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-3) var(--space-2);
+}
+
+.staff-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.staff-brand-mark {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  object-fit: contain;
+}
+
+.staff-brand-eyebrow {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.staff-brand-title {
+  margin: 0;
+  color: var(--brand-forest);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.staff-session {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.staff-session-id {
+  min-width: 0;
+  text-align: right;
+}
+
+.staff-session-name {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.staff-session-role {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.staff-nav {
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 var(--space-3) var(--space-2);
+  overflow-x: auto;
+}
+
+.staff-nav ul {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.staff-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.4rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface-softest);
+  color: var(--color-body);
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.staff-nav a:hover {
+  background: var(--color-surface-hover);
+}
+
+.staff-nav a[aria-current="page"] {
+  border-color: var(--brand-forest);
+  background: var(--brand-forest);
+  color: #fff;
+}
+
+.staff-main {
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-3) var(--space-5);
+}
+
+.staff-dialog {
+  width: min(34rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 1.5rem;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: 0 1.5rem 4rem rgb(13 35 25 / 28%);
+}
+
+.staff-dialog::backdrop {
+  background: rgb(12 51 37 / 75%);
+  backdrop-filter: blur(4px);
+}
+
+.staff-dialog-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.staff-dialog-form h2 {
+  margin: 0.25rem 0 0.5rem;
+  color: var(--brand-forest);
+  font-size: 1.25rem;
+}
+
+.staff-dialog-form p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.staff-dialog-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.staff-dialog-form textarea,
+.staff-dialog-form select {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.staff-dialog-form textarea {
+  min-height: 6.5rem;
+  resize: vertical;
+}
+
+.staff-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
