@@ -30,5 +30,5 @@ export const AUDIT_DOMAINS = [
 
 export function matchesAuditDomain(action, domainId) {
   const domain = AUDIT_DOMAINS.find((entry) => entry.id === domainId);
-  return !domain || !domain.test || domain.test(action);
+  return !domain?.test || domain.test(action);
 }

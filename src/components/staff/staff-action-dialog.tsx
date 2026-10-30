@@ -4,7 +4,7 @@ import { type ReactNode, useId, useRef } from "react";
 
 export interface StaffActionDialogProps {
   action: (formData: FormData) => void | Promise<void>;
-  fields: Record<string, string>;
+  fields?: Record<string, string>;
   triggerLabel: string;
   title: string;
   description: string;
@@ -17,7 +17,7 @@ export interface StaffActionDialogProps {
 
 export default function StaffActionDialog({
   action,
-  fields,
+  fields = {},
   triggerLabel,
   title,
   description,

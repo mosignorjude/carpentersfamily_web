@@ -35,11 +35,7 @@ export async function requireStaffProfile(): Promise<{
     .eq("id", auth.user.id)
     .maybeSingle();
 
-  if (
-    !profile ||
-    profile.status !== "staff" ||
-    profile.staff_disabled_at !== null
-  ) {
+  if (profile?.status !== "staff" || profile.staff_disabled_at !== null) {
     redirect("/?notice=denied");
   }
 

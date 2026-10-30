@@ -127,10 +127,11 @@ export default async function MemberAdministrationPage({
     initialOfficerRole = "president";
   }
 
-  // Fetch all members
+  // Fetch all club members; staff administrators are not club members.
   const { data: memberRows, error: membersError } = await supabase
     .from("member_profiles")
     .select("id, full_name, username, status, profile_completed_at, created_at")
+    .neq("status", "staff")
     .order("created_at", { ascending: true });
 
   const members = membersError ? [] : (memberRows ?? []);

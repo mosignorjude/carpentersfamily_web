@@ -26,11 +26,7 @@ export default async function StaffLayout({
     .eq("id", authData.user.id)
     .maybeSingle();
 
-  if (
-    !profile ||
-    profile.status !== "staff" ||
-    profile.staff_disabled_at !== null
-  ) {
+  if (profile?.status !== "staff" || profile.staff_disabled_at !== null) {
     // Club officers keep a useful landing page; everyone else is denied.
     if (profile?.status === "active") {
       const { data: assignments } = await supabase

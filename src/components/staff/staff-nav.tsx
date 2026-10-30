@@ -27,6 +27,7 @@ export default function StaffNav({
     <header className="staff-header">
       <div className="staff-header-bar">
         <div className="staff-brand">
+          {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
           <img
             alt={clubBrand.logoAlt}
             className="staff-brand-mark"
