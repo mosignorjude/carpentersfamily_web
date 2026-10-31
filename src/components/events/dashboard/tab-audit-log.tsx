@@ -64,11 +64,11 @@ export function TabAuditLog({
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 min-w-0">
       {/* Section 1: Transaction Ledger Journal */}
       <section
         aria-labelledby="ledger-heading"
-        className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-6"
+        className="bg-white sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 border-[#E5DDD3] p-4 sm:p-0 shadow-xs sm:shadow-none space-y-6 min-w-0"
       >
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
@@ -566,7 +566,7 @@ export function TabAuditLog({
       </section>
 
       {/* Section 2: Chronological System Activity Audit Trail */}
-      <section className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 space-y-4 text-xs">
+      <section className="bg-white sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 sm:border-t border-[#E5DDD3] p-4 sm:p-0 sm:pt-6 space-y-4 text-xs min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-[#E5DDD3]">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-[#174C37]/10 text-[#174C37] flex items-center justify-center">

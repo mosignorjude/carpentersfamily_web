@@ -75,7 +75,7 @@ export function TabBudgetAllocations({
   ];
 
   return (
-    <section className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-6 min-w-0 overflow-hidden">
+    <section className="bg-white sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 border-[#E5DDD3] p-4 sm:p-0 shadow-xs sm:shadow-none space-y-6 min-w-0 max-w-full">
       {/* Chart Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
         <div>
@@ -186,7 +186,7 @@ export function TabBudgetAllocations({
                 : {})}
             />
           ) : (
-            <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-5 min-w-0 max-w-full overflow-hidden">
+            <div className="space-y-5 min-w-0 max-w-full">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-[#E5DDD3]">
                 <div>
                   <h4 className="text-base font-bold text-[#3D291F]">

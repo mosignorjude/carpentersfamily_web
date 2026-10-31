@@ -82,7 +82,7 @@ export function TabOverview({
       : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       {/* Page Heading & Status */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 sm:border-b border-[#E5DDD3]">
         <div>

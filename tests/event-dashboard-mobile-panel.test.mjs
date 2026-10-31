@@ -23,6 +23,10 @@ const expenses = readFileSync(
   ),
   "utf8",
 );
+const globalsCss = readFileSync(
+  new URL("../src/app/globals.css", import.meta.url),
+  "utf8",
+);
 
 describe("event dashboard mobile panel layout", () => {
   it("does not clip event dashboard tab content at the panel boundary", () => {
@@ -37,6 +41,19 @@ describe("event dashboard mobile panel layout", () => {
     );
     assert.match(panel[1], /(?:^|\s)min-w-0(?:\s|$)/);
     assert.match(panel[1], /(?:^|\s)max-w-full(?:\s|$)/);
+  });
+
+  it("keeps .event-finance-panel unboxed with a bounded 1fr grid track in globals.css", () => {
+    assert.doesNotMatch(
+      globalsCss,
+      /\.club-finance-panel,\s*\.event-finance-panel/,
+      ".event-finance-panel should not share the bordered card rules with .club-finance-panel",
+    );
+    assert.match(
+      globalsCss,
+      /\.event-finance-panel\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/,
+      ".event-finance-panel must bound its grid track with minmax(0, 1fr) so wide tables cannot blow out the panel width",
+    );
   });
 
   it("wraps the revenue summary and action controls on narrow screens", () => {

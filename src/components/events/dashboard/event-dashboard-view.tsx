@@ -905,7 +905,7 @@ export function EventDashboardView({
                   return (
                     <button
                       aria-current={isActive ? "page" : undefined}
-                      className={`px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex items-center gap-1.5 min-h-[48px] cursor-pointer border-0 ${
+                      className={`px-2.5 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex items-center gap-1.5 min-h-[48px] cursor-pointer border-0 ${
                         isActive
                           ? "bg-[#174C37] text-white shadow-xs font-semibold"
                           : "bg-transparent text-[#5C4638] hover:text-[#174C37] hover:bg-white/80"

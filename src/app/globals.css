@@ -7028,7 +7028,6 @@ textarea:focus-visible {
 }
 
 .club-finance-panel,
-.event-finance-panel,
 .notifications-workspace-panel {
   display: grid;
   gap: 1.25rem;
@@ -7783,7 +7782,6 @@ textarea:focus-visible {
   }
 
   .club-finance-panel,
-  .event-finance-panel,
   .notifications-workspace-panel,
   .communications-workspace-page .communications-panel {
     gap: 0.9rem;
@@ -7864,7 +7862,6 @@ textarea:focus-visible {
 .app-shell-dashboard .dues-page > .dues-panel,
 .app-shell-dashboard .events-workflow-page > .event-panel,
 .app-shell-dashboard .club-finance-page > .club-finance-panel,
-.app-shell-dashboard .event-finance-page > .event-finance-panel,
 .app-shell-dashboard .communications-workspace-page > .communications-panel,
 .app-shell-dashboard
   .notifications-workspace-page
@@ -8769,7 +8766,10 @@ textarea:focus-visible {
 }
 
 .event-finance-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
+  max-width: 100%;
 }
 
 .event-finance-panel > .finance-balance-grid > .finance-balance-forecast {

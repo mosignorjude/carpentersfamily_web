@@ -35,7 +35,7 @@ export function TabReports({
   return (
     <div className="space-y-6 min-w-0 max-w-full overflow-hidden">
       {/* Top Actions Bar for Reports */}
-      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
+      <div className="bg-white sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 sm:border-b border-[#E5DDD3] p-4 sm:p-0 sm:pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
         <div className="min-w-0">
           <span className="text-[11px] font-bold uppercase tracking-wider text-[#174C37] block">
             Financial Report
@@ -68,7 +68,7 @@ export function TabReports({
       </div>
 
       {/* Embedded Official Financial Statement */}
-      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 lg:p-8 space-y-6 text-xs text-[#3D291F] min-w-0 max-w-full overflow-hidden">
+      <div className="bg-white sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 border-[#E5DDD3] p-4 sm:p-0 space-y-6 text-xs text-[#3D291F] min-w-0 max-w-full overflow-hidden">
         {/* Letterhead */}
         <div className="border-b-2 border-[#174C37] pb-5 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 sm:gap-4 min-w-0">
           <div className="min-w-0">

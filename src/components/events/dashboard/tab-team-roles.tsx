@@ -14,8 +14,8 @@ interface TabTeamRolesProps {
 
 export function TabTeamRoles({ event, team }: TabTeamRolesProps) {
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-6 space-y-4 text-xs">
+    <div className="space-y-6 min-w-0">
+      <div className="bg-white sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 border-[#E5DDD3] p-4 sm:p-0 shadow-xs sm:shadow-none space-y-4 text-xs min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#E5DDD3] gap-2">
           <div>
             <div className="flex items-center gap-2">

@@ -66,9 +66,9 @@ export function TabRevenue({
   const totalPending = streams.reduce((acc, s) => acc + s.pending, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       {/* 1. Master Consolidated Revenue Streams Matrix Card */}
-      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-6 shadow-xs space-y-4 sm:space-y-5">
+      <div className="bg-white sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 border-[#E5DDD3] p-3.5 sm:p-0 shadow-xs sm:shadow-none space-y-4 sm:space-y-5 min-w-0">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
           <div>
