@@ -242,13 +242,13 @@ export function EventDomainLedger({
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span
-                        className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F]"
+                        className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-[#FAF6F0] text-[#3D291F]"
                         title={`Full Transaction ID: ${txn.id}`}
                       >
                         #{txn.paymentRef || txn.id.slice(0, 8).toUpperCase()}
                       </span>
                       {txn.categoryLabel && (
-                        <span className="text-[11px] font-semibold text-[#6B5D53] bg-[#FAF6F0] px-2 py-0.5 rounded-md border border-[#E5DDD3]">
+                        <span className="text-[11px] font-semibold text-[#6B5D53] bg-[#FAF6F0] px-2 py-0.5 rounded-md">
                           {txn.categoryLabel}
                         </span>
                       )}

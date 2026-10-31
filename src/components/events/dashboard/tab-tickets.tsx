@@ -59,7 +59,7 @@ export function TabTickets({
   return (
     <div className="space-y-6">
       {/* 1. Master Consolidated Admission Tiers & Inventory Matrix Card */}
-      <section className="bg-white rounded-2xl border border-[#E5DDD3] p-5 sm:p-6 shadow-xs space-y-5">
+      <section className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-6 shadow-xs space-y-4 sm:space-y-5">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
           <div>
@@ -183,7 +183,7 @@ export function TabTickets({
         ) : (
           <>
             {/* Mobile Tier Cards (sm:hidden) */}
-            <div className="sm:hidden space-y-3 p-3">
+            <div className="sm:hidden space-y-3 pt-1">
               {tiers.map((tier) => {
                 const revenue = tier.sold * tier.price;
                 const percentageFilled = Math.min(

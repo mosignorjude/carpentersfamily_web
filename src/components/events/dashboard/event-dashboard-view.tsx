@@ -677,7 +677,7 @@ export function EventDashboardView({
       </section>
 
       {/* 2. Joined Content Card: Tab Navigation & Active Tab Content */}
-      <section className="bg-white rounded-[20px] border border-[#E5DDD3] p-3 sm:p-6 shadow-xs relative">
+      <section className="bg-transparent sm:bg-white border-0 sm:border border-[#E5DDD3] rounded-none sm:rounded-[20px] p-0 sm:p-6 sm:shadow-xs relative">
         <nav aria-label="Event Sections" className="relative">
           {/* Mobile 5-Tab Bar (sm:hidden) */}
           <div className="sm:hidden grid grid-cols-5 items-start gap-1 bg-white rounded-2xl border border-[#E5DDD3] p-1.5 shadow-xs mb-4">

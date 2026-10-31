@@ -68,7 +68,7 @@ export function TabRevenue({
   return (
     <div className="space-y-6">
       {/* 1. Master Consolidated Revenue Streams Matrix Card */}
-      <section className="bg-white rounded-2xl border border-[#E5DDD3] p-5 sm:p-6 shadow-xs space-y-5">
+      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-6 shadow-xs space-y-4 sm:space-y-5">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
           <div>
@@ -93,20 +93,20 @@ export function TabRevenue({
           </div>
 
           {/* Aggregate Inflow Stats & Single Record Button */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
-              <span className="text-[11px] text-[#7A685D] block">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="bg-[#FAF6F0] px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-[#E5DDD3] text-right">
+              <span className="text-[10px] sm:text-[11px] text-[#7A685D] block">
                 Gross Reconciled
               </span>
-              <span className="font-bold text-[#174C37] text-base tabular-nums font-mono">
+              <span className="font-bold text-[#174C37] text-xs sm:text-base tabular-nums font-mono">
                 {formatNaira(totalActual)}
               </span>
             </div>
-            <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
-              <span className="text-[11px] text-[#7A685D] block">
+            <div className="bg-[#FAF6F0] px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-[#E5DDD3] text-right">
+              <span className="text-[10px] sm:text-[11px] text-[#7A685D] block">
                 Pending Receivables
               </span>
-              <span className="font-bold text-[#8D5B0E] text-base tabular-nums font-mono">
+              <span className="font-bold text-[#8D5B0E] text-xs sm:text-base tabular-nums font-mono">
                 {formatNaira(totalPending)}
               </span>
             </div>
@@ -153,7 +153,7 @@ export function TabRevenue({
         ) : (
           <>
             {/* Mobile Revenue Streams Cards (sm:hidden) */}
-            <div className="sm:hidden space-y-3 p-3">
+            <div className="sm:hidden space-y-3 pt-1">
               {streams.map((stream) => {
                 const Icon = streamIcons[stream.id] || TrendingUp;
                 const percentage = Math.min(
@@ -170,7 +170,7 @@ export function TabRevenue({
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] flex items-center justify-center text-[#174C37] shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#174C37] shrink-0">
                           <Icon className="w-4 h-4" />
                         </div>
                         <div>
@@ -341,7 +341,7 @@ export function TabRevenue({
             </div>
           </>
         )}
-      </section>
+      </div>
 
       {/* 2. Embedded Revenue Inflow Ledger */}
       <EventDomainLedger

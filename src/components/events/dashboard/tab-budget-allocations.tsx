@@ -268,12 +268,12 @@ export function TabBudgetAllocations({
                       </div>
 
                       {/* 3-Col Stats: Allocated, Disbursed, Committed */}
-                      <div className="grid grid-cols-3 gap-2 p-2 rounded-lg bg-white border border-[#E5DDD3] text-center text-xs">
+                      <div className="grid grid-cols-3 gap-1.5 p-2 rounded-lg bg-white text-center text-xs">
                         <div className="min-w-0">
                           <span className="text-[10px] text-[#7A685D] block">
                             Allocated
                           </span>
-                          <span className="font-mono font-bold text-[#3D291F] block text-xs truncate">
+                          <span className="font-mono font-bold text-[#3D291F] block text-[11px] leading-tight">
                             {formatNaira(center.allocated)}
                           </span>
                         </div>
@@ -281,7 +281,7 @@ export function TabBudgetAllocations({
                           <span className="text-[10px] text-[#7A685D] block">
                             Disbursed
                           </span>
-                          <span className="font-mono font-bold text-[#BA3C2A] block text-xs truncate">
+                          <span className="font-mono font-bold text-[#BA3C2A] block text-[11px] leading-tight">
                             {formatNaira(center.spent)}
                           </span>
                         </div>
@@ -289,7 +289,7 @@ export function TabBudgetAllocations({
                           <span className="text-[10px] text-[#7A685D] block">
                             Committed
                           </span>
-                          <span className="font-mono font-bold text-[#8D5B0E] block text-xs truncate">
+                          <span className="font-mono font-bold text-[#8D5B0E] block text-[11px] leading-tight">
                             {formatNaira(center.committed)}
                           </span>
                         </div>

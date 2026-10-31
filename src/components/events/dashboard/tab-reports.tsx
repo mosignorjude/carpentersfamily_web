@@ -323,12 +323,12 @@ export function TabReports({
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-1.5 p-2 rounded-lg bg-white border border-[#E5DDD3] text-center text-xs">
+                    <div className="grid grid-cols-3 gap-1.5 p-2 rounded-lg bg-white text-center text-xs">
                       <div className="min-w-0">
                         <span className="text-[10px] text-[#7A685D] block">
                           Allocated
                         </span>
-                        <span className="font-mono font-semibold text-[#5C4638] text-[11px] truncate block">
+                        <span className="font-mono font-semibold text-[#5C4638] text-[11px] leading-tight block">
                           {formatNaira(c.allocated)}
                         </span>
                       </div>
@@ -336,7 +336,7 @@ export function TabReports({
                         <span className="text-[10px] text-[#7A685D] block">
                           Spent
                         </span>
-                        <span className="font-mono font-bold text-[#BA3C2A] text-[11px] truncate block">
+                        <span className="font-mono font-bold text-[#BA3C2A] text-[11px] leading-tight block">
                           {formatNaira(c.spent)}
                         </span>
                       </div>
@@ -344,7 +344,7 @@ export function TabReports({
                         <span className="text-[10px] text-[#7A685D] block">
                           Committed
                         </span>
-                        <span className="font-mono text-[#8D5B0E] text-[11px] truncate block">
+                        <span className="font-mono text-[#8D5B0E] text-[11px] leading-tight block">
                           {formatNaira(c.committed)}
                         </span>
                       </div>
