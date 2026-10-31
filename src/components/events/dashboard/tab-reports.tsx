@@ -164,60 +164,11 @@ export function TabReports({
             </span>
           </h4>
 
-          {/* Mobile Revenue Stream Cards (sm:hidden) */}
-          <div className="sm:hidden space-y-2.5">
-            {revenueStreams.length === 0 ? (
-              <div className="py-4 text-center text-[#7A685D]">
-                No revenue streams recorded.
-              </div>
-            ) : (
-              revenueStreams.map((s) => {
-                const variance = s.actual - s.target;
-                return (
-                  <div
-                    className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-2"
-                    key={`mobile-rev-${s.id}`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <span className="font-bold text-xs text-[#3D291F] block">
-                          {s.name}
-                        </span>
-                        {s.description && (
-                          <span className="text-[11px] text-[#7A685D] block truncate">
-                            {s.description}
-                          </span>
-                        )}
-                      </div>
-                      <span
-                        className={`font-mono text-xs font-semibold shrink-0 ${
-                          variance >= 0 ? "text-[#174C37]" : "text-[#BA3C2A]"
-                        }`}
-                      >
-                        {variance >= 0
-                          ? `+${formatNaira(variance)}`
-                          : `-${formatNaira(Math.abs(variance))}`}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs font-mono pt-1.5 border-t border-[#E5DDD3]">
-                      <span className="text-[#7A685D]">
-                        Target:{" "}
-                        <strong className="text-[#5C4638]">
-                          {formatNaira(s.target)}
-                        </strong>
-                      </span>
-                      <span className="text-[#174C37] font-bold">
-                        Actual: {formatNaira(s.actual)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Desktop Table (hidden sm:block) */}
-          <div className="hidden sm:block">
+          {/* Revenue Table (Tabular & Horizontally Scrollable on Mobile and Desktop) */}
+          <div className="space-y-1.5">
+            <p className="text-[11px] text-[#7A685D] sm:hidden">
+              Swipe left or right to scroll the revenue table
+            </p>
             <TableScroll label="Financial report">
               <table className="w-full text-left min-w-[500px]">
                 <thead>
@@ -287,76 +238,11 @@ export function TabReports({
             </span>
           </h4>
 
-          {/* Mobile Cost Center Disbursement Cards (sm:hidden) */}
-          <div className="sm:hidden space-y-2.5">
-            {costCenters.length === 0 ? (
-              <div className="py-4 text-center text-[#7A685D]">
-                No cost center disbursements recorded.
-              </div>
-            ) : (
-              costCenters.map((c) => {
-                const remaining = c.allocated - (c.spent + c.committed);
-                return (
-                  <div
-                    className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-2"
-                    key={`mobile-cost-${c.id}`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <span className="font-bold text-xs text-[#3D291F] block">
-                          {c.name}
-                        </span>
-                        <span className="text-[11px] text-[#7A685D]">
-                          {c.items.length} item{c.items.length === 1 ? "" : "s"}
-                        </span>
-                      </div>
-                      <span
-                        className={`font-mono text-xs font-semibold shrink-0 px-2 py-0.5 rounded-md ${
-                          remaining >= 0
-                            ? "bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]"
-                            : "bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]"
-                        }`}
-                      >
-                        {remaining >= 0
-                          ? `+${formatNaira(remaining)}`
-                          : `-${formatNaira(Math.abs(remaining))}`}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-1.5 p-2 rounded-lg bg-white text-center text-xs">
-                      <div className="min-w-0">
-                        <span className="text-[10px] text-[#7A685D] block">
-                          Allocated
-                        </span>
-                        <span className="font-mono font-semibold text-[#5C4638] text-[11px] leading-tight block">
-                          {formatNaira(c.allocated)}
-                        </span>
-                      </div>
-                      <div className="min-w-0">
-                        <span className="text-[10px] text-[#7A685D] block">
-                          Spent
-                        </span>
-                        <span className="font-mono font-bold text-[#BA3C2A] text-[11px] leading-tight block">
-                          {formatNaira(c.spent)}
-                        </span>
-                      </div>
-                      <div className="min-w-0">
-                        <span className="text-[10px] text-[#7A685D] block">
-                          Committed
-                        </span>
-                        <span className="font-mono text-[#8D5B0E] text-[11px] leading-tight block">
-                          {formatNaira(c.committed)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Desktop Table (hidden sm:block) */}
-          <div className="hidden sm:block">
+          {/* Disbursements Table (Tabular & Horizontally Scrollable on Mobile and Desktop) */}
+          <div className="space-y-1.5">
+            <p className="text-[11px] text-[#7A685D] sm:hidden">
+              Swipe left or right to scroll the disbursements table
+            </p>
             <TableScroll label="Report summary">
               <table className="w-full text-left min-w-[540px]">
                 <thead>

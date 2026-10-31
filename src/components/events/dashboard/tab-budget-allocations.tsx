@@ -226,104 +226,11 @@ export function TabBudgetAllocations({
                 </div>
               </div>
 
-              {/* Mobile Allocation Cards (sm:hidden) */}
-              <div className="sm:hidden space-y-3">
-                {costCenters.map((center) => {
-                  const totalUtilized = center.spent + center.committed;
-                  const percent = Math.min(
-                    100,
-                    (totalUtilized / (center.allocated || 1)) * 100,
-                  );
-                  const variance = center.allocated - totalUtilized;
-                  const isOverBudget = variance < 0;
-
-                  return (
-                    <div
-                      className="bg-[#FAF6F0] p-3.5 rounded-xl border border-[#E5DDD3] space-y-2.5"
-                      key={`mobile-alloc-${center.id}`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <span className="font-bold text-sm text-[#3D291F] block">
-                            {center.name}
-                          </span>
-                          <span className="text-[11px] text-[#7A685D]">
-                            {center.items.length} item
-                            {center.items.length === 1 ? "" : "s"}
-                          </span>
-                        </div>
-                        {isOverBudget ? (
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
-                            {formatNaira(Math.abs(variance))} Deficit
-                          </span>
-                        ) : percent > 85 ? (
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
-                            Near Cap (+{formatNaira(variance)})
-                          </span>
-                        ) : (
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
-                            Healthy (+{formatNaira(variance)})
-                          </span>
-                        )}
-                      </div>
-
-                      {/* 3-Col Stats: Allocated, Disbursed, Committed */}
-                      <div className="grid grid-cols-3 gap-1.5 p-2 rounded-lg bg-white text-center text-xs">
-                        <div className="min-w-0">
-                          <span className="text-[10px] text-[#7A685D] block">
-                            Allocated
-                          </span>
-                          <span className="font-mono font-bold text-[#3D291F] block text-[11px] leading-tight">
-                            {formatNaira(center.allocated)}
-                          </span>
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-[10px] text-[#7A685D] block">
-                            Disbursed
-                          </span>
-                          <span className="font-mono font-bold text-[#BA3C2A] block text-[11px] leading-tight">
-                            {formatNaira(center.spent)}
-                          </span>
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-[10px] text-[#7A685D] block">
-                            Committed
-                          </span>
-                          <span className="font-mono font-bold text-[#8D5B0E] block text-[11px] leading-tight">
-                            {formatNaira(center.committed)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Burn Rate Bar */}
-                      <div>
-                        <div className="flex items-baseline justify-between text-xs font-mono">
-                          <span className="text-[11px] text-[#7A685D]">
-                            Burn Rate
-                          </span>
-                          <span className="font-semibold text-[#3D291F]">
-                            {formatPercent(percent)}
-                          </span>
-                        </div>
-                        <div className="w-full bg-[#E5DDD3] rounded-full h-1.5 mt-1 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              isOverBudget
-                                ? "bg-[#BA3C2A]"
-                                : percent > 85
-                                  ? "bg-[#D6A23A]"
-                                  : "bg-[#174C37]"
-                            } ${percentWidthClass(percent)}`}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Desktop Matrix Table (hidden sm:block) */}
-              <div className="hidden sm:block">
+              {/* Matrix Table (Tabular & Horizontally Scrollable on Mobile and Desktop) */}
+              <div className="space-y-2">
+                <p className="text-[11px] text-[#7A685D] sm:hidden">
+                  Swipe left or right to scroll the allocation matrix
+                </p>
                 <TableScroll label="Budget allocations">
                   <table className="w-full text-left text-xs border-collapse min-w-[580px]">
                     <thead>

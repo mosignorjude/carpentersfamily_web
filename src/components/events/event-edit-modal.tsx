@@ -89,7 +89,7 @@ export function EventEditModal({
       ref={dialogRef}
       role="dialog"
     >
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-[#E5DDD3] w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-[#E5DDD3] w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] flex flex-col">
         {/* Header */}
         <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -123,7 +123,7 @@ export function EventEditModal({
         {/* Scrollable Form Body */}
         <form
           action={updateEventDetailsAction}
-          className="p-6 space-y-4 overflow-y-auto"
+          className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0"
           onSubmit={() => {
             setIsPending(true);
             dispatchActionStatusToast({

@@ -135,9 +135,9 @@ export function PayDuesModal({
         onClick={onClose}
         type="button"
       />
-      <div className="relative z-10 bg-white rounded-t-2xl sm:rounded-2xl border border-[#E5DDD3] w-full max-w-lg max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 my-0 sm:my-8">
+      <div className="relative z-10 bg-white rounded-t-2xl sm:rounded-2xl border border-[#E5DDD3] w-full max-w-lg max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 my-0 sm:my-8">
         {/* Header */}
-        <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#174C37] text-white flex items-center justify-center font-extrabold text-base shadow-xs">
               ₦
@@ -168,11 +168,11 @@ export function PayDuesModal({
         {/* Form & Body */}
         <form
           action={submitDuesPaymentRequestAction}
-          className="flex flex-col flex-1 overflow-hidden"
+          className="flex flex-col flex-1 min-h-0 overflow-hidden"
           encType="multipart/form-data"
           id="dues-payment-form"
         >
-          <div className="p-6 space-y-4 text-xs text-[#3D291F] max-h-[75vh] overflow-y-auto">
+          <div className="p-4 sm:p-6 space-y-4 text-xs text-[#3D291F] flex-1 min-h-0 overflow-y-auto">
             {/* Admin Exemption Banner */}
             {isAdmin ? (
               <div className="p-5 rounded-xl bg-[#FAF6F0] border border-[#174C37]/30 text-center space-y-3">
@@ -540,7 +540,7 @@ export function PayDuesModal({
           </div>
 
           {/* Pinned Footer */}
-          <div className="p-4 border-t border-[#E5DDD3] bg-[#FAF6F0] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
+          <div className="p-4 border-t border-[#E5DDD3] bg-[#FAF6F0] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 shrink-0">
             <button
               className="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-[#E5DDD3] bg-white text-[#3D291F] text-xs font-bold hover:bg-[#F5EFEB] transition-colors cursor-pointer min-h-[44px]"
               onClick={onClose}

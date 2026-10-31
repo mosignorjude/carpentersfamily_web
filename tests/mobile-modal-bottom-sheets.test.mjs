@@ -46,6 +46,16 @@ describe("Sprint 2 Mobile Bottom Sheet Modals", () => {
       payDuesModal,
       /rounded-t-2xl\s+sm:rounded-2xl/
     );
+    assert.match(
+      payDuesModal,
+      /max-h-\[calc\(100dvh-1rem\)\]\s+sm:max-h-\[90dvh\]/,
+      "PayDuesModal must bound its height to the dynamic viewport (dvh) so the header is never clipped on mobile browsers"
+    );
+    assert.doesNotMatch(
+      payDuesModal,
+      /max-h-\[(?:92|75)vh\]/,
+      "PayDuesModal must not use static vh max-heights that exceed 100dvh when mobile browser toolbars are visible"
+    );
   });
 
   it("adapts EventCategoryManagementModal overlay and container to bottom sheet on mobile", () => {

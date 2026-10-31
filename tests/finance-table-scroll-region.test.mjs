@@ -36,6 +36,11 @@ describe("event finance horizontal overflow", () => {
   it("declares a focusable table scroll region class", () => {
     assert.match(css, /\.table-scroll-region\s*\{[^}]*overflow-x:\s*auto/);
     assert.match(css, /\.table-scroll-region\s*\{[^}]*min-width:\s*0/);
+    assert.doesNotMatch(
+      css,
+      /\.table-scroll-region\s*\{[^}]*background-image:/,
+      ".table-scroll-region must not paint gradient scroll shadows that leave a shaded vertical bar at the end of tables",
+    );
     assert.match(css, /\.table-scroll-region:focus-visible/);
   });
 
