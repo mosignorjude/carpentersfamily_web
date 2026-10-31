@@ -527,7 +527,7 @@ test("navigation progress: component intercepts internal links and manages progr
 
 test("formatPrimaryRole: correctly prioritizes club governance roles", () => {
   assert.equal(formatPrimaryRole(["admin", "executive"]), "ADMIN");
-  assert.equal(formatPrimaryRole(["backup_admin", "member"]), "BACKUP ADMIN");
+  assert.equal(formatPrimaryRole(["president", "member"]), "PRESIDENT");
   assert.equal(formatPrimaryRole(["executive", "committee"]), "EXECUTIVE");
   assert.equal(formatPrimaryRole(["lead"]), "EVENT LEAD");
   assert.equal(formatPrimaryRole(["assistant"]), "EVENT ASSISTANT");

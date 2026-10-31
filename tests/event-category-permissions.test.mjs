@@ -4,7 +4,7 @@ import { getNavigationItems } from "../src/lib/app-navigation.mjs";
 
 test("navigation: event finance categories standalone link is removed for all roles", () => {
   const adminLinks = getNavigationItems(["admin"]).map((item) => item.href);
-  const backupAdminLinks = getNavigationItems(["backup_admin"]).map(
+  const presidentLinks = getNavigationItems(["president"]).map(
     (item) => item.href,
   );
   const executiveLinks = getNavigationItems(["executive"]).map(
@@ -17,8 +17,8 @@ test("navigation: event finance categories standalone link is removed for all ro
     "Admin navigation must not contain /admin/event-finance-categories",
   );
   assert.ok(
-    !backupAdminLinks.includes("/admin/event-finance-categories"),
-    "Backup Admin navigation must not contain /admin/event-finance-categories",
+    !presidentLinks.includes("/admin/event-finance-categories"),
+    "President navigation must not contain /admin/event-finance-categories",
   );
   assert.ok(
     !executiveLinks.includes("/admin/event-finance-categories"),
@@ -30,10 +30,10 @@ test("navigation: event finance categories standalone link is removed for all ro
   );
 });
 
-test("category permissions: Admin and Backup Admin can create, edit, and delete categories", () => {
+test("category permissions: Admin and President can create, edit, and delete categories", () => {
   function computePermissions(clubRoles, eventRoles) {
     const isAdmin =
-      clubRoles.includes("admin") || clubRoles.includes("backup_admin");
+      clubRoles.includes("admin") || clubRoles.includes("president");
     const isEventLead =
       eventRoles.includes("event_lead") || eventRoles.includes("lead");
     return {
@@ -46,9 +46,9 @@ test("category permissions: Admin and Backup Admin can create, edit, and delete 
   assert.equal(adminPerms.canManageCategories, true);
   assert.equal(adminPerms.canDeleteCategories, true);
 
-  const backupAdminPerms = computePermissions(["backup_admin"], []);
-  assert.equal(backupAdminPerms.canManageCategories, true);
-  assert.equal(backupAdminPerms.canDeleteCategories, true);
+  const presidentPerms = computePermissions(["president"], []);
+  assert.equal(presidentPerms.canManageCategories, true);
+  assert.equal(presidentPerms.canDeleteCategories, true);
 
   const eventLeadPerms = computePermissions([], ["lead"]);
   assert.equal(eventLeadPerms.canManageCategories, true);

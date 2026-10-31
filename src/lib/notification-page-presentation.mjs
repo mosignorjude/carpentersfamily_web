@@ -195,7 +195,7 @@ export function getNotificationHref(notification) {
         body.startsWith("Your ") &&
         !body.startsWith("Your role changed to Executive") &&
         !body.startsWith("Your role changed to Admin") &&
-        !body.startsWith("Your role changed to Backup Admin")
+        !body.startsWith("Your role changed to President")
       ) {
         return "/";
       }
@@ -204,9 +204,9 @@ export function getNotificationHref(notification) {
         bodyLower.includes("membership request") ||
         bodyLower.includes("applicant")
       ) {
-        return "/admin/members#pending-requests";
+        return "/officers/members#pending-requests";
       }
-      return "/admin/members#member-roster";
+      return "/officers/members#member-roster";
 
     default:
       return "/announcements";

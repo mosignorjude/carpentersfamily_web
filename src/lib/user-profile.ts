@@ -6,7 +6,7 @@ export interface UserProfileData {
 
 export function formatPrimaryRole(roleList: string[]): string {
   if (roleList.includes("admin")) return "ADMIN";
-  if (roleList.includes("backup_admin")) return "BACKUP ADMIN";
+  if (roleList.includes("president")) return "PRESIDENT";
   if (roleList.includes("executive")) return "EXECUTIVE";
   if (roleList.includes("lead")) return "EVENT LEAD";
   if (roleList.includes("assistant")) return "EVENT ASSISTANT";

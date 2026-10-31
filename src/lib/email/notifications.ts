@@ -69,7 +69,7 @@ function formatPaymentMethod(method: string): string {
 function formatRoleLabel(role: string): string {
   const labels: Record<string, string> = {
     admin: "Admin",
-    backup_admin: "Backup Admin",
+    president: "President",
     executive: "Executive",
     member: "Member",
     lead: "Event Lead",
@@ -232,7 +232,7 @@ export async function notifyNewMemberSignUp(params: {
           subject: `New Member Sign-Up Request — ${params.fullName}`,
           heading: "New Membership Request Pending Review",
           ctaLabel: "Review Member Requests",
-          ctaPath: "/admin/members",
+          ctaPath: "/officers/members",
           copy: {
             previewText: `${params.fullName} (@${params.username}) requested a Carpenters Family account.`,
             intro:

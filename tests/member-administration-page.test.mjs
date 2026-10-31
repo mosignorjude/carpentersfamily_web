@@ -9,19 +9,19 @@ import {
 } from "../src/lib/member-administration-presentation.mjs";
 
 const page = readFileSync(
-  new URL("../src/app/(member)/admin/members/page.tsx", import.meta.url),
+  new URL("../src/app/(member)/officers/members/page.tsx", import.meta.url),
   "utf8",
 );
 const lifecycleForm = readFileSync(
   new URL(
-    "../src/app/(member)/admin/members/lifecycle-form.tsx",
+    "../src/app/(member)/officers/members/lifecycle-form.tsx",
     import.meta.url,
   ),
   "utf8",
 );
 const clubRoleForm = readFileSync(
   new URL(
-    "../src/app/(member)/admin/members/club-role-form.tsx",
+    "../src/app/(member)/officers/members/club-role-form.tsx",
     import.meta.url,
   ),
   "utf8",
@@ -66,8 +66,8 @@ test("Executive can approve but cannot deactivate or reactivate members", () => 
   );
 });
 
-test("Admin and Backup Admin can approve and manage member status", () => {
-  for (const role of ["admin", "backup_admin"]) {
+test("Admin and President can approve and manage member status", () => {
+  for (const role of ["admin", "president"]) {
     const capabilities = getMemberAdministrationCapabilities([role]);
     assert.deepEqual(capabilities, {
       canApprove: true,
@@ -107,8 +107,8 @@ test("failed role lookup grants no presentation capabilities", () => {
   });
 });
 
-test("only Admin and Backup Admin can grant or remove Executive status", () => {
-  for (const role of ["admin", "backup_admin"]) {
+test("only Admin and President can grant or remove Executive status", () => {
+  for (const role of ["admin", "president"]) {
     const capabilities = getMemberAdministrationCapabilities([role]);
     assert.equal(
       getExecutiveRolePresentation("active", false, capabilities),
@@ -203,7 +203,7 @@ test("the page authenticates, gates account state and role, and selects minimal 
   assert.match(page, /member\.id === authData\.user\.id/);
   assert.match(
     page,
-    /Another active Admin or Backup Admin must\s+deactivate your account\./,
+    /Another active Admin or President must\s+deactivate your account\./,
   );
   assert.match(
     page,
@@ -219,7 +219,7 @@ test("roster query failure withholds every member row and lifecycle form", () =>
   );
   assert.match(page, /!membersError && members\.length > 0/);
   assert.match(page, /No member details or actions are\s*available/);
-  assert.match(page, /href="\/admin\/members">Try again/);
+  assert.match(page, /href="\/officers\/members">Try again/);
 });
 
 test("member names and usernames render as React text without unsafe HTML", () => {
@@ -247,8 +247,8 @@ test("club role changes offer supported roles and require reason and confirmatio
   assert.match(clubRoleForm, /Change role/);
   assert.match(clubRoleForm, /value="member">Member/);
   assert.match(clubRoleForm, /value="executive">Executive/);
-  assert.match(clubRoleForm, /value="admin">Admin/);
-  assert.match(clubRoleForm, /value="backup_admin">Backup Admin/);
+  assert.doesNotMatch(clubRoleForm, /value="admin"/);
+  assert.doesNotMatch(clubRoleForm, /value="president"/);
   assert.match(
     clubRoleForm,
     /name="role" type="hidden" value=\{selectedRole \?\? ""\}/,
@@ -285,7 +285,7 @@ test("club role Server Action independently checks actor and uses the role RPC",
   assert.match(action, /request\.memberId === authData\.user\.id/);
   assert.match(action, /.eq\("member_id", authData\.user\.id\)/);
   assert.match(action, /roles\.has\("admin"\)/);
-  assert.match(action, /roles\.has\("backup_admin"\)/);
+  assert.match(action, /roles\.has\("president"\)/);
   assert.match(action, /supabase\.rpc\("set_club_role"/);
   assert.match(action, /p_role: request\.role/);
   assert.match(action, /p_member_id: request\.memberId/);

@@ -28,7 +28,7 @@ export const MemberAdminPermissionGuide: React.FC = () => {
               Requests &amp; Event Staffing
             </span>
             <p>
-              Executive, Admin, and Backup Admin can review requests and staff
+              Executive, Admin, and President can review requests and staff
               events.
             </p>
           </div>
@@ -37,7 +37,7 @@ export const MemberAdminPermissionGuide: React.FC = () => {
               Account Status Management
             </span>
             <p>
-              Only Admin and Backup Admin can deactivate or reactivate member
+              Only Admin and President can deactivate or reactivate member
               accounts.
             </p>
           </div>
@@ -55,8 +55,8 @@ export const MemberAdminPermissionGuide: React.FC = () => {
         <div className="pt-2 text-[11px] text-[#7A685D] flex items-center gap-2">
           <Lock className="w-3.5 h-3.5 text-[#D6A23A] shrink-0" />
           <span>
-            Admin and Backup Admin roles are established by club trustees and
-            cannot be reassigned via this portal.
+            Admin and President roles are established by the club's system
+            administrators and cannot be reassigned via this portal.
           </span>
         </div>
       </div>

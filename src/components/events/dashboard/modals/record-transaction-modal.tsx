@@ -215,11 +215,15 @@ export function RecordTransactionModal({
     : 0;
 
   const authorizerName =
-    userRole === "admin" || userRole === "backup_admin"
+    userRole === "admin" || userRole === "president"
       ? "Club Admin"
       : "Event Officer";
   const authorizerRole =
-    userRole === "admin" || userRole === "backup_admin" ? "Admin" : "Executive";
+    userRole === "president"
+      ? "President"
+      : userRole === "admin"
+        ? "Admin"
+        : "Executive";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

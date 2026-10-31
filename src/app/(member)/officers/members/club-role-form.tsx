@@ -5,7 +5,7 @@ import { clubRoleChangeAction } from "@/app/actions";
 
 const roleLabels: Record<string, string> = {
   admin: "Admin",
-  backup_admin: "Backup Admin",
+  president: "President",
   executive: "Executive",
   member: "Member",
 };
@@ -13,14 +13,12 @@ const roleLabels: Record<string, string> = {
 type ClubRole = keyof typeof roleLabels;
 
 type ClubRoleFormProps = {
-  canManageAdminRoles: boolean;
   currentRoles: string[];
   memberId: string;
   memberName: string;
 };
 
 export default function ClubRoleForm({
-  canManageAdminRoles,
   currentRoles,
   memberId,
   memberName,
@@ -64,12 +62,6 @@ export default function ClubRoleForm({
         </option>
         <option value="member">Member</option>
         <option value="executive">Executive</option>
-        {canManageAdminRoles ? (
-          <>
-            <option value="admin">Admin</option>
-            <option value="backup_admin">Backup Admin</option>
-          </>
-        ) : null}
       </select>
 
       <dialog

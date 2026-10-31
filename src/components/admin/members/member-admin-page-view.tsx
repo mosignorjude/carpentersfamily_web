@@ -92,8 +92,8 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
 
   const resolvedOfficerId = currentOfficerId ?? "";
 
-  const isAdminOrBackup =
-    officerRole === "admin" || officerRole === "backup_admin";
+  const isAdminOrPresident =
+    officerRole === "admin" || officerRole === "president";
 
   const pendingRequests = useMemo(
     () => members.filter((m) => m.accountStatus === "pending"),
@@ -234,7 +234,7 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
         `Assigned as ${role} per event staffing schedule.`,
       ),
     );
-    formData.set("return_to", "admin-members");
+    formData.set("return_to", "officer-members");
     startTransition(() => {
       void assignEventRoleAction(formData);
     });
@@ -255,7 +255,7 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
       "reason",
       sanitizeAuditReason(reason, "Removed from event staffing assignment."),
     );
-    formData.set("return_to", "admin-members");
+    formData.set("return_to", "officer-members");
     startTransition(() => {
       void revokeEventRoleAction(formData);
     });
@@ -298,7 +298,7 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
         <MemberRosterSection
           members={members}
           currentOfficerId={resolvedOfficerId}
-          isAdminOrBackup={isAdminOrBackup}
+          isAdminOrPresident={isAdminOrPresident}
           roleLookupFailed={roleLookupFailed}
           onOpenDeactivateModal={(member) => {
             setSelectedMember(member);

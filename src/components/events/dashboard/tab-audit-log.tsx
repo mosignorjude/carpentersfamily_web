@@ -29,7 +29,7 @@ export function TabAuditLog({
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const isAdmin = userRole === "admin" || userRole === "backup_admin";
+  const isAdmin = userRole === "admin" || userRole === "president";
 
   const categories = Array.from(
     new Set(transactions.map((t) => t.categoryLabel)),

@@ -19,7 +19,7 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
   const isOfficer =
     roles.includes("admin") ||
     roles.includes("executive") ||
-    roles.includes("backup_admin");
+    roles.includes("president");
 
   const links = [
     {
@@ -78,7 +78,7 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
             title: "Member Administration",
             description:
               "Officer review of pending memberships, account status, and role grants.",
-            href: "/admin/members",
+            href: "/officers/members",
             icon: Users,
             actionLabel: "Open Administration",
           },

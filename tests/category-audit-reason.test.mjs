@@ -11,7 +11,7 @@ const modalSource = readFileSync(
 );
 const actionSource = readFileSync(
   new URL(
-    "../src/app/(member)/admin/event-finance-categories/actions.ts",
+    "../src/app/(member)/officers/event-finance-categories/actions.ts",
     import.meta.url,
   ),
   "utf8",

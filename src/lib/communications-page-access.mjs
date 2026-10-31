@@ -16,7 +16,10 @@ export function getCommunicationsPageAccess({
   const leadEventSet = new Set(roleLookupFailed ? [] : eventLeadIds);
   const activeEventSet = new Set(activeEventIds);
   const globalPublisher =
-    !roleLookupFailed && (roleSet.has("admin") || roleSet.has("executive"));
+    !roleLookupFailed &&
+    (roleSet.has("admin") ||
+      roleSet.has("president") ||
+      roleSet.has("executive"));
   const publishEventIds = activeEventIds.filter(
     (eventId) => globalPublisher || leadEventSet.has(eventId),
   );

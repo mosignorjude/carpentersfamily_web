@@ -87,7 +87,7 @@ where member_id between '00000000-0000-0000-0000-000000000201'::uuid
 
 insert into public.member_role_assignments (member_id, role, assigned_by, grant_reason) values
   ('00000000-0000-0000-0000-000000000201', 'admin', '00000000-0000-0000-0000-000000000201', 'Dues test primary Admin'),
-  ('00000000-0000-0000-0000-000000000202', 'backup_admin', '00000000-0000-0000-0000-000000000201', 'Dues test Backup Admin'),
+  ('00000000-0000-0000-0000-000000000202', 'president', '00000000-0000-0000-0000-000000000201', 'Dues test Backup Admin'),
   ('00000000-0000-0000-0000-000000000203', 'executive', '00000000-0000-0000-0000-000000000201', 'Dues test Executive');
 
 update public.member_profiles

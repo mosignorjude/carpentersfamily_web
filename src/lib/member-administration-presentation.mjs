@@ -11,7 +11,7 @@ export function getMemberAdministrationCapabilities(
 ) {
   const roleSet = new Set(roleLookupFailed ? [] : roles);
   const canManageStatus =
-    !roleLookupFailed && (roleSet.has("admin") || roleSet.has("backup_admin"));
+    !roleLookupFailed && (roleSet.has("admin") || roleSet.has("president"));
 
   return {
     canApprove:

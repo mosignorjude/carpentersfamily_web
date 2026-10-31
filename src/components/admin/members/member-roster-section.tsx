@@ -16,7 +16,7 @@ import type { AccountStatus, ClubMemberRecord } from "./member-admin-types";
 interface MemberRosterSectionProps {
   members: ClubMemberRecord[];
   currentOfficerId: string;
-  isAdminOrBackup: boolean;
+  isAdminOrPresident: boolean;
   roleLookupFailed: boolean;
   onOpenDeactivateModal: (member: ClubMemberRecord) => void;
   onOpenReactivateModal: (member: ClubMemberRecord) => void;
@@ -30,7 +30,7 @@ interface MemberRosterSectionProps {
 export const MemberRosterSection: React.FC<MemberRosterSectionProps> = ({
   members,
   currentOfficerId,
-  isAdminOrBackup,
+  isAdminOrPresident,
   roleLookupFailed,
   onOpenDeactivateModal,
   onOpenReactivateModal,
@@ -96,7 +96,7 @@ export const MemberRosterSection: React.FC<MemberRosterSectionProps> = ({
   // Role badges mapping
   const roleBadges = {
     Admin: "bg-[#3D291F] text-white",
-    "Backup Admin": "bg-[#103D2B] text-white",
+    President: "bg-[#103D2B] text-white",
     Executive:
       "bg-[#D6A23A]/20 text-[#8A641A] border border-[#D6A23A]/40 font-semibold",
     Member: "bg-neutral-100 text-[#3D291F] border border-[#E5DDD3]",
@@ -251,7 +251,7 @@ export const MemberRosterSection: React.FC<MemberRosterSectionProps> = ({
                   {member.accountStatus === "active" && (
                     <>
                       {/* Assign / Remove Executive */}
-                      {isAdminOrBackup && !roleLookupFailed && (
+                      {isAdminOrPresident && !roleLookupFailed && (
                         <>
                           {member.clubRole === "Member" && (
                             <button
@@ -282,7 +282,7 @@ export const MemberRosterSection: React.FC<MemberRosterSectionProps> = ({
                       )}
 
                       {/* Deactivate */}
-                      {isAdminOrBackup && (
+                      {isAdminOrPresident && (
                         <button
                           type="button"
                           disabled={isCurrentUser}
@@ -303,7 +303,7 @@ export const MemberRosterSection: React.FC<MemberRosterSectionProps> = ({
 
                   {/* Deactivated member control: Reactivate */}
                   {member.accountStatus === "deactivated" &&
-                    isAdminOrBackup && (
+                    isAdminOrPresident && (
                       <button
                         type="button"
                         onClick={() => onOpenReactivateModal(member)}

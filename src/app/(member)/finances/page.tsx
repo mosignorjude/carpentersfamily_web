@@ -112,11 +112,10 @@ export default async function FinancesPage({
   );
   const isOfficer =
     !roleError &&
-    ["executive", "admin", "backup_admin"].some((role) => roles.has(role));
+    ["executive", "admin", "president"].some((role) => roles.has(role));
   const canCorrect =
-    !roleError && (roles.has("admin") || roles.has("backup_admin"));
-  const isAdmin =
-    !roleError && (roles.has("admin") || roles.has("backup_admin"));
+    !roleError && (roles.has("admin") || roles.has("president"));
+  const isAdmin = !roleError && (roles.has("admin") || roles.has("president"));
 
   const requestedPage = pageNumber(params.page);
   const requestedAuditPage = pageNumber(params.audit_page);

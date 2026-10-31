@@ -59,7 +59,7 @@ const uuidPattern =
 const clubRoleRank: Record<string, number> = {
   member: 0,
   executive: 1,
-  backup_admin: 2,
+  president: 2,
   admin: 3,
 };
 
@@ -303,13 +303,11 @@ async function getActiveFinanceActor() {
 }
 
 function financeRoleAllowed(roles: Set<string>) {
-  return (
-    roles.has("executive") || roles.has("admin") || roles.has("backup_admin")
-  );
+  return roles.has("executive") || roles.has("admin") || roles.has("president");
 }
 
 function financeCorrectionAllowed(roles: Set<string>) {
-  return roles.has("admin") || roles.has("backup_admin");
+  return roles.has("admin") || roles.has("president");
 }
 
 function eventNoticeUrl(notice: string) {
@@ -336,13 +334,11 @@ function eventAttendanceNoticeUrl(
 }
 
 function eventManagerAllowed(roles: Set<string>) {
-  return (
-    roles.has("executive") || roles.has("admin") || roles.has("backup_admin")
-  );
+  return roles.has("executive") || roles.has("admin") || roles.has("president");
 }
 
 function attendanceSessionControllerAllowed(roles: Set<string>) {
-  return roles.has("executive") || roles.has("admin");
+  return roles.has("executive") || roles.has("admin") || roles.has("president");
 }
 
 function eventFinanceManagerAllowed(actor: {
@@ -357,7 +353,7 @@ function eventFinanceManagerAllowed(actor: {
 }
 
 function eventCorrectionAllowed(roles: Set<string>) {
-  return roles.has("admin") || roles.has("backup_admin");
+  return roles.has("admin") || roles.has("president");
 }
 
 function eventCheckbox(formData: FormData, key: string) {
@@ -531,11 +527,7 @@ export async function recordDuesPaymentAction(formData: FormData) {
   }
 
   const actor = await getActiveDuesActor();
-  if (
-    !actor.roles.has("executive") &&
-    !actor.roles.has("admin") &&
-    !actor.roles.has("backup_admin")
-  ) {
+  if (!actor.roles.has("executive") && !actor.roles.has("president")) {
     redirect(duesNoticeUrl("denied", memberId));
   }
 
@@ -615,7 +607,7 @@ export async function writeOffDuesAction(formData: FormData) {
   if (
     !actor.roles.has("executive") &&
     !actor.roles.has("admin") &&
-    !actor.roles.has("backup_admin")
+    !actor.roles.has("president")
   ) {
     redirect(duesNoticeUrl("denied", memberId));
   }
@@ -653,7 +645,7 @@ export async function correctDuesPaymentAction(formData: FormData) {
   }
 
   const actor = await getActiveDuesActor();
-  if (!actor.roles.has("admin") && !actor.roles.has("backup_admin")) {
+  if (!actor.roles.has("admin") && !actor.roles.has("president")) {
     redirect(duesNoticeUrl("denied", memberId));
   }
 
@@ -690,7 +682,7 @@ export async function setDuesRateAction(formData: FormData) {
   }
 
   const actor = await getActiveDuesActor();
-  if (!actor.roles.has("admin") && !actor.roles.has("backup_admin")) {
+  if (!actor.roles.has("admin") && !actor.roles.has("president")) {
     redirect(duesNoticeUrl("denied"));
   }
 
@@ -800,9 +792,7 @@ export async function approveDuesPaymentRequestAction(formData: FormData) {
 
   const actor = await getActiveDuesActor();
   const isOfficer =
-    actor.roles.has("executive") ||
-    actor.roles.has("admin") ||
-    actor.roles.has("backup_admin");
+    actor.roles.has("executive") || actor.roles.has("president");
   if (!isOfficer) {
     redirect(duesNoticeUrl("denied"));
   }
@@ -851,9 +841,7 @@ export async function rejectDuesPaymentRequestAction(formData: FormData) {
 
   const actor = await getActiveDuesActor();
   const isOfficer =
-    actor.roles.has("executive") ||
-    actor.roles.has("admin") ||
-    actor.roles.has("backup_admin");
+    actor.roles.has("executive") || actor.roles.has("president");
   if (!isOfficer) {
     redirect(duesNoticeUrl("denied"));
   }
@@ -897,8 +885,8 @@ export async function updateClubPaymentSettingsAction(
     if (returnTo === "dues" || returnTo === "/dues") {
       return duesNoticeUrl(notice);
     }
-    if (returnTo === "admin-members" || returnTo === "/admin/members") {
-      return `/admin/members?${new URLSearchParams({ notice }).toString()}`;
+    if (returnTo === "officer-members" || returnTo === "/officers/members") {
+      return `/officers/members?${new URLSearchParams({ notice }).toString()}`;
     }
     return financeNoticeUrl(notice);
   };
@@ -937,7 +925,7 @@ export async function updateClubPaymentSettingsAction(
   }
 
   const actor = await getActiveFinanceActor();
-  const allowed = actor.roles.has("admin") || actor.roles.has("backup_admin");
+  const allowed = actor.roles.has("admin") || actor.roles.has("president");
   if (!allowed) {
     redirect(noticeUrl("denied"));
   }
@@ -958,7 +946,7 @@ export async function updateClubPaymentSettingsAction(
 
   revalidatePath("/dues");
   revalidatePath("/finances");
-  revalidatePath("/admin/members");
+  revalidatePath("/officers/members");
   redirect(noticeUrl("payment-settings-saved"));
 }
 
@@ -990,7 +978,7 @@ export async function recordOpeningBalanceAction(
   }
 
   const actor = await getActiveFinanceActor();
-  const allowed = actor.roles.has("admin") || actor.roles.has("backup_admin");
+  const allowed = actor.roles.has("admin") || actor.roles.has("president");
   if (!allowed) {
     redirect(financeNoticeUrl("denied"));
   }
@@ -1059,7 +1047,7 @@ export async function backfillMemberHistoricalDuesAction(
   }
 
   const actor = await getActiveDuesActor();
-  const allowed = actor.roles.has("admin") || actor.roles.has("backup_admin");
+  const allowed = actor.roles.has("admin") || actor.roles.has("president");
   if (!allowed) {
     redirect(duesNoticeUrl("denied", memberId));
   }
@@ -1489,7 +1477,7 @@ export async function memberLifecycleAction(formData: FormData) {
     !uuidPattern.test(memberId) ||
     !reason
   ) {
-    redirect("/admin/members?notice=invalid-request");
+    redirect("/officers/members?notice=invalid-request");
   }
 
   const supabase = await clientOrRedirect("/?notice=configuration");
@@ -1502,7 +1490,7 @@ export async function memberLifecycleAction(formData: FormData) {
     .eq("id", authData.user.id)
     .maybeSingle();
   if (profileError || profile?.status !== "active") {
-    redirect("/admin/members?notice=denied");
+    redirect("/officers/members?notice=denied");
   }
 
   const { data: assignments, error: assignmentsError } = await supabase
@@ -1510,16 +1498,16 @@ export async function memberLifecycleAction(formData: FormData) {
     .select("role")
     .eq("member_id", authData.user.id)
     .is("revoked_at", null);
-  if (assignmentsError) redirect("/admin/members?notice=denied");
+  if (assignmentsError) redirect("/officers/members?notice=denied");
 
   const roles = new Set(
     (assignments ?? []).map((assignment) => assignment.role),
   );
   const canApprove =
-    roles.has("executive") || roles.has("admin") || roles.has("backup_admin");
-  const canManageStatus = roles.has("admin") || roles.has("backup_admin");
+    roles.has("executive") || roles.has("admin") || roles.has("president");
+  const canManageStatus = roles.has("admin") || roles.has("president");
   const allowed = operation === "approve" ? canApprove : canManageStatus;
-  if (!allowed) redirect("/admin/members?notice=denied");
+  if (!allowed) redirect("/officers/members?notice=denied");
 
   const rpcName = {
     approve: "approve_member",
@@ -1536,7 +1524,7 @@ export async function memberLifecycleAction(formData: FormData) {
     p_member_id: memberId,
     p_reason: reason,
   });
-  if (error) redirect(`/admin/members?notice=${rpcErrorNotice(error)}`);
+  if (error) redirect(`/officers/members?notice=${rpcErrorNotice(error)}`);
 
   await notifyMemberLifecycleChanged({
     supabase,
@@ -1545,19 +1533,19 @@ export async function memberLifecycleAction(formData: FormData) {
     reason,
   });
 
-  revalidatePath("/admin/members");
+  revalidatePath("/officers/members");
   const lifecycleNotice = {
     approve: "member-approved",
     reject: "member-rejected",
     deactivate: "member-deactivated",
     reactivate: "member-reactivated",
   }[operation];
-  redirect(`/admin/members?notice=${lifecycleNotice}`);
+  redirect(`/officers/members?notice=${lifecycleNotice}`);
 }
 
 export async function executiveRoleAction(formData: FormData) {
   const request = parseExecutiveRoleRequest(formData);
-  if (!request) redirect("/admin/members?notice=invalid-request");
+  if (!request) redirect("/officers/members?notice=invalid-request");
 
   const supabase = await clientOrRedirect("/?notice=configuration");
   const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -1569,7 +1557,7 @@ export async function executiveRoleAction(formData: FormData) {
     .eq("id", authData.user.id)
     .maybeSingle();
   if (profileError || profile?.status !== "active") {
-    redirect("/admin/members?notice=denied");
+    redirect("/officers/members?notice=denied");
   }
 
   const { data: assignments, error: assignmentsError } = await supabase
@@ -1577,13 +1565,13 @@ export async function executiveRoleAction(formData: FormData) {
     .select("role")
     .eq("member_id", authData.user.id)
     .is("revoked_at", null);
-  if (assignmentsError) redirect("/admin/members?notice=denied");
+  if (assignmentsError) redirect("/officers/members?notice=denied");
 
   const roles = new Set(
     (assignments ?? []).map((assignment) => assignment.role),
   );
-  if (!roles.has("admin") && !roles.has("backup_admin")) {
-    redirect("/admin/members?notice=denied");
+  if (!roles.has("admin") && !roles.has("president")) {
+    redirect("/officers/members?notice=denied");
   }
 
   const rpcName =
@@ -1593,7 +1581,7 @@ export async function executiveRoleAction(formData: FormData) {
     p_role: "executive",
     p_reason: request.reason,
   });
-  if (error) redirect(`/admin/members?notice=${rpcErrorNotice(error)}`);
+  if (error) redirect(`/officers/members?notice=${rpcErrorNotice(error)}`);
 
   await notifyClubRoleChanged({
     supabase,
@@ -1604,20 +1592,20 @@ export async function executiveRoleAction(formData: FormData) {
     upgraded: request.operation === "grant",
   });
 
-  revalidatePath("/admin/members");
-  redirect("/admin/members?notice=role-updated");
+  revalidatePath("/officers/members");
+  redirect("/officers/members?notice=role-updated");
 }
 
 export async function clubRoleChangeAction(formData: FormData) {
   const request = parseClubRoleRequest(formData);
-  if (!request) redirect("/admin/members?notice=invalid-request");
+  if (!request) redirect("/officers/members?notice=invalid-request");
 
   const supabase = await clientOrRedirect("/?notice=configuration");
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData.user) redirect("/?notice=sign-in");
 
   if (request.memberId === authData.user.id) {
-    redirect("/admin/members?notice=self-action-denied");
+    redirect("/officers/members?notice=self-action-denied");
   }
 
   const { data: profile, error: profileError } = await supabase
@@ -1626,7 +1614,7 @@ export async function clubRoleChangeAction(formData: FormData) {
     .eq("id", authData.user.id)
     .maybeSingle();
   if (profileError || profile?.status !== "active") {
-    redirect("/admin/members?notice=denied");
+    redirect("/officers/members?notice=denied");
   }
 
   const { data: assignments, error: assignmentsError } = await supabase
@@ -1634,13 +1622,13 @@ export async function clubRoleChangeAction(formData: FormData) {
     .select("role")
     .eq("member_id", authData.user.id)
     .is("revoked_at", null);
-  if (assignmentsError) redirect("/admin/members?notice=denied");
+  if (assignmentsError) redirect("/officers/members?notice=denied");
 
   const roles = new Set(
     (assignments ?? []).map((assignment) => assignment.role),
   );
-  if (!roles.has("admin") && !roles.has("backup_admin")) {
-    redirect("/admin/members?notice=denied");
+  if (!roles.has("admin") && !roles.has("president")) {
+    redirect("/officers/members?notice=denied");
   }
 
   const { data: targetAssignments } = await supabase
@@ -1661,7 +1649,7 @@ export async function clubRoleChangeAction(formData: FormData) {
     p_role: request.role,
     p_reason: request.reason,
   });
-  if (error) redirect(`/admin/members?notice=${rpcErrorNotice(error)}`);
+  if (error) redirect(`/officers/members?notice=${rpcErrorNotice(error)}`);
 
   await notifyClubRoleChanged({
     supabase,
@@ -1672,8 +1660,8 @@ export async function clubRoleChangeAction(formData: FormData) {
     upgraded,
   });
 
-  revalidatePath("/admin/members");
-  redirect("/admin/members?notice=role-updated");
+  revalidatePath("/officers/members");
+  redirect("/officers/members?notice=role-updated");
 }
 
 export async function signOutAction() {
@@ -1867,8 +1855,8 @@ export async function updateEventDetailsAction(formData: FormData) {
 }
 
 function eventRoleNoticeUrl(notice: string, returnTo?: string | null) {
-  if (returnTo === "admin-members") {
-    return `/admin/members?${new URLSearchParams({ notice }).toString()}`;
+  if (returnTo === "officer-members") {
+    return `/officers/members?${new URLSearchParams({ notice }).toString()}`;
   }
   return eventNoticeUrl(notice);
 }
@@ -1920,7 +1908,7 @@ export async function assignEventRoleAction(formData: FormData) {
   });
 
   revalidatePath("/events");
-  revalidatePath("/admin/members");
+  revalidatePath("/officers/members");
   redirect(eventRoleNoticeUrl("event-role-assigned", returnTo));
 }
 
@@ -1949,7 +1937,7 @@ export async function revokeEventRoleAction(formData: FormData) {
   });
   if (error) redirect(eventRoleNoticeUrl(rpcErrorNotice(error), returnTo));
   revalidatePath("/events");
-  revalidatePath("/admin/members");
+  revalidatePath("/officers/members");
   redirect(eventRoleNoticeUrl("event-role-revoked", returnTo));
 }
 

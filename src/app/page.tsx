@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   completeProfileAction,
   googleSignInAction,
@@ -32,6 +33,7 @@ const notices: Record<string, string> = {
   "google-unavailable": "Google isn’t available in this environment.",
   "password-updated": "Your password was updated.",
   "sign-in": "Sign in again to continue.",
+  denied: "Your account does not have access to that area.",
   "invalid-profile":
     "Use a name of at most 120 characters and a username of 3–30 letters, numbers, or underscores.",
   "profile-locked": "This profile can no longer be edited.",
@@ -174,7 +176,9 @@ export default async function HomePage({
 
   const { data: profile, error: profileError } = await supabase
     .from("member_profiles")
-    .select("id, full_name, username, status, profile_completed_at")
+    .select(
+      "id, full_name, username, status, profile_completed_at, staff_disabled_at",
+    )
     .eq("id", authData.user.id)
     .maybeSingle();
 
@@ -187,6 +191,27 @@ export default async function HomePage({
           <p>
             No member features have been loaded. Contact a club administrator if
             this continues.
+          </p>
+          <form action={signOutAction}>
+            <button className="button-secondary" type="submit">
+              Sign out
+            </button>
+          </form>
+        </section>
+      </main>
+    );
+  }
+
+  if (profile.status === "staff") {
+    if (profile.staff_disabled_at === null) redirect("/admin");
+    return (
+      <main className="shell">
+        <section className="panel narrow-panel">
+          <p className="eyebrow">Staff access</p>
+          <h1>Staff access disabled</h1>
+          <p>
+            This staff administrator account has been disabled. Contact another
+            staff administrator if you believe this is incorrect.
           </p>
           <form action={signOutAction}>
             <button className="button-secondary" type="submit">

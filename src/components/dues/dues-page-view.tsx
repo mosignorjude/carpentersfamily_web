@@ -39,6 +39,7 @@ import {
 interface DuesPageViewProps {
   member: DuesMemberOption;
   isAdmin?: boolean;
+  isDuesExempt?: boolean;
   isOfficer: boolean;
   canRecord: boolean;
   canWriteOff: boolean;
@@ -116,6 +117,7 @@ export function DuesPageView({
   totalAuditCount,
   pageSize,
   isAdmin = false,
+  isDuesExempt = false,
   viewerId,
   viewerRoles = [],
   pendingRequests = [],
@@ -203,10 +205,10 @@ export function DuesPageView({
 
           {/* Quick Action Station */}
           <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
-            {isAdmin ? (
+            {isDuesExempt ? (
               <div className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#FAF6F0] border border-[#174C37]/30 text-[#174C37] text-xs font-bold min-h-[46px] shadow-2xs">
                 <ShieldCheck className="w-4 h-4 text-[#174C37]" />
-                <span>Admin Dues Exempt</span>
+                <span>System Administrator Dues Exempt</span>
               </div>
             ) : (
               <button
@@ -461,15 +463,15 @@ export function DuesPageView({
 
       {/* Dignified Club Footer & Policy */}
       <footer className="pt-6 pb-6 border-t border-[#E5DDD3] space-y-4 text-xs text-[#54433A]">
-        {isAdmin && (
+        {isDuesExempt && (
           <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#174C37]/30 flex items-start gap-3 text-xs text-[#174C37] font-medium shadow-2xs">
             <ShieldCheck className="w-5 h-5 text-[#174C37] shrink-0 mt-0.5" />
             <div className="leading-relaxed">
               <strong className="font-bold block text-[#3D291F]">
-                Club Administrator Exemption Policy
+                System Administrator Exemption Policy
               </strong>
               <span>
-                Club Administrators are exempt from statutory membership dues
+                System administrators are exempt from statutory membership dues
                 obligations under club financial policy. No dues obligations
                 accrue for this account.
               </span>
@@ -501,7 +503,7 @@ export function DuesPageView({
       {/* Pay Dues Interactive Modal */}
       <PayDuesModal
         availableMonths={availableMonths}
-        isAdmin={isAdmin}
+        isAdmin={isDuesExempt}
         isOpen={isPayModalOpen}
         memberName={member.full_name}
         monthlyRateNgn={currentMonthlyRate}

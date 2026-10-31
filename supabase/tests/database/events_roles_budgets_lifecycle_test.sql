@@ -107,7 +107,7 @@ insert into public.member_role_assignments (
   member_id, role, assigned_by, grant_reason
 ) values
   ('00000000-0000-0000-0000-000000000701', 'admin', '00000000-0000-0000-0000-000000000701', 'Event test Admin'),
-  ('00000000-0000-0000-0000-000000000702', 'backup_admin', '00000000-0000-0000-0000-000000000701', 'Event test Backup Admin'),
+  ('00000000-0000-0000-0000-000000000702', 'president', '00000000-0000-0000-0000-000000000701', 'Event test Backup Admin'),
   ('00000000-0000-0000-0000-000000000703', 'executive', '00000000-0000-0000-0000-000000000701', 'Event test Executive');
 
 set local role authenticated;

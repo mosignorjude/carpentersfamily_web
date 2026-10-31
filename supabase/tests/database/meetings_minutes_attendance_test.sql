@@ -64,7 +64,7 @@ insert into public.member_role_assignments (
   member_id, role, assigned_by, grant_reason
 ) values
   ('00000000-0000-0000-0000-000000001001', 'admin', '00000000-0000-0000-0000-000000001001', 'Meeting test primary Admin'),
-  ('00000000-0000-0000-0000-000000001002', 'backup_admin', '00000000-0000-0000-0000-000000001001', 'Meeting test Backup Admin'),
+  ('00000000-0000-0000-0000-000000001002', 'president', '00000000-0000-0000-0000-000000001001', 'Meeting test president'),
   ('00000000-0000-0000-0000-000000001003', 'executive', '00000000-0000-0000-0000-000000001001', 'Meeting test Executive');
 
 set local role authenticated;
@@ -145,10 +145,10 @@ select throws_ok(
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001002', true);
 select throws_ok(
   $$select public.save_event_minutes(
-    current_setting('test.meeting_one_id')::uuid, 'Backup cannot write minutes', null
+    current_setting('test.meeting_one_id')::uuid, 'President minutes edit', null
   )$$,
-  '42501', 'Meeting minutes management access is required.',
-  'Backup Admin does not inherit the distinct minutes-author role'
+  '22023', 'Editing minutes requires a reason.',
+  'the President passes the minutes authorization gate'
 );
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001004', true);
 select throws_ok(
@@ -178,15 +178,13 @@ select is(
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001003', true);
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001002', true);
-select throws_ok(
-  $$select public.set_attendance_default(21, 'Backup scope check')$$,
-  '42501', 'Attendance settings access is required.',
-  'Backup Admin cannot change the club-wide attendance cutoff'
+select lives_ok(
+  $$select public.set_attendance_default(21, 'President scope check')$$,
+  'the President can change the club-wide attendance cutoff'
 );
-select throws_ok(
-  $$select public.open_event_attendance(current_setting('test.meeting_one_id')::uuid, null)$$,
-  '42501', 'Only an attendance officer can open check-in.',
-  'Backup Admin cannot open or close attendance sessions'
+select ok(
+  private.can_control_attendance_sessions(),
+  'the President holds attendance session control'
 );
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001003', true);
 select lives_ok(
@@ -311,13 +309,12 @@ select lives_ok(
   'an attendance officer can issue a short-lived event QR challenge'
 );
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001002', true);
-select throws_ok(
+select lives_ok(
   $$select public.issue_event_attendance_qr(
     current_setting('test.meeting_two_id')::uuid,
     repeat('f',64), pg_catalog.clock_timestamp() + interval '60 seconds'
   )$$,
-  '42501', 'Only an attendance officer can issue a check-in QR.',
-  'Backup Admin can review and correct attendance but cannot issue check-in QR challenges'
+  'the President can issue a check-in QR challenge'
 );
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001003', true);
 select lives_ok(

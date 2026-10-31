@@ -3,7 +3,7 @@
  * Corresponds to prototype types/memberAdmin.ts and production schema.
  */
 
-export type OfficerRole = "admin" | "backup_admin" | "executive" | "member";
+export type OfficerRole = "admin" | "president" | "executive" | "member";
 
 export type AccountStatus = "pending" | "active" | "deactivated" | "rejected";
 
@@ -22,7 +22,7 @@ export interface ClubMemberRecord {
   accountStatus: AccountStatus;
   profileState: ProfileCompletionState;
   profileStateDescription?: string;
-  clubRole: "Member" | "Executive" | "Admin" | "Backup Admin";
+  clubRole: "Member" | "Executive" | "Admin" | "President";
   requestDateWAT: string;
   activationDateWAT?: string;
   lastStatusChangeReason?: string;

@@ -102,7 +102,7 @@ export default async function MemberAdministrationPage({
             Your role could not be verified. No member records were loaded.
           </p>
           <Link
-            href="/admin/members"
+            href="/officers/members"
             className="text-xs text-[#2E7D32] hover:underline mt-4 inline-block"
           >
             Try verifying access again
@@ -123,14 +123,15 @@ export default async function MemberAdministrationPage({
   let initialOfficerRole: OfficerRole = "executive";
   if (ownRoles.has("admin")) {
     initialOfficerRole = "admin";
-  } else if (ownRoles.has("backup_admin")) {
-    initialOfficerRole = "backup_admin";
+  } else if (ownRoles.has("president")) {
+    initialOfficerRole = "president";
   }
 
-  // Fetch all members
+  // Fetch all club members; staff administrators are not club members.
   const { data: memberRows, error: membersError } = await supabase
     .from("member_profiles")
     .select("id, full_name, username, status, profile_completed_at, created_at")
+    .neq("status", "staff")
     .order("created_at", { ascending: true });
 
   const members = membersError ? [] : (memberRows ?? []);
@@ -161,8 +162,8 @@ export default async function MemberAdministrationPage({
   const rolesByMember = new Map<string, string>();
   for (const r of roleRows ?? []) {
     if (r.role === "admin") rolesByMember.set(r.member_id, "Admin");
-    else if (r.role === "backup_admin" && !rolesByMember.has(r.member_id))
-      rolesByMember.set(r.member_id, "Backup Admin");
+    else if (r.role === "president" && !rolesByMember.has(r.member_id))
+      rolesByMember.set(r.member_id, "President");
     else if (r.role === "executive" && !rolesByMember.has(r.member_id))
       rolesByMember.set(r.member_id, "Executive");
   }
@@ -187,7 +188,7 @@ export default async function MemberAdministrationPage({
     !membersError && members.length > 0
       ? members.map((member) => {
           const isSelf = member.id === authData.user.id;
-          // Another active Admin or Backup Admin must deactivate your account.
+          // Another active Admin or President must deactivate your account.
           const isComplete = Boolean(member.profile_completed_at);
           const assignedRole: ClubMemberRecord["clubRole"] =
             (rolesByMember.get(member.id) as ClubMemberRecord["clubRole"]) ||
@@ -346,7 +347,7 @@ export default async function MemberAdministrationPage({
           <p className="text-sm font-semibold text-red-800">
             Member records could not be loaded. No member details or actions are
             available until the roster can be verified.{" "}
-            <Link href="/admin/members">Try again</Link>.
+            <Link href="/officers/members">Try again</Link>.
           </p>
         </div>
       ) : null}

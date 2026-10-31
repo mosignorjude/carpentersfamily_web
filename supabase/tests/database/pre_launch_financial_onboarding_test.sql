@@ -24,7 +24,7 @@ where id = '00000000-0000-0000-0000-000000000964';
 
 insert into public.member_role_assignments (member_id, role, assigned_by, grant_reason) values
   ('00000000-0000-0000-0000-000000000961', 'admin', '00000000-0000-0000-0000-000000000961', 'PL Admin test role'),
-  ('00000000-0000-0000-0000-000000000962', 'backup_admin', '00000000-0000-0000-0000-000000000961', 'PL Backup Admin test role');
+  ('00000000-0000-0000-0000-000000000962', 'president', '00000000-0000-0000-0000-000000000961', 'PL Backup Admin test role');
 
 -- 1. Table existence & forced RLS
 select has_table('public', 'club_payment_settings', 'club_payment_settings table exists');

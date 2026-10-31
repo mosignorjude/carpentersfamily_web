@@ -103,7 +103,7 @@ export function EventLifecycleModal({
       statusValue: "completed",
       confirmLabel:
         "I confirm this event has concluded and all records are accurate",
-      desc: "Marking this event completed locks planning changes. Only Club Administrators or Backup Administrators can reopen it with an audited reason.",
+      desc: "Marking this event completed locks planning changes. Only the President or a system administrator can reopen it with an audited reason.",
     },
     cancel: {
       title: "Cancel Scheduled Event",
@@ -130,7 +130,7 @@ export function EventLifecycleModal({
       statusValue: null,
       confirmLabel:
         "I certify administrative necessity to reopen locked event planning",
-      desc: "Restricted to Club Administrators and Backup Administrators. This action writes directly to the immutable governance audit trail.",
+      desc: "Restricted to the President or a system administrator. This action writes directly to the immutable governance audit trail.",
     },
     archive: {
       title: "Move Event to Retained Archive",

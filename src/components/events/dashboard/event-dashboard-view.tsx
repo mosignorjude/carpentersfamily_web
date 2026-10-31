@@ -272,9 +272,9 @@ export function EventDashboardView({
     event.status.toLowerCase() === "cancelled" ||
     Boolean(event.archivedAt);
 
-  const isAdminOrBackup = userRole === "admin" || userRole === "backup_admin";
+  const isAdminOrPresident = userRole === "admin" || userRole === "president";
   const isLeadOrExec =
-    isAdminOrBackup || userRole === "executive" || userRole === "event_lead";
+    isAdminOrPresident || userRole === "executive" || userRole === "event_lead";
   const canRecord = isLeadOrExec && !isLocked;
 
   // Aggregate computations
@@ -660,7 +660,7 @@ export function EventDashboardView({
               <span>
                 {event.archivedAt
                   ? "Retained indefinitely for permanent reporting and audit. Records are read-only."
-                  : "Only an Admin or Backup Admin can reopen completed or cancelled records."}
+                  : "Only an Admin or President can reopen completed or cancelled records."}
               </span>
             </div>
           </div>

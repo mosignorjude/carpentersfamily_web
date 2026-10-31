@@ -114,13 +114,13 @@ export function EventCard({
               text: "Status: Completed",
               badge: "text-[#5C4638] bg-[#FAF6F0] border-[#E5DDD3]",
               border: "border-[#E5DDD3]",
-              desc: "Concluded. Planning locked. Only Admin or Backup Admin can reopen.",
+              desc: "Concluded. Planning locked. Only Admin or President can reopen.",
             }
           : {
               text: "Status: Cancelled",
               badge: "text-[#BA3C2A] bg-[#BA3C2A]/10 border-[#BA3C2A]/30",
               border: "border-[#BA3C2A]/30",
-              desc: "Planning halted and locked. Only Admin or Backup Admin can reopen.",
+              desc: "Planning halted and locked. Only Admin or President can reopen.",
             };
 
   const formattedDate = dateFormatter.format(startDate);
@@ -492,7 +492,7 @@ export function EventCard({
                           setMobileActionsOpen(false);
                           onOpenLifecycle(event, "reopen");
                         }}
-                        title="Only Admin or Backup Admin can reopen concluded/cancelled records"
+                        title="Only Admin or President can reopen concluded/cancelled records"
                         type="button"
                       >
                         <RotateCcw className="w-4 h-4 shrink-0" />
@@ -610,7 +610,7 @@ export function EventCard({
                 <button
                   className="cf-btn cf-btn--neutral cf-btn--accent min-h-[44px] px-3.5 py-2 cursor-pointer"
                   onClick={() => onOpenLifecycle(event, "reopen")}
-                  title="Only Admin or Backup Admin can reopen concluded/cancelled records"
+                  title="Only Admin or President can reopen concluded/cancelled records"
                   type="button"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />

@@ -112,9 +112,9 @@ export function DuesRateScheduleCard({
             </div>
             <div className="flex items-start gap-2.5 bg-[#FAF6F0] p-3 rounded-xl border border-[#E5DDD3] text-xs text-[#54433A]">
               <p className="leading-relaxed">
-                Only Club Administrators or Backup Administrators can schedule a
-                rate change. Effective rates for past months cannot be modified;
-                any already-paid future months preserve their recorded receipt
+                Only the President or a system administrator can schedule a rate
+                change. Effective rates for past months cannot be modified; any
+                already-paid future months preserve their recorded receipt
                 value.
               </p>
             </div>
