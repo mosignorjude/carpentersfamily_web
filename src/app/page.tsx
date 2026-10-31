@@ -40,6 +40,10 @@ const notices: Record<string, string> = {
   "profile-update-failed":
     "The profile could not be saved. The username may already be in use.",
   "profile-complete": "Your profile is complete and is waiting for approval.",
+  "email-confirmed":
+    "Your email address is confirmed. Your membership is now waiting for club approval.",
+  "confirm-link-invalid":
+    "This confirmation link is no longer valid. Sign in again or ask a club administrator to send a new link.",
 };
 
 const signInErrorNotices = new Set([
@@ -48,6 +52,7 @@ const signInErrorNotices = new Set([
   "google-unavailable",
   "sign-in",
   "auth-failed",
+  "confirm-link-invalid",
 ]);
 
 export default async function HomePage({
