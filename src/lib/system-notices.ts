@@ -344,6 +344,12 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     message:
       "Approval is blocked until the applicant completes their profile details, then the approval can be recorded.",
   },
+  "confirmation-resent": {
+    type: "success",
+    title: "Confirmation Email Queued",
+    message:
+      "A fresh confirmation link was queued for the applicant and the resend is recorded in the audit history.",
+  },
   "already-confirmed": {
     type: "info",
     title: "Email Already Confirmed",

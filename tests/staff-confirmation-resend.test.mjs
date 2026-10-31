@@ -117,3 +117,13 @@ test("the members page reports a successful resend", () => {
   );
   assert.match(page, /"confirmation-resent": \{/);
 });
+
+test("a successful resend reports through the shared toast allowlist", () => {
+  const system = fs.readFileSync("src/lib/system-notices.ts", "utf8");
+  const entry = system.match(/"confirmation-resent": \{[\s\S]*?\n {2}\},/);
+  assert.ok(
+    entry,
+    "confirmation-resent must be a system notice or the toast stays silent",
+  );
+  assert.match(entry[0], /type: "success"/);
+});
