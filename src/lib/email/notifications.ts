@@ -249,36 +249,6 @@ export async function notifyNewMemberSignUp(params: {
         }),
       ),
     );
-
-    if (params.userId) {
-      await queueSingle({
-        idempotencyKey: signupReceiptKey(params.userId),
-        triggerType: "signup_receipt",
-        contact: {
-          email: params.email.toLowerCase(),
-          userId: params.userId,
-          name: params.fullName,
-        },
-        subject: "Welcome to Carpenters Family — Registration Received",
-        heading: "Your Registration Request Was Received",
-        ctaLabel: "Visit Member Portal",
-        ctaPath: "/",
-        copy: {
-          previewText:
-            "We received your Carpenters Family registration request.",
-          greeting: `Hello ${params.fullName},`,
-          intro:
-            "Thank you for registering with the Carpenters Family Social Club portal. Once you confirm your email address, our club executives will review and activate your membership.",
-          detailsTitle: "Registration Summary",
-          details: [
-            { label: "Full Name", value: params.fullName },
-            { label: "Username", value: `@${params.username}` },
-            { label: "Status", value: "Pending Approval" },
-          ],
-          category: "membership",
-        },
-      });
-    }
   } catch (err) {
     reportNotificationError(
       "[Email Service] notifyNewMemberSignUp failed:",
@@ -304,6 +274,53 @@ export async function notifyWelcomeIfActive(userId: string): Promise<void> {
   } catch (err) {
     reportNotificationError(
       "[Email Service] notifyWelcomeIfActive failed:",
+      err,
+    );
+  }
+}
+
+export async function notifyRegistrationReceivedIfPending(
+  userId: string,
+): Promise<void> {
+  try {
+    const admin = createSupabaseAdminClient();
+    if (!admin) return;
+    const { data: profile } = await admin
+      .from("member_profiles")
+      .select("status, username")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profile?.status !== "pending") return;
+
+    const contact = await resolveMemberContact(admin, userId);
+    if (!contact) return;
+
+    await queueSingle({
+      idempotencyKey: signupReceiptKey(userId),
+      triggerType: "signup_receipt",
+      contact,
+      subject: "Carpenters Family — Email Confirmed. Approval Is Pending.",
+      heading: "Your Membership Request Is Awaiting Club Approval",
+      ctaLabel: "Visit Member Portal",
+      ctaPath: "/",
+      copy: {
+        previewText:
+          "Your email is confirmed and your membership request is with the club executives.",
+        greeting: `Hello ${contact.name},`,
+        intro:
+          "Thank you for registering with the Carpenters Family Social Club portal. Your email address is now confirmed, so our club executives can review your registration and activate your membership. You will receive another email as soon as a decision is recorded.",
+        detailsTitle: "Registration Summary",
+        details: [
+          { label: "Full Name", value: contact.name },
+          { label: "Username", value: `@${profile.username ?? "member"}` },
+          { label: "Status", value: "Pending Approval" },
+        ],
+        category: "membership",
+      },
+    });
+  } catch (err) {
+    reportNotificationError(
+      "[Email Service] notifyRegistrationReceivedIfPending failed:",
       err,
     );
   }
