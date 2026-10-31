@@ -81,3 +81,6 @@ next-env.d.ts
 /seed-communications.sql
 /tests/artifacts/
 /notification-deep-link-plan.txt
+
+# Local git worktrees (isolated agent workspaces)
+.worktrees/
