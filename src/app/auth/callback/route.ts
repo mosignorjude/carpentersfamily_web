@@ -1,5 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { notifyWelcomeIfActive } from "@/lib/email/notifications";
+import {
+  notifyRegistrationReceivedIfPending,
+  notifyWelcomeIfActive,
+} from "@/lib/email/notifications";
 import { getSiteOrigin } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -28,6 +31,7 @@ export async function GET(request: NextRequest) {
     if (error)
       return NextResponse.redirect(new URL("/?notice=auth-failed", origin));
     if (data.user?.email_confirmed_at) {
+      await notifyRegistrationReceivedIfPending(data.user.id);
       await notifyWelcomeIfActive(data.user.id);
     }
     return NextResponse.redirect(new URL(destination, origin));

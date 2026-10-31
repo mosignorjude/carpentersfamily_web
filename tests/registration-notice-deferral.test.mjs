@@ -38,3 +38,20 @@ test("the deferred copy confirms the email first and then states pending approva
   assert.doesNotMatch(copy, /Once you confirm your email address/);
   assert.match(copy, /Pending Approval/);
 });
+
+test("the auth callback queues the pending notice before the welcome check", () => {
+  const route = fs.readFileSync("src/app/auth/callback/route.ts", "utf8");
+  assert.match(
+    route,
+    /import \{\s*notifyRegistrationReceivedIfPending,/,
+    "the callback must import the deferred notice",
+  );
+  const branch = route.match(
+    /if \(data\.user\?\.email_confirmed_at\) \{([\s\S]*?)\n {4}\}/,
+  );
+  assert.ok(branch, "the confirmed-email branch must exist");
+  const deferred = branch[1].search(/notifyRegistrationReceivedIfPending\(/);
+  const welcome = branch[1].search(/notifyWelcomeIfActive\(/);
+  assert.notEqual(deferred, -1, "the branch must queue the pending notice");
+  assert.ok(deferred < welcome, "the pending notice must be queued first");
+});
