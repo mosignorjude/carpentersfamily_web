@@ -391,9 +391,9 @@ export function RecordTransactionModal({
         onClick={onClose}
         type="button"
       />
-      <div className="relative z-10 bg-white rounded-t-2xl sm:rounded-2xl border border-[#E5DDD3] w-full max-w-xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="relative z-10 bg-white rounded-t-2xl sm:rounded-2xl border border-[#E5DDD3] w-full max-w-xl max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between">
+        <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#174C37] text-white flex items-center justify-center">
               <Plus className="w-5 h-5 text-[#D6A23A]" />
@@ -422,7 +422,7 @@ export function RecordTransactionModal({
         </div>
 
         {/* Mode Switcher Tabs */}
-        <div className="p-3 bg-[#FAF6F0] border-b border-[#E5DDD3] flex items-center gap-1.5">
+        <div className="p-3 bg-[#FAF6F0] border-b border-[#E5DDD3] flex items-center gap-1.5 shrink-0">
           <button
             className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 min-h-[38px] ${
               mode === "ticket"
@@ -481,7 +481,7 @@ export function RecordTransactionModal({
 
         {/* Modal Form Body */}
         <form
-          className="p-6 overflow-y-auto space-y-4 text-xs"
+          className="p-6 overflow-y-auto space-y-4 text-xs flex-1 min-h-0"
           noValidate
           onSubmit={handleSubmit}
         >

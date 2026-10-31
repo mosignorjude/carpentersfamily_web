@@ -213,9 +213,9 @@ export function EventCategoryManagementModal({
         type="button"
       />
 
-      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl border border-[#E5DDD3] shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden z-10 animate-in zoom-in-95 duration-150">
+      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl border border-[#E5DDD3] shadow-xl max-w-2xl w-full max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] flex flex-col overflow-hidden z-10 animate-in zoom-in-95 duration-150">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[#E5DDD3] bg-[#FAF6F0]">
+        <div className="flex items-center justify-between p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] shrink-0">
           <div>
             <h2
               className="text-lg font-bold text-[#3D291F]"
@@ -241,7 +241,7 @@ export function EventCategoryManagementModal({
         </div>
 
         {/* Modal Content */}
-        <div className="p-6 overflow-y-auto space-y-6">
+        <div className="p-6 overflow-y-auto space-y-6 flex-1 min-h-0">
           {/* ========================================================= */}
           {/* BUDGET ALLOCATION MODE: Percentage & Amount Form          */}
           {/* ========================================================= */}
