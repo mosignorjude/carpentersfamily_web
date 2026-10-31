@@ -1,7 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { staffMemberLifecycleAction } from "@/app/(staff)/admin/actions";
+import {
+  staffMemberLifecycleAction,
+  staffResendConfirmationAction,
+} from "@/app/(staff)/admin/actions";
 import { getMemberProfileStateLabel } from "@/lib/member-administration-presentation.mjs";
 import { formatStaffTimestamp } from "@/lib/staff-presentation.mjs";
 import StaffActionDialog from "./staff-action-dialog";
@@ -144,6 +147,22 @@ export default function StaffMemberTable({
                             title={`Approve ${member.fullName}?`}
                             triggerLabel="Approve"
                           />
+                        ) : member.profileState === "incomplete_email" ? (
+                          <>
+                            <p className="max-w-56 text-[#8B261E]">
+                              {member.profileStateDescription}
+                            </p>
+                            <StaffActionDialog
+                              action={staffResendConfirmationAction}
+                              confirmLabel="Send confirmation email"
+                              description="The applicant receives a fresh link to confirm their email address. This attempt is recorded in the audit history and can be repeated after 15 minutes."
+                              fields={{ member_id: member.id }}
+                              reasonHelp="Required. Explain why the link is being re-sent, for example that the applicant reported never receiving the confirmation email."
+                              reasonLabel="Reason for resending"
+                              title={`Resend the confirmation email to ${member.fullName}?`}
+                              triggerLabel="Resend confirmation"
+                            />
+                          </>
                         ) : (
                           <p className="max-w-56 text-[#8B261E]">
                             {member.profileStateDescription}

@@ -24,6 +24,11 @@ const pageNotices = {
     message: "Member account reactivated and recorded in the audit history.",
     isError: false,
   },
+  "confirmation-resent": {
+    message:
+      "A fresh confirmation link was queued for the applicant and the resend is recorded in the audit history.",
+    isError: false,
+  },
 };
 
 const memberStatuses = new Set([

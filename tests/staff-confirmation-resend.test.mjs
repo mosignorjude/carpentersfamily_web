@@ -79,3 +79,41 @@ test("the audit action has a human label", () => {
     /member_email_confirmation_resent: "Confirmation email resent"/,
   );
 });
+
+test("the roster offers resend only for a known unconfirmed email", () => {
+  const table = fs.readFileSync(
+    "src/components/staff/staff-member-table.tsx",
+    "utf8",
+  );
+  assert.match(table, /staffResendConfirmationAction/);
+  assert.match(
+    table,
+    /member\.profileState === "incomplete_email"/,
+    "resend must be gated on a confirmed-negative email state",
+  );
+  assert.doesNotMatch(
+    table.slice(table.search(/staffResendConfirmationAction/)),
+    /officers/,
+    "the officer roster must not reuse the staff resend action",
+  );
+});
+
+test("verification unknown never offers a resend", () => {
+  const table = fs.readFileSync(
+    "src/components/staff/staff-member-table.tsx",
+    "utf8",
+  );
+  const resendBlock = table.match(
+    /profileState === "incomplete_email"[\s\S]*?"Resend confirmation"/,
+  );
+  assert.ok(resendBlock, "resend dialog must exist");
+  assert.doesNotMatch(resendBlock[0], /verification_unknown/);
+});
+
+test("the members page reports a successful resend", () => {
+  const page = fs.readFileSync(
+    "src/app/(staff)/admin/members/page.tsx",
+    "utf8",
+  );
+  assert.match(page, /"confirmation-resent": \{/);
+});
