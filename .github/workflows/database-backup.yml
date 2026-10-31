@@ -1,0 +1,105 @@
+name: Database backup
+
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+    inputs:
+      retention_days:
+        description: Delete R2 snapshots older than this many days
+        required: false
+        default: "90"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+      BACKUP_GPG_PASSPHRASE: ${{ secrets.BACKUP_GPG_PASSPHRASE }}
+      BACKUP_RETENTION_DAYS: ${{ inputs.retention_days || '90' }}
+    steps:
+      - name: Check out source without persisting the token
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Check required secrets
+        run: |
+          missing=0
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_REF SUPABASE_DB_PASSWORD \
+            R2_ACCOUNT_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_BUCKET_NAME \
+            BACKUP_GPG_PASSPHRASE; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Secret $name is not set for this repository."
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Link the production project
+        run: node_modules/.bin/supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Write the encryption key
+        run: |
+          umask 077
+          printf '%s' "$BACKUP_GPG_PASSPHRASE" > "$RUNNER_TEMP/backup-key.txt"
+          if [ "$(wc -c < "$RUNNER_TEMP/backup-key.txt")" -lt 32 ]; then
+            echo "::error::BACKUP_GPG_PASSPHRASE must be at least 32 characters."
+            exit 1
+          fi
+
+      - name: Create the encrypted snapshot
+        run: |
+          mkdir -p "$RUNNER_TEMP/snapshot"
+          node scripts/backup-hosted-snapshot.mjs \
+            --label "scheduled-${GITHUB_RUN_ID}" \
+            --local-dir "$RUNNER_TEMP/snapshot" \
+            --key-file "$RUNNER_TEMP/backup-key.txt" \
+            --no-offsite
+
+      - name: Upload to R2 and prune expired snapshots
+        run: |
+          node scripts/upload-backup-snapshot.mjs \
+            --in-dir "$RUNNER_TEMP/snapshot" \
+            --prefix backups/production \
+            --retention-days "$BACKUP_RETENTION_DAYS"
+
+      - name: Remove plaintext and key material
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/backup-key.txt"
+          rm -rf "$RUNNER_TEMP/snapshot"
+
+      - name: Record failure
+        if: failure()
+        run: |
+          {
+            echo "## Database backup failed"
+            echo ""
+            echo "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo ""
+            echo "No snapshot should be treated as uploaded unless the upload step succeeded."
+          } >> "$GITHUB_STEP_SUMMARY"
