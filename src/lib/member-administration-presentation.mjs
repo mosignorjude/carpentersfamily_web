@@ -23,6 +23,64 @@ export function getMemberAdministrationCapabilities(
 
 /** @typedef {"approve" | "deactivate" | "reactivate" | null} LifecycleOperation */
 
+const profileStateLabels = {
+  complete: "Complete",
+  incomplete_email: "Email unconfirmed",
+  incomplete_guarantor: "Incomplete",
+  incomplete_bio: "Incomplete",
+  verification_unknown: "Verification unavailable",
+};
+
+/** @param {string} profileState */
+export function getMemberProfileStateLabel(profileState) {
+  return Object.hasOwn(profileStateLabels, profileState)
+    ? profileStateLabels[profileState]
+    : "Status unavailable";
+}
+
+/**
+ * Eligibility shown to officers and staff. The database independently refuses to
+ * activate a member whose profile is unfinished or whose email is unconfirmed, so
+ * this only decides what the roster says before anyone clicks Approve.
+ *
+ * @param {{profileComplete: boolean, emailConfirmed: boolean, lookupFailed?: boolean}} state
+ * @returns {{profileState: "complete" | "incomplete_email" | "incomplete_guarantor" | "incomplete_bio" | "verification_unknown", profileStateDescription: string}}
+ */
+export function getMemberProfileReadiness({
+  profileComplete,
+  emailConfirmed,
+  lookupFailed = false,
+}) {
+  if (lookupFailed) {
+    return {
+      profileState: "verification_unknown",
+      profileStateDescription:
+        "Email confirmation status is unavailable right now. Refresh before approving.",
+    };
+  }
+
+  if (!profileComplete) {
+    return {
+      profileState: "incomplete_bio",
+      profileStateDescription: "Profile documentation incomplete.",
+    };
+  }
+
+  if (!emailConfirmed) {
+    return {
+      profileState: "incomplete_email",
+      profileStateDescription:
+        "The applicant has not confirmed their email address. Approval unlocks once they open the confirmation link we sent.",
+    };
+  }
+
+  return {
+    profileState: "complete",
+    profileStateDescription:
+      "All requirements met: Email verified and profile complete.",
+  };
+}
+
 /**
  * @param {string} status
  * @param {boolean} profileComplete

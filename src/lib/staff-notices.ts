@@ -9,6 +9,8 @@ const sharedCodes = [
   "denied",
   "invalid-request",
   "operation-failed",
+  "email-confirmation-required",
+  "profile-incomplete",
   "self-action-denied",
   "invalid-state",
   "duplicate-record",

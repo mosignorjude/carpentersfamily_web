@@ -12,6 +12,8 @@ export interface RpcErrorLike {
 }
 
 const MESSAGE_RULES: ReadonlyArray<readonly [RegExp, string]> = [
+  [/\bmust confirm their email\b/i, "email-confirmation-required"],
+  [/\bmust complete their profile\b/i, "profile-incomplete"],
   [
     /\btheir own\b|\bown account\b|\bown (club role|dues)\b/i,
     "self-action-denied",

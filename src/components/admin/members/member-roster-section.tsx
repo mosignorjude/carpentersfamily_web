@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useMemo, useState } from "react";
+import { getMemberProfileStateLabel } from "@/lib/member-administration-presentation.mjs";
 import type { AccountStatus, ClubMemberRecord } from "./member-admin-types";
 
 interface MemberRosterSectionProps {
@@ -216,9 +217,7 @@ export const MemberRosterSection: React.FC<MemberRosterSectionProps> = ({
                     <span className="text-[#7A685D] text-[11px]">
                       Profile:{" "}
                       <strong className="text-[#3D291F]">
-                        {member.profileState === "complete"
-                          ? "Complete"
-                          : "Incomplete"}
+                        {getMemberProfileStateLabel(member.profileState)}
                       </strong>
                     </span>
 
