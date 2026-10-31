@@ -23,4 +23,26 @@ describe("TabExpenses layout and overflow protection", () => {
       "Header must wrap gracefully on tablet viewports using lg:flex-row instead of md:flex-row"
     );
   });
+
+  it("places Disbursement Ledger before Operational Cost Centers & Budget Matrix and keeps the matrix tabular on mobile with helper text", () => {
+    const ledgerIdx = source.indexOf('title="Disbursement Ledger"');
+    const matrixIdx = source.indexOf(
+      "Operational Cost Centers & Budget Matrix"
+    );
+    assert.ok(ledgerIdx > -1 && matrixIdx > -1);
+    assert.ok(
+      ledgerIdx < matrixIdx,
+      "Disbursement Ledger must come before Operational Cost Centers & Budget Matrix"
+    );
+    assert.match(
+      source,
+      /Swipe left or right to scroll the cost center table/,
+      "Must display horizontal scroll helper text on mobile"
+    );
+    assert.match(
+      source,
+      /<table[^>]*min-w-\[680px\]/,
+      "Cost centers table must specify min-w-[680px] for horizontal scrolling on mobile"
+    );
+  });
 });

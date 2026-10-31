@@ -52,9 +52,21 @@ describe("Phase 3: Table-to-Card Responsive Transformation & Tap Floors", () => 
     assert.match(tabRevenue, /<TableScroll[^>]*label="Revenue streams by source"/);
   });
 
-  it("tab-expenses implements mobile cost center cards and desktop table", () => {
-    assert.match(tabExpenses, /sm:hidden\s+space-y-3/);
-    assert.match(tabExpenses, /hidden\s+sm:block/);
+  it("tab-expenses renders Disbursement Ledger before the horizontally scrollable Cost Centers table with mobile helper text", () => {
+    const ledgerIdx = tabExpenses.indexOf('title="Disbursement Ledger"');
+    const matrixIdx = tabExpenses.indexOf(
+      "Operational Cost Centers & Budget Matrix"
+    );
+    assert.ok(ledgerIdx !== -1 && matrixIdx !== -1);
+    assert.ok(
+      ledgerIdx < matrixIdx,
+      "Disbursement Ledger must appear before Operational Cost Centers & Budget Matrix"
+    );
+    assert.doesNotMatch(tabExpenses, /hidden\s+sm:block/);
+    assert.match(
+      tabExpenses,
+      /Swipe left or right to scroll the cost center table/
+    );
     assert.match(tabExpenses, /<TableScroll[^>]*label="Expenses by cost center"/);
   });
 

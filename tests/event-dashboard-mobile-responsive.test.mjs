@@ -63,16 +63,16 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       assert.match(budgetSource, />\s*Cash Velocity\s*</);
     });
 
-    it("renders touch-friendly mobile cards and hides wide table on mobile", () => {
+    it("renders the Capital Allocation & Burn Rate Matrix as a horizontally scrollable table on mobile with helper text", () => {
       assert.match(
         budgetSource,
-        /sm:hidden/,
-        "TabBudgetAllocations must render mobile cards on narrow screens",
+        /Swipe left or right to scroll the allocation matrix/,
+        "TabBudgetAllocations must render mobile scroll helper text",
       );
-      assert.match(
+      assert.doesNotMatch(
         budgetSource,
         /hidden\s+sm:block/,
-        "TabBudgetAllocations must hide wide matrix table on mobile viewports",
+        "TabBudgetAllocations must keep the matrix table visible and scrollable on mobile viewports",
       );
     });
   });
@@ -107,16 +107,21 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       );
     });
 
-    it("renders touch-friendly mobile cards and hides wide tables on mobile", () => {
+    it("renders the statement tables as horizontally scrollable on mobile with helper text", () => {
       assert.match(
         reportSource,
-        /sm:hidden/,
-        "TabReports must render mobile cards on narrow screens",
+        /Swipe left or right to scroll the revenue table/,
+        "TabReports must render mobile scroll helper text for the revenue table",
       );
       assert.match(
         reportSource,
+        /Swipe left or right to scroll the disbursements table/,
+        "TabReports must render mobile scroll helper text for the disbursements table",
+      );
+      assert.doesNotMatch(
+        reportSource,
         /hidden\s+sm:block/,
-        "TabReports must hide wide statement tables on mobile viewports",
+        "TabReports must keep the statement tables visible and scrollable on mobile viewports",
       );
     });
 

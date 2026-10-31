@@ -68,7 +68,7 @@ describe("event dashboard mobile panel layout", () => {
 
   it("wraps expense summary and action controls on narrow screens", () => {
     const actionRow =
-      /<div className="([^"]*\bflex-wrap\b[^"]*)">([\s\S]*?btn-record-disbursement[\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/.exec(
+      /<div className="([^"]*\bflex-wrap\b[^"]*)">([\s\S]*?btn-record-disbursement[\s\S]*?)<\/div>\s*<\/div>/.exec(
         expenses,
       );
     assert.ok(actionRow, "could not find the expense summary and action row");
