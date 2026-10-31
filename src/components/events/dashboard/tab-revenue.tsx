@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
+import { EmptyStateCard } from "@/components/ui/state-screen";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { formatNaira, formatPercent } from "@/lib/format";
 import { percentWidthClass } from "@/lib/percent-width-class";
@@ -105,7 +106,7 @@ export function TabRevenue({
               <span className="text-[11px] text-[#7A685D] block">
                 Pending Receivables
               </span>
-              <span className="font-bold text-[#D6A23A] text-base tabular-nums font-mono">
+              <span className="font-bold text-[#8D5B0E] text-base tabular-nums font-mono">
                 {formatNaira(totalPending)}
               </span>
             </div>
@@ -128,7 +129,7 @@ export function TabRevenue({
                 onClick={() => onRecordRevenue()}
                 type="button"
               >
-                <Plus className="w-4 h-4 text-[#D6A23A]" />
+                <Plus className="w-4 h-4 text-white" />
                 <span>Record Revenue</span>
               </button>
             )}
@@ -137,9 +138,18 @@ export function TabRevenue({
 
         {/* Revenue Streams Table Matrix */}
         {streams.length === 0 ? (
-          <div className="p-8 text-center rounded-2xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#7A685D]">
-            No revenue streams or inflows recorded yet.
-          </div>
+          <EmptyStateCard
+            className="my-4"
+            description="No revenue streams or planned inflows have been recorded for this event yet."
+            icon={TrendingUp}
+            title="No Revenue Streams Recorded"
+            {...(canManageCategories && onManageCategories
+              ? {
+                  actionLabel: "Manage Revenue Streams",
+                  onAction: onManageCategories,
+                }
+              : {})}
+          />
         ) : (
           <>
             {/* Mobile Revenue Streams Cards (sm:hidden) */}
@@ -286,7 +296,7 @@ export function TabRevenue({
                           </td>
 
                           {/* Pending Receivables */}
-                          <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#D6A23A]">
+                          <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#8D5B0E]">
                             {formatNaira(stream.pending)}
                           </td>
 

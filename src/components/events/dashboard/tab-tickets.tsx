@@ -48,12 +48,12 @@ export function TabTickets({
   const totalCapacity = tiers.reduce((acc, t) => acc + t.capacity, 0);
   const totalGross = tiers.reduce((acc, t) => acc + t.sold * t.price, 0);
 
-  const tierColors = [
-    "#D6A23A", // Amber
-    "#174C37", // Forest Green
-    "#5C7C6D", // Sage
-    "#3D291F", // Deep Espresso
-    "#BA3C2A", // Terracotta
+  const tierBgClasses = [
+    "bg-[#D6A23A]", // Amber
+    "bg-[#174C37]", // Forest Green
+    "bg-[#5C7C6D]", // Sage
+    "bg-[#3D291F]", // Deep Espresso
+    "bg-[#BA3C2A]", // Terracotta
   ];
 
   return (
@@ -142,11 +142,7 @@ export function TabTickets({
                 return (
                   <div
                     key={tier.id}
-                    className="h-full transition-all duration-300"
-                    style={{
-                      width: `${widthPercent}%`,
-                      backgroundColor: tierColors[idx % tierColors.length],
-                    }}
+                    className={`h-full transition-all duration-300 ${percentWidthClass(widthPercent)} ${tierBgClasses[idx % tierBgClasses.length]}`}
                     title={`${tier.name}: ${tier.sold}/${tier.capacity} passes (${widthPercent.toFixed(1)}% of inventory)`}
                   />
                 );

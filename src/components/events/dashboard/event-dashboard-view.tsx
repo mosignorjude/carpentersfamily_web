@@ -42,9 +42,9 @@ import type {
   DashboardTicketTier,
   DashboardTransaction,
   EventFinanceCategoryItem,
+  MobileTabItem,
   TransactionType,
 } from "./dashboard-types";
-import type { MobileTabItem } from "./mobile-tab-bottom-sheet";
 import { DownloadReportModal } from "./modals/download-report-modal";
 import { EventBudgetCeilingModal } from "./modals/event-budget-ceiling-modal";
 import { EventCategoryManagementModal } from "./modals/event-category-management-modal";
@@ -177,7 +177,7 @@ export function EventDashboardView({
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleDismiss(event: Event) {
       if (
         moreMenuRef.current &&
         !moreMenuRef.current.contains(event.target as Node)
@@ -186,10 +186,22 @@ export function EventDashboardView({
       }
     }
 
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsMoreOpen(false);
+        document.getElementById("tab-btn-more")?.focus();
+      }
+    }
+
     if (isMoreOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
+      document.addEventListener("mousedown", handleDismiss);
+      document.addEventListener("touchstart", handleDismiss);
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.removeEventListener("mousedown", handleDismiss);
+        document.removeEventListener("touchstart", handleDismiss);
+        window.removeEventListener("keydown", handleKeyDown);
+      };
     }
   }, [isMoreOpen]);
 
@@ -606,12 +618,18 @@ export function EventDashboardView({
           </div>
         </div>
 
-        {/* Quick Action Section (Mobile View: 2-Button Grid) */}
+        {/* Quick Action Section (Mobile View: 1 or 2-Button Grid) */}
         <div className="sm:hidden pt-1">
           <h2 className="text-[15px] font-semibold text-[#231F1D] mb-2.5">
             Quick Action
           </h2>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div
+            className={
+              canRecord
+                ? "grid grid-cols-2 gap-2.5"
+                : "grid grid-cols-1 gap-2.5"
+            }
+          >
             <button
               className="w-full py-3 px-3 min-h-[48px] rounded-[14px] bg-white border border-[#CFD5D0] text-[#231F1D] font-semibold text-[14px] flex items-center justify-center gap-2 hover:bg-stone-50 active:scale-[0.98] transition shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer"
               id="btn-download-report-mobile"
@@ -622,7 +640,7 @@ export function EventDashboardView({
               <span className="truncate">Download Report</span>
             </button>
 
-            {canRecord ? (
+            {canRecord && (
               <button
                 className="w-full py-3 px-3 min-h-[48px] rounded-[14px] bg-[#174C37] text-white font-semibold text-[14px] flex items-center justify-center gap-2 hover:bg-[#103D2B] active:scale-[0.98] transition shadow-xs cursor-pointer"
                 id="btn-record-transaction-mobile"
@@ -635,15 +653,6 @@ export function EventDashboardView({
               >
                 <Plus className="w-[17px] h-[17px] text-[#85B89A] shrink-0" />
                 <span className="truncate">Record Transaction</span>
-              </button>
-            ) : (
-              <button
-                className="w-full py-3 px-3 min-h-[48px] rounded-[14px] bg-stone-100 border border-stone-200 text-stone-400 font-semibold text-[14px] flex items-center justify-center gap-2 cursor-not-allowed"
-                disabled
-                type="button"
-              >
-                <Lock className="w-[17px] h-[17px] text-stone-400 shrink-0" />
-                <span className="truncate">Record-Only Admin</span>
               </button>
             )}
           </div>
@@ -668,18 +677,21 @@ export function EventDashboardView({
       </section>
 
       {/* 2. Joined Content Card: Tab Navigation & Active Tab Content */}
-      <section className="bg-white rounded-[20px] sm:rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs relative">
+      <section className="bg-white rounded-[20px] border border-[#E5DDD3] p-3 sm:p-6 shadow-xs relative">
         <nav aria-label="Event Sections" className="relative">
           {/* Mobile 5-Tab Bar (sm:hidden) */}
-          <div className="sm:hidden grid grid-cols-5 items-start gap-1">
+          <div className="sm:hidden grid grid-cols-5 items-start gap-1 bg-white rounded-2xl border border-[#E5DDD3] p-1.5 shadow-xs mb-4">
             {/* Tab 1: Overview */}
             <button
-              className="group flex flex-col items-center focus:outline-none cursor-pointer min-h-[48px]"
+              aria-controls="tab-content"
+              aria-selected={activeTab === "overview"}
+              className="group flex flex-col items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] cursor-pointer min-h-[48px]"
               id="tab-btn-overview"
               onClick={() => {
                 selectTab("overview");
                 setIsMoreOpen(false);
               }}
+              role="tab"
               type="button"
             >
               <div
@@ -703,12 +715,15 @@ export function EventDashboardView({
 
             {/* Tab 2: Tickets */}
             <button
-              className="group flex flex-col items-center focus:outline-none cursor-pointer min-h-[48px]"
+              aria-controls="tab-content"
+              aria-selected={activeTab === "tickets"}
+              className="group flex flex-col items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] cursor-pointer min-h-[48px]"
               id="tab-btn-tickets"
               onClick={() => {
                 selectTab("tickets");
                 setIsMoreOpen(false);
               }}
+              role="tab"
               type="button"
             >
               <div
@@ -732,12 +747,15 @@ export function EventDashboardView({
 
             {/* Tab 3: Expense */}
             <button
-              className="group flex flex-col items-center focus:outline-none cursor-pointer min-h-[48px]"
+              aria-controls="tab-content"
+              aria-selected={activeTab === "expenses"}
+              className="group flex flex-col items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] cursor-pointer min-h-[48px]"
               id="tab-btn-expenses"
               onClick={() => {
                 selectTab("expenses");
                 setIsMoreOpen(false);
               }}
+              role="tab"
               type="button"
             >
               <div
@@ -761,12 +779,15 @@ export function EventDashboardView({
 
             {/* Tab 4: Revenue */}
             <button
-              className="group flex flex-col items-center focus:outline-none cursor-pointer min-h-[48px]"
+              aria-controls="tab-content"
+              aria-selected={activeTab === "revenue"}
+              className="group flex flex-col items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] cursor-pointer min-h-[48px]"
               id="tab-btn-revenue"
               onClick={() => {
                 selectTab("revenue");
                 setIsMoreOpen(false);
               }}
+              role="tab"
               type="button"
             >
               <div
@@ -794,7 +815,10 @@ export function EventDashboardView({
               ref={moreMenuRef}
             >
               <button
-                className="w-full focus:outline-none flex flex-col items-center cursor-pointer min-h-[48px]"
+                aria-controls="moreDropdown"
+                aria-expanded={isMoreOpen}
+                aria-haspopup="menu"
+                className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] flex flex-col items-center cursor-pointer min-h-[48px]"
                 id="tab-btn-more"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -906,8 +930,8 @@ export function EventDashboardView({
             </p>
           </div>
 
-          {/* Subtle horizontal divider separating the tab bar from the active tab content */}
-          <div className="my-3.5 sm:my-5 border-b border-[#E5DDD3]" />
+          {/* Subtle horizontal divider separating the tab bar from the active tab content on desktop */}
+          <div className="hidden sm:block my-5 border-b border-[#E5DDD3]" />
         </nav>
 
         {/* Render Active Tab Component */}

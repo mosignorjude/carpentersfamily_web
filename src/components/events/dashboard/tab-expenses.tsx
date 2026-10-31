@@ -104,7 +104,7 @@ export function TabExpenses({
               <span className="text-[11px] text-[#7A685D] block">
                 Committed POs
               </span>
-              <span className="font-bold text-[#D6A23A] text-base tabular-nums font-mono">
+              <span className="font-bold text-[#8D5B0E] text-base tabular-nums font-mono">
                 {formatNaira(totalCommitted)}
               </span>
             </div>
@@ -291,7 +291,7 @@ export function TabExpenses({
                           </td>
 
                           {/* Committed POs */}
-                          <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#D6A23A]">
+                          <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#8D5B0E]">
                             {formatNaira(center.committed)}
                           </td>
 
