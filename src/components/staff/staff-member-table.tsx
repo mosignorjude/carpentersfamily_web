@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { staffMemberLifecycleAction } from "@/app/(staff)/admin/actions";
+import { getMemberProfileStateLabel } from "@/lib/member-administration-presentation.mjs";
 import { formatStaffTimestamp } from "@/lib/staff-presentation.mjs";
 import StaffActionDialog from "./staff-action-dialog";
 
@@ -10,7 +11,8 @@ export interface StaffMemberRow {
   fullName: string;
   username: string;
   status: "pending" | "active" | "deactivated" | "rejected";
-  profileComplete: boolean;
+  profileState: string;
+  profileStateDescription: string;
   requestedAt: string;
 }
 
@@ -119,7 +121,7 @@ export default function StaffMemberTable({
                   </span>
                 </td>
                 <td className="py-3 pr-3 text-[#5C4638]">
-                  {member.profileComplete ? "Complete" : "Incomplete"}
+                  {getMemberProfileStateLabel(member.profileState)}
                 </td>
                 <td className="py-3 pr-3 text-[#5C4638]">
                   {formatStaffTimestamp(member.requestedAt)}
@@ -128,19 +130,25 @@ export default function StaffMemberTable({
                   <div className="flex flex-wrap gap-2">
                     {member.status === "pending" ? (
                       <>
-                        <StaffActionDialog
-                          action={staffMemberLifecycleAction}
-                          confirmLabel="Approve membership"
-                          description="Member access is enabled immediately and the decision is recorded in the audit history."
-                          fields={{
-                            member_id: member.id,
-                            operation: "approve",
-                          }}
-                          reasonHelp="Required. This reason is recorded against the approved membership."
-                          reasonLabel="Reason for approval"
-                          title={`Approve ${member.fullName}?`}
-                          triggerLabel="Approve"
-                        />
+                        {member.profileState === "complete" ? (
+                          <StaffActionDialog
+                            action={staffMemberLifecycleAction}
+                            confirmLabel="Approve membership"
+                            description="Member access is enabled immediately and the decision is recorded in the audit history."
+                            fields={{
+                              member_id: member.id,
+                              operation: "approve",
+                            }}
+                            reasonHelp="Required. This reason is recorded against the approved membership."
+                            reasonLabel="Reason for approval"
+                            title={`Approve ${member.fullName}?`}
+                            triggerLabel="Approve"
+                          />
+                        ) : (
+                          <p className="max-w-56 text-[#8B261E]">
+                            {member.profileStateDescription}
+                          </p>
+                        )}
                         <StaffActionDialog
                           action={staffMemberLifecycleAction}
                           confirmLabel="Reject request"

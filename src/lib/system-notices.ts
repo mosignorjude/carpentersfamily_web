@@ -332,6 +332,18 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     title: "Member Reactivated",
     message: "The member's access was restored.",
   },
+  "email-confirmation-required": {
+    type: "error",
+    title: "Email Not Confirmed",
+    message:
+      "Approval is blocked until the applicant confirms their email address. Ask them to open the confirmation link we sent, then approve again.",
+  },
+  "profile-incomplete": {
+    type: "error",
+    title: "Profile Incomplete",
+    message:
+      "Approval is blocked until the applicant completes their profile details, then the approval can be recorded.",
+  },
   "role-updated": {
     type: "success",
     title: "Club Role Updated",

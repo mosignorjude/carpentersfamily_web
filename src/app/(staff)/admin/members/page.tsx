@@ -2,6 +2,8 @@ import StaffMemberTable, {
   type StaffMemberRow,
 } from "@/components/staff/staff-member-table";
 import StaffNotice from "@/components/staff/staff-notice";
+import { getMemberProfileReadiness } from "@/lib/member-administration-presentation.mjs";
+import { loadEmailConfirmationState } from "@/lib/member-email-confirmation.server";
 import { requireStaffProfile } from "@/lib/staff-access.server";
 import { resolveStaffNotice } from "@/lib/staff-notices";
 
@@ -46,6 +48,8 @@ export default async function StaffMembersPage({
     .neq("status", "staff")
     .order("created_at", { ascending: false });
 
+  const emailState = await loadEmailConfirmationState(supabase);
+
   const members: StaffMemberRow[] = (data ?? []).flatMap((row) =>
     memberStatuses.has(row.status)
       ? [
@@ -54,7 +58,11 @@ export default async function StaffMembersPage({
             fullName: row.full_name,
             username: row.username,
             status: row.status as StaffMemberRow["status"],
-            profileComplete: row.profile_completed_at !== null,
+            ...getMemberProfileReadiness({
+              profileComplete: row.profile_completed_at !== null,
+              emailConfirmed: !emailState.unconfirmedMemberIds.has(row.id),
+              lookupFailed: emailState.lookupFailed,
+            }),
             requestedAt: row.created_at,
           },
         ]

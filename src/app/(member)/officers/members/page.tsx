@@ -10,7 +10,11 @@ import type {
   OfficerRole,
 } from "@/components/admin/members/member-admin-types";
 import { DataUnavailableCard } from "@/components/ui/state-screen";
-import { getMemberAdministrationCapabilities } from "@/lib/member-administration-presentation.mjs";
+import {
+  getMemberAdministrationCapabilities,
+  getMemberProfileReadiness,
+} from "@/lib/member-administration-presentation.mjs";
+import { loadEmailConfirmationState } from "@/lib/member-email-confirmation.server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const notices: Record<string, { message: string; isError: boolean }> = {
@@ -26,6 +30,16 @@ const notices: Record<string, { message: string; isError: boolean }> = {
   "operation-failed": {
     message:
       "The operation was rejected. Check the member state and required information, then try again.",
+    isError: true,
+  },
+  "email-confirmation-required": {
+    message:
+      "Approval is blocked until the applicant confirms their email address. Ask them to open the confirmation link we sent, then approve again.",
+    isError: true,
+  },
+  "profile-incomplete": {
+    message:
+      "Approval is blocked until the applicant completes their profile details.",
     isError: true,
   },
   "role-updated": {
@@ -136,6 +150,8 @@ export default async function MemberAdministrationPage({
 
   const members = membersError ? [] : (memberRows ?? []);
 
+  const emailState = await loadEmailConfirmationState(supabase);
+
   let executiveRoleLookupFailed = false;
   if (!membersError && capabilities.canManageExecutiveRole) {
     const activeMemberIds = members
@@ -189,7 +205,11 @@ export default async function MemberAdministrationPage({
       ? members.map((member) => {
           const isSelf = member.id === authData.user.id;
           // Another active Admin or President must deactivate your account.
-          const isComplete = Boolean(member.profile_completed_at);
+          const readiness = getMemberProfileReadiness({
+            profileComplete: Boolean(member.profile_completed_at),
+            emailConfirmed: !emailState.unconfirmedMemberIds.has(member.id),
+            lookupFailed: emailState.lookupFailed,
+          });
           const assignedRole: ClubMemberRecord["clubRole"] =
             (rolesByMember.get(member.id) as ClubMemberRecord["clubRole"]) ||
             "Member";
@@ -199,15 +219,14 @@ export default async function MemberAdministrationPage({
             fullName: member.full_name,
             username: `@${member.username}`,
             accountStatus: member.status as ClubMemberRecord["accountStatus"],
-            profileState: isComplete ? "complete" : "incomplete_bio",
-            profileStateDescription: isComplete
-              ? "All requirements met: Email verified and profile complete."
-              : "Profile documentation incomplete.",
+            profileState: readiness.profileState,
+            profileStateDescription: readiness.profileStateDescription,
             clubRole: assignedRole,
             requestDateWAT: formatWAT(member.created_at),
-            activationDateWAT: isComplete
-              ? formatWAT(member.created_at)
-              : undefined,
+            activationDateWAT:
+              readiness.profileState === "complete"
+                ? formatWAT(member.created_at)
+                : undefined,
             chapter: "",
             isSelf,
           };

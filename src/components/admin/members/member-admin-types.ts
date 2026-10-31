@@ -11,7 +11,8 @@ export type ProfileCompletionState =
   | "complete"
   | "incomplete_email"
   | "incomplete_guarantor"
-  | "incomplete_bio";
+  | "incomplete_bio"
+  | "verification_unknown";
 
 export type EventStaffRole = "Event lead" | "Event assistant" | "Committee";
 
