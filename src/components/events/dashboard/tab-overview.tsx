@@ -131,7 +131,7 @@ export function TabOverview({
       {/* 4-Metric Financial Overview Cards: 2x2 grid on mobile, 4-col on desktop */}
       <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-4">
         {/* 1. Ticket Sales (Prominently Featured) */}
-        <div className="bg-white rounded-2xl border-2 border-[#174C37] p-3.5 sm:p-5 shadow-xs relative overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[#174C37] p-3.5 sm:p-5 shadow-xs relative overflow-hidden">
           <div className="absolute top-0 right-0 bg-[#174C37] text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-bl-lg">
             Core Driver
           </div>
@@ -141,12 +141,12 @@ export function TabOverview({
               Ticket Sales
             </span>
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#174C37] shrink-0">
-              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D6A23A]" />
+              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8D5B0E]" />
             </div>
           </div>
 
           <div className="mt-2 sm:mt-3">
-            <div className="text-lg sm:text-3xl font-bold text-[#3D291F] tabular-nums font-mono truncate">
+            <div className="text-base sm:text-2xl lg:text-3xl font-bold text-[#3D291F] tabular-nums font-mono leading-tight">
               {formatNaira(totalTicketRevenue)}
             </div>
             <p className="text-[11px] sm:text-xs text-[#6B5D53] mt-0.5 sm:mt-1 truncate">
@@ -177,7 +177,7 @@ export function TabOverview({
           </div>
 
           <div className="mt-2 sm:mt-3">
-            <div className="text-lg sm:text-3xl font-bold text-[#3D291F] tabular-nums font-mono truncate">
+            <div className="text-base sm:text-2xl lg:text-3xl font-bold text-[#3D291F] tabular-nums font-mono leading-tight">
               {formatNaira(totalRevenue)}
             </div>
             <div className="flex items-center gap-1 text-[11px] sm:text-xs text-[#174C37] mt-0.5 sm:mt-1 font-medium truncate">
@@ -210,7 +210,7 @@ export function TabOverview({
           </div>
 
           <div className="mt-2 sm:mt-3">
-            <div className="text-lg sm:text-3xl font-bold text-[#3D291F] tabular-nums font-mono truncate">
+            <div className="text-base sm:text-2xl lg:text-3xl font-bold text-[#3D291F] tabular-nums font-mono leading-tight">
               {formatNaira(totalExpenses)}
             </div>
             <div className="flex items-center gap-1 text-[11px] sm:text-xs text-[#6B5D53] mt-0.5 sm:mt-1 truncate">
@@ -243,7 +243,7 @@ export function TabOverview({
           </div>
 
           <div className="mt-2 sm:mt-3">
-            <div className="text-lg sm:text-3xl font-bold text-white tabular-nums font-mono truncate">
+            <div className="text-base sm:text-2xl lg:text-3xl font-bold text-white tabular-nums font-mono leading-tight">
               {formatNaira(netSurplus)}
             </div>
             <div className="flex items-center gap-1 text-[11px] sm:text-xs text-[#D6A23A] mt-0.5 sm:mt-1 font-medium truncate">

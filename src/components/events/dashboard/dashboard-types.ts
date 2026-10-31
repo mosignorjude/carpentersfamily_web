@@ -1,3 +1,5 @@
+import type React from "react";
+
 export type DashboardTab =
   | "overview"
   | "tickets"
@@ -7,6 +9,13 @@ export type DashboardTab =
   | "reports"
   | "team_roles"
   | "audit_log";
+
+export interface MobileTabItem {
+  id: DashboardTab;
+  label: string;
+  subtitle: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
 
 export type TicketTierStatus = "active" | "sold_out" | "limited";
 

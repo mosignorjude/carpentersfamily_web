@@ -68,7 +68,7 @@ export function TabExpenses({
   return (
     <div className="space-y-6">
       {/* 1. Master Consolidated Operational Cost Centers & Budget Matrix Card */}
-      <section className="bg-white rounded-2xl border border-[#E5DDD3] p-5 sm:p-6 shadow-xs space-y-5">
+      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-6 shadow-xs space-y-4 sm:space-y-5">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
           <div>
@@ -91,28 +91,28 @@ export function TabExpenses({
           </div>
 
           {/* Aggregate Expense Stats & Single Record Button */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
-              <span className="text-[11px] text-[#7A685D] block">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="bg-[#FAF6F0] px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-[#E5DDD3] text-right">
+              <span className="text-[10px] sm:text-[11px] text-[#7A685D] block">
                 Disbursed Outflows
               </span>
-              <span className="font-bold text-[#BA3C2A] text-base tabular-nums font-mono">
+              <span className="font-bold text-[#BA3C2A] text-xs sm:text-base tabular-nums font-mono">
                 {formatNaira(totalSpent)}
               </span>
             </div>
-            <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
-              <span className="text-[11px] text-[#7A685D] block">
+            <div className="bg-[#FAF6F0] px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-[#E5DDD3] text-right">
+              <span className="text-[10px] sm:text-[11px] text-[#7A685D] block">
                 Committed POs
               </span>
-              <span className="font-bold text-[#D6A23A] text-base tabular-nums font-mono">
+              <span className="font-bold text-[#8D5B0E] text-xs sm:text-base tabular-nums font-mono">
                 {formatNaira(totalCommitted)}
               </span>
             </div>
-            <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
-              <span className="text-[11px] text-[#7A685D] block">
+            <div className="bg-[#FAF6F0] px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-[#E5DDD3] text-right">
+              <span className="text-[10px] sm:text-[11px] text-[#7A685D] block">
                 Unallocated Buffer
               </span>
-              <span className="font-bold text-[#174C37] text-base tabular-nums font-mono">
+              <span className="font-bold text-[#174C37] text-xs sm:text-base tabular-nums font-mono">
                 {formatNaira(totalRemaining)}
               </span>
             </div>
@@ -144,7 +144,7 @@ export function TabExpenses({
         ) : (
           <>
             {/* Mobile Cost Centers Cards (sm:hidden) */}
-            <div className="sm:hidden space-y-3 p-3">
+            <div className="sm:hidden space-y-3 pt-1">
               {costCenters.map((center) => {
                 const Icon = centerIcons[center.id] || Wallet;
                 const totalUtilized = center.spent + center.committed;
@@ -162,7 +162,7 @@ export function TabExpenses({
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] flex items-center justify-center text-[#174C37] shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#174C37] shrink-0">
                           <Icon className="w-4 h-4" />
                         </div>
                         <div>
@@ -291,7 +291,7 @@ export function TabExpenses({
                           </td>
 
                           {/* Committed POs */}
-                          <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#D6A23A]">
+                          <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#8D5B0E]">
                             {formatNaira(center.committed)}
                           </td>
 
@@ -336,7 +336,7 @@ export function TabExpenses({
             </div>
           </>
         )}
-      </section>
+      </div>
 
       {/* 2. Embedded Disbursement Ledger */}
       <EventDomainLedger

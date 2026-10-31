@@ -62,9 +62,9 @@ export function VoidTransactionModal({
         onClick={onClose}
         type="button"
       />
-      <div className="relative z-10 bg-white rounded-2xl border border-[#E5DDD3] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="relative z-10 bg-white rounded-2xl border border-[#E5DDD3] w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between">
+        <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#BA3C2A]/10 text-[#BA3C2A] flex items-center justify-center">
               <ShieldAlert className="w-5 h-5" />
@@ -84,7 +84,7 @@ export function VoidTransactionModal({
 
           <button
             aria-label="Close dialog"
-            className="p-2 text-[#7A685D] bg-transparent border-0 hover:text-[#3D291F] rounded-lg hover:bg-[#E5DDD3]/50 transition-colors cursor-pointer"
+            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#7A685D] bg-transparent border-0 hover:text-[#3D291F] rounded-lg hover:bg-[#E5DDD3]/50 transition-colors cursor-pointer"
             onClick={onClose}
             type="button"
           >
@@ -93,7 +93,10 @@ export function VoidTransactionModal({
         </div>
 
         {/* Body */}
-        <form className="p-6 space-y-4 text-xs" onSubmit={handleSubmit}>
+        <form
+          className="p-6 space-y-4 text-xs overflow-y-auto flex-1"
+          onSubmit={handleSubmit}
+        >
           {/* Policy Notice */}
           <div className="p-3.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1 text-[#5C4638]">
             <span className="font-semibold text-[#174C37] block">

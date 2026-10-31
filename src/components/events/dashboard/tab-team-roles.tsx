@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, ShieldCheck, Users } from "lucide-react";
+import { EmptyStateCard } from "@/components/ui/state-screen";
 import type {
   DashboardEventInfo,
   DashboardTeamMember,
@@ -34,10 +35,12 @@ export function TabTeamRoles({ event, team }: TabTeamRolesProps) {
         </div>
 
         {team.length === 0 ? (
-          <div className="p-8 text-center rounded-2xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#7A685D]">
-            No committee officers or event leads have been assigned to this
-            event yet.
-          </div>
+          <EmptyStateCard
+            className="my-4"
+            description="No committee officers or event leads have been assigned to this event yet."
+            icon={Users}
+            title="No Committee Assigned"
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {team.map((m) => {

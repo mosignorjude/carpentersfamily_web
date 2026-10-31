@@ -84,9 +84,9 @@ export function EventBudgetCeilingModal({
         onClick={onClose}
         type="button"
       />
-      <div className="relative z-10 bg-white rounded-2xl border border-[#E5DDD3] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="relative z-10 bg-white rounded-2xl border border-[#E5DDD3] w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between">
+        <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#174C37]/10 text-[#174C37] flex items-center justify-center">
               <Banknote className="w-5 h-5" />
@@ -110,7 +110,7 @@ export function EventBudgetCeilingModal({
 
           <button
             aria-label="Close dialog"
-            className="p-2 text-[#7A685D] bg-transparent border-0 hover:text-[#3D291F] rounded-lg hover:bg-[#E5DDD3]/50 transition-colors cursor-pointer"
+            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#7A685D] bg-transparent border-0 hover:text-[#3D291F] rounded-lg hover:bg-[#E5DDD3]/50 transition-colors cursor-pointer"
             onClick={onClose}
             type="button"
           >
@@ -121,7 +121,7 @@ export function EventBudgetCeilingModal({
         {/* Form Body */}
         <form
           action={setEventBudgetAction}
-          className="p-6 space-y-4 text-xs"
+          className="p-6 space-y-4 text-xs overflow-y-auto flex-1"
           noValidate
           onSubmit={handleSubmit}
         >
@@ -242,7 +242,7 @@ export function EventBudgetCeilingModal({
               Cancel
             </button>
             <FormSubmitButton
-              className="px-5 py-2 bg-[#174C37] text-white hover:bg-[#123B2B] rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+              className="px-5 py-2.5 bg-[#174C37] text-white hover:bg-[#103D2B] rounded-xl text-xs font-semibold transition-colors cursor-pointer min-h-[44px]"
               id="btn-submit-budget-ceiling"
               pendingLabel={isEditing ? "Updating..." : "Saving..."}
             >

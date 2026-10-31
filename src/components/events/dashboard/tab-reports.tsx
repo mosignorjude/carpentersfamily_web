@@ -61,7 +61,7 @@ export function TabReports({
             onClick={() => downloadLedgerCSV(transactions)}
             type="button"
           >
-            <Download className="w-3.5 h-3.5 text-[#D6A23A]" />
+            <Download className="w-3.5 h-3.5 text-white" />
             <span>Export CSV</span>
           </button>
         </div>
@@ -72,7 +72,7 @@ export function TabReports({
         {/* Letterhead */}
         <div className="border-b-2 border-[#174C37] pb-5 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 sm:gap-4 min-w-0">
           <div className="min-w-0">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-[#D6A23A] block">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-[#8D5B0E] block">
               Accounting Statement
             </span>
             <h2 className="text-xl sm:text-2xl font-bold text-[#0C3325] uppercase tracking-tight mt-0.5 break-words">
@@ -104,7 +104,7 @@ export function TabReports({
             <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
               Revenue
             </span>
-            <span className="text-base sm:text-lg font-bold font-mono text-[#174C37] block mt-0.5 tabular-nums truncate">
+            <span className="text-sm sm:text-lg font-bold font-mono text-[#174C37] block mt-0.5 tabular-nums leading-tight">
               {formatNaira(totalRevenue)}
             </span>
             <span className="text-[10px] text-[#7A685D] block truncate">
@@ -118,7 +118,7 @@ export function TabReports({
             <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
               Expenses
             </span>
-            <span className="text-base sm:text-lg font-bold font-mono text-[#BA3C2A] block mt-0.5 tabular-nums truncate">
+            <span className="text-sm sm:text-lg font-bold font-mono text-[#BA3C2A] block mt-0.5 tabular-nums leading-tight">
               {formatNaira(totalExpenses)}
             </span>
             <span className="text-[10px] text-[#7A685D] block truncate">
@@ -132,7 +132,7 @@ export function TabReports({
             <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
               Net Surplus
             </span>
-            <span className="text-base sm:text-lg font-bold font-mono text-[#174C37] block mt-0.5 tabular-nums truncate">
+            <span className="text-sm sm:text-lg font-bold font-mono text-[#174C37] block mt-0.5 tabular-nums leading-tight">
               {formatNaira(netSurplus)}
             </span>
             <span className="text-[10px] text-[#174C37] font-semibold block truncate">
@@ -323,12 +323,12 @@ export function TabReports({
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-1.5 p-2 rounded-lg bg-white border border-[#E5DDD3] text-center text-xs">
+                    <div className="grid grid-cols-3 gap-1.5 p-2 rounded-lg bg-white text-center text-xs">
                       <div className="min-w-0">
                         <span className="text-[10px] text-[#7A685D] block">
                           Allocated
                         </span>
-                        <span className="font-mono font-semibold text-[#5C4638] text-[11px] truncate block">
+                        <span className="font-mono font-semibold text-[#5C4638] text-[11px] leading-tight block">
                           {formatNaira(c.allocated)}
                         </span>
                       </div>
@@ -336,7 +336,7 @@ export function TabReports({
                         <span className="text-[10px] text-[#7A685D] block">
                           Spent
                         </span>
-                        <span className="font-mono font-bold text-[#BA3C2A] text-[11px] truncate block">
+                        <span className="font-mono font-bold text-[#BA3C2A] text-[11px] leading-tight block">
                           {formatNaira(c.spent)}
                         </span>
                       </div>
@@ -344,7 +344,7 @@ export function TabReports({
                         <span className="text-[10px] text-[#7A685D] block">
                           Committed
                         </span>
-                        <span className="font-mono text-[#D6A23A] text-[11px] truncate block">
+                        <span className="font-mono text-[#8D5B0E] text-[11px] leading-tight block">
                           {formatNaira(c.committed)}
                         </span>
                       </div>
@@ -399,7 +399,7 @@ export function TabReports({
                           <td className="py-2.5 text-right font-mono font-bold text-[#BA3C2A]">
                             {formatNaira(c.spent)}
                           </td>
-                          <td className="py-2.5 text-right font-mono text-[#D6A23A]">
+                          <td className="py-2.5 text-right font-mono text-[#8D5B0E]">
                             {formatNaira(c.committed)}
                           </td>
                           <td

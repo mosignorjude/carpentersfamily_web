@@ -242,13 +242,13 @@ export function EventDomainLedger({
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span
-                        className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F]"
+                        className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-[#FAF6F0] text-[#3D291F]"
                         title={`Full Transaction ID: ${txn.id}`}
                       >
                         #{txn.paymentRef || txn.id.slice(0, 8).toUpperCase()}
                       </span>
                       {txn.categoryLabel && (
-                        <span className="text-[11px] font-semibold text-[#6B5D53] bg-[#FAF6F0] px-2 py-0.5 rounded-md border border-[#E5DDD3]">
+                        <span className="text-[11px] font-semibold text-[#6B5D53] bg-[#FAF6F0] px-2 py-0.5 rounded-md">
                           {txn.categoryLabel}
                         </span>
                       )}
@@ -591,9 +591,9 @@ export function EventDomainLedger({
             page)
           </span>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 max-w-full overflow-x-auto py-1">
             <button
-              className="px-3 py-1.5 border border-[#E5DDD3] bg-white rounded-lg font-medium text-[#3D291F] hover:bg-[#FAF6F0] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+              className="px-3 py-1.5 border border-[#E5DDD3] bg-white rounded-lg font-medium text-[#3D291F] hover:bg-[#FAF6F0] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 min-h-[38px] shrink-0 cursor-pointer"
               disabled={validPage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               type="button"
@@ -602,23 +602,27 @@ export function EventDomainLedger({
               <span>Previous</span>
             </button>
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
-              <button
-                className={`w-7 h-7 rounded-lg font-mono font-medium text-xs transition-colors cursor-pointer ${
-                  num === validPage
-                    ? "bg-[#174C37] text-white font-bold"
-                    : "bg-white border border-[#E5DDD3] text-[#5C4638] hover:bg-[#FAF6F0]"
-                }`}
-                key={num}
-                onClick={() => setCurrentPage(num)}
-                type="button"
-              >
-                {num}
-              </button>
-            ))}
+            <div className="hidden sm:flex items-center gap-1.5">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (num) => (
+                  <button
+                    className={`min-w-[36px] min-h-[36px] px-2 rounded-lg font-mono font-medium text-xs transition-colors cursor-pointer flex items-center justify-center ${
+                      num === validPage
+                        ? "bg-[#174C37] text-white font-bold"
+                        : "bg-white border border-[#E5DDD3] text-[#5C4638] hover:bg-[#FAF6F0]"
+                    }`}
+                    key={num}
+                    onClick={() => setCurrentPage(num)}
+                    type="button"
+                  >
+                    {num}
+                  </button>
+                ),
+              )}
+            </div>
 
             <button
-              className="px-3 py-1.5 border border-[#E5DDD3] bg-white rounded-lg font-medium text-[#3D291F] hover:bg-[#FAF6F0] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+              className="px-3 py-1.5 border border-[#E5DDD3] bg-white rounded-lg font-medium text-[#3D291F] hover:bg-[#FAF6F0] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 min-h-[38px] shrink-0 cursor-pointer"
               disabled={validPage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               type="button"

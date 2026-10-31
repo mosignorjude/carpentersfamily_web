@@ -303,6 +303,16 @@ export function TabAuditLog({
                             </span>
                           )}
                         </div>
+
+                        {/* Visible Retained History wording if voided */}
+                        {isVoided && txn.voidReason && (
+                          <div className="mt-2 p-2.5 rounded-lg bg-[#BA3C2A]/10 border border-[#BA3C2A]/20 text-[11px] text-[#BA3C2A] space-y-0.5">
+                            <p className="font-semibold">{txn.voidReason}</p>
+                            <p className="text-[10px] text-[#7A685D]">
+                              Voided by {txn.voidedBy} · {txn.voidedAt}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Footer: Receipt & Actions */}

@@ -138,8 +138,19 @@ export function VoucherInspectionDrawer({
     : null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#3D291F]/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-      <div className="bg-white rounded-3xl border border-[#E5DDD3] shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+    <div
+      aria-labelledby="voucher-inspection-title"
+      aria-modal="true"
+      className="fixed inset-0 z-50 bg-[#3D291F]/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      role="dialog"
+    >
+      <button
+        aria-label="Close modal overlay"
+        className="fixed inset-0 cursor-default bg-transparent border-0"
+        onClick={onClose}
+        type="button"
+      />
+      <div className="relative z-10 bg-white rounded-3xl border border-[#E5DDD3] shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
         {/* Drawer Header */}
         <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -147,7 +158,10 @@ export function VoucherInspectionDrawer({
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-[#3D291F]">
+              <h3
+                className="text-base font-bold text-[#3D291F]"
+                id="voucher-inspection-title"
+              >
                 Voucher Audit & Verification Inspection
               </h3>
               <p className="text-xs text-[#7A685D] mt-0.5">
@@ -157,7 +171,8 @@ export function VoucherInspectionDrawer({
             </div>
           </div>
           <button
-            className="w-8 h-8 rounded-full bg-white border border-[#E5DDD3] hover:bg-[#FAF6F0] flex items-center justify-center text-[#7A685D] hover:text-[#3D291F] transition-colors cursor-pointer"
+            aria-label="Close voucher inspection"
+            className="w-11 h-11 min-h-[44px] min-w-[44px] rounded-full bg-white border border-[#E5DDD3] hover:bg-[#FAF6F0] flex items-center justify-center text-[#7A685D] hover:text-[#3D291F] transition-colors cursor-pointer"
             onClick={onClose}
             type="button"
           >
@@ -465,7 +480,7 @@ export function VoucherInspectionDrawer({
 
           <div className="flex items-center gap-3">
             <button
-              className="px-4 py-2 bg-white text-[#3D291F] border border-[#E5DDD3] rounded-xl text-xs font-semibold hover:bg-[#FAF6F0] transition-colors cursor-pointer"
+              className="px-4 py-2 bg-white text-[#3D291F] border border-[#E5DDD3] rounded-xl text-xs font-semibold hover:bg-[#FAF6F0] transition-colors cursor-pointer min-h-[44px] flex items-center justify-center"
               onClick={onClose}
               type="button"
             >

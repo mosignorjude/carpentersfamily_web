@@ -1,7 +1,8 @@
 "use client";
 
-import { BarChart3, Pencil, Plus, Tags } from "lucide-react";
+import { Banknote, BarChart3, Pencil, Plus, Tags } from "lucide-react";
 import { useState } from "react";
+import { EmptyStateCard } from "@/components/ui/state-screen";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { formatNaira, formatPercent } from "@/lib/format";
 import { percentWidthClass } from "@/lib/percent-width-class";
@@ -94,7 +95,7 @@ export function TabBudgetAllocations({
           <div className="flex items-center gap-2">
             {canManageCategories && onOpenBudgetCeilingModal && (
               <button
-                className="flex-1 sm:flex-initial px-3 py-1.5 bg-[#174C37] text-white hover:bg-[#123B2B] rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 min-h-[36px] shadow-xs cursor-pointer"
+                className="flex-1 sm:flex-initial px-3.5 py-2 bg-[#174C37] text-white hover:bg-[#103D2B] rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 min-h-[44px] shadow-xs cursor-pointer"
                 id="btn-set-budget-total"
                 onClick={onOpenBudgetCeilingModal}
                 type="button"
@@ -169,29 +170,21 @@ export function TabBudgetAllocations({
       {activeChartTab === "allocation" && (
         <div className="space-y-6">
           {costCenters.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#7A685D] space-y-3">
-              <p>
-                No budget allocations or cost centers configured for this event
-                yet.
-              </p>
-              {canManageCategories && onOpenBudgetCeilingModal && (
-                <div>
-                  <button
-                    className="px-4 py-2 bg-[#174C37] text-white hover:bg-[#123B2B] rounded-xl text-xs font-semibold transition-colors inline-flex items-center gap-1.5 min-h-[36px] shadow-xs cursor-pointer"
-                    id="btn-open-budget-ceiling-empty"
-                    onClick={onOpenBudgetCeilingModal}
-                    type="button"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>
-                      {budgetCeiling > 0
+            <EmptyStateCard
+              className="my-4"
+              description="No budget allocations or cost centers have been configured for this event yet."
+              icon={Banknote}
+              title="No Budget Allocations Configured"
+              {...(canManageCategories && onOpenBudgetCeilingModal
+                ? {
+                    actionLabel:
+                      budgetCeiling > 0
                         ? "Edit Budget Total"
-                        : "Set Budget Total"}
-                    </span>
-                  </button>
-                </div>
-              )}
-            </div>
+                        : "Set Budget Total",
+                    onAction: onOpenBudgetCeilingModal,
+                  }
+                : {})}
+            />
           ) : (
             <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-5 min-w-0 max-w-full overflow-hidden">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-[#E5DDD3]">
@@ -275,12 +268,12 @@ export function TabBudgetAllocations({
                       </div>
 
                       {/* 3-Col Stats: Allocated, Disbursed, Committed */}
-                      <div className="grid grid-cols-3 gap-2 p-2 rounded-lg bg-white border border-[#E5DDD3] text-center text-xs">
+                      <div className="grid grid-cols-3 gap-1.5 p-2 rounded-lg bg-white text-center text-xs">
                         <div className="min-w-0">
                           <span className="text-[10px] text-[#7A685D] block">
                             Allocated
                           </span>
-                          <span className="font-mono font-bold text-[#3D291F] block text-xs truncate">
+                          <span className="font-mono font-bold text-[#3D291F] block text-[11px] leading-tight">
                             {formatNaira(center.allocated)}
                           </span>
                         </div>
@@ -288,7 +281,7 @@ export function TabBudgetAllocations({
                           <span className="text-[10px] text-[#7A685D] block">
                             Disbursed
                           </span>
-                          <span className="font-mono font-bold text-[#BA3C2A] block text-xs truncate">
+                          <span className="font-mono font-bold text-[#BA3C2A] block text-[11px] leading-tight">
                             {formatNaira(center.spent)}
                           </span>
                         </div>
@@ -296,7 +289,7 @@ export function TabBudgetAllocations({
                           <span className="text-[10px] text-[#7A685D] block">
                             Committed
                           </span>
-                          <span className="font-mono font-bold text-[#D6A23A] block text-xs truncate">
+                          <span className="font-mono font-bold text-[#8D5B0E] block text-[11px] leading-tight">
                             {formatNaira(center.committed)}
                           </span>
                         </div>
@@ -378,7 +371,7 @@ export function TabBudgetAllocations({
                             <td className="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-[#BA3C2A]">
                               {formatNaira(center.spent)}
                             </td>
-                            <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#D6A23A]">
+                            <td className="py-3 px-3.5 whitespace-nowrap font-mono text-[#8D5B0E]">
                               {formatNaira(center.committed)}
                             </td>
                             <td className="py-3 px-3.5 whitespace-nowrap min-w-[140px]">

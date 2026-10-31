@@ -51,7 +51,7 @@ export function DownloadReportModal({
         onClick={onClose}
         type="button"
       />
-      <div className="relative z-10 bg-white w-full max-w-sm rounded-[22px] border border-[#E5DDD3] p-5 shadow-xl space-y-4">
+      <div className="relative z-10 bg-white w-full max-w-sm rounded-[22px] border border-[#E5DDD3] p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD3]">
           <h3
             className="text-lg font-bold text-[#231F1D] tracking-tight"
@@ -78,7 +78,7 @@ export function DownloadReportModal({
         <div className="space-y-2.5 pt-1">
           {/* Full Audit Report (PDF) */}
           <button
-            className="w-full py-3 px-4 rounded-xl bg-[#174C37] text-white text-sm font-semibold flex items-center justify-between hover:bg-[#123E2C] active:scale-[0.99] transition shadow-xs cursor-pointer border-0"
+            className="w-full py-3 px-4 rounded-xl bg-[#174C37] text-white text-sm font-semibold flex items-center justify-between hover:bg-[#103D2B] active:scale-[0.99] transition shadow-xs cursor-pointer border-0 min-h-[44px]"
             id="btn-download-pdf-option"
             onClick={handleDownloadPdf}
             type="button"
@@ -87,7 +87,7 @@ export function DownloadReportModal({
               <FileText className="w-4 h-4 text-[#85B89A] shrink-0" />
               <span>Full Audit Report (PDF)</span>
             </div>
-            <span className="text-xs bg-[#123E2C] px-2 py-0.5 rounded text-white/90 font-mono">
+            <span className="text-xs bg-[#103D2B] px-2 py-0.5 rounded text-white/90 font-mono">
               PDF
             </span>
           </button>
