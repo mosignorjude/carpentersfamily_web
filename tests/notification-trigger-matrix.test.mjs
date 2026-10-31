@@ -27,7 +27,12 @@ const TRIGGER_MATRIX = [
   {
     id: 1,
     name: "Welcome Email",
-    app: ["triggerType: \"welcome\"", "welcomeKey(", "notifyWelcomeIfActive("],
+    app: [
+      "triggerType: \"welcome\"",
+      "welcomeKey(",
+      "notifyWelcomeIfActive(",
+      "notifyRegistrationReceivedIfPending(",
+    ],
     triggerTypes: ["welcome"],
   },
   {
@@ -198,6 +203,7 @@ const TRIGGER_MATRIX = [
 const SUPPLEMENTAL_TRIGGER_TYPES = [
   "member_signup_alert",
   "signup_receipt",
+  "email_confirmation_resend",
   "club_role_changed",
   "password_updated",
   "dues_request_submitted",

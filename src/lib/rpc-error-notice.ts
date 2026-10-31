@@ -12,6 +12,9 @@ export interface RpcErrorLike {
 }
 
 const MESSAGE_RULES: ReadonlyArray<readonly [RegExp, string]> = [
+  [/already confirmed their email/i, "already-confirmed"],
+  [/less than 15 minutes ago/i, "resend-cooldown"],
+  [/only a pending applicant/i, "not-pending"],
   [/\bmust confirm their email\b/i, "email-confirmation-required"],
   [/\bmust complete their profile\b/i, "profile-incomplete"],
   [

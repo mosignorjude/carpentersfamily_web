@@ -2,9 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { notifyMemberLifecycleChanged } from "@/lib/email/notifications";
+import {
+  notifyMemberLifecycleChanged,
+  queueEmailConfirmationResend,
+} from "@/lib/email/notifications";
 import { rpcErrorNotice } from "@/lib/rpc-error-notice";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getSiteOrigin } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -226,4 +230,63 @@ export async function staffMemberLifecycleAction(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/officers/members");
   redirect(`/admin/members?notice=${lifecycleNotice[typedOperation]}`);
+}
+
+export async function staffResendConfirmationAction(formData: FormData) {
+  const { supabase } = await requireStaffActor();
+
+  const memberId = formString(formData, "member_id", 36);
+  const reason = formString(formData, "reason", 500);
+
+  if (!memberId || !uuidPattern.test(memberId) || !reason) {
+    redirect("/admin/members?notice=invalid-request");
+  }
+
+  // The RPC records the audit row (and therefore the 15-minute cooldown) before
+  // the link exists, so a failed send below still burns the cooldown.
+  const { data, error } = await supabase.rpc(
+    "staff_resend_member_email_confirmation",
+    { p_member_id: memberId, p_reason: reason },
+  );
+  if (error) redirect(`/admin/members?notice=${rpcErrorNotice(error)}`);
+
+  const recipient = (data ?? [])[0] as
+    | { email?: string; full_name?: string }
+    | undefined;
+  if (!recipient?.email) {
+    redirect("/admin/members?notice=operation-failed");
+  }
+
+  const origin = getSiteOrigin();
+  const admin = createSupabaseAdminClient();
+  if (!origin || !admin) {
+    redirect("/admin/members?notice=confirmation-send-failed");
+  }
+
+  // Only the hashed token crosses the URL; Auth never sees a password here and
+  // the recipient still confirms through /auth/confirm.
+  const { data: link, error: linkError } = await admin.auth.admin.generateLink({
+    type: "magiclink",
+    email: recipient.email,
+    options: { redirectTo: origin },
+  });
+  const tokenHash = link?.properties?.hashed_token;
+  if (linkError || !tokenHash) {
+    redirect("/admin/members?notice=confirmation-send-failed");
+  }
+
+  try {
+    await queueEmailConfirmationResend({
+      memberId,
+      email: recipient.email,
+      fullName: recipient.full_name ?? "member",
+      tokenHash,
+    });
+  } catch {
+    redirect("/admin/members?notice=confirmation-send-failed");
+  }
+
+  revalidatePath("/admin/members");
+  revalidatePath("/admin");
+  redirect("/admin/members?notice=confirmation-resent");
 }

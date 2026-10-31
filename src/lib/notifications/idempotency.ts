@@ -34,6 +34,17 @@ export function signupReceiptKey(userId: string): string {
   return userKey("signup_receipt", userId);
 }
 
+export function emailConfirmationResendKey(params: {
+  userId: string;
+  occurredAt: Date;
+}): string {
+  return userKey(
+    "email_confirmation_resend",
+    params.userId,
+    `:${minuteStamp(params.occurredAt)}`,
+  );
+}
+
 export function roleUpgradeKey(params: {
   userId: string;
   role: string;

@@ -5,6 +5,7 @@ const knownActions = {
   member_rejected: "Membership request rejected",
   member_deactivated: "Member deactivated",
   member_reactivated: "Member reactivated",
+  member_email_confirmation_resent: "Confirmation email resent",
   club_role_granted: "Club role granted",
   club_role_revoked: "Club role revoked",
   staff_provisioned: "Staff account created",

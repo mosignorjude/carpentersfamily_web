@@ -15,6 +15,10 @@ const sharedCodes = [
   "invalid-state",
   "duplicate-record",
   "already-processed",
+  "already-confirmed",
+  "not-pending",
+  "resend-cooldown",
+  "confirmation-send-failed",
 ];
 
 export function resolveStaffNotice(

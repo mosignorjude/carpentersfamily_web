@@ -344,6 +344,28 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     message:
       "Approval is blocked until the applicant completes their profile details, then the approval can be recorded.",
   },
+  "already-confirmed": {
+    type: "info",
+    title: "Email Already Confirmed",
+    message: "This applicant has already confirmed their email address.",
+  },
+  "not-pending": {
+    type: "info",
+    title: "Applicant Is Not Pending",
+    message: "Only a pending applicant can be sent a confirmation email.",
+  },
+  "resend-cooldown": {
+    type: "warning",
+    title: "Confirmation Email Already Sent",
+    message:
+      "A confirmation email was sent to this applicant less than 15 minutes ago. Try again later.",
+  },
+  "confirmation-send-failed": {
+    type: "error",
+    title: "Confirmation Email Not Sent",
+    message:
+      "The confirmation link could not be generated. No email was sent. Try again or contact the platform administrator.",
+  },
   "role-updated": {
     type: "success",
     title: "Club Role Updated",

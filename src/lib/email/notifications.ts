@@ -11,6 +11,7 @@ import {
   announcementPublishedKey,
   attendanceOpenedKey,
   duesRequestSubmittedKey,
+  emailConfirmationResendKey,
   eventCancelledKey,
   eventChangedKey,
   eventPublishedKey,
@@ -255,6 +256,42 @@ export async function notifyNewMemberSignUp(params: {
       err,
     );
   }
+}
+
+export async function queueEmailConfirmationResend(params: {
+  memberId: string;
+  email: string;
+  fullName: string;
+  tokenHash: string;
+}): Promise<void> {
+  await queueSingle({
+    idempotencyKey: emailConfirmationResendKey({
+      userId: params.memberId,
+      occurredAt: new Date(),
+    }),
+    triggerType: "email_confirmation_resend",
+    contact: {
+      email: params.email.toLowerCase(),
+      userId: params.memberId,
+      name: params.fullName,
+    },
+    subject: "Confirm your Carpenters Family email address",
+    heading: "Your Confirmation Link Is Ready",
+    ctaLabel: "Confirm My Email Address",
+    ctaPath: `/auth/confirm?token_hash=${encodeURIComponent(
+      params.tokenHash,
+    )}&type=magiclink`,
+    copy: {
+      previewText: "A fresh link to confirm your email address is waiting.",
+      greeting: `Hello ${params.fullName},`,
+      intro:
+        "A club administrator has re-sent your Carpenters Family email confirmation link. Open the link below to confirm your address — it works for this attempt only and expires soon. Once confirmed, your membership moves ahead to approval.",
+      bodyLabel: "Need Help?",
+      bodyText:
+        "If the link reports that it is no longer valid, sign in and request a new confirmation link, or contact a club administrator.",
+      category: "membership",
+    },
+  });
 }
 
 export async function notifyWelcomeIfActive(userId: string): Promise<void> {
