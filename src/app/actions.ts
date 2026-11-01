@@ -3409,7 +3409,7 @@ export async function markAnnouncementReadAction(formData: FormData) {
   });
   if (error) redirect(communicationNotice(rpcErrorNotice(error)));
   revalidateCommunications();
-  redirect(communicationNotice("announcement-read"));
+  redirect("/announcements");
 }
 
 export async function createAnnouncementPollAction(formData: FormData) {
@@ -3697,4 +3697,80 @@ export async function deleteAllNotificationsAsyncAction() {
   } catch {
     return { ok: false, error: "unauthorized" };
   }
+}
+
+export async function updateMemberProfileSettingsAction(formData: FormData) {
+  const username = formString(formData, "username", 30);
+  const rawAvatar = formData.get("avatar_url");
+  const avatarUrl =
+    typeof rawAvatar === "string" ? rawAvatar.trim().slice(0, 300000) : "";
+
+  if (!username || !usernamePattern.test(username)) {
+    redirect("/settings?notice=invalid-profile");
+  }
+
+  const supabase = await clientOrRedirect();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) redirect("/?notice=sign-in");
+
+  const { error } = await supabase.rpc("update_own_member_profile", {
+    p_username: username,
+    p_avatar_url: avatarUrl,
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      redirect("/settings?notice=username-taken");
+    }
+    redirect("/settings?notice=profile-update-failed");
+  }
+
+  revalidatePath("/", "layout");
+  revalidatePath("/settings");
+  redirect("/settings?notice=profile-settings-updated");
+}
+
+export async function updateMemberEmailAction(formData: FormData) {
+  const email = formString(formData, "email", 254)?.toLowerCase();
+  if (!email || !emailPattern.test(email)) {
+    redirect("/settings?notice=invalid-request");
+  }
+
+  const supabase = await clientOrRedirect();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) redirect("/?notice=sign-in");
+
+  const { error } = await supabase.auth.updateUser({ email });
+  if (error) {
+    redirect("/settings?notice=operation-failed");
+  }
+
+  revalidatePath("/settings");
+  redirect("/settings?notice=email-update-requested");
+}
+
+export async function updateMemberPasswordAction(formData: FormData) {
+  const password = formData.get("password");
+  const confirmPassword = formData.get("confirm_password");
+
+  if (
+    typeof password !== "string" ||
+    password.length < 12 ||
+    password.length > 128 ||
+    password !== confirmPassword
+  ) {
+    redirect("/settings?notice=password-change-failed");
+  }
+
+  const supabase = await clientOrRedirect();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) redirect("/?notice=sign-in");
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    redirect("/settings?notice=password-change-failed");
+  }
+
+  revalidatePath("/settings");
+  redirect("/settings?notice=password-updated");
 }

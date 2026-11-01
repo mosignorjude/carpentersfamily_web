@@ -24,6 +24,7 @@ export interface ClubMemberRecord {
   profileState: ProfileCompletionState;
   profileStateDescription?: string;
   clubRole: "Member" | "Executive" | "Admin" | "President";
+  createdAt?: string;
   requestDateWAT: string;
   activationDateWAT?: string;
   lastStatusChangeReason?: string;

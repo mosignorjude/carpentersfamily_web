@@ -289,6 +289,28 @@ export function EventDashboardView({
     isAdminOrPresident || userRole === "executive" || userRole === "event_lead";
   const canRecord = isLeadOrExec && !isLocked;
 
+  useEffect(() => {
+    if (!canRecord || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (
+      params.get("action") === "record-transaction" ||
+      window.location.hash === "#record-transaction"
+    ) {
+      setRecordInitialType("revenue");
+      setRecordInitialCategory(
+        ticketTiers.length > 0 ? "ticket_sales" : undefined,
+      );
+      setIsRecordModalOpen(true);
+      params.delete("action");
+      const query = params.toString();
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${query ? `?${query}` : ""}`,
+      );
+    }
+  }, [canRecord, ticketTiers.length]);
+
   // Aggregate computations
   const totalTicketRevenue = ticketTiers.reduce(
     (acc, t) => acc + t.sold * t.price,

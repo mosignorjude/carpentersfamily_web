@@ -11,12 +11,6 @@ const categoryLabels = Object.freeze({
   officer_event: "Event alert",
 });
 
-const notificationDateFormatter = new Intl.DateTimeFormat("en-NG", {
-  timeZone: "Africa/Lagos",
-  dateStyle: "medium",
-  timeStyle: "short",
-});
-
 /** @type {ReadonlyArray<readonly [string, string]>} */
 export const routinePreferenceCategories = Object.freeze([
   Object.freeze(["announcement", "Announcements"]),
@@ -38,16 +32,49 @@ export function getNotificationReadLabel(readAt) {
   return readAt === null ? "Unread" : "Read";
 }
 
-/** @param {string} timestamp */
-export function getNotificationTimestamp(timestamp) {
+/**
+ * @param {string} timestamp
+ * @param {number | Date} [now]
+ */
+export function getNotificationTimestamp(timestamp, now = Date.now()) {
   const date = new Date(timestamp);
 
   if (Number.isNaN(date.getTime())) {
     return { label: "Date unavailable", dateTime: undefined };
   }
 
+  const nowMs = now instanceof Date ? now.getTime() : Number(now);
+  const referenceMs = Number.isFinite(nowMs) ? nowMs : Date.now();
+  const diffSeconds = Math.max(
+    1,
+    Math.floor((referenceMs - date.getTime()) / 1000),
+  );
+
+  let label;
+  if (diffSeconds < 60) {
+    label = `${diffSeconds} second${diffSeconds === 1 ? "" : "s"} ago`;
+  } else {
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    if (diffMinutes < 60) {
+      label = `${diffMinutes} minute${diffMinutes === 1 ? "" : "s"} ago`;
+    } else {
+      const diffHours = Math.floor(diffMinutes / 60);
+      if (diffHours < 24) {
+        label = `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+      } else {
+        const diffDays = Math.floor(diffHours / 24);
+        if (diffDays < 7) {
+          label = `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+        } else {
+          const diffWeeks = Math.floor(diffDays / 7);
+          label = `${diffWeeks} week${diffWeeks === 1 ? "" : "s"} ago`;
+        }
+      }
+    }
+  }
+
   return {
-    label: notificationDateFormatter.format(date),
+    label,
     dateTime: date.toISOString(),
   };
 }

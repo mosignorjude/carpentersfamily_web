@@ -30,7 +30,7 @@ export default async function MemberLayout({
   ] = await Promise.all([
     supabase
       .from("member_profiles")
-      .select("status, full_name, username")
+      .select("status, full_name, username, avatar_url")
       .eq("id", authData.user.id)
       .maybeSingle(),
     supabase
@@ -83,6 +83,7 @@ export default async function MemberLayout({
       authData.user.email?.split("@")[0] ||
       "member",
     role: formatPrimaryRole(roles),
+    avatarUrl: profileResult.data?.avatar_url ?? null,
   };
 
   const notifications = (notificationResult.data ?? []) as AppNotification[];

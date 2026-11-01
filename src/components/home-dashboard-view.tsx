@@ -39,6 +39,38 @@ export default function HomeDashboardView({
   const effectiveGreeting = greeting ?? getTimeOfDayGreeting();
   const greetingName = formatGreetingUsername(username, memberName);
 
+  const fallbackActivityRows =
+    !dashboard.activity.unavailable && dashboard.activity.rows.length === 0
+      ? [
+          ...(dashboard.announcements.rows ?? []).map((ann) => ({
+            id: `ann-${ann.id}`,
+            category: "announcement",
+            title: ann.title,
+            body:
+              ann.message.length > 220
+                ? `${ann.message.slice(0, 220)}…`
+                : ann.message,
+            createdAt: ann.createdAt,
+            readAt: null,
+            href: `/announcements#announcement-${ann.id}`,
+          })),
+          ...(dashboard.events.rows ?? []).map((evt) => ({
+            id: `evt-${evt.id}`,
+            category: "event_activity",
+            title: evt.title,
+            body: `${evt.location} — Scheduled club event`,
+            createdAt: evt.startsAt,
+            readAt: null,
+            href: `/events#event-${evt.id}`,
+          })),
+        ].slice(0, 5)
+      : dashboard.activity.rows;
+
+  const effectiveActivity = {
+    unavailable: dashboard.activity.unavailable,
+    rows: fallbackActivityRows,
+  };
+
   return (
     <div className="home-dashboard min-h-full p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full font-sans antialiased text-[#3D291F]">
       {/* Welcoming Family-Oriented Member Header */}
@@ -105,7 +137,7 @@ export default function HomeDashboardView({
       </div>
 
       {/* 3. Personal Activity & Notifications */}
-      <PersonalNotificationsCard activity={dashboard.activity} />
+      <PersonalNotificationsCard activity={effectiveActivity} />
 
       {/* 4. Quick Access & Club Services */}
       <QuickLinksSection roles={roles} />

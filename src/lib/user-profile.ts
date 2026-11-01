@@ -2,6 +2,7 @@ export interface UserProfileData {
   fullName: string;
   username: string;
   role: string;
+  avatarUrl?: string | null;
 }
 
 export function formatPrimaryRole(roleList: string[]): string {

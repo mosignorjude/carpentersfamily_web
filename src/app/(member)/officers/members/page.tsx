@@ -222,6 +222,7 @@ export default async function MemberAdministrationPage({
             profileState: readiness.profileState,
             profileStateDescription: readiness.profileStateDescription,
             clubRole: assignedRole,
+            createdAt: member.created_at,
             requestDateWAT: formatWAT(member.created_at),
             activationDateWAT:
               readiness.profileState === "complete"
@@ -300,59 +301,87 @@ export default async function MemberAdministrationPage({
     },
   );
 
-  // Fetch audit log
+  const memberAdminActions = [
+    "member_approved",
+    "member_rejected",
+    "member_request_rejected",
+    "member_deactivated",
+    "member_reactivated",
+    "club_role_granted",
+    "club_role_revoked",
+    "event_role_assigned",
+    "event_role_granted",
+    "event_role_revoked",
+  ] as const;
+
+  const mapMemberAdminActionType = (
+    action: string,
+  ): MemberAdminAuditEntry["actionType"] | null => {
+    switch (action) {
+      case "member_approved":
+        return "membership_approved";
+      case "member_rejected":
+      case "member_request_rejected":
+        return "membership_rejected";
+      case "member_deactivated":
+        return "account_deactivated";
+      case "member_reactivated":
+        return "account_reactivated";
+      case "club_role_granted":
+        return "executive_role_assigned";
+      case "club_role_revoked":
+        return "executive_role_removed";
+      case "event_role_assigned":
+      case "event_role_granted":
+        return "event_role_assigned";
+      case "event_role_revoked":
+        return "event_role_removed";
+      default:
+        return null;
+    }
+  };
+
+  // Fetch audit log (restricted to member lifecycle, club role, and event staffing actions)
   const { data: auditRows } = await supabase
     .from("audit_log")
     .select(
       "id, actor_id, action, entity_type, entity_id, target_member_id, reason, occurred_at",
     )
+    .in("action", [...memberAdminActions])
     .order("occurred_at", { ascending: false })
     .limit(50);
 
-  const initialAuditLog: MemberAdminAuditEntry[] = (auditRows ?? []).map(
+  const initialAuditLog: MemberAdminAuditEntry[] = (auditRows ?? []).flatMap(
     (aud) => {
+      const actionType = mapMemberAdminActionType(aud.action);
+      if (!actionType) return [];
+
       const actor = memberMap.get(aud.actor_id);
       const target = aud.target_member_id
         ? memberMap.get(aud.target_member_id)
         : null;
 
-      let actionType: MemberAdminAuditEntry["actionType"] =
-        "membership_approved";
-      if (aud.action.includes("reject")) actionType = "membership_rejected";
-      else if (aud.action.includes("deactivat"))
-        actionType = "account_deactivated";
-      else if (aud.action.includes("reactivat"))
-        actionType = "account_reactivated";
-      else if (
-        aud.action.includes("role_grant") ||
-        aud.action.includes("role_assigned")
-      )
-        actionType = "executive_role_assigned";
-      else if (
-        aud.action.includes("role_revok") ||
-        aud.action.includes("role_removed")
-      )
-        actionType = "executive_role_removed";
-
-      return {
-        id: aud.id,
-        timestampWAT: formatWAT(aud.occurred_at),
-        actorName: actor ? actor.full_name : "Authorized Officer",
-        actorRole: "Officer",
-        targetMemberName: target
-          ? target.full_name
-          : actor
-            ? actor.full_name
-            : "Club Member",
-        targetMemberUsername: target
-          ? `@${target.username}`
-          : actor
-            ? `@${actor.username}`
-            : "@member",
-        actionType,
-        reason: aud.reason,
-        details: `Action: ${aud.action} on ${aud.entity_type}`,
-      };
+      return [
+        {
+          id: aud.id,
+          timestampWAT: formatWAT(aud.occurred_at),
+          actorName: actor ? actor.full_name : "Authorized Officer",
+          actorRole: "Officer",
+          targetMemberName: target
+            ? target.full_name
+            : actor
+              ? actor.full_name
+              : "Club Member",
+          targetMemberUsername: target
+            ? `@${target.username}`
+            : actor
+              ? `@${actor.username}`
+              : "@member",
+          actionType,
+          reason: aud.reason,
+          details: `Action: ${aud.action} on ${aud.entity_type}`,
+        },
+      ];
     },
   );
 

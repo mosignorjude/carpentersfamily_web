@@ -135,7 +135,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
               <FormSubmitButton
                 className="cf-btn cf-btn--primary"
                 pendingLabel="Marking Read…"
-                statusToastMessage="Updating your announcement read status."
+                showStatusToast={false}
               >
                 <Check className="w-3.5 h-3.5" />
                 <span>Mark as read</span>

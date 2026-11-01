@@ -604,3 +604,34 @@ test("activity unreadCount counts only rows with read_at === null even when tota
   );
   assert.equal(oneUnreadDashboard.activity.unreadCount, 1);
 });
+
+test("activity accepts 300-codepoint notification bodies containing surrogate-pair emojis", async () => {
+  const emojiBody = `📢 ${"a".repeat(298)}`;
+  assert.equal(Array.from(emojiBody).length, 300);
+  assert.equal(emojiBody.length, 301);
+
+  const supabase = createSupabase({
+    tables: {
+      notifications: {
+        data: [
+          {
+            id: notificationId,
+            category: "announcement",
+            title: "📢 Official Announcement",
+            body: emojiBody,
+            event_id: null,
+            created_at: "2026-10-25T14:00:00.000Z",
+            read_at: null,
+          },
+        ],
+        count: 1,
+        error: null,
+      },
+    },
+  });
+
+  const dashboard = await getHomeDashboardData(supabase, memberId, now);
+  assert.equal(dashboard.activity.unavailable, false);
+  assert.equal(dashboard.activity.rows.length, 1);
+  assert.equal(dashboard.activity.rows[0].body, emojiBody);
+});

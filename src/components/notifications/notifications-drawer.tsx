@@ -406,9 +406,6 @@ export function NotificationsDrawer({
                           <span>Mark unread</span>
                         </button>
                       )}
-                      <span className="text-[10px] text-[#8C7D73] font-mono">
-                        {timestamp.label}
-                      </span>
                       <button
                         aria-label={`Delete "${notification.title}" notification`}
                         className="p-1 text-[#8C7D73] hover:text-[#BA3C2A] hover:bg-[#FAF6F0] rounded-md transition-colors cursor-pointer disabled:opacity-50"
@@ -435,6 +432,15 @@ export function NotificationsDrawer({
                       {notification.body}
                     </p>
                   </Link>
+
+                  <div className="pt-1 border-t border-[#E5DDD3]/60 flex items-center justify-end">
+                    <time
+                      className="text-[10px] text-[#8C7D73] font-mono"
+                      dateTime={timestamp.dateTime}
+                    >
+                      {timestamp.label}
+                    </time>
+                  </div>
                 </div>
               );
             })

@@ -109,6 +109,7 @@ const DEFERRED_CLOSE_BUTTONS = [
   "src/app/(member)/events/event-action-dialog.tsx",
   "src/components/communications/announcement-edit-modal.tsx",
   "src/components/communications/poll-edit-modal.tsx",
+  "src/components/dues/dues-page-view.tsx",
   "src/components/events/attendance/attendance-roster-table.tsx",
   "src/components/events/dashboard/modals/correct-transaction-modal.tsx",
   "src/components/events/dashboard/modals/download-report-modal.tsx",
@@ -120,6 +121,7 @@ const DEFERRED_CLOSE_BUTTONS = [
   "src/components/events/dashboard/modals/void-transaction-modal.tsx",
   "src/components/events/event-edit-modal.tsx",
   "src/components/events/event-lifecycle-modal.tsx",
+  "src/components/finances/finances-page-view.tsx",
 ];
 
 /**

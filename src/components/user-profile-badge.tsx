@@ -1,6 +1,7 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { signOutAction } from "@/app/actions";
 import type { UserProfileData } from "@/lib/user-profile";
@@ -67,9 +68,18 @@ export function UserProfileBadge({
         <div className="flex items-center gap-2.5 min-w-0">
           <div
             aria-hidden="true"
-            className="w-9 h-9 rounded-full bg-[#D6A23A] text-[#1F1713] flex items-center justify-center font-bold text-sm shrink-0 shadow-xs"
+            className="w-9 h-9 rounded-full bg-[#D6A23A] text-[#1F1713] flex items-center justify-center font-bold text-sm shrink-0 shadow-xs overflow-hidden"
           >
-            {initial}
+            {user.avatarUrl ? (
+              /* biome-ignore lint/performance/noImgElement: Avatar supports data URIs and CSP-safe img rendering */
+              <img
+                alt=""
+                className="w-full h-full object-cover"
+                src={user.avatarUrl}
+              />
+            ) : (
+              initial
+            )}
           </div>
           <div className="flex flex-col min-w-0">
             <span className="text-xs font-bold text-white tracking-tight truncate leading-tight">
@@ -81,16 +91,26 @@ export function UserProfileBadge({
           </div>
         </div>
 
-        <form action={signOutAction} className="shrink-0">
-          <button
-            aria-label="Sign out"
-            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            title="Sign out"
-            type="submit"
+        <div className="flex items-center gap-1 shrink-0">
+          <Link
+            aria-label="Profile settings"
+            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer no-underline"
+            href="/settings"
+            title="Profile settings"
           >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </form>
+            <Settings className="w-4 h-4" />
+          </Link>
+          <form action={signOutAction} className="shrink-0">
+            <button
+              aria-label="Sign out"
+              className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              title="Sign out"
+              type="submit"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </form>
+        </div>
       </div>
     );
   }
@@ -103,9 +123,18 @@ export function UserProfileBadge({
         {/* Circular Initial Avatar */}
         <div
           aria-hidden="true"
-          className="w-9 h-9 rounded-full bg-[#174C37] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs"
+          className="w-9 h-9 rounded-full bg-[#174C37] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs overflow-hidden"
         >
-          {initial}
+          {user.avatarUrl ? (
+            /* biome-ignore lint/performance/noImgElement: Avatar supports data URIs and CSP-safe img rendering */
+            <img
+              alt=""
+              className="w-full h-full object-cover"
+              src={user.avatarUrl}
+            />
+          ) : (
+            initial
+          )}
         </div>
 
         {/* Name and Role Stack */}
@@ -118,8 +147,17 @@ export function UserProfileBadge({
           </span>
         </div>
 
+        <Link
+          aria-label="Profile settings"
+          className="p-2 rounded-lg text-[#7A685D] hover:text-[#174C37] hover:bg-[#FAF6F0] transition-colors cursor-pointer no-underline shrink-0 ml-0.5"
+          href="/settings"
+          title="Profile settings"
+        >
+          <Settings className="w-4 h-4" />
+        </Link>
+
         {/* Signout Action Icon */}
-        <form action={signOutAction} className="shrink-0 ml-1">
+        <form action={signOutAction} className="shrink-0">
           <button
             aria-label="Sign out"
             className="p-2 rounded-lg text-[#7A685D] hover:text-[#BA3C2A] hover:bg-red-50/80 transition-colors cursor-pointer"
@@ -137,11 +175,20 @@ export function UserProfileBadge({
           aria-expanded={isDropdownOpen}
           aria-haspopup="menu"
           aria-label={`User menu for ${user.fullName}`}
-          className="w-9 h-9 rounded-full bg-[#174C37] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-[#174C37]"
+          className="w-9 h-9 rounded-full bg-[#174C37] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-[#174C37] overflow-hidden"
           onClick={() => setIsDropdownOpen((prev) => !prev)}
           type="button"
         >
-          {initial}
+          {user.avatarUrl ? (
+            /* biome-ignore lint/performance/noImgElement: Avatar supports data URIs and CSP-safe img rendering */
+            <img
+              alt=""
+              className="w-full h-full object-cover"
+              src={user.avatarUrl}
+            />
+          ) : (
+            initial
+          )}
         </button>
 
         {isDropdownOpen && (
@@ -154,9 +201,18 @@ export function UserProfileBadge({
             <div className="flex items-center gap-2.5 pb-2.5 border-b border-[#E5DDD3]">
               <div
                 aria-hidden="true"
-                className="w-8 h-8 rounded-full bg-[#174C37] text-white flex items-center justify-center font-bold text-xs shrink-0"
+                className="w-8 h-8 rounded-full bg-[#174C37] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden"
               >
-                {initial}
+                {user.avatarUrl ? (
+                  /* biome-ignore lint/performance/noImgElement: Avatar supports data URIs and CSP-safe img rendering */
+                  <img
+                    alt=""
+                    className="w-full h-full object-cover"
+                    src={user.avatarUrl}
+                  />
+                ) : (
+                  initial
+                )}
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-xs font-bold text-[#3D291F] truncate leading-tight">
@@ -168,17 +224,29 @@ export function UserProfileBadge({
               </div>
             </div>
 
-            {/* Sign Out Action Button */}
-            <form action={signOutAction} className="pt-2">
-              <button
-                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-bold text-[#BA3C2A] hover:bg-red-50 transition-colors cursor-pointer"
+            <div className="pt-2 space-y-1">
+              <Link
+                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-bold text-[#3D291F] hover:bg-[#FAF6F0] transition-colors cursor-pointer no-underline"
+                href="/settings"
+                onClick={() => setIsDropdownOpen(false)}
                 role="menuitem"
-                type="submit"
               >
-                <LogOut className="w-4 h-4 text-[#BA3C2A]" />
-                <span>Sign out</span>
-              </button>
-            </form>
+                <Settings className="w-4 h-4 text-[#174C37]" />
+                <span>Profile settings</span>
+              </Link>
+
+              {/* Sign Out Action Button */}
+              <form action={signOutAction}>
+                <button
+                  className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-bold text-[#BA3C2A] hover:bg-red-50 transition-colors cursor-pointer"
+                  role="menuitem"
+                  type="submit"
+                >
+                  <LogOut className="w-4 h-4 text-[#BA3C2A]" />
+                  <span>Sign out</span>
+                </button>
+              </form>
+            </div>
           </div>
         )}
       </div>

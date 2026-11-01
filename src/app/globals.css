@@ -200,6 +200,7 @@ html,
 body {
   min-height: 100%;
   margin: 0;
+  overflow-x: clip;
 }
 
 body {
@@ -4033,6 +4034,15 @@ textarea:focus-visible {
     /* biome-ignore lint/complexity/noImportantStyles: Safari auto-zoom prevention requires overriding utility classes */
     font-size: 16px !important;
     min-height: 44px;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    /* biome-ignore lint/complexity/noImportantStyles: Touch viewport auto-zoom prevention */
+    font-size: 16px !important;
   }
 }
 

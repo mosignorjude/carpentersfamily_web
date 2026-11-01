@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
+  DollarSign,
   MapPin,
 } from "lucide-react";
 import Link from "next/link";
@@ -193,19 +194,36 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
                       evt.expensesEnabled ||
                       evt.ticketingEnabled,
                   );
+                  const canTransact = Boolean(
+                    isOfficer &&
+                      (evt.ticketingEnabled ||
+                        evt.incomeEnabled ||
+                        evt.expensesEnabled),
+                  );
                   const detailsHref =
                     isOfficer && hasDashboardFeatures
                       ? `/events/${evt.id}/dashboard`
                       : "/events";
 
                   return (
-                    <Link
-                      className="text-xs font-bold text-[#174C37] hover:underline flex items-center gap-1 py-1"
-                      href={detailsHref}
-                    >
-                      <span>View Details</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {canTransact && (
+                        <Link
+                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-xs font-bold bg-[#174C37] !text-white hover:bg-[#103D2B] transition-colors min-h-[40px] no-underline shadow-2xs"
+                          href={`/events/${evt.id}/dashboard?action=record-transaction`}
+                        >
+                          <DollarSign className="w-3.5 h-3.5 text-[#D6A23A]" />
+                          <span className="text-white">Make a Transaction</span>
+                        </Link>
+                      )}
+                      <Link
+                        className="text-xs font-bold text-[#174C37] hover:underline flex items-center gap-1 py-1"
+                        href={detailsHref}
+                      >
+                        <span>View Details</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
                   );
                 })()}
               </div>
