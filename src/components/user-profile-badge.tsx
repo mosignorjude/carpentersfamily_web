@@ -146,10 +146,10 @@ export function UserProfileBadge({
           className="absolute right-0 top-full mt-2 w-56 rounded-xl bg-white border border-[#E5DDD3] shadow-xl overflow-hidden z-50 animate-in fade-in duration-150"
           role="menu"
         >
-          {/* 1. [@Username] with bottom border */}
+          {/* 1. [@Username] with bottom border (plus [Full Name] - [role] on mobile) */}
           <div className="px-3.5 py-2.5 border-b border-[#E5DDD3] bg-[#FAF6F0]/60">
             <span className="block sm:hidden text-xs font-bold text-[#3D291F] truncate leading-tight mb-0.5">
-              {user.fullName}
+              {user.fullName} - {user.role}
             </span>
             <span className="block text-xs font-bold font-mono text-[#54433A] truncate">
               {cleanUsername}
