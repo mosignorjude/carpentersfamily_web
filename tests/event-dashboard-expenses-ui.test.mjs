@@ -24,15 +24,15 @@ describe("TabExpenses layout and overflow protection", () => {
     );
   });
 
-  it("places Disbursement Ledger before Operational Cost Centers & Budget Matrix and keeps the matrix tabular on mobile with helper text", () => {
+  it("places Operational Cost Centers & Budget Matrix before Disbursement Ledger and keeps the matrix tabular on mobile with helper text", () => {
     const ledgerIdx = source.indexOf('title="Disbursement Ledger"');
     const matrixIdx = source.indexOf(
       "Operational Cost Centers & Budget Matrix"
     );
     assert.ok(ledgerIdx > -1 && matrixIdx > -1);
     assert.ok(
-      ledgerIdx < matrixIdx,
-      "Disbursement Ledger must come before Operational Cost Centers & Budget Matrix"
+      matrixIdx < ledgerIdx,
+      "Operational Cost Centers & Budget Matrix must come before Disbursement Ledger"
     );
     assert.match(
       source,

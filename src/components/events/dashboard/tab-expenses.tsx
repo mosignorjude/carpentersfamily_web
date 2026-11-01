@@ -67,17 +67,7 @@ export function TabExpenses({
 
   return (
     <div className="space-y-6 min-w-0">
-      {/* 1. Embedded Disbursement Ledger */}
-      <EventDomainLedger
-        currentUserId={currentUserId}
-        domain="expenses"
-        onInspect={(txn) => setSelectedTxn(txn)}
-        title="Disbursement Ledger"
-        transactions={expenseTransactions}
-        userRole={userRole}
-      />
-
-      {/* 2. Master Consolidated Operational Cost Centers & Budget Matrix Card */}
+      {/* 1. Master Consolidated Operational Cost Centers & Budget Matrix Card */}
       <div className="bg-white sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 border-[#E5DDD3] p-3.5 sm:p-0 shadow-xs sm:shadow-none space-y-4 sm:space-y-5 min-w-0">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
@@ -253,6 +243,16 @@ export function TabExpenses({
           </div>
         )}
       </div>
+
+      {/* 2. Embedded Disbursement Ledger */}
+      <EventDomainLedger
+        currentUserId={currentUserId}
+        domain="expenses"
+        onInspect={(txn) => setSelectedTxn(txn)}
+        title="Disbursement Ledger"
+        transactions={expenseTransactions}
+        userRole={userRole}
+      />
 
       {/* 3. Split-Screen Voucher Inspection Drawer */}
       <VoucherInspectionDrawer
