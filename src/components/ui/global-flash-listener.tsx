@@ -32,6 +32,12 @@ const ROOT_INLINE_NOTICE_CODES = new Set([
   "sign-in",
 ]);
 
+const SILENT_READ_NOTICE_CODES = new Set([
+  "announcement-read",
+  "read",
+  "unread",
+]);
+
 function UrlNoticeDetector() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -55,7 +61,10 @@ function UrlNoticeDetector() {
 
     // Only allowlisted notice codes may produce a toast. Arbitrary query text is
     // never rendered, which prevents branded-toast spoofing via crafted links.
-    const systemNotice = skipToast ? null : getSystemNotice(noticeCode);
+    const systemNotice =
+      skipToast || SILENT_READ_NOTICE_CODES.has(noticeCode)
+        ? null
+        : getSystemNotice(noticeCode);
     if (systemNotice) {
       dispatchFlashCard({
         type: systemNotice.type,

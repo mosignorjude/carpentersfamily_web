@@ -44,15 +44,27 @@ export async function proxy(request: NextRequest) {
   const config = getSupabasePublicConfig();
   const nonce = Buffer.from(randomUUID()).toString("base64");
   const contentSecurityPolicy = createCsp(nonce, config?.url ?? null);
+  const hostHeader = (
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host") ||
+    ""
+  ).toLowerCase();
+  const isTicketsSubdomain = hostHeader.startsWith("tickets.");
 
   function nextWithSecurityHeaders() {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-nonce", nonce);
     requestHeaders.set("Content-Security-Policy", contentSecurityPolicy);
 
-    const nextResponse = NextResponse.next({
-      request: { headers: requestHeaders },
-    });
+    const nextResponse =
+      isTicketsSubdomain && request.nextUrl.pathname === "/"
+        ? NextResponse.rewrite(
+            new URL(`/tickets${request.nextUrl.search}`, request.url),
+            { request: { headers: requestHeaders } },
+          )
+        : NextResponse.next({
+            request: { headers: requestHeaders },
+          });
     nextResponse.headers.set("Content-Security-Policy", contentSecurityPolicy);
     return nextResponse;
   }
@@ -82,9 +94,36 @@ export async function proxy(request: NextRequest) {
     },
   });
 
+  const IDLE_TIMEOUT_MS = 4 * 60 * 60 * 1000;
+  const IDLE_COOKIE_NAME = "cf_last_active";
+  const now = Date.now();
+  const lastActiveRaw = request.cookies.get(IDLE_COOKIE_NAME)?.value;
+  const lastActiveMs = lastActiveRaw ? Number(lastActiveRaw) : null;
+
   // Refresh cookie-backed sessions only. Authorization remains in PostgreSQL
   // RLS/RPCs and in each Server Action, never in this routing layer.
-  await supabase.auth.getClaims();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  if (claimsData?.claims) {
+    if (
+      lastActiveMs !== null &&
+      Number.isFinite(lastActiveMs) &&
+      now - lastActiveMs > IDLE_TIMEOUT_MS
+    ) {
+      await supabase.auth.signOut();
+      response.cookies.delete(IDLE_COOKIE_NAME);
+    } else {
+      response.cookies.set(IDLE_COOKIE_NAME, String(now), {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: Math.floor(IDLE_TIMEOUT_MS / 1000),
+      });
+    }
+  } else if (lastActiveRaw) {
+    response.cookies.delete(IDLE_COOKIE_NAME);
+  }
+
   response.headers.set("Content-Security-Policy", contentSecurityPolicy);
   return response;
 }

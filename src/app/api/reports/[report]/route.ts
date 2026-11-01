@@ -425,7 +425,22 @@ async function createDuesExport(
     return { kind: "unavailable" as const };
   if (rowData.some((row) => !isRecord(row)))
     return { kind: "unavailable" as const };
-  const duesRows = rowData as DuesStatus[];
+  const rawDuesRows = rowData as DuesStatus[];
+  const fallbackDuesAmount =
+    rawDuesRows
+      .map((row) => wholeNgn(row.amount_ngn))
+      .find((amt): amt is bigint => amt !== null && amt > BigInt(0)) ??
+    BigInt(5000);
+  const duesRows: DuesStatus[] = rawDuesRows.map((row) => {
+    const parsedAmount = wholeNgn(row.amount_ngn);
+    if (parsedAmount !== null && parsedAmount > BigInt(0)) {
+      return row;
+    }
+    return {
+      ...row,
+      amount_ngn: fallbackDuesAmount.toString(),
+    };
+  });
   if (
     duesRows.some((row) => {
       const amount = wholeNgn(row.amount_ngn);

@@ -1,6 +1,13 @@
 "use client";
 
-import { FileSpreadsheet, FileText, Shield, ShieldAlert } from "lucide-react";
+import {
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Shield,
+  ShieldAlert,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type {
@@ -12,6 +19,7 @@ import {
   type ClubPaymentSettings,
 } from "@/components/admin/club-bank-settings-card";
 import { useSuccessNotice } from "@/components/ui/use-success-notice";
+import { useModalHygiene } from "@/lib/use-modal-hygiene";
 import { CategoryManagementModal } from "./category-management-modal";
 import { ClubFinancialSummary } from "./club-financial-summary";
 import { ClubTransactionLedger } from "./club-transaction-ledger";
@@ -101,6 +109,11 @@ export function FinancesPageView({
   const [isRecordIncomeOpen, setIsRecordIncomeOpen] = useState(false);
   const [isRecordExpenseOpen, setIsRecordExpenseOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isDownloadReportOpen, setIsDownloadReportOpen] = useState(false);
+  useModalHygiene({
+    isOpen: isDownloadReportOpen,
+    onClose: () => setIsDownloadReportOpen(false),
+  });
 
   const [correctingTransaction, setCorrectingTransaction] =
     useState<FinanceTransaction | null>(null);
@@ -195,44 +208,102 @@ export function FinancesPageView({
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
-              <form
-                action="/api/reports/finances"
-                className="flex-1"
-                method="post"
-                rel="noopener"
-                target="_blank"
-              >
-                <input name="format" type="hidden" value="csv" />
-                <button
-                  className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] text-[#3D291F] text-xs font-bold hover:bg-white transition-colors cursor-pointer min-h-[38px] shadow-2xs"
-                  type="submit"
-                >
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-[#174C37]" />
-                  <span>Finance CSV</span>
-                </button>
-              </form>
+            <button
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors cursor-pointer min-h-[42px] shadow-2xs"
+              onClick={() => setIsDownloadReportOpen(true)}
+              type="button"
+            >
+              <Download className="w-4 h-4 text-[#D6A23A]" />
+              <span>Download Report</span>
+            </button>
+          </div>
+        </div>
+      </section>
 
+      {isDownloadReportOpen && (
+        <div
+          aria-labelledby="finance-report-modal-title"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] flex items-center justify-center p-4 animate-in fade-in duration-150"
+          role="dialog"
+        >
+          <button
+            aria-label="Close modal overlay"
+            className="fixed inset-0 cursor-default bg-transparent border-0"
+            onClick={() => setIsDownloadReportOpen(false)}
+            type="button"
+          />
+          <div className="relative z-10 bg-white w-full max-w-sm rounded-[22px] border border-[#E5DDD3] p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD3]">
+              <h3
+                className="text-lg font-bold text-[#231F1D] tracking-tight"
+                id="finance-report-modal-title"
+              >
+                Download Finance Report
+              </h3>
+              <button
+                aria-label="Close dialog"
+                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[#7A685D] hover:text-[#231F1D] hover:bg-[#FAF6F0] transition-colors cursor-pointer border-0 bg-transparent"
+                onClick={() => setIsDownloadReportOpen(false)}
+                type="button"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-sm text-[#5C4638] leading-relaxed">
+              Select a format to export the audited club treasury summary and
+              transaction ledger.
+            </p>
+
+            <div className="space-y-2.5 pt-1">
               <form
                 action="/api/reports/finances"
-                className="flex-1"
                 method="post"
+                onSubmit={() => setIsDownloadReportOpen(false)}
                 rel="noopener"
                 target="_blank"
               >
                 <input name="format" type="hidden" value="pdf" />
                 <button
-                  className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors cursor-pointer min-h-[38px] shadow-2xs"
+                  className="w-full py-3 px-4 rounded-xl bg-[#174C37] text-white text-sm font-semibold flex items-center justify-between hover:bg-[#103D2B] active:scale-[0.99] transition shadow-xs cursor-pointer border-0 min-h-[44px]"
                   type="submit"
                 >
-                  <FileText className="w-3.5 h-3.5 text-[#D6A23A]" />
-                  <span>Finance PDF</span>
+                  <div className="flex items-center gap-2.5">
+                    <FileText className="w-4 h-4 text-[#85B89A] shrink-0" />
+                    <span>Full Audit Report (PDF)</span>
+                  </div>
+                  <span className="text-xs bg-[#103D2B] px-2 py-0.5 rounded text-white/90 font-mono">
+                    PDF
+                  </span>
+                </button>
+              </form>
+
+              <form
+                action="/api/reports/finances"
+                method="post"
+                onSubmit={() => setIsDownloadReportOpen(false)}
+                rel="noopener"
+                target="_blank"
+              >
+                <input name="format" type="hidden" value="csv" />
+                <button
+                  className="w-full py-3 px-4 rounded-xl border border-[#CFD5D0] bg-white text-[#231F1D] text-sm font-semibold flex items-center justify-between hover:bg-[#FAF6F0] active:scale-[0.99] transition shadow-xs cursor-pointer min-h-[44px]"
+                  type="submit"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <FileSpreadsheet className="w-4 h-4 text-[#174C37] shrink-0" />
+                    <span>Transaction Ledger (CSV)</span>
+                  </div>
+                  <span className="text-xs bg-[#FAF6F0] text-[#5C4638] px-2 py-0.5 rounded font-mono border border-[#E5DDD3]">
+                    CSV
+                  </span>
                 </button>
               </form>
             </div>
           </div>
         </div>
-      </section>
+      )}
 
       {roleError && (
         <div
@@ -361,7 +432,8 @@ export function FinancesPageView({
               Carpenters Family Social Club — Asaba, Delta State, Nigeria
             </p>
             <p className="text-[11px] text-[#7A685D]">
-              Private Members Portal · Nnebisi Road Secretariat · Est. 1988
+              Private Members Portal · Fobbs Apartment, Michael Fidelis Nwaefulu
+              Street, GRA Phase 1, Asaba
             </p>
           </div>
 

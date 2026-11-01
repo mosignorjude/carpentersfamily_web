@@ -54,9 +54,29 @@ test("read state is explicit and does not include member identity", () => {
   assert.equal(getNotificationReadLabel("2026-10-01T10:00:00.000Z"), "Read");
 });
 
-test("valid timestamps are localized to Lagos and malformed dates fail softly", () => {
-  const timestamp = getNotificationTimestamp("2026-10-01T10:00:00.000Z");
-  assert.match(timestamp.label, /2026/);
+test("valid timestamps format as relative age and malformed dates fail softly", () => {
+  const refNow = new Date("2026-10-15T12:00:00.000Z");
+  assert.equal(
+    getNotificationTimestamp("2026-10-15T11:59:45.000Z", refNow).label,
+    "15 seconds ago",
+  );
+  assert.equal(
+    getNotificationTimestamp("2026-10-15T11:45:00.000Z", refNow).label,
+    "15 minutes ago",
+  );
+  assert.equal(
+    getNotificationTimestamp("2026-10-15T09:00:00.000Z", refNow).label,
+    "3 hours ago",
+  );
+  assert.equal(
+    getNotificationTimestamp("2026-10-13T12:00:00.000Z", refNow).label,
+    "2 days ago",
+  );
+  const timestamp = getNotificationTimestamp(
+    "2026-10-01T10:00:00.000Z",
+    refNow,
+  );
+  assert.equal(timestamp.label, "2 weeks ago");
   assert.equal(timestamp.dateTime, "2026-10-01T10:00:00.000Z");
 
   assert.deepEqual(getNotificationTimestamp("not-a-date"), {

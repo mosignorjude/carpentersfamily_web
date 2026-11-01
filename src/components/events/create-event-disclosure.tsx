@@ -181,7 +181,7 @@ export function CreateEventDisclosure({
                   </label>
                   <input
                     className="w-full h-11 px-3.5 bg-white border border-[#E5DDD3] rounded-xl text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
-                    defaultValue="Club Secretariat & Assembly Hall, Nnebisi Road, Asaba"
+                    defaultValue="Fobbs Apartment, Michael Fidelis Nwaefulu Street, GRA Phase 1, Asaba"
                     id="create-event-location"
                     maxLength={200}
                     name="location"

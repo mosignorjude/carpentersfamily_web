@@ -12,10 +12,11 @@ const TICKET_PAGE_SIZE = 1_000;
 const MAX_TICKET_ROWS = 10_000;
 
 function validText(value, maximumLength) {
+  if (typeof value !== "string") return false;
+  const codePointLength = Array.from(value).length;
   return (
-    typeof value === "string" &&
-    value.length > 0 &&
-    value.length <= maximumLength &&
+    codePointLength > 0 &&
+    codePointLength <= maximumLength &&
     value.trim() === value &&
     !hasUnsupportedControlCharacter(value)
   );

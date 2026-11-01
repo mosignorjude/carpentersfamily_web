@@ -472,6 +472,29 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     title: "Authentication Failed",
     message: "Sign in could not be completed. Check your credentials.",
   },
+  "profile-settings-updated": {
+    type: "success",
+    title: "Profile Settings Saved",
+    message: "Your username and profile picture have been updated.",
+  },
+  "email-update-requested": {
+    type: "info",
+    title: "Confirmation Email Sent",
+    message:
+      "Check your inbox to confirm and complete your email address change.",
+  },
+  "password-change-failed": {
+    type: "error",
+    title: "Password Update Failed",
+    message:
+      "Enter a valid password (12 to 128 characters) and ensure both fields match.",
+  },
+  "username-taken": {
+    type: "error",
+    title: "Username Unavailable",
+    message:
+      "That username is already in use by another member. Choose a different handle.",
+  },
 };
 
 /**

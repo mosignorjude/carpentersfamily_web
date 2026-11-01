@@ -3,16 +3,12 @@
 import { Bell, Calendar, Wallet } from "lucide-react";
 import Link from "next/link";
 import type { HomeDashboardActivity } from "@/lib/home-dashboard.server";
+import {
+  getNotificationCategoryLabel,
+  getNotificationTimestamp,
+} from "@/lib/notification-page-presentation.mjs";
 
 const RECENT_ACTIVITY_LIMIT = 5;
-
-function formatActivityDate(timestamp: string) {
-  return new Intl.DateTimeFormat("en-NG", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Africa/Lagos",
-  }).format(new Date(timestamp));
-}
 
 function getCategoryIcon(category: string) {
   if (category.includes("event")) {
@@ -112,46 +108,58 @@ export function PersonalNotificationsCard({
       </div>
 
       <div className="space-y-3">
-        {rows.map((item) => (
-          <div
-            className="p-4 sm:p-5 rounded-xl border border-[#E5DDD3] bg-white shadow-2xs space-y-3"
-            key={item.id}
-          >
-            <div className="flex items-center gap-2 text-xs">
-              <span className="shrink-0 p-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3]">
-                {getCategoryIcon(item.category)}
-              </span>
-              <span className="text-xs font-bold font-mono text-[#7A685D]">
-                {formatActivityDate(item.createdAt)}
-              </span>
-            </div>
-
-            {item.href ? (
-              <Link
-                className="block space-y-1.5 rounded-lg -mx-1.5 px-1.5 py-1 hover:bg-[#FAF6F0] transition-colors focus-visible:outline-2 focus-visible:outline-[#174C37] group"
-                href={item.href}
-              >
-                <h4 className="font-bold text-[#3D291F] group-hover:text-[#174C37] transition-colors text-sm leading-snug">
-                  {item.title}
-                </h4>
-
-                <p className="text-xs font-normal text-[#5C4638] leading-relaxed">
-                  {item.body}
-                </p>
-              </Link>
-            ) : (
-              <div className="space-y-1.5">
-                <h4 className="font-bold text-[#3D291F] text-sm leading-snug">
-                  {item.title}
-                </h4>
-
-                <p className="text-xs font-normal text-[#5C4638] leading-relaxed">
-                  {item.body}
-                </p>
+        {rows.map((item) => {
+          const timestamp = getNotificationTimestamp(item.createdAt);
+          return (
+            <div
+              className="p-4 sm:p-5 rounded-xl border border-[#E5DDD3] bg-white shadow-2xs space-y-3"
+              key={item.id}
+            >
+              <div className="flex items-center gap-2 text-xs">
+                <span className="shrink-0 p-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3]">
+                  {getCategoryIcon(item.category)}
+                </span>
+                <span className="font-bold text-[11px] uppercase tracking-wider text-[#174C37]">
+                  {getNotificationCategoryLabel(item.category)}
+                </span>
               </div>
-            )}
-          </div>
-        ))}
+
+              {item.href ? (
+                <Link
+                  className="block space-y-1.5 rounded-lg -mx-1.5 px-1.5 py-1 hover:bg-[#FAF6F0] transition-colors focus-visible:outline-2 focus-visible:outline-[#174C37] group"
+                  href={item.href}
+                >
+                  <h4 className="font-bold text-[#3D291F] group-hover:text-[#174C37] transition-colors text-sm leading-snug">
+                    {item.title}
+                  </h4>
+
+                  <p className="text-xs font-normal text-[#5C4638] leading-relaxed">
+                    {item.body}
+                  </p>
+                </Link>
+              ) : (
+                <div className="space-y-1.5">
+                  <h4 className="font-bold text-[#3D291F] text-sm leading-snug">
+                    {item.title}
+                  </h4>
+
+                  <p className="text-xs font-normal text-[#5C4638] leading-relaxed">
+                    {item.body}
+                  </p>
+                </div>
+              )}
+
+              <div className="pt-1.5 border-t border-[#E5DDD3]/60 flex items-center justify-end">
+                <time
+                  className="text-[11px] font-mono text-[#7A685D]"
+                  dateTime={timestamp.dateTime}
+                >
+                  {timestamp.label}
+                </time>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

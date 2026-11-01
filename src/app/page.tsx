@@ -182,7 +182,7 @@ export default async function HomePage({
   const { data: profile, error: profileError } = await supabase
     .from("member_profiles")
     .select(
-      "id, full_name, username, status, profile_completed_at, staff_disabled_at",
+      "id, full_name, username, avatar_url, status, profile_completed_at, staff_disabled_at",
     )
     .eq("id", authData.user.id)
     .maybeSingle();
@@ -407,6 +407,7 @@ export default async function HomePage({
       authData.user.email?.split("@")[0] ||
       "member",
     role: formatPrimaryRole(roles),
+    avatarUrl: profile.avatar_url ?? null,
   };
 
   const greeting = getTimeOfDayGreeting();

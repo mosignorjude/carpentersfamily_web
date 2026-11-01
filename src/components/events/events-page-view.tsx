@@ -4,6 +4,7 @@ import {
   Archive,
   Calendar,
   CalendarCheck,
+  ChevronDown,
   History,
   Search,
 } from "lucide-react";
@@ -42,6 +43,7 @@ export function EventsPageView({
   // Filters
   const [selectedType, setSelectedType] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isArchiveExpanded, setIsArchiveExpanded] = useState<boolean>(false);
 
   // Modal states
   const [editingEvent, setEditingEvent] = useState<EventRow | null>(null);
@@ -290,42 +292,68 @@ export function EventsPageView({
           ======================================================== */}
       <section aria-labelledby="archive-heading" className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 pb-2.5 border-b border-[#E5DDD3]">
-          <div className="flex items-center gap-2">
-            <Archive className="w-5 h-5 text-[#174C37]" />
-            <h2
-              className="text-lg font-extrabold text-[#3D291F]"
-              id="archive-heading"
+          <div className="flex items-center justify-between sm:justify-start gap-3">
+            <div className="flex items-center gap-2">
+              <Archive className="w-5 h-5 text-[#174C37]" />
+              <h2
+                className="text-lg font-extrabold text-[#3D291F]"
+                id="archive-heading"
+              >
+                Retained Archive
+              </h2>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#FAF6F0] border border-[#E5DDD3] text-[#7A685D]">
+                {retainedArchive.length}
+              </span>
+            </div>
+
+            <button
+              aria-controls="retained-archive-panel"
+              aria-expanded={isArchiveExpanded}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-white hover:bg-[#FAF6F0] text-xs font-bold text-[#174C37] transition-colors cursor-pointer"
+              onClick={() => setIsArchiveExpanded((prev) => !prev)}
+              type="button"
             >
-              Retained Archive
-            </h2>
+              <span>{isArchiveExpanded ? "Collapse" : "Expand"}</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  isArchiveExpanded ? "rotate-180" : ""
+                }`}
+              />
+            </button>
           </div>
           <span className="text-xs text-[#7A685D] font-medium sm:text-right">
             Permanent Reporting Repository · Club Governance Active
           </span>
         </div>
 
-        {retainedArchive.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-white border border-[#E5DDD3] text-center space-y-2">
-            <Archive className="w-8 h-8 text-[#7A685D] mx-auto opacity-60" />
-            <h3 className="text-sm font-bold text-[#3D291F]">Archive Empty</h3>
-            <p className="text-xs text-[#5C4638] max-w-sm mx-auto">
-              Historical event records and archived sessions will remain
-              permanently available here for governance reporting.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {retainedArchive.map((event) => (
-              <EventCard
-                archivedGroup={true}
-                event={event}
-                eventRoles={eventRolesByEvent[event.id] ?? []}
-                key={event.id}
-                onOpenEdit={setEditingEvent}
-                onOpenLifecycle={handleOpenLifecycle}
-                roles={roles}
-              />
-            ))}
+        {isArchiveExpanded && (
+          <div id="retained-archive-panel">
+            {retainedArchive.length === 0 ? (
+              <div className="p-8 rounded-2xl bg-white border border-[#E5DDD3] text-center space-y-2">
+                <Archive className="w-8 h-8 text-[#7A685D] mx-auto opacity-60" />
+                <h3 className="text-sm font-bold text-[#3D291F]">
+                  Archive Empty
+                </h3>
+                <p className="text-xs text-[#5C4638] max-w-sm mx-auto">
+                  Historical event records and archived sessions will remain
+                  permanently available here for governance reporting.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {retainedArchive.map((event) => (
+                  <EventCard
+                    archivedGroup={true}
+                    event={event}
+                    eventRoles={eventRolesByEvent[event.id] ?? []}
+                    key={event.id}
+                    onOpenEdit={setEditingEvent}
+                    onOpenLifecycle={handleOpenLifecycle}
+                    roles={roles}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </section>

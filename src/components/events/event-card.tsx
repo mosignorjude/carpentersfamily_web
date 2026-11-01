@@ -342,13 +342,28 @@ export function EventCard({
         <div className="sm:hidden space-y-2">
           {/* Primary CTA */}
           {event.event_type === "party" ? (
-            <Link
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[48px] no-underline"
-              href={`/events/${event.id}/dashboard`}
-            >
-              <span>Open Event Dashboard</span>
-              <ArrowRight className="w-4 h-4 text-[#D6A23A]" />
-            </Link>
+            <div className="grid grid-cols-1 gap-2">
+              <Link
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[48px] no-underline"
+                href={`/events/${event.id}/dashboard`}
+              >
+                <span>Open Event Dashboard</span>
+                <ArrowRight className="w-4 h-4 text-[#D6A23A]" />
+              </Link>
+              {isManager &&
+                !isLocked &&
+                (event.ticketing_enabled ||
+                  event.income_enabled ||
+                  event.expenses_enabled) && (
+                  <Link
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-xl transition-colors min-h-[44px] no-underline"
+                    href={`/events/${event.id}/dashboard?action=record-transaction`}
+                  >
+                    <DollarSign className="w-4 h-4" />
+                    <span>Make a Transaction</span>
+                  </Link>
+                )}
+            </div>
           ) : event.budget_enabled ||
             event.income_enabled ||
             event.expenses_enabled ||
@@ -528,13 +543,28 @@ export function EventCard({
           <div className="flex flex-wrap items-center gap-2">
             {/* Party Dashboard Link */}
             {event.event_type === "party" && (
-              <Link
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[44px] no-underline"
-                href={`/events/${event.id}/dashboard`}
-              >
-                <span className="text-white">Open Event Dashboard</span>
-                <ArrowRight className="w-3.5 h-3.5 text-[#D6A23A]" />
-              </Link>
+              <>
+                <Link
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[44px] no-underline"
+                  href={`/events/${event.id}/dashboard`}
+                >
+                  <span className="text-white">Open Event Dashboard</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-[#D6A23A]" />
+                </Link>
+                {isManager &&
+                  !isLocked &&
+                  (event.ticketing_enabled ||
+                    event.income_enabled ||
+                    event.expenses_enabled) && (
+                    <Link
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-xl transition-colors min-h-[44px] no-underline"
+                      href={`/events/${event.id}/dashboard?action=record-transaction`}
+                    >
+                      <DollarSign className="w-4 h-4" />
+                      <span>Make a Transaction</span>
+                    </Link>
+                  )}
+              </>
             )}
 
             {/* Minutes & Attendance */}

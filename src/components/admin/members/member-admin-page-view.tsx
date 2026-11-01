@@ -99,6 +99,10 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
     () => members.filter((m) => m.accountStatus === "pending"),
     [members],
   );
+  const rosterMembers = useMemo(
+    () => members.filter((m) => m.accountStatus !== "pending"),
+    [members],
+  );
   const activeMembers = useMemo(
     () => members.filter((m) => m.accountStatus === "active"),
     [members],
@@ -296,7 +300,7 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
       {/* 5. SECTION 2: MEMBER ROSTER */}
       <div id="member-roster" className="scroll-target">
         <MemberRosterSection
-          members={members}
+          members={rosterMembers}
           currentOfficerId={resolvedOfficerId}
           isAdminOrPresident={isAdminOrPresident}
           roleLookupFailed={roleLookupFailed}
@@ -312,10 +316,6 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
             setSelectedMember(member);
             setTargetClubRole(targetRole);
             setActiveModal("change_club_role");
-          }}
-          onScrollToPending={() => {
-            const el = document.getElementById("pending-requests");
-            if (el) el.scrollIntoView({ behavior: "smooth" });
           }}
         />
       </div>
