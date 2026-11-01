@@ -76,6 +76,8 @@ export interface DashboardCostCenter {
   categoryId?: string;
   spent: number;
   committed: number;
+  latestInputAt?: string;
+  inputOrder?: number;
   items: ExpenseItem[];
 }
 

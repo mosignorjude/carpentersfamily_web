@@ -81,6 +81,19 @@ export function TabOverview({
       ? Math.min(100, Math.max(0, (committedExpenses / safeBudget) * 100))
       : 0;
 
+  const latestCostCenters = [...costCenters]
+    .sort((a, b) => {
+      const timeA = a.latestInputAt ? Date.parse(a.latestInputAt) : 0;
+      const timeB = b.latestInputAt ? Date.parse(b.latestInputAt) : 0;
+      const validTimeA = Number.isNaN(timeA) ? 0 : timeA;
+      const validTimeB = Number.isNaN(timeB) ? 0 : timeB;
+      if (validTimeA !== validTimeB) {
+        return validTimeB - validTimeA;
+      }
+      return (b.inputOrder ?? 0) - (a.inputOrder ?? 0);
+    })
+    .slice(0, 3);
+
   return (
     <div className="space-y-6 min-w-0">
       {/* Page Heading & Status */}
@@ -412,12 +425,12 @@ export function TabOverview({
             </div>
 
             <div className="space-y-1.5 pt-1">
-              {costCenters.length === 0 ? (
+              {latestCostCenters.length === 0 ? (
                 <p className="text-xs text-[#7A685D] py-2">
                   No cost centers or expenses recorded yet.
                 </p>
               ) : (
-                costCenters.slice(0, 3).map((center) => (
+                latestCostCenters.map((center) => (
                   <div
                     className="flex items-center justify-between text-xs py-1 border-b border-[#FAF6F0]"
                     key={center.id}

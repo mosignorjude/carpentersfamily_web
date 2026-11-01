@@ -239,7 +239,7 @@ export default async function EventDashboardPage({
     supabase
       .from("event_financial_transactions")
       .select(
-        "id, kind, amount_ngn, transaction_date, description, payer_payee, source_note, payment_method, category_id, category_name_snapshot, budget_allocation_category_id, budget_allocation_name_snapshot, payment_status, voided_at, void_reason, created_by, verification_status, verified_by, verified_at, rejection_reason",
+        "id, kind, amount_ngn, transaction_date, created_at, updated_at, description, payer_payee, source_note, payment_method, category_id, category_name_snapshot, budget_allocation_category_id, budget_allocation_name_snapshot, payment_status, voided_at, void_reason, created_by, verification_status, verified_by, verified_at, rejection_reason",
       )
       .eq("event_id", eventId)
       .order("transaction_date", { ascending: false }),
@@ -394,8 +394,38 @@ export default async function EventDashboardPage({
 
   // Cost Centers / Budget Allocations (strictly from real database allocations & expenses)
   const categoryNameById = new Map<string, string>();
+  const categoryCreatedAtById = new Map<string, string>();
+  const categoryCreatedAtByName = new Map<string, string>();
   for (const c of categoriesResult.data ?? []) {
     categoryNameById.set(c.id, c.name);
+    if (c.created_at) {
+      categoryCreatedAtById.set(c.id, c.created_at);
+      categoryCreatedAtByName.set(c.name.trim().toLowerCase(), c.created_at);
+    }
+  }
+
+  function resolveLatestExpenseTimestamp(
+    expenses: typeof unvoidedExpenses,
+    fallbackCategoryCreatedAt?: string,
+  ): string | undefined {
+    let latestMs = fallbackCategoryCreatedAt
+      ? Date.parse(fallbackCategoryCreatedAt)
+      : Number.NaN;
+    let latestIso = Number.isNaN(latestMs)
+      ? undefined
+      : fallbackCategoryCreatedAt;
+
+    for (const exp of expenses) {
+      const candidate =
+        exp.updated_at || exp.created_at || exp.transaction_date;
+      if (!candidate) continue;
+      const ms = Date.parse(candidate);
+      if (!Number.isNaN(ms) && (Number.isNaN(latestMs) || ms > latestMs)) {
+        latestMs = ms;
+        latestIso = candidate;
+      }
+    }
+    return latestIso;
   }
 
   function matchesCategoryOrAlias(
@@ -472,6 +502,10 @@ export default async function EventDashboardPage({
         ? (a.amount_ngn / eventInfo.budgetCeiling) * 100
         : 0;
 
+    const fallbackCreatedAt =
+      (a.category_id ? categoryCreatedAtById.get(a.category_id) : undefined) ??
+      categoryCreatedAtByName.get(a.allocation_name.trim().toLowerCase());
+
     costCenters.push({
       id: centerKey,
       name: a.allocation_name,
@@ -480,6 +514,11 @@ export default async function EventDashboardPage({
       categoryId: a.category_id ?? undefined,
       spent,
       committed,
+      latestInputAt: resolveLatestExpenseTimestamp(
+        matchingExpenses,
+        fallbackCreatedAt,
+      ),
+      inputOrder: costCenters.length + 1,
       items: matchingExpenses.map((e) => ({
         name: e.description || a.allocation_name,
         allocated: a.amount_ngn,
@@ -518,6 +557,9 @@ export default async function EventDashboardPage({
       eventInfo.budgetCeiling > 0
         ? (allocated / eventInfo.budgetCeiling) * 100
         : 0;
+    const fallbackCreatedAt = categoryCreatedAtByName.get(
+      catName.trim().toLowerCase(),
+    );
     costCenters.push({
       id: catName.toLowerCase().replace(/\s+/g, "_") as ExpenseCategory,
       name: catName,
@@ -525,6 +567,8 @@ export default async function EventDashboardPage({
       percentage,
       spent,
       committed,
+      latestInputAt: resolveLatestExpenseTimestamp(list, fallbackCreatedAt),
+      inputOrder: costCenters.length + 1,
       items: list.map((e) => ({
         name: e.description || catName,
         allocated: e.amount_ngn,
