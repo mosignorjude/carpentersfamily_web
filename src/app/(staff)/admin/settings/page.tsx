@@ -27,13 +27,13 @@ export default async function StaffSettingsPage() {
   return (
     <div className="space-y-6">
       <section>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-[#174C37]">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-forest">
           Staff administration
         </p>
-        <h1 className="text-xl sm:text-2xl font-extrabold text-[#3D291F]">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-espresso">
           Club settings
         </h1>
-        <p className="mt-1 max-w-3xl text-xs sm:text-sm text-[#7A685D]">
+        <p className="mt-1 max-w-3xl text-xs sm:text-sm text-muted">
           Current club configuration. President:{" "}
           {president ? president.fullName : "Vacant"}. Values are read-only for
           staff administrators.
@@ -42,7 +42,7 @@ export default async function StaffSettingsPage() {
 
       {paymentResult.error || attendanceResult.error ? (
         <p
-          className="rounded-xl border border-[#E5C5C1] bg-[#FAF0EE] p-4 text-xs font-semibold text-[#76342D]"
+          className="rounded-xl border border-terracotta/30 bg-terracotta/10 p-4 text-xs font-semibold text-terracotta"
           role="alert"
         >
           Some club settings could not be loaded. Refresh the page and try

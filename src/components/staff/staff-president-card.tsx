@@ -20,24 +20,24 @@ export default function StaffPresidentCard({
   candidates: PresidentCandidate[];
 }) {
   return (
-    <section className="rounded-2xl border border-[#E5DDD3] bg-white p-5 sm:p-6 shadow-xs space-y-4">
+    <section className="rounded-2xl border border-linen bg-white p-5 sm:p-6 shadow-xs space-y-4">
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-[#174C37]">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-forest">
           Club administration
         </p>
-        <h2 className="text-lg font-extrabold text-[#3D291F]">
+        <h2 className="text-lg font-extrabold text-espresso">
           Current President
         </h2>
       </div>
 
       {president ? (
         <div className="space-y-3">
-          <div className="rounded-xl border border-[#D5E4DC] bg-[#F3F8F5] p-4">
-            <p className="text-sm font-bold text-[#174C37]">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
+            <p className="text-sm font-bold text-forest">
               {president.fullName}
             </p>
-            <p className="text-xs text-[#5C4638]">@{president.username}</p>
-            <p className="mt-1 text-[11px] text-[#7A685D]">
+            <p className="text-xs text-body">@{president.username}</p>
+            <p className="mt-1 text-[11px] text-muted">
               Appointed {formatStaffTimestamp(president.since)}
             </p>
           </div>
@@ -53,7 +53,7 @@ export default function StaffPresidentCard({
           />
         </div>
       ) : (
-        <p className="rounded-xl border border-[#F0D9A8] bg-[#FBF6EA] p-4 text-xs font-semibold text-[#60451C]">
+        <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs font-semibold text-amber-900">
           Vacant. No member currently holds the President role, so no officer
           can approve dues, correct finance records, or administer members until
           one is appointed.
@@ -74,9 +74,15 @@ export default function StaffPresidentCard({
         }
         triggerLabel={president ? "Replace President" : "Appoint President"}
       >
-        <label className="grid gap-1 text-xs font-bold text-[#3D291F]">
+        <label className="grid gap-1 text-xs font-bold text-espresso">
           Member
-          <select defaultValue="" name="member_id" required>
+          <select
+            aria-required="true"
+            className="min-h-11 rounded-lg border border-linen bg-white px-3 text-sm font-normal text-espresso focus-visible:border-forest focus-visible:outline-hidden"
+            defaultValue=""
+            name="member_id"
+            required
+          >
             <option disabled value="">
               Select an active member
             </option>
@@ -90,7 +96,7 @@ export default function StaffPresidentCard({
       </StaffActionDialog>
 
       {candidates.length === 0 ? (
-        <p className="text-xs text-[#7A685D]">
+        <p className="text-xs text-muted">
           No active member is eligible for appointment. Approve a member request
           first.
         </p>

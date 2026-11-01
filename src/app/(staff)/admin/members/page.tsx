@@ -77,13 +77,13 @@ export default async function StaffMembersPage({
   return (
     <div className="space-y-6">
       <section>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-[#174C37]">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-forest">
           Staff administration
         </p>
-        <h1 className="text-xl sm:text-2xl font-extrabold text-[#3D291F]">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-espresso">
           Member directory
         </h1>
-        <p className="mt-1 max-w-3xl text-xs sm:text-sm text-[#7A685D]">
+        <p className="mt-1 max-w-3xl text-xs sm:text-sm text-muted">
           Approve, reject, deactivate, and reactivate member accounts. Every
           decision requires a reason and is recorded in the audit history.
         </p>
@@ -91,10 +91,10 @@ export default async function StaffMembersPage({
 
       <StaffNotice notice={notice} />
 
-      <section className="rounded-2xl border border-[#E5DDD3] bg-white p-5 sm:p-6 shadow-xs space-y-4">
+      <section className="rounded-2xl border border-linen bg-white p-5 sm:p-6 shadow-xs space-y-4">
         {error ? (
           <p
-            className="rounded-xl border border-[#E5C5C1] bg-[#FAF0EE] p-4 text-xs font-semibold text-[#76342D]"
+            className="rounded-xl border border-terracotta/30 bg-terracotta/10 p-4 text-xs font-semibold text-terracotta"
             role="alert"
           >
             The member directory could not be loaded. Refresh the page and try

@@ -137,13 +137,13 @@ export default async function StaffOverviewPage() {
   return (
     <div className="space-y-6">
       <section>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-[#174C37]">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-forest">
           Staff administration
         </p>
-        <h1 className="text-xl sm:text-2xl font-extrabold text-[#3D291F]">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-espresso">
           Club overview
         </h1>
-        <p className="mt-1 max-w-3xl text-xs sm:text-sm text-[#7A685D]">
+        <p className="mt-1 max-w-3xl text-xs sm:text-sm text-muted">
           Staff administrators keep the club's identity model intact. The
           President runs the club's operations; staff appoint the President and
           manage accounts.
@@ -152,42 +152,42 @@ export default async function StaffOverviewPage() {
 
       <StaffOverviewStats stats={stats} />
 
-      <section className="rounded-2xl border border-[#E5DDD3] bg-white p-5 sm:p-6 shadow-xs space-y-3">
+      <section className="rounded-2xl border border-linen bg-white p-5 sm:p-6 shadow-xs space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-sm font-extrabold text-[#3D291F]">
+          <h2 className="text-sm font-extrabold text-espresso">
             Recent governance activity
           </h2>
           <Link
-            className="text-xs font-bold text-[#174C37] hover:underline"
+            className="text-xs font-bold text-forest hover:underline"
             href="/admin/audit"
           >
             Open the audit viewer
           </Link>
         </div>
         {auditRows.length > 0 ? (
-          <ul className="divide-y divide-[#F1EBE3]">
+          <ul className="divide-y divide-linen/50">
             {auditRows.map((row) => (
               <li className="py-2 text-xs" key={row.id}>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="font-bold text-[#3D291F]">
+                  <p className="font-bold text-espresso">
                     {humanizeAuditAction(row.action)}
                   </p>
-                  <p className="text-[#7A685D]">
+                  <p className="text-muted">
                     {formatStaffTimestamp(row.occurred_at)}
                   </p>
                 </div>
-                <p className="text-[#5C4638]">
+                <p className="text-body">
                   {nameById.get(row.actor_id) ?? "Unknown actor"}
                   {row.target_member_id
                     ? ` · ${nameById.get(row.target_member_id) ?? "Unknown member"}`
                     : ""}
                 </p>
-                <p className="text-[#7A685D]">{row.reason}</p>
+                <p className="text-muted">{row.reason}</p>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-[#7A685D]">
+          <p className="text-xs text-muted">
             No governance activity has been recorded yet.
           </p>
         )}
@@ -196,14 +196,14 @@ export default async function StaffOverviewPage() {
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {sections.map((section) => (
           <Link
-            className="rounded-2xl border border-[#E5DDD3] bg-white p-4 shadow-xs hover:border-[#174C37]"
+            className="rounded-2xl border border-linen bg-white p-4 shadow-xs hover:border-forest"
             href={section.href}
             key={section.href}
           >
-            <p className="text-sm font-extrabold text-[#3D291F]">
+            <p className="text-sm font-extrabold text-espresso">
               {section.title}
             </p>
-            <p className="mt-1 text-xs text-[#7A685D]">{section.description}</p>
+            <p className="mt-1 text-xs text-muted">{section.description}</p>
           </Link>
         ))}
       </section>

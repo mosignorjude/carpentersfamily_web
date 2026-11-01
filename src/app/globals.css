@@ -12421,6 +12421,19 @@ textarea:focus-visible {
   white-space: nowrap;
 }
 
+@media (max-width: 640px) {
+  .staff-header-bar {
+    padding: var(--space-2) var(--space-3);
+  }
+  .staff-session {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .staff-session-id {
+    text-align: left;
+  }
+}
+
 .staff-nav {
   width: 100%;
   max-width: 80rem;
@@ -12440,7 +12453,7 @@ textarea:focus-visible {
 .staff-nav a {
   display: inline-flex;
   align-items: center;
-  min-height: 2.4rem;
+  min-height: 2.75rem;
   padding: 0.35rem 0.85rem;
   border: 1px solid var(--color-border);
   border-radius: 999px;
@@ -12454,6 +12467,11 @@ textarea:focus-visible {
 
 .staff-nav a:hover {
   background: var(--color-surface-hover);
+}
+
+.staff-nav a:focus-visible {
+  outline: 2px solid var(--brand-forest);
+  outline-offset: 2px;
 }
 
 .staff-nav a[aria-current="page"] {

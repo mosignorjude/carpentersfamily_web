@@ -72,13 +72,13 @@ export default async function StaffAccountsPage({
   return (
     <div className="space-y-6">
       <section>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-[#174C37]">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-forest">
           Staff administration
         </p>
-        <h1 className="text-xl sm:text-2xl font-extrabold text-[#3D291F]">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-espresso">
           Staff accounts
         </h1>
-        <p className="mt-1 max-w-3xl text-xs sm:text-sm text-[#7A685D]">
+        <p className="mt-1 max-w-3xl text-xs sm:text-sm text-muted">
           Staff administrators manage accounts and appoint the President. The
           last active staff account cannot be disabled, and no one can change
           their own access.
@@ -87,12 +87,12 @@ export default async function StaffAccountsPage({
 
       <StaffNotice notice={notice} />
 
-      <section className="rounded-2xl border border-[#E5DDD3] bg-white p-5 sm:p-6 shadow-xs space-y-4">
+      <section className="rounded-2xl border border-linen bg-white p-5 sm:p-6 shadow-xs space-y-4">
         <div>
-          <h2 className="text-sm font-extrabold text-[#3D291F]">
+          <h2 className="text-sm font-extrabold text-espresso">
             Invite a staff administrator
           </h2>
-          <p className="mt-1 text-xs text-[#7A685D]">
+          <p className="mt-1 text-xs text-muted">
             The invite email creates the sign-in account. The staff profile is
             provisioned in the same step.
           </p>
@@ -100,18 +100,18 @@ export default async function StaffAccountsPage({
         <StaffAccountForm />
       </section>
 
-      <section className="rounded-2xl border border-[#E5DDD3] bg-white p-5 sm:p-6 shadow-xs space-y-4">
+      <section className="rounded-2xl border border-linen bg-white p-5 sm:p-6 shadow-xs space-y-4">
         <div>
-          <h2 className="text-sm font-extrabold text-[#3D291F]">
+          <h2 className="text-sm font-extrabold text-espresso">
             Current staff
           </h2>
-          <p className="mt-1 text-xs text-[#7A685D]">
+          <p className="mt-1 text-xs text-muted">
             {activeStaffCount} active of {accounts.length} staff accounts.
           </p>
         </div>
         {error ? (
           <p
-            className="rounded-xl border border-[#E5C5C1] bg-[#FAF0EE] p-4 text-xs font-semibold text-[#76342D]"
+            className="rounded-xl border border-terracotta/30 bg-terracotta/10 p-4 text-xs font-semibold text-terracotta"
             role="alert"
           >
             The staff accounts could not be loaded. Refresh the page and try
@@ -124,7 +124,7 @@ export default async function StaffAccountsPage({
             currentUserId={userId}
           />
         ) : (
-          <p className="text-xs text-[#7A685D]">No staff accounts exist yet.</p>
+          <p className="text-xs text-muted">No staff accounts exist yet.</p>
         )}
       </section>
     </div>
