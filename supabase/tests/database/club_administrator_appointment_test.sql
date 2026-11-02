@@ -131,5 +131,99 @@ select lives_ok(
   'the incumbent club administrator can be revoked'
 );
 
+-- ===========================================================================
+-- staff_grant_admin: the happy path and the handover.
+-- State entering this block: zero live admin assignments (Task 1 revoked it).
+-- ===========================================================================
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000501', true);
+select lives_ok(
+  $$select public.staff_grant_admin('00000000-0000-0000-0000-000000000503', 'Appointed records officer')$$,
+  'a staff administrator can grant the club administrator role'
+);
+reset role;
+
+select is(
+  (select count(*) from public.member_role_assignments
+   where role = 'admin' and revoked_at is null),
+  1::bigint,
+  'exactly one live club administrator assignment exists after a grant'
+);
+
+select is(
+  (select member_id from public.member_role_assignments
+   where role = 'admin' and revoked_at is null),
+  '00000000-0000-0000-0000-000000000503'::uuid,
+  'the granted member holds the live assignment'
+);
+
+select is(
+  (select action from public.audit_log
+   where entity_type = 'member_role_assignment'
+     and target_member_id = '00000000-0000-0000-0000-000000000503'
+   order by occurred_at desc limit 1),
+  'club_role_granted'::text,
+  'the grant is audited'
+);
+
+select is(
+  (select actor_id from public.audit_log
+   where action = 'club_role_granted'
+     and target_member_id = '00000000-0000-0000-0000-000000000503'
+   order by occurred_at desc limit 1),
+  '00000000-0000-0000-0000-000000000501'::uuid,
+  'the staff account is recorded as the actor, not the appointee'
+);
+
+-- Handover: a second grant moves the slot rather than failing.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000501', true);
+select lives_ok(
+  $$select public.staff_grant_admin('00000000-0000-0000-0000-000000000504', 'Handed the books to a second officer')$$,
+  'a second grant replaces the incumbent instead of raising'
+);
+reset role;
+
+select is(
+  (select member_id from public.member_role_assignments
+   where role = 'admin' and revoked_at is null),
+  '00000000-0000-0000-0000-000000000504'::uuid,
+  'the successor holds the single live assignment'
+);
+
+-- …0503 has two revoked admin rows by now (Task 1 handed one back), so the
+-- handover is identified by the reason it wrote, not by the member alone.
+select is(
+  (select revoked_by from public.member_role_assignments
+   where role = 'admin'
+     and member_id = '00000000-0000-0000-0000-000000000503'
+     and revoked_at is not null
+     and revoke_reason = 'Handed the books to a second officer'),
+  '00000000-0000-0000-0000-000000000501'::uuid,
+  'the revoked incumbent assignment records the staff actor'
+);
+
+select is(
+  (select count(*) from public.audit_log
+   where action in ('club_role_granted', 'club_role_revoked')
+     and reason = 'Handed the books to a second officer'),
+  2::bigint,
+  'a handover writes one revoke and one grant audit row'
+);
+
+-- The successor must resolve as club administrator through the shared predicate.
+-- has_club_role() reads auth.uid(), so it can only be answered inside the
+-- holder's own session; from the suite's default session it returns null and
+-- proves nothing.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000504', true);
+select is(
+  (select private.has_club_role('admin')),
+  true,
+  'the successor resolves as club administrator through the shared predicate'
+);
+reset role;
+
 select * from finish();
 rollback;
