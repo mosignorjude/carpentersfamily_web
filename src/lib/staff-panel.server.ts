@@ -16,7 +16,7 @@ export interface OfficerHolder {
 
 async function loadHolders(
   supabase: ServerSupabaseClient,
-  role: "president" | "executive",
+  role: "president" | "executive" | "admin",
 ): Promise<OfficerHolder[]> {
   const { data: assignments, error } = await supabase
     .from("member_role_assignments")
@@ -54,6 +54,13 @@ export async function loadPresident(
   supabase: ServerSupabaseClient,
 ): Promise<OfficerHolder | null> {
   const holders = await loadHolders(supabase, "president");
+  return holders[0] ?? null;
+}
+
+export async function loadClubAdmin(
+  supabase: ServerSupabaseClient,
+): Promise<OfficerHolder | null> {
+  const holders = await loadHolders(supabase, "admin");
   return holders[0] ?? null;
 }
 
