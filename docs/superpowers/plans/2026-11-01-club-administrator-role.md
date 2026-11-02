@@ -20,6 +20,8 @@
 - Audit `action` values reuse `club_role_granted` and `club_role_revoked`. No new action names.
 - `member_profiles.status` must be `'active'` for any grant target; staff profiles can never hold a club role (`private.reject_staff_role_target`).
 - pgTAP suites use `select no_plan();` except `membership_roles_rls_test.sql`, which uses `select plan(N);` and must be kept arithmetically exact.
+- **Reading `supabase test db` output: never grep for `^not ok`.** The CLI runs `pg_prove` inside a container, so it prints per-file summaries (`(Wstat: 0 Tests: 43 Failed: 5)`), `# Failed test N: "label"` lines and a final `Result: PASS|FAIL` — a raw `not ok` line is never emitted, and `grep -c "^not ok"` returns `0` on a wholly broken run. Count failures with `grep -cE "^# Failed test"` and list the suites with `grep -E "Failed: [1-9]"`; treat `Result: FAIL` as the pass/fail signal for a single-suite run.
+- **Pre-change pgTAP baseline, recorded 2026-11-02 on the local stack at migration `20261101010000` (65 applied, no reset):** `Files=19, Tests=503`, **34 failing assertions across 8 suites** — `events_roles_budgets_lifecycle` (17), `in_app_notifications` (5), `president_staff_admin` (5, tests 30-34), `meetings_minutes_attendance` (2), `report_exports` (2), `auth_member_lifecycle` (1, test 8), `event_finance_ticketing_ledger` (1, test 1), `staff_resend_email_confirmation` (1, test 19). Five suites abort mid-file on missing objects (`record_club_financial_transaction(text,bigint,date,text,uuid,text,text,uuid)`, `record_dues_payment(uuid,bigint,date,date[])`, `event_financial_receipts`, a `dues_membership_periods` check violation, and an own-role guard trip), so their reported assertion counts are lower than their file contents. Full transcript: `~/supabase-local-backups/2026-11-02-pre-club-admin-reset/pgtap-baseline.txt`. **A "zero failures" expectation is wrong for this stack — the gate is always a diff against these numbers.**
 - App tests are Node built-in runner, flat `tests/*.test.mjs`, asserting on `fs.readFileSync` source text.
 - Formatting: Biome, double quotes, 2-space indent, trailing commas. `npm run lint` is `biome check next.config.ts src` with **no `--write`**, so formatting must be correct as typed.
 - Local UI verification uses a production build at `http://127.0.0.1:3001` (`npm run build` then `npx next start -p 3001`), because the long-running `next dev` on :3000 serves unhydrated HTML. Stop any leftover `next start -p 3001` before building, and stop the temporary server afterwards.
@@ -286,8 +288,8 @@ Expected: every file reports 1 except `membership_roles_rls_test.sql` and `presi
 
 - [ ] **Step 9: Run the full local suite and compare to the baseline**
 
-Run: `npx supabase db reset --local && npx supabase test db --local`
-Expected: zero `not ok` lines in `club_administrator_appointment_test.sql` and `membership_roles_rls_test.sql`; the only remaining failures are the seven documented stale-name failures in unrelated suites. Record the failing suite names and counts in your report — a new failure is a regression from this task.
+Run: `npx supabase test db --local 2>&1 | tee "$HOME/supabase-local-backups/pgtap-task1.txt" | grep -E "Failed: [1-9]|^# Failed test" | head -50`
+Expected: no `# Failed test` line labelled from `club_administrator_appointment_test.sql`, and `membership_roles_rls_test.sql` gone from the `Failed: [1-9]` list (it passed at baseline, so any appearance is caused by this task). The rest must be exactly the eight baseline suites and 34 assertions from Global Constraints — **do not expect a clean run on this stack**. A ninth failing suite, or a baseline suite whose count rose, is a regression from this task. Note that `db reset --local` is deliberately not run here: it would destroy the `verify-*@local.test` auth users Task 11 needs, and the pre-change baseline was taken on this same unreset stack.
 
 - [ ] **Step 10: Commit**
 
@@ -1739,18 +1741,20 @@ git commit -m "feat(staff): add Club Admin appointment card to the governance pa
 - Consumes: every deliverable from Tasks 1–9.
 - Produces: the evidence block that the implementation report and the rollout step quote.
 
-- [ ] **Step 1: Record the pre-change pgTAP baseline**
+- [ ] **Step 1: Confirm the pre-change pgTAP baseline is still valid**
 
-Run: `npx supabase db reset --local && npx supabase test db --local 2>&1 | tee /tmp/pgtap-baseline.txt | grep -c "^not ok"`
-Expected: the documented stale-name failures appear (seven on this stack). Save the count and the failing suite names. **`db reset --local` destroys every row of the shared local stack including auth users — confirm nobody else is using it first.**
+The baseline is recorded in Global Constraints (503 tests, 34 failing assertions, 8 suites). Re-take it only if the stack has drifted since; if it must be re-taken, **do not use `db reset --local` without asking the operator** — this stack carries the four `verify-*@local.test` auth users that Task 11's browser pass signs in with, and a reset destroys them. Compare the two runs with:
+
+Run: `npx supabase test db --local 2>&1 | tee "$HOME/supabase-local-backups/pgtap-baseline-check.txt" | grep -cE "^# Failed test"`
+Expected: `34`, and `grep -E "Failed: [1-9]"` naming the same eight suites. A different number means the stack moved and the baseline must be re-recorded before Step 2 means anything.
 
 - [ ] **Step 2: Apply and re-run**
 
-Run: `npx supabase db reset --local && npx supabase test db --local 2>&1 | tee /tmp/pgtap-after.txt | grep -c "^not ok"`
-Expected: a count no higher than Step 1, and **zero `not ok` lines whose label comes from `club_administrator_appointment_test.sql` or `membership_roles_rls_test.sql`**. Diff the two files to prove no new failure:
+Run: `npx supabase db push --local --include-all && npx supabase test db --local 2>&1 | tee "$HOME/supabase-local-backups/pgtap-after.txt" | grep -cE "^# Failed test"`
+Expected: no more than 34 failing assertions, **zero `# Failed test` lines labelled from `club_administrator_appointment_test.sql`**, and `membership_roles_rls_test.sql` absent from the `Failed: [1-9]` list (its rewritten block must pass). Prove no new failure by name, not by count:
 
-Run: `diff /tmp/pgtap-baseline.txt /tmp/pgtap-after.txt | grep "^>" | grep "not ok"`
-Expected: no output.
+Run: `diff <(grep -E "^# Failed test" "$HOME/supabase-local-backups/pgtap-baseline.txt" | sort) <(grep -E "^# Failed test" "$HOME/supabase-local-backups/pgtap-after.txt" | sort) | grep "^>"`
+Expected: no output. A `<` line is a baseline failure that disappeared — an improvement worth reporting, but confirm it disappeared because this feature fixed it, not because a suite aborted earlier than before.
 
 - [ ] **Step 3: App gate**
 
@@ -1764,7 +1768,7 @@ Expected: PASS. This is the exact script CI runs, alongside lint and build.
 
 - [ ] **Step 5: Report the gate with numbers, not adjectives**
 
-State: baseline `not ok` count, after count, the names of the new assertions added (`club_administrator_appointment_test.sql` assertion count — count them with `grep -c "^select \|^  (select" …` and quote the `plan`-free total from the run output instead), `npm test` pass count, and build status. Do not describe any of it as "looks good".
+State: baseline failing-assertion count and after count (both from `grep -cE "^# Failed test"`), the failing suite list from each run, the `# ` labelled assertion count reported by the new suite's own run line (`Tests: N Failed: 0`), `npm test` pass count, and build status. Do not describe any of it as "looks good".
 
 ---
 
