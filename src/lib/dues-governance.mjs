@@ -1,6 +1,6 @@
 /**
  * Dues Payment Request & Approval Governance Rules (Phase 4):
- * 1. Club administrators do NOT pay dues.
+ * 1. A member holding the Club Admin role does not pay dues while the assignment is live.
  * 2. Active members/officers (Executive, President, Member) can submit dues payment requests.
  * 3. Reviewers must be active club officers: Executive, Club Admin, or President.
  * 4. Self-review rule: no officer may review their own dues.
@@ -17,7 +17,7 @@
  */
 export function canSubmitDues(actorRoles) {
   const roles = new Set(actorRoles || []);
-  // System administrators do not pay dues
+  // The Club Admin does not pay dues while holding the role
   if (roles.has("admin")) return false;
   return true;
 }

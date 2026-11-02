@@ -165,9 +165,9 @@ export default async function EventsPage() {
     rolesSet.has("president");
 
   const userRoleTitle = rolesSet.has("admin")
-    ? "System Administrator"
+    ? "Club Admin"
     : rolesSet.has("president")
-      ? "President (Club Administrator)"
+      ? "President"
       : rolesSet.has("executive")
         ? "Executive Officer"
         : "General Assembly Member";

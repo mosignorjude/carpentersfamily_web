@@ -180,10 +180,10 @@ export function PayDuesModal({
                   <ShieldCheck className="w-6 h-6 text-[#174C37]" />
                 </div>
                 <h4 className="font-bold text-sm text-[#3D291F]">
-                  System Administrator Exemption
+                  Club Admin Exemption
                 </h4>
                 <p className="text-xs text-[#54433A] max-w-sm mx-auto leading-relaxed">
-                  As an active system administrator, you are exempt from
+                  While you hold the Club Admin role you are exempt from
                   statutory dues obligations under club financial policy. No
                   payment submission is required.
                 </p>
