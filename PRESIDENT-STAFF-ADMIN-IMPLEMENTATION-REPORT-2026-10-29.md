@@ -208,8 +208,9 @@ Legend: **v1 staff** = included in the first-release staff panel. **President** 
 | Last-active-staff guarantee | new trigger | Yes | — |
 | Grant/revoke Executive | core:297 / role-replacement | No | Yes |
 | Change a member's role (including back to member) | `set_club_role`, role-replacement:50 | No | Yes |
-| Grant/replace/remove Admin or Backup Admin | primary admin only, role-replacement:74 | Replaced by president appointment | No |
-| Last-active-primary-Admin guarantee | core:193 | Replaced by last-staff guard | — |
+| Grant/replace/remove **Club Admin** (`admin`) | new staff RPCs `staff_grant_admin` / `staff_revoke_admin` | **Yes — Phase 2** | No |
+| Grant/replace/remove Backup Admin | primary admin only, role-replacement:74 | Replaced by president appointment | No |
+| Last-active-primary-Admin guarantee | core:193 | Kept for deactivation ordering; the singleton index now bounds the count | — |
 
 ### Dues
 
@@ -295,6 +296,25 @@ Legend: **v1 staff** = included in the first-release staff panel. **President** 
 
 That is the full surface. Note the honest bound: this is the admin's *authorization* surface. A few UI affordances are additionally client-gated and would not appear for an admin even though the database would allow the operation (for example, session control excludes `backup_admin` in the UI while the database allows it). The inventory follows the database, which is the real boundary.
 
+### Phase 2 addendum — Club Admin (2026-11-02)
+
+The accurate rule, replacing the Phase 1 statement that club roles cannot be granted from `/admin`: **staff may grant and revoke exactly one Club Admin (`admin`); president, executive and member roles still move only through their existing paths.** The `/admin` panel itself stays read-only for money — the write authority lives in the granted member's session, not in the staff session (separate hats, separate logins).
+
+| Action | Result for Club Admin | Enforcement |
+| --- | --- | --- |
+| Record / correct / void club transactions, opening balance, categories | **Allowed** | `has_club_role('admin')` gates in `20261003090000_club_finances.sql` |
+| Event ledger, ticketing, staged review, verification, budgets, create event | **Allowed** | `has_club_role('admin')` in `20261003102501_event_finance_ticketing_ledger.sql` and successors |
+| Dues correction, rates, write-off, backfill, payment methods | **Allowed** | `has_club_role('admin')` in `20261017230000_dues_payment_requests_governance.sql` |
+| **Approve, reject or record a dues payment request** | **Denied `42501` — contradicts "same authority as president"; open operator decision** | Phase 1 narrowed these three gates to president/executive in `20261029121000_president_role_and_alias.sql` and never added `admin`. Pinned by an assertion in `supabase/tests/database/club_administrator_appointment_test.sql` so a future widening is a visible change. |
+| Grant or revoke **executive**, set a member back to plain membership | **Allowed** | `set_club_role` / `grant_club_role` / `revoke_club_role` accept only `('member','executive')`; actor gate is `has_club_role('admin')` or president |
+| Appoint, replace or revoke **president** | **Denied `42501`** | president moves only through `staff_appoint_president` / `staff_revoke_president`, both gated on `is_staff_administrator()` |
+| Grant or revoke **admin** (including themselves) | **Denied** | no member-facing RPC accepts `p_role = 'admin'`; only `staff_grant_admin` / `staff_revoke_admin` do, and both require `is_staff_administrator()` |
+| Change their **own** role | **Denied** | existing "Administrators cannot change their own club role" guard |
+| Monthly dues obligation | **Exempt** | `not exists (... role = 'admin' ...)` in `dues_month_status` and its predecessors |
+| In-app notifications | **Receives them**; role changes read "Club Admin", never raw `admin` and never "superuser" | `private.format_role_label()` restated in `20261101130000_club_administrator_appointment.sql` |
+| Anything in `/admin` | **Denied** | `src/app/(staff)/layout.tsx` requires `status = 'staff'`; a holder is redirected to `/officers/members` |
+| Deactivate a holder without revoking first | **Blocked** | `member_profiles_preserve_last_primary_admin` trigger → notice "Revoke Club Admin First". The partial unique index `member_role_assignments_one_current_admin_uidx` counts rows, not live members, so the trigger is what keeps revoke-before-deactivate true. |
+
 ---
 
 ## 9. Hazards to plan around
@@ -335,6 +355,30 @@ That is the full surface. Note the honest bound: this is the admin's *authorizat
   - last-staff disable is refused with a readable error;
   - the audit viewer labels staff actors.
 - `npm run lint`, `npm test`, and the Supabase database test run.
+
+### Phase 2 verification record (2026-11-02)
+
+Local stack only: production build served on `http://127.0.0.1:3001`, stopped and the port confirmed released afterward. Fixture accounts `verify-staff` / `verify-officer` / `verify-applicant` were used with a re-set local password; the fourth account was approved through the UI. No production system was touched.
+
+Verified in a real browser session (rendered and read back from the DOM):
+
+- staff governance page renders the "Money & records authority / Current Club Admin" card below the president card, vacant copy, required reason, and an appoint list of active members that **excludes the sitting president** (observed before and after appointing);
+- appoint → card shows the holder with "Appointed 02 Nov 2026 · 14:32" and the zero-candidate hint; revoke → card returns to Vacant and "Appoint Club Admin" reappears;
+- the holder's `/finances` write controls are live: an opening-balance income line was recorded (row in `club_financial_transactions`, `kind=income`) and then voided through the UI (`voided_at`, `void_reason`, `voided_by` set);
+- `/dues` differential: holder = `OUTSTANDING ₦0 / All Clear` with the exempt badge, while the president's ledger in the same officer console = `₦45,000 / 9 mo. due`; after revoke the former holder owes `₦45,000` again;
+- `/officers/members`: the holder approved a pending applicant, then "Assign Executive" and "Remove Executive" on another member (only member/executive exist; no admin option anywhere); afterwards the president demoted the former holder's leftover executive hat;
+- boxed in: `/admin` and `/admin/governance` as the holder resolve to `/officers/members` with no staff shell and no president UI; deactivating a serving holder returns the "Revoke Club Admin First" alert; after revoke, deactivation succeeded and the holder's `/finances` lost every write control;
+- president-side: the notification feed renders "@…'s role changed to Club Admin" and "(was Club Admin)" — no raw `admin`, no "superuser"; `/admin/audit` lists "Club role granted" / "Club role revoked" against the staff actor.
+
+Checked by DOM probe or database read rather than by eye: everything above was read from the rendered DOM or `psql`; **no screenshot was taken and no visual layout was judged**, because the Desktop browser viewport is locked and pointer clicks are unavailable — submissions were driven with `requestSubmit()` and modal opens with synthetic `click()`.
+
+Not verified, stated plainly:
+
+- the green *success* notice after appoint/revoke is server-rendered (confirmed in the raw HTML, `bg-forest/5` + copy) but is erased within a frame by `src/components/ui/global-flash-listener.tsx:80-86`, which strips `?notice=` with `router.replace()`. Because page-local codes are absent from `system-notices.ts`, no toast replaces it, so staff see no confirmation. **This predates Phase 2** — the Phase 1 `president-appointed` notice behaves identically — and is left unfixed as a product decision.
+- the dues payment-request path (approve/reject/record) is denied to the holder, so no end-to-end approval was attempted in the browser; it is pinned by pgTAP instead.
+- an event ledger line: the holder created a real event through `/events` and the event dashboard rendered the write controls, but its "Record Transaction" / "Record Disbursement" modals never mounted under the hidden viewport, so the line was written only in pgTAP (`20261101130000` suite).
+- no responsive breakpoint (mobile, tablet, desktop) was rendered or measured for the new card in this pass.
+- a plain non-officer member's `/?notice=denied` redirect from `/admin` was not exercised (the only such account has no known local password).
 
 ---
 
