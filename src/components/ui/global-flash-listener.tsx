@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef } from "react";
-import { rendersNoticeInline } from "@/lib/notice-routing.mjs";
+import { handlesNoticeOnPage } from "@/lib/notice-routing.mjs";
 import { getSystemNotice } from "@/lib/system-notices";
 import { dispatchFlashCard, FlashCardContainer } from "./flash-card";
 
@@ -29,15 +29,15 @@ function UrlNoticeDetector() {
     if (lastHandledRef.current === noticeCode) return;
     lastHandledRef.current = noticeCode;
 
-    // A page that renders its own banner needs the query parameter to stay in
-    // the address bar; clearing it hides the notice, and a toast on top of the
-    // banner would show the same copy twice.
-    const inlineNotice = rendersNoticeInline(pathname, noticeCode);
+    // A page that handles its own notice needs the query parameter left in
+    // place until that page has read it; clearing it here would delete the
+    // notice before the page ever saw it.
+    const pageHandlesNotice = handlesNoticeOnPage(pathname, noticeCode);
 
     // Only allowlisted notice codes may produce a toast. Arbitrary query text is
     // never rendered, which prevents branded-toast spoofing via crafted links.
     const systemNotice =
-      inlineNotice || SILENT_READ_NOTICE_CODES.has(noticeCode)
+      pageHandlesNotice || SILENT_READ_NOTICE_CODES.has(noticeCode)
         ? null
         : getSystemNotice(noticeCode);
     if (systemNotice) {
@@ -48,7 +48,7 @@ function UrlNoticeDetector() {
       });
     }
 
-    if (inlineNotice) return;
+    if (pageHandlesNotice) return;
 
     // Remove ?notice= through the router so the next identical notice (for
     // example, two consecutive validation errors) is detected as a new change.

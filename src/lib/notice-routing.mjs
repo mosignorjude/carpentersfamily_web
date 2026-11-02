@@ -1,11 +1,12 @@
 /**
- * Where a `?notice=` code is rendered by the page itself instead of by the
- * floating flash card.
+ * Which pages handle their own `?notice=` code, so the global flash listener
+ * must stay out — no toast of its own and no cleanup of the query.
  *
- * A page-rendered banner reads the query parameter on every server render, so
- * the flash listener must leave the parameter in the address bar. Erasing it
- * made the banner vanish within a frame — the staff panel's success and failure
- * notices were never visible to the operator who triggered them.
+ * The public auth routes read the parameter on the server and paint a banner.
+ * Staff pages resolve their own wording on the server and hand it to
+ * `StaffNoticeToast`, which announces it and clears the query; if the listener
+ * cleared it first the page would never see the notice, and if it toasted the
+ * operator would read the same copy twice.
  */
 
 /** Public auth routes with their own page-specific notice banners. */
@@ -29,16 +30,16 @@ const ROOT_INLINE_NOTICE_CODES = new Set([
   "sign-in",
 ]);
 
-/** Every page under the staff panel resolves its notice through StaffNotice. */
-const STAFF_ROUTE_ROOT = "admin";
+/** Every page under the staff panel resolves and announces its own notice. */
+const PAGE_OWNED_ROUTE_ROOT = "admin";
 
 /**
  * @param {string} pathname
  * @param {string} noticeCode
- * @returns {boolean} true when the page shows the notice itself.
+ * @returns {boolean} true when the page deals with the notice itself.
  */
-export function rendersNoticeInline(pathname, noticeCode) {
+export function handlesNoticeOnPage(pathname, noticeCode) {
   if (INLINE_NOTICE_PATHS.has(pathname)) return true;
-  if (pathname.split("/")[1] === STAFF_ROUTE_ROOT) return true;
+  if (pathname.split("/")[1] === PAGE_OWNED_ROUTE_ROOT) return true;
   return pathname === "/" && ROOT_INLINE_NOTICE_CODES.has(noticeCode);
 }

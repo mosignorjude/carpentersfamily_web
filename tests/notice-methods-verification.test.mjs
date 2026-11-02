@@ -715,8 +715,8 @@ test("notification hardening: GlobalFlashListener rejects arbitrary unallowliste
     "GlobalFlashListener must never echo raw unallowlisted noticeCode strings as toast messages",
   );
   assert.ok(
-    listenerSource.includes("rendersNoticeInline(pathname, noticeCode)"),
-    "GlobalFlashListener must defer to the shared routing predicate so a page-rendered banner is never duplicated by a toast or erased from the address bar",
+    listenerSource.includes("handlesNoticeOnPage(pathname, noticeCode)"),
+    "GlobalFlashListener must defer to the shared routing predicate so a page-owned notice is never announced twice or cleaned up before the page reads it",
   );
   const routingSource = fs.readFileSync(
     "src/lib/notice-routing.mjs",

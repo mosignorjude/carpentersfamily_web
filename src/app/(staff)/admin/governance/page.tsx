@@ -1,7 +1,7 @@
 import StaffClubAdminCard, {
   type ClubAdminCandidate,
 } from "@/components/staff/staff-club-admin-card";
-import StaffNotice from "@/components/staff/staff-notice";
+import StaffNoticeToast from "@/components/staff/staff-notice-toast";
 import StaffPresidentCard, {
   type PresidentCandidate,
 } from "@/components/staff/staff-president-card";
@@ -88,7 +88,7 @@ export default async function StaffGovernancePage({
         </p>
       </section>
 
-      <StaffNotice notice={notice} />
+      <StaffNoticeToast notice={notice} />
 
       <StaffPresidentCard candidates={candidates} president={president} />
 
