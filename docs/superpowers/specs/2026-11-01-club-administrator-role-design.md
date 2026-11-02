@@ -27,7 +27,7 @@ The decisive finding is that this role **already exists in the schema**. `admin`
 ### Goals
 
 - Give staff a way to grant and revoke the `admin` club role, one holder at a time, to an approved active member.
-- Give that holder the full authority the `admin` role already carries — club ledger, dues governance, event finance, ticketing, attendance, communications, categories — with **no edits to any existing authorisation gate**.
+- Give that holder the full authority the `admin` role already carries — club ledger, dues governance, event finance, ticketing, attendance, communications, categories — with **no edits to any existing authorisation gate except the three named in §6**.
 - Keep the holder exempt from dues, as the role already is.
 - Allow that holder to grant and revoke `executive` and to return members to plain membership, which the current RPC surface already permits.
 - Keep the president outside the club admin's reach: the club admin cannot appoint, replace or revoke a president.
@@ -79,14 +79,17 @@ Introduces a third profile status that passes officer checks but stays out of ro
 
 ## 6. Authority profile
 
-The requirement was "same authority as president, no financial obligation, may grant or revoke club roles except president, may not create another club admin". That profile needs no new code — it is what the current RPC surface already does once a member holds `admin`.
+The requirement was "same authority as president, no financial obligation, may grant or revoke club roles except president, may not create another club admin". Almost all of that profile needs no new code — it is what the current RPC surface already does once a member holds `admin`. The exception is the dues trio, which the operator ruled on after this spec was first written; see the two rows marked **widened**.
 
 | Action | Result for Club Admin | Why |
 | --- | --- | --- |
 | Record / correct / void club transactions, opening balance, categories | **Allowed** | gated on `has_club_role('admin')` — 6 such checks in [20261003090000_club_finances.sql](../../../supabase/migrations/20261003090000_club_finances.sql) |
 | Event ledger, ticketing, staged review, verification, budgets | **Allowed** | `has_club_role('admin')` in [20261003102501_event_finance_ticketing_ledger.sql](../../../supabase/migrations/20261003102501_event_finance_ticketing_ledger.sql) and successors |
 | Dues correction, rates, write-off, backfill, payment methods | **Allowed** | `has_club_role('admin')` in [20261017230000_dues_payment_requests_governance.sql](../../../supabase/migrations/20261017230000_dues_payment_requests_governance.sql) |
-| **Approve, reject or record a dues payment request** | **Denied `42501` — contradicts the requirement, see below** | Phase 1 narrowed these three gates to `has_club_role('president') or has_club_role('executive')` in [20261029121000_president_role_and_alias.sql](../../../supabase/migrations/20261029121000_president_role_and_alias.sql) and never added `admin`. `approve_dues_payment_request`, `reject_dues_payment_request` and `record_dues_payment` are the only money-path functions in §6 whose gate does not name `admin`. Widening them is a separate decision, not a gate this plan touches. |
+| **Record a dues payment** | **Allowed — widened** (2026-11-02 ruling) | Phase 1 narrowed this gate to president-or-executive in [20261029121000_president_role_and_alias.sql](../../../supabase/migrations/20261029121000_president_role_and_alias.sql) and never added `admin`. `20261102120000_club_administrator_dues_review.sql` restores the `admin` check, so the denial message now reads "Only an active Executive, Club Admin, or President may record dues payments." |
+| **Approve or reject a dues payment request** | **Allowed — widened** (2026-11-02 ruling) | Same migration adds a `v_caller_is_admin` clause to `private.approve_dues_payment_request` and `private.reject_dues_payment_request`. The self-review guard is untouched: the holder still cannot review their own request (`42501`). |
+| **Review the President's own dues** | **Allowed — widened** (2026-11-02 ruling) | Phase 1 reserved president requests for executives. A Club Admin is a sufficient second pair of eyes because `one_admin_identity_per_member_uidx` makes it structurally impossible for one member to hold both `admin` and `president`, so the reviewer can never be the requester. Message: "President dues payments can only be approved by an Executive or Club Admin." |
+| Prelaunch reconciliation — correct, write off, backfill, set rates | **Already Allowed, verified 2026-11-02 against the live schema** | These functions already name `admin`; the ruling needed no change. Confirmed by reading `pg_proc` on the local stack rather than migration text. |
 | Attendance, meetings/minutes, announcements, polls | **Allowed** | the Phase 1 officer gates accept `has_club_role('admin')` alongside president and executive ([20261029122500_president_attendance_session_gate.sql:14](../../../supabase/migrations/20261029122500_president_attendance_session_gate.sql), [20261029122600_president_communications_gate.sql:12](../../../supabase/migrations/20261029122600_president_communications_gate.sql)) |
 | Grant or revoke **executive**, set a member back to plain membership | **Allowed** | `set_club_role`, `grant_club_role`, `revoke_club_role` accept only `('member','executive')` and their actor gate is `has_club_role('admin')` or president ([20261029122000:1007,1024-1049,1177,1266](../../../supabase/migrations/20261029122000_staff_administration_rpcs.sql)) |
 | Appoint, replace or revoke **president** | **Denied `42501`** | president moves only through `staff_appoint_president` / `staff_revoke_president`, both gated on `is_staff_administrator()` |
@@ -100,7 +103,7 @@ Because `has_club_role()` re-reads `member_profiles.status` on every call, revok
 
 ## 7. Database surface
 
-One migration, `supabase/migrations/20261101130000_club_administrator_appointment.sql`, containing three objects and no edits to existing ones.
+One migration for the grant path — `supabase/migrations/20261101130000_club_administrator_appointment.sql`, three new objects and no edits to existing ones — plus the dues-review widening in §7.5, which does replace three existing bodies.
 
 ### 7.1 Singleton ceiling
 
@@ -224,6 +227,14 @@ Same gate, same reason validation, same guard lock. Finds the live `admin` assig
 
 `public.staff_grant_admin(uuid, text)` and `public.staff_revoke_admin(uuid, text)` as `language sql security invoker set search_path = ''` one-line delegates, then `revoke all on function private.* / public.* from public, anon, service_role;` followed by `grant execute … to authenticated;` for all four, appended in the same block style as the president pair.
 
+### 7.5 `20261102120000_club_administrator_dues_review.sql`
+
+The 2026-11-02 ruling added a second migration, and it is the only place in this programme that edits an existing object. It contains exactly three `CREATE OR REPLACE FUNCTION` statements — `public.record_dues_payment`, `private.approve_dues_payment_request`, `private.reject_dues_payment_request` — and nothing else.
+
+Each body was lifted verbatim from the deployed definition via `pg_get_functiondef()` and changed only at the role gate and its user-facing messages, because a `CREATE OR REPLACE` cannot patch one clause in place; the whole body has to be restated. Replacing rather than dropping also preserves the function OID, so the existing `grant execute` rows and `comment on function` entries survive the push untouched — which is why this migration re-grants nothing.
+
+Two consequences to keep in mind when reading the diff: the record gate lives on the `public` wrapper, where its role check sits, while approve and reject live in `private` behind thin public delegates, so their widened gates appear in the `private` bodies; and the `admin` clause uses the same `has_club_role('admin')` select form the prelaunch functions already use, so the role is still read from the assignment table rather than a stale JWT claim.
+
 ## 8. Deactivation ordering
 
 Because the singleton index counts rows, not live members, a deactivated member holding an unreoked `admin` assignment would occupy the slot and block every future appointment. The rule is therefore: **revoke the role before deactivating the account.**
@@ -283,8 +294,11 @@ An appointment therefore produces: two audit rows when a handover occurs (revoke
 10. The holder has **zero rows** in `dues_month_status` while an executive member in the same fixture has unpaid months — the exemption, proved.
 11. A staff session still cannot perform any write in (8) — the regression that matters most.
 12. Deactivating the incumbent admin without revoking first raises the trigger error.
+13. **Dues review, added by the 2026-11-02 ruling** (`supabase/tests/database/club_administrator_appointment_test.sql`, 8 assertions). The holder's session inserts three pending `dues_payment_requests` rows (president, plain member, self) and then: approving the president's request **flips `status` to `approved` and records `reviewed_by` as the holder** — a real end-to-end approval, not a gate probe, because approve's disposition insert uses a lateral join on `dues_rates` and simply contributes zero rows when no rate exists; rejecting the member's request flips `status` to `rejected`; the holder's own request is still refused with `42501 'Officers cannot review their own dues payments.'`; and recording for a nonexistent member fails `23503 'The selected member does not exist.'` rather than `42501`, which proves the role gate was cleared without inventing a `dues_rates` fixture.
 
 **App test — `tests/staff-governance-club-admin.test.mjs`**, source-text assertions in the established style: the card exists and renders the grant and revoke forms; the actions file calls `staff_grant_admin` and `staff_revoke_admin`; the governance page wires `loadClubAdmin` and filters out the president; the notice keys are present.
+
+**App tests for the 2026-11-02 ruling:** `tests/dues-approval-governance.test.mjs` covers the widened `canReviewDuesRequest` / `canManageDues` predicates as behaviour (club admin reviews member, executive and president dues; cannot review their own; the denial copy names Club Admin) and then proves the wiring by source text — `canManageDues(actor.roles)` appears exactly three times in `src/app/actions.ts`, the old inline executive-and-president gate is gone, and the dues page uses `const canRecord = canManageDues(roles);`. Two tests that asserted the *old* behaviour ("a system administrator cannot review dues", "a system administrator cannot approve any dues") were deleted, not left to fail. `tests/staff-notice-url-preservation.test.mjs` covers `src/lib/notice-routing.mjs`: staff paths render inline, member paths still clear `?notice=`, and the auth and root rules are unchanged.
 
 **Full gate:** `npm run lint`, `npm test`, `npm run build`, `npx supabase db reset --local`, `npx supabase test db --local` — with the finance suites (`club_finances_test`, `event_finance_ticketing_ledger_test`, `finance_receipts_test`, `report_exports_test`, `president_staff_admin_test`) compared against a pre-change baseline; the seven documented stale-name failures elsewhere are drift, recorded not chased.
 
@@ -297,8 +311,8 @@ An appointment therefore produces: two audit rows when a handover occurs (revoke
 ## 14. Rollout
 
 1. Merge the app changes; they are inert until the role exists.
-2. Apply the migration to production through the operator-approved path only — encrypted snapshot, isolated restore drill, then `supabase db push` against the linked project with explicit confirmation. No data conversion, no `auth.users` change, no account conversion.
-3. Pre-flight the admin-row count (§7.1) against production before the push.
+2. Pre-flight the admin-row count (§7.1) against production before any push.
+3. Apply both migrations to production through the operator-approved path only — encrypted snapshot, isolated restore drill, then `supabase db push` against the linked project with explicit confirmation. No data conversion, no `auth.users` change, no account conversion.
 4. Staff appoint the intended holder at `/admin/governance`; the new holder confirms they can record a transaction and that the dues page reads "not liable".
 5. Append the resulting authority matrix to §8 of `PRESIDENT-STAFF-ADMIN-IMPLEMENTATION-REPORT-2026-10-29.md`, replacing the Phase 1 line that says club roles cannot be granted from `/admin` — that becomes true again, deliberately, for one role.
 
@@ -311,3 +325,6 @@ An appointment therefore produces: two audit rows when a handover occurs (revoke
 - Authority = everything the `admin` role already grants, including executive and member role changes; excludes president and excludes creating another club admin.
 - One club admin at a time, appointed and revoked by staff alone, reason mandatory, president notified.
 - Revoke before deactivate, enforced by the existing status trigger and surfaced as actionable staff copy.
+- **2026-11-02 ruling 1:** the club admin can record, approve and reject dues payments after all. The three Phase 1 gates that omitted `admin` were widened in `20261102120000_club_administrator_dues_review.sql`; prelaunch reconciliation, correction, write-off, backfill and rates needed no change, which was verified against the live `pg_proc` bodies rather than migration text.
+- **2026-11-02 ruling 2:** the club admin may also review the president's dues, which Phase 1 reserved for executives. Safe because the singleton index makes the two hats mutually exclusive on one member.
+- **2026-11-02 defect fix:** a staff action's `?notice=` was being erased by the global flash listener, so 12 of the 17 page-local staff notices never rendered. Inline-vs-toast routing now lives in `src/lib/notice-routing.mjs`; staff routes keep the query and render the page banner, and no toast is dispatched for them, so the same copy cannot appear twice.
