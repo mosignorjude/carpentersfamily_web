@@ -441,6 +441,12 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     message:
       "This action isn't allowed for the record's current status (for example, a completed or cancelled event).",
   },
+  "revoke-club-admin-first": {
+    type: "error",
+    title: "Revoke Club Admin First",
+    message:
+      "This member still holds the Club Admin role. Revoke it on the Governance page before deactivating the account, then try again.",
+  },
   denied: {
     type: "error",
     title: "Access Denied",

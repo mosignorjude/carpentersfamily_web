@@ -19,6 +19,7 @@ const sharedCodes = [
   "not-pending",
   "resend-cooldown",
   "confirmation-send-failed",
+  "revoke-club-admin-first",
 ];
 
 export function resolveStaffNotice(
