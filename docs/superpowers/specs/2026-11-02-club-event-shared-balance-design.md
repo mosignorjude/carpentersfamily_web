@@ -242,7 +242,9 @@ audit history grows.
 | [src/app/api/reports/[report]/route.ts:319-320](file:///C:/Users/HomePC/Documents/codex/Carpentersfamily/src/app/api/reports/%5Breport%5D/route.ts#L319-L320) | header list extended to match. |
 | [src/lib/home-dashboard.mjs:413-414](file:///C:/Users/HomePC/Documents/codex/Carpentersfamily/src/lib/home-dashboard.mjs#L413-L414) | none — it reads `dues_income`/`other_income`, whose meaning is unchanged, and the balance figure it shows becomes correct for free. |
 
-New money renders through `formatNgn`, as elsewhere.
+New money on screen renders through `formatNaira`
+([src/lib/format.ts:8](file:///C:/Users/HomePC/Documents/codex/Carpentersfamily/src/lib/format.ts#L8)).
+The export path keeps its own `formatNgn` / `formatPdfAmount` helpers.
 
 ## 7. Behaviour Changes This Deliberately Causes
 
@@ -296,7 +298,9 @@ Cases, each asserting on `public.club_finance_summary()` as an active member:
 7. complete an event → posting row exists, `signed_amount_ngn` equals that event's `net`, and
    the club `balance` is **unchanged** across the close.
 8. reopen then re-close → balance unchanged both times; posting and reversal rows both present.
-9. refund after close → balance falls, posting untouched.
+9. money moving after a close → the balance follows the live rows while the posting rows
+   stay frozen. Proved as close → reopen → refund/void, because the refund and void RPCs
+   both reject a non-scheduled event.
 10. `event_ledger_entries` rows alone (inject one directly) → no effect on `balance`,
     `other_income` or `expenses`.
 11. non-member and `staff`-status subject → still zero rows from the wrapper; the core is not
