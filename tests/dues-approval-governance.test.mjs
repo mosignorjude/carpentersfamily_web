@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  canManageDues,
   canReviewDuesRequest,
   canSubmitDues,
   formatCoveredMonthsDisplay,
@@ -38,18 +40,46 @@ test("dues review: non-officers cannot review dues requests", () => {
     targetRoles: [],
   });
   assert.equal(result.allowed, false);
-  assert.match(result.reason, /Only an Executive or President/i);
+  assert.match(result.reason, /Only an Executive, Club Admin, or President/i);
 });
 
-test("dues review: a system administrator cannot review dues", () => {
+test("dues review: a club administrator CAN review member and executive dues", () => {
+  for (const targetRoles of [[], ["executive"]]) {
+    const result = canReviewDuesRequest({
+      approverId: "club-admin-1",
+      approverRoles: ["admin"],
+      targetMemberId: "member-2",
+      targetRoles,
+    });
+    assert.equal(
+      result.allowed,
+      true,
+      targetRoles.join(",") || "ordinary member",
+    );
+    assert.equal(result.reason, null);
+  }
+});
+
+test("dues review: a club administrator CAN review the president's dues", () => {
   const result = canReviewDuesRequest({
-    approverId: "admin-1",
+    approverId: "club-admin-1",
     approverRoles: ["admin"],
-    targetMemberId: "member-1",
-    targetRoles: [],
+    targetMemberId: "president-1",
+    targetRoles: ["president"],
+  });
+  assert.equal(result.allowed, true);
+  assert.equal(result.reason, null);
+});
+
+test("dues review: a club administrator cannot review their own dues", () => {
+  const result = canReviewDuesRequest({
+    approverId: "club-admin-1",
+    approverRoles: ["admin"],
+    targetMemberId: "club-admin-1",
+    targetRoles: ["admin"],
   });
   assert.equal(result.allowed, false);
-  assert.match(result.reason, /Only an Executive or President/i);
+  assert.match(result.reason, /cannot approve their own dues/i);
 });
 
 test("dues review: Officers CANNOT approve their own dues", () => {
@@ -140,22 +170,12 @@ test("dues review: President CANNOT approve President dues", () => {
   );
 });
 
-test("dues review: a system administrator cannot approve any dues", () => {
-  for (const targetRoles of [[], ["executive"], ["president"]]) {
-    const result = canReviewDuesRequest({
-      approverId: "admin-1",
-      approverRoles: ["admin"],
-      targetMemberId: "member-1",
-      targetRoles,
-    });
-    assert.equal(result.allowed, false, targetRoles.join(",") || "member");
-    assert.match(result.reason, /Only an Executive or President/i);
-  }
-});
-
 test("formatCoveredMonthsDisplay formats single, multiple, and bounded ranges", () => {
   assert.equal(formatCoveredMonthsDisplay([]), "No months specified");
-  assert.equal(formatCoveredMonthsDisplay(["2026-01-01"]), "Jan 2026");
+  assert.equal(
+    formatCoveredMonthsDisplay(["2026-01-01"]),
+    "Jan 2026",
+  );
   assert.equal(
     formatCoveredMonthsDisplay(["2026-01-01", "2026-02-01"]),
     "Jan 2026, Feb 2026",
@@ -169,4 +189,35 @@ test("formatCoveredMonthsDisplay formats single, multiple, and bounded ranges", 
     ]),
     "Jan 2026 – Apr 2026 (4 months)",
   );
+});
+
+test("dues write roles: reviewer and recorder are the same set", () => {
+  assert.equal(canManageDues(["admin"]), true, "the club administrator writes dues");
+  assert.equal(canManageDues(["executive"]), true);
+  assert.equal(canManageDues(["president"]), true);
+  assert.equal(canManageDues(["member"]), false);
+  assert.equal(canManageDues([]), false);
+});
+
+test("server actions gate dues writes through the shared predicate", () => {
+  const actions = readFileSync("src/app/actions.ts", "utf8");
+  assert.deepEqual(
+    (actions.match(/canManageDues\(actor\.roles\)/g) ?? []).length,
+    3,
+    "approve, reject and record each consult canManageDues",
+  );
+  assert.deepEqual(
+    (
+      actions.match(
+        /if \(!actor\.roles\.has\("executive"\) && !actor\.roles\.has\("president"\)\)/g,
+      ) ?? []
+    ).length,
+    0,
+    "no dues action keeps an inline executive-or-president gate",
+  );
+});
+
+test("the dues page shows the record station to the club administrator", () => {
+  const duesPage = readFileSync("src/app/(member)/dues/page.tsx", "utf8");
+  assert.match(duesPage, /const canRecord = canManageDues\(roles\);/);
 });

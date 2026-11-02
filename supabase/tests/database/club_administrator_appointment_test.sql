@@ -442,6 +442,37 @@ select lives_ok(
 );
 reset role;
 
+-- Pending dues requests, created from the suite's superuser session so the
+-- holder can be pointed at real rows. …0505 is the sitting president, which is
+-- the case the executive-only sub-gate used to reserve for executives; …0507 is
+-- an ordinary member; …0503 is the holder's own request, which exists only as a
+-- fixture because exempt members cannot submit one.
+with president_request as (
+  insert into public.dues_payment_requests (
+    member_id, amount_ngn, covered_months, payment_method, notes
+  ) values (
+    '00000000-0000-0000-0000-000000000505', 45000,
+    array['2026-01-01']::date[], 'bank_transfer', 'President fixture request'
+  ) returning id
+), member_request as (
+  insert into public.dues_payment_requests (
+    member_id, amount_ngn, covered_months, payment_method, notes
+  ) values (
+    '00000000-0000-0000-0000-000000000507', 15000,
+    array['2026-02-01']::date[], 'cash', 'Member fixture request'
+  ) returning id
+), holder_request as (
+  insert into public.dues_payment_requests (
+    member_id, amount_ngn, covered_months, payment_method, notes
+  ) values (
+    '00000000-0000-0000-0000-000000000503', 5000,
+    array['2026-03-01']::date[], 'cash', 'Holder fixture request'
+  ) returning id
+)
+select set_config('ca.president_request_id', (select id::text from president_request), true),
+       set_config('ca.member_request_id', (select id::text from member_request), true),
+       set_config('ca.holder_request_id', (select id::text from holder_request), true);
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000503', true);
 
@@ -520,15 +551,67 @@ select ok(
   'the club administrator writes an event ledger line'
 );
 
--- Dues payment-request review is the one §6 authority the holder does NOT have:
--- the Phase 1 president rework (20261029121000) narrowed these three gates to
--- president|executive and never mentioned admin, so the denial lands before any
--- record lookup. Pinned here so widening it later is a visible change.
+-- Dues payment review is inside the holder's remit. The president's own request
+-- is the hardest case: the Phase 1 sub-gate reserved it for executives, and the
+-- holder may now review it because one_admin_identity_per_member_uidx makes it
+-- impossible for one member to be both the president and the club administrator.
+select lives_ok(
+  $$select public.approve_dues_payment_request(current_setting('ca.president_request_id')::uuid)$$,
+  'the club administrator approves the president''s dues request'
+);
+
+select is(
+  (select status from public.dues_payment_requests
+   where id = current_setting('ca.president_request_id')::uuid),
+  'approved',
+  'the president''s request really moved to approved'
+);
+
+select is(
+  (select reviewed_by from public.dues_payment_requests
+   where id = current_setting('ca.president_request_id')::uuid),
+  '00000000-0000-0000-0000-000000000503'::uuid,
+  'the club administrator is recorded as the reviewer of the president''s dues'
+);
+
+select lives_ok(
+  $$select public.reject_dues_payment_request(current_setting('ca.member_request_id')::uuid, 'Transfer book shows no such payment')$$,
+  'the club administrator rejects an ordinary member''s dues request'
+);
+
+select is(
+  (select status from public.dues_payment_requests
+   where id = current_setting('ca.member_request_id')::uuid),
+  'rejected',
+  'the member''s request really moved to rejected'
+);
+
+-- The widening must not open self-review. The holder is dues exempt, so this
+-- request exists only because the fixture inserted it directly.
+select throws_ok(
+  $$select public.reject_dues_payment_request(current_setting('ca.holder_request_id')::uuid, 'Self review')$$,
+  '42501',
+  'Officers cannot review their own dues payments.',
+  'the club administrator still cannot review their own dues request'
+);
+
+-- Gate ordering: the role check lands before any record lookup, so a missing
+-- row is what surfaces once the holder is permitted.
 select throws_ok(
   $$select public.approve_dues_payment_request(gen_random_uuid())$$,
-  '42501',
-  'Only an Executive or President may approve dues payments.',
-  'the club administrator is denied dues payment review by the president-only gate'
+  '23503',
+  'Dues payment request not found.',
+  'the club administrator passes the dues approval role gate'
+);
+
+select throws_ok(
+  $$select public.record_dues_payment(
+    '00000000-0000-0000-0000-000000000999'::uuid, 5000,
+    (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
+    array['2026-01-01']::date[], 'cash')$$,
+  '23503',
+  'The selected member does not exist.',
+  'the club administrator passes the dues recording role gate'
 );
 
 -- Role administration inside the holder's remit.

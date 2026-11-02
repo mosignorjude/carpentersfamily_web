@@ -1,12 +1,12 @@
 /**
  * Dues Payment Request & Approval Governance Rules (Phase 4):
- * 1. System administrators do NOT pay dues.
+ * 1. Club administrators do NOT pay dues.
  * 2. Active members/officers (Executive, President, Member) can submit dues payment requests.
- * 3. Approvers must be active club officers: Executive or President.
- * 4. Self-approval rule: Officers (Executive, President) CANNOT approve their own dues.
+ * 3. Reviewers must be active club officers: Executive, Club Admin, or President.
+ * 4. Self-review rule: no officer may review their own dues.
  * 5. Executive CAN approve regular members, other Executives, and the President.
  * 6. President CAN approve regular members and Executives.
- * 7. A President's dues can only be reviewed by an Executive.
+ * 7. A President's dues are reviewed by an Executive or the Club Admin, never by a President.
  * 8. Regular members cannot approve any dues.
  */
 
@@ -20,6 +20,17 @@ export function canSubmitDues(actorRoles) {
   // System administrators do not pay dues
   if (roles.has("admin")) return false;
   return true;
+}
+
+/**
+ * Roles allowed to write another member's dues: record a payment, approve a
+ * payment request, or reject a payment request.
+ * @param {string[] | Set<string>} actorRoles
+ * @returns {boolean}
+ */
+export function canManageDues(actorRoles) {
+  const roles = new Set(actorRoles || []);
+  return roles.has("executive") || roles.has("admin") || roles.has("president");
 }
 
 /**
@@ -40,14 +51,10 @@ export function canReviewDuesRequest({
   const approverRoleSet = new Set(approverRoles || []);
   const targetRoleSet = new Set(targetRoles || []);
 
-  const isApproverPresident = approverRoleSet.has("president");
-  const isApproverExecutive = approverRoleSet.has("executive");
-
-  // Must be an active officer
-  if (!isApproverPresident && !isApproverExecutive) {
+  if (!canManageDues(approverRoleSet)) {
     return {
       allowed: false,
-      reason: "Only an Executive or President may review dues.",
+      reason: "Only an Executive, Club Admin, or President may review dues.",
     };
   }
 
@@ -59,11 +66,18 @@ export function canReviewDuesRequest({
     };
   }
 
-  // A President's dues can only be reviewed by an Executive
-  if (targetRoleSet.has("president") && !isApproverExecutive) {
+  // A President's dues need a reviewer who is not a President. The club
+  // administrator can never hold both hats: one_admin_identity_per_member_uidx
+  // forbids a live admin and president assignment on the same member.
+  if (
+    targetRoleSet.has("president") &&
+    !approverRoleSet.has("executive") &&
+    !approverRoleSet.has("admin")
+  ) {
     return {
       allowed: false,
-      reason: "President dues payments can only be approved by an Executive.",
+      reason:
+        "President dues payments can only be approved by an Executive or Club Admin.",
     };
   }
 
