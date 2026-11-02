@@ -1,6 +1,6 @@
 begin;
 
-select plan(53);
+select plan(54);
 
 -- Structural checks: all public tables have deliberate grants and forced RLS.
 select has_table('public', 'member_profiles', 'member profiles table exists');
@@ -347,7 +347,7 @@ select throws_ok(
   'At least one active primary Admin must remain active.',
   'database trigger blocks deactivation of the last active primary Admin'
 );
-select lives_ok(
+select throws_ok(
   $$
     insert into public.member_role_assignments (member_id, role, assigned_by, grant_reason)
     values (
@@ -355,11 +355,25 @@ select lives_ok(
       '00000000-0000-0000-0000-000000000001', 'Successor administrator'
     );
   $$,
-  'a second active primary Admin can be recorded'
+  '23505',
+  'duplicate key value violates unique constraint "member_role_assignments_one_current_admin_uidx"',
+  'only one current club administrator may exist'
+);
+select lives_ok(
+  $$
+    update public.member_role_assignments
+    set revoked_at = pg_catalog.clock_timestamp(),
+        revoked_by = '00000000-0000-0000-0000-000000000001',
+        revoke_reason = 'The successor must wait for the incumbent to be revoked'
+    where role = 'admin'
+      and revoked_at is null
+      and member_id = '00000000-0000-0000-0000-000000000001';
+  $$,
+  'the incumbent club administrator can be revoked'
 );
 select lives_ok(
   $$update public.member_profiles set status = 'deactivated' where id = '00000000-0000-0000-0000-000000000001'$$,
-  'non-final former Admin may be deactivated'
+  'a former club administrator may be deactivated once revoked'
 );
 
 -- A deactivated user with a still-valid JWT loses effective privileges immediately.
