@@ -1143,6 +1143,17 @@ git add supabase/tests/database/club_administrator_appointment_test.sql
 git commit -m "test(staff): prove club administrator money authority and dues exemption"
 ```
 
+- [x] **Execution corrections (recorded while running Task 5)**
+
+Three of Step 1's statements could not run as written, and one §6 promise turned out to be false:
+
+1. **Income shape.** `record_club_financial_transaction` rejects a description or category on `kind = 'income'` and *requires* `p_source_note` (23514 "Non-dues income requires a source note and cannot have an expense category."). The recorded call now passes `null, null, 'A. Member', 'Weekly member collection'`.
+2. **Set-returning RPCs.** `record_club_financial_transaction` and `record_event_financial_transaction` return `TABLE(transaction_id uuid, deduplicated boolean)`, so `f(...)::text` is illegal inside `set_config`. Each id is now taken with a scalar subquery over the function in the FROM clause.
+3. **The 8-argument overload is gone.** Task 5 Step 5's `club_finances_test.sql` aborts because it still calls `record_club_financial_transaction(text,bigint,date,text,uuid,text,text,uuid)`; that is pre-existing (identical in the recorded baseline), not a regression from this feature.
+4. **Dues payment review is NOT inherited.** Step 1's differential proof expected the holder to reach the 23503 record lookup. It does not: `approve_dues_payment_request`, `reject_dues_payment_request` and `record_dues_payment` gate on `has_club_role('president') or has_club_role('executive')` — Phase 1's `20261029121000_president_role_and_alias.sql` narrowed them and never added `admin`. Every other §6 dues row is true (`correct_dues_payment`, `set_dues_rate`, `write_off_dues_months`, `backfill_member_historical_dues`, `submit_dues_payment_request` all accept admin). The suite now pins the real 42501 message so a later widening shows up as a change. **Open decision for the operator:** widen those three gates to accept `admin` (honours "same authority as president") or amend spec §6 to record the denial.
+
+Spec §6's dues-approval row and the migration's own preamble ("no existing authorisation gate changes") both need this correction carried into the Task 11 report.
+
 ---
 
 ### Task 6: The role reads "Club Admin" in notifications
