@@ -428,5 +428,207 @@ select throws_ok(
 );
 reset role;
 
+-- ===========================================================================
+-- The authority claim: an active member holding admin can write money through
+-- the gates that already exist, and nothing else changes.
+-- State entering: zero live admin assignments.
+-- ===========================================================================
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000501', true);
+select lives_ok(
+  $$select public.staff_grant_admin('00000000-0000-0000-0000-000000000503', 'Records officer for the ledger test')$$,
+  'the authority holder is appointed'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000503', true);
+
+select set_config(
+  'ca.category_id',
+  public.create_finance_category('Records test category', 'Opened by the club administrator')::text,
+  true
+);
+
+select ok(
+  current_setting('ca.category_id') <> '',
+  'the club administrator manages finance categories'
+);
+
+-- A club ledger income line carries no description and no category, but must
+-- carry a source note; that is the shape record_club_financial_transaction
+-- enforces for kind = 'income'.
+select set_config(
+  'ca.club_income_id',
+  (select line.transaction_id::text
+   from public.record_club_financial_transaction(
+     'income', 5000,
+     (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
+     null, null, 'A. Member', 'Weekly member collection',
+     '50000000-0000-0000-0000-000000000001', 'cash'
+   ) as line),
+  true
+);
+
+select ok(
+  current_setting('ca.club_income_id') <> '',
+  'the club administrator records a club ledger income line'
+);
+
+select throws_ok(
+  $$select public.record_club_financial_transaction(
+    'income', 5000,
+    (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
+    null, null, 'A. Member', 'A different source note',
+    '50000000-0000-0000-0000-000000000001', 'cash')$$,
+  '23505',
+  'This submission key was already used for different financial data.',
+  'the holder reaches the real ledger rules, not a permissive stub'
+);
+
+select lives_ok(
+  $$select public.void_club_financial_transaction(
+    current_setting('ca.club_income_id')::uuid, 'Entered against the wrong payer')$$,
+  'the club administrator voids a club ledger line'
+);
+
+select set_config(
+  'ca.event_id',
+  public.create_event(
+    'Club Admin Authority Event', 'party',
+    pg_catalog.clock_timestamp() + interval '3 days', 'Club Hall',
+    null, false, false, true, true, true, true
+  )::text,
+  true
+);
+
+select set_config(
+  'ca.event_expense_id',
+  (select line.transaction_id::text
+   from public.record_event_financial_transaction(
+     current_setting('ca.event_id')::uuid, 'expense', 2000,
+     (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
+     'Sound hire', 'Local Sound Co', null, 'cash',
+     '50000000-0000-0000-0000-000000000002'
+   ) as line),
+  true
+);
+
+select ok(
+  current_setting('ca.event_expense_id') <> '',
+  'the club administrator writes an event ledger line'
+);
+
+-- Dues payment-request review is the one §6 authority the holder does NOT have:
+-- the Phase 1 president rework (20261029121000) narrowed these three gates to
+-- president|executive and never mentioned admin, so the denial lands before any
+-- record lookup. Pinned here so widening it later is a visible change.
+select throws_ok(
+  $$select public.approve_dues_payment_request(gen_random_uuid())$$,
+  '42501',
+  'Only an Executive or President may approve dues payments.',
+  'the club administrator is denied dues payment review by the president-only gate'
+);
+
+-- Role administration inside the holder's remit.
+select lives_ok(
+  $$select public.set_club_role('00000000-0000-0000-0000-000000000509', 'executive', 'Promoted by the club administrator')$$,
+  'the club administrator can grant executive status'
+);
+
+-- Role administration outside the holder's remit.
+select throws_ok(
+  $$select public.staff_appoint_president('00000000-0000-0000-0000-000000000509', 'Holder tries to move the president')$$,
+  '42501',
+  'An active staff administrator account is required.',
+  'the club administrator cannot touch the president role'
+);
+select throws_ok(
+  $$select public.set_club_role('00000000-0000-0000-0000-000000000503', 'executive', 'Self promotion')$$,
+  '42501',
+  'Administrators cannot change their own club role.',
+  'the club administrator cannot change their own roles'
+);
+reset role;
+
+-- ===========================================================================
+-- Dues exemption, the staff regression, and revoke-before-deactivate.
+-- State entering: …0503 holds the live admin assignment.
+-- ===========================================================================
+
+select is(
+  (select count(*) from public.dues_month_status
+   where member_id = '00000000-0000-0000-0000-000000000503'),
+  0::bigint,
+  'the club administrator has no dues months at all'
+);
+
+select ok(
+  (select count(*) > 0 from public.dues_month_status
+   where member_id = '00000000-0000-0000-0000-000000000506'),
+  'an active executive in the same fixture does owe dues months, so the exemption is real'
+);
+
+-- The regression that matters most: staff themselves still cannot write money.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000501', true);
+select throws_ok(
+  $$select public.record_club_financial_transaction(
+    'income', 1,
+    (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
+    null, null, 'Nobody', 'Staff tries the ledger',
+    '50000000-0000-0000-0000-000000000003', 'cash')$$,
+  '42501',
+  'Active membership is required.',
+  'a staff session is still rejected by the club ledger'
+);
+select throws_ok(
+  $$select public.approve_dues_payment_request(gen_random_uuid())$$,
+  '42501',
+  'Only active club members may approve dues.',
+  'a staff session is stopped by the dues gate, where the holder reached the officer gate'
+);
+select throws_ok(
+  $$insert into public.club_financial_transactions (
+    kind, amount_ngn, transaction_date, source_note, created_by, idempotency_key
+  ) values ('income', 1, current_date, 'Direct insert by staff', auth.uid(), gen_random_uuid())$$,
+  '42501', null,
+  'a staff session still cannot write the ledger table directly'
+);
+reset role;
+
+-- Revoke before deactivate: the existing status trigger forces the ordering,
+-- because the singleton index counts rows and cannot see member status. These
+-- two statements run from the suite's default session on purpose — a BEFORE
+-- UPDATE trigger fires for every role, whereas a direct member_profiles update
+-- from a staff session would be stopped by RLS for a reason unrelated to the
+-- ordering rule being proved.
+select throws_ok(
+  $$update public.member_profiles set status = 'deactivated' where id = '00000000-0000-0000-0000-000000000503'$$,
+  '23514',
+  'At least one active primary Admin must remain active.',
+  'deactivating a member who still holds Club Admin is blocked by the existing trigger'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000501', true);
+select lives_ok(
+  $$select public.staff_revoke_admin('00000000-0000-0000-0000-000000000503', 'Stepped down before leaving')$$,
+  'staff revoke the role first'
+);
+reset role;
+
+select ok(
+  (select count(*) from public.dues_month_status
+   where member_id = '00000000-0000-0000-0000-000000000503') > 0,
+  'once revoked, the former administrator is dues-liable again'
+);
+
+select lives_ok(
+  $$update public.member_profiles set status = 'deactivated' where id = '00000000-0000-0000-0000-000000000503'$$,
+  'after revoking, the same deactivation succeeds'
+);
+
 select * from finish();
 rollback;
