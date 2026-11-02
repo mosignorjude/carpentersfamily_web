@@ -5,6 +5,14 @@ import test from "node:test";
 const panel = fs.readFileSync("src/lib/staff-panel.server.ts", "utf8");
 const actions = fs.readFileSync("src/app/(staff)/admin/actions.ts", "utf8");
 const errorNotices = fs.readFileSync("src/lib/rpc-error-notice.ts", "utf8");
+const card = fs.readFileSync(
+  "src/components/staff/staff-club-admin-card.tsx",
+  "utf8",
+);
+const page = fs.readFileSync(
+  "src/app/(staff)/admin/governance/page.tsx",
+  "utf8",
+);
 
 test("the staff panel can read the incumbent club administrator", () => {
   assert.match(
@@ -54,4 +62,29 @@ test("deactivating a serving club administrator is explained, not dumped", () =>
     /primary Admin must remain active/i,
     "the trigger message maps to a notice code",
   );
+});
+
+test("the club admin card offers appoint, replace and revoke", () => {
+  assert.match(card, /export default function StaffClubAdminCard/);
+  assert.match(card, /clubAdmin: OfficerHolder \| null/);
+  assert.match(card, /candidates: ClubAdminCandidate\[\]/);
+  assert.match(card, /Money & records authority/);
+  assert.match(card, /staffGrantClubAdminAction/);
+  assert.match(card, /staffRevokeClubAdminAction/);
+  assert.match(card, /name="member_id"/);
+  assert.match(
+    card,
+    /Does not pay dues while holding this role/,
+    "the card must state the dues exemption",
+  );
+  assert.match(card, /cannot appoint another Club Admin/i);
+});
+
+test("the governance page wires the card and hides ineligible candidates", () => {
+  assert.match(page, /loadClubAdmin/);
+  assert.match(page, /StaffClubAdminCard/);
+  assert.match(page, /row\.id !== president\?\.memberId/);
+  assert.match(page, /row\.id !== clubAdmin\?\.memberId/);
+  assert.match(page, /"club-admin-granted"/);
+  assert.match(page, /"club-admin-revoked"/);
 });
