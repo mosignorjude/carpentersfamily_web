@@ -630,5 +630,28 @@ select lives_ok(
   'after revoking, the same deactivation succeeds'
 );
 
+-- ===========================================================================
+-- Display label. Members must read "Club Admin"; the word "superuser"
+-- describes staff and must never appear in member-facing text.
+-- ===========================================================================
+
+select is(
+  (select private.format_role_label('admin')),
+  'Club Admin'::text,
+  'the club administrator role is labelled for members'
+);
+
+select is(
+  (select private.format_role_label('backup_admin')),
+  'Backup Admin'::text,
+  'the legacy backup label is unchanged'
+);
+
+select is(
+  (select private.format_role_label('president')),
+  'President'::text,
+  'the president label is unchanged'
+);
+
 select * from finish();
 rollback;
