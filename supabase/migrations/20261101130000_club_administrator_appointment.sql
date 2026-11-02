@@ -128,3 +128,79 @@ revoke all on function private.staff_grant_admin(uuid, text) from public, anon, 
 revoke all on function public.staff_grant_admin(uuid, text) from public, anon, service_role;
 grant execute on function private.staff_grant_admin(uuid, text) to authenticated;
 grant execute on function public.staff_grant_admin(uuid, text) to authenticated;
+
+-- Staff withdraw the Club Admin role. There is no "at least one admin must
+-- remain" floor guard here, unlike the legacy officer paths: staff are the only
+-- granters and must always be able to pull authority back, and a club with zero
+-- club admins is still governed by its president through backup_admin.
+create or replace function private.staff_revoke_admin(
+  p_member_id uuid,
+  p_reason text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_actor_id uuid := (select auth.uid());
+  v_reason text := pg_catalog.btrim(p_reason);
+  v_assignment_id uuid;
+begin
+  if v_actor_id is null or not (select private.is_staff_administrator()) then
+    raise exception using errcode = '42501',
+      message = 'An active staff administrator account is required.';
+  end if;
+
+  if p_member_id is null or v_reason is null
+     or pg_catalog.char_length(v_reason) not between 1 and 500 then
+    raise exception using errcode = '22023',
+      message = 'A member ID and a valid 1 to 500 character reason are required.';
+  end if;
+
+  perform 1 from private.administration_guard where singleton_id = true for update;
+
+  update public.member_role_assignments as mra
+  set revoked_at = pg_catalog.clock_timestamp(),
+      revoked_by = v_actor_id,
+      revoke_reason = v_reason
+  where mra.member_id = p_member_id
+    and mra.role = 'admin'
+    and mra.revoked_at is null
+  returning mra.id into v_assignment_id;
+
+  if v_assignment_id is null then
+    raise exception using
+      errcode = 'P0002',
+      message = 'No active club administrator assignment exists.';
+  end if;
+
+  insert into public.audit_log (
+    actor_id, action, entity_type, entity_id, target_member_id,
+    before_data, after_data, reason
+  ) values (
+    v_actor_id, 'club_role_revoked', 'member_role_assignment',
+    v_assignment_id, p_member_id,
+    pg_catalog.jsonb_build_object('role', 'admin', 'active', true),
+    pg_catalog.jsonb_build_object('role', 'admin', 'active', false),
+    v_reason
+  );
+end;
+$function$;
+
+create or replace function public.staff_revoke_admin(
+  p_member_id uuid,
+  p_reason text
+)
+returns void
+language sql
+security invoker
+set search_path = ''
+as $function$
+  select private.staff_revoke_admin(p_member_id, p_reason);
+$function$;
+
+revoke all on function private.staff_revoke_admin(uuid, text) from public, anon, service_role;
+revoke all on function public.staff_revoke_admin(uuid, text) from public, anon, service_role;
+grant execute on function private.staff_revoke_admin(uuid, text) to authenticated;
+grant execute on function public.staff_revoke_admin(uuid, text) to authenticated;

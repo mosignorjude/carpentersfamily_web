@@ -225,5 +225,65 @@ select is(
 );
 reset role;
 
+-- ===========================================================================
+-- staff_revoke_admin. State entering: …0504 holds the live assignment.
+-- ===========================================================================
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000504', true);
+select throws_ok(
+  $$select public.staff_revoke_admin('00000000-0000-0000-0000-000000000504', 'Attempted self-revocation')$$,
+  '42501',
+  'An active staff administrator account is required.',
+  'a club administrator cannot revoke themselves'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000501', true);
+select lives_ok(
+  $$select public.staff_revoke_admin('00000000-0000-0000-0000-000000000504', 'Officer stood down')$$,
+  'staff can revoke the club administrator role'
+);
+reset role;
+
+select is(
+  (select count(*) from public.member_role_assignments
+   where role = 'admin' and revoked_at is null),
+  0::bigint,
+  'revoking leaves the club with zero live club administrators'
+);
+
+select is(
+  (select after_data ->> 'active' from public.audit_log
+   where action = 'club_role_revoked'
+     and target_member_id = '00000000-0000-0000-0000-000000000504'
+   order by occurred_at desc limit 1),
+  'false'::text,
+  'the revoke is audited'
+);
+
+-- Zero administrators must stay revocable: no floor guard, no lockout.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000501', true);
+select throws_ok(
+  $$select public.staff_revoke_admin('00000000-0000-0000-0000-000000000504', 'Already revoked')$$,
+  'P0002',
+  'No active club administrator assignment exists.',
+  'revoking with no incumbent reports a missing assignment, not a floor guard'
+);
+reset role;
+
+-- Zero administrators must still be a survivable state: the president alone
+-- satisfies every paired admin/backup_admin money gate.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000505', true);
+select is(
+  (select private.has_club_role('backup_admin')),
+  true,
+  'the president alone still satisfies every paired admin/backup_admin money gate'
+);
+reset role;
+
 select * from finish();
 rollback;
