@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { handlesNoticeOnPage } from "../src/lib/notice-routing.mjs";
+import { getSystemNotice } from "../src/lib/system-notices.ts";
 
 test("staff routes keep the listener out so the page can announce the notice", () => {
   for (const pathname of [
@@ -168,4 +169,91 @@ test("every code a staff action routes is renderable on that staff page", () => 
         `so suppressing the toast on staff routes hides the notice entirely`,
     );
   }
+});
+
+// The same promise for the rest of the app: a redirect that no page claims is
+// only visible if the registry can toast it. This is how the three silent
+// /settings codes were found, and it is what stops the class reopening.
+// Read markers are the one exemption the listener itself declares, so the
+// guard below pins this list to the listener instead of trusting it.
+const SILENT_READ_CODES = new Set(["announcement-read", "read", "unread"]);
+
+const actionSources = (dir, found = []) => {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) actionSources(path, found);
+    else if (/\.tsx?$/.test(entry.name)) found.push(path);
+  }
+  return found;
+};
+
+const redirectStatements = (source) => {
+  const statements = [];
+  for (const match of source.matchAll(/redirect\(/g)) {
+    let depth = 1;
+    let end = match.index + match[0].length;
+    for (; depth > 0 && end < source.length; end++) {
+      if (source[end] === "(") depth++;
+      if (source[end] === ")") depth--;
+    }
+    statements.push(source.slice(match.index, end));
+  }
+  return statements;
+};
+
+const appRoutedCodes = () => {
+  const pairs = [];
+  for (const file of actionSources("src/app")) {
+    const source = readFileSync(file, "utf8");
+    for (const statement of redirectStatements(source)) {
+      if (!statement.includes("?notice=")) continue;
+      const route = statement.match(/["'`]\/([^"'`?]*)\?notice=/)?.[1];
+      if (route === undefined) continue;
+      const codes = new Set();
+      for (const m of statement.matchAll(/\?notice=([a-z][a-z0-9-]*)/g))
+        codes.add(m[1]);
+      for (const m of statement.matchAll(/\$\{([^}]*)\}/g))
+        for (const q of m[1].matchAll(/"([a-z][a-z0-9-]*)"/g)) codes.add(q[1]);
+      if (/rpcErrorNotice/.test(statement))
+        for (const c of rpcNoticeCodes()) codes.add(c);
+      for (const code of codes) pairs.push([`/${route}`, code, file]);
+    }
+  }
+  return pairs;
+};
+
+test("every notice the app routes is announced by a page or by the registry", () => {
+  const routed = appRoutedCodes();
+  assert.ok(routed.length >= 80, `expected the whole app to route notices, saw ${routed.length}`);
+
+  const silent = [];
+  for (const [route, code, file] of routed) {
+    if (SILENT_READ_CODES.has(code)) continue;
+    if (handlesNoticeOnPage(route, code)) continue;
+    if (getSystemNotice(code)) continue;
+    silent.push(`${route}?notice=${code} (${file})`);
+  }
+  assert.deepEqual(
+    silent,
+    [],
+    "these redirects leave the member with neither a page notice nor toast copy",
+  );
+});
+
+test("the sweep exempts only the codes the listener itself keeps silent", () => {
+  const listener = readFileSync(
+    "src/components/ui/global-flash-listener.tsx",
+    "utf8",
+  );
+  const declared = listener.match(
+    /const SILENT_READ_NOTICE_CODES = new Set\(\[([\s\S]*?)\]\);/,
+  )?.[1];
+  assert.ok(
+    declared,
+    "the listener no longer declares SILENT_READ_NOTICE_CODES; the sweep would be exempting codes nobody silenced",
+  );
+  assert.deepEqual(
+    new Set([...declared.matchAll(/"([a-z0-9-]+)"/g)].map((m) => m[1])),
+    SILENT_READ_CODES,
+  );
 });

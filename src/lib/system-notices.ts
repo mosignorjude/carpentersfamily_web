@@ -501,6 +501,26 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     message:
       "That username is already in use by another member. Choose a different handle.",
   },
+  // /settings renders no notice of its own, so these codes only reach the
+  // member through the toast. The wording matches the sign-in screen, which
+  // already says the same thing for the same failures.
+  "password-updated": {
+    type: "success",
+    title: "Password Updated",
+    message: "Your password was updated.",
+  },
+  "invalid-profile": {
+    type: "error",
+    title: "Profile Details Invalid",
+    message:
+      "Use a name of at most 120 characters and a username of 3–30 letters, numbers, or underscores.",
+  },
+  "profile-update-failed": {
+    type: "error",
+    title: "Profile Update Failed",
+    message:
+      "The profile could not be saved. The username may already be in use.",
+  },
 };
 
 /**
