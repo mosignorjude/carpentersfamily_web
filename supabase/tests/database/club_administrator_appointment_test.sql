@@ -285,5 +285,148 @@ select is(
 );
 reset role;
 
+-- ===========================================================================
+-- Grant guardrails. State entering: zero live admin assignments.
+-- ===========================================================================
+
+-- Only staff may grant. Everyone else sees the staff gate, whatever their club role.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000505', true);
+select throws_ok(
+  $$select public.staff_grant_admin('00000000-0000-0000-0000-000000000503', 'President tries')$$,
+  '42501',
+  'An active staff administrator account is required.',
+  'the president cannot mint a club administrator'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000506', true);
+select throws_ok(
+  $$select public.staff_grant_admin('00000000-0000-0000-0000-000000000503', 'Executive tries')$$,
+  '42501',
+  'An active staff administrator account is required.',
+  'an executive cannot mint a club administrator'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000507', true);
+select throws_ok(
+  $$select public.staff_grant_admin('00000000-0000-0000-0000-000000000503', 'Member tries')$$,
+  '42501',
+  'An active staff administrator account is required.',
+  'an ordinary member cannot mint a club administrator'
+);
+reset role;
+
+-- anon has no EXECUTE, so Postgres raises its own 42501 with a different message.
+set local role anon;
+select set_config('request.jwt.claim.sub', '', true);
+select throws_ok(
+  $$select public.staff_grant_admin('00000000-0000-0000-0000-000000000503', 'Anon tries')$$,
+  '42501', null,
+  'anonymous callers cannot reach the grant function at all'
+);
+reset role;
+
+select ok(
+  not has_function_privilege('anon', 'public.staff_grant_admin(uuid, text)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.staff_revoke_admin(uuid, text)', 'EXECUTE')
+  and not has_function_privilege('service_role', 'public.staff_grant_admin(uuid, text)', 'EXECUTE'),
+  'the club administrator RPCs are revoked from anon and service_role'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000502', true);
+select throws_ok(
+  $$select public.staff_grant_admin('00000000-0000-0000-0000-000000000503', 'Disabled staff tries')$$,
+  '42501',
+  'An active staff administrator account is required.',
+  'a disabled staff account cannot grant the role'
+);
+reset role;
+
+-- Reason validation happens before any write.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000501', true);
+select throws_ok(
+  $$select public.staff_grant_admin('00000000-0000-0000-0000-000000000503', '   ')$$,
+  '22023',
+  'A member ID and a valid 1 to 500 character reason are required.',
+  'a whitespace-only reason is rejected'
+);
+select throws_ok(
+  $$select public.staff_grant_admin('00000000-0000-0000-0000-000000000503', pg_catalog.repeat('x', 501))$$,
+  '22023',
+  'A member ID and a valid 1 to 500 character reason are required.',
+  'a reason longer than 500 characters is rejected'
+);
+select throws_ok(
+  $$select public.staff_grant_admin(null, 'No target supplied')$$,
+  '22023',
+  'A member ID and a valid 1 to 500 character reason are required.',
+  'a null member id is rejected'
+);
+reset role;
+
+select is(
+  (select count(*) from public.member_role_assignments where role = 'admin'),
+  3::bigint,
+  'the rejected calls wrote no assignment rows'
+);
+
+-- Target eligibility.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000501', true);
+select throws_ok(
+  $$select public.staff_grant_admin('00000000-0000-0000-0000-000000000508', 'Pending tries')$$,
+  '23514',
+  'The club administrator must be an active member.',
+  'a pending applicant cannot be appointed'
+);
+select throws_ok(
+  $$select public.staff_grant_admin('00000000-0000-0000-0000-000000000502', 'Staff tries')$$,
+  '23514',
+  'The club administrator must be an active member.',
+  'a staff account cannot be appointed'
+);
+select throws_ok(
+  $$select public.staff_grant_admin('00000000-0000-0000-0000-000000000505', 'President tries as target')$$,
+  '23514',
+  'Revoke the president role before granting Club Admin.',
+  'the sitting president is refused a friendly conflict, not a raw unique violation'
+);
+select throws_ok(
+  $$select public.staff_grant_admin('95f2b9a2-3f6d-4e77-9b0f-0d4e5a56c111', 'Unknown account')$$,
+  '23514',
+  'That account does not exist.',
+  'an unknown member id reports a missing account'
+);
+reset role;
+
+-- No member-facing RPC accepts p_role = 'admin'.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000505', true);
+select throws_ok(
+  $$select public.set_club_role('00000000-0000-0000-0000-000000000503', 'admin', 'President tries the old way')$$,
+  '22023',
+  'Invalid member or club role.',
+  'the president cannot grant admin through set_club_role'
+);
+select throws_ok(
+  $$select public.grant_club_role('00000000-0000-0000-0000-000000000503', 'admin', 'President tries the old way')$$,
+  '22023',
+  'Invalid member or club role.',
+  'the president cannot grant admin through grant_club_role'
+);
+select throws_ok(
+  $$select public.revoke_club_role('00000000-0000-0000-0000-000000000506', 'admin', 'President tries the old way')$$,
+  '22023',
+  'Invalid member or club role.',
+  'the president cannot revoke admin through revoke_club_role'
+);
+reset role;
+
 select * from finish();
 rollback;
