@@ -311,7 +311,7 @@ An appointment therefore produces: two audit rows when a handover occurs (revoke
 ## 14. Rollout
 
 1. Merge the app changes; they are inert until the role exists.
-2. Pre-flight the admin-row count (§7.1) against production before any push.
+2. Pre-flight the admin-row count (§7.1) against production before any push. Measured read-only on 2026-11-03: **0** live admins, 1 president, 1 staff profile, so the singleton index creates as written. The full measured pre-flight — the four pending migrations, the two production history rows that have no repo file, the function-by-function drift comparison, the test evidence state and the rollback list — is in `docs/superpowers/runbooks/2026-11-03-club-administrator-production-apply.md`.
 3. Apply both migrations to production through the operator-approved path only — encrypted snapshot, isolated restore drill, then `supabase db push` against the linked project with explicit confirmation. No data conversion, no `auth.users` change, no account conversion.
 4. Staff appoint the intended holder at `/admin/governance`; the new holder confirms they can record a transaction and that `/dues` shows the **"Club Admin Dues Exempt"** badge with an own schedule of All (0). The earlier wording here — "reads *not liable*" — is not copy any page produces; it was corrected after the 2026-11-02 browser run.
 5. Append the resulting authority matrix to §8 of `PRESIDENT-STAFF-ADMIN-IMPLEMENTATION-REPORT-2026-10-29.md`, replacing the Phase 1 line that says club roles cannot be granted from `/admin` — that becomes true again, deliberately, for one role.
