@@ -24,6 +24,7 @@ function argument(name, fallback) {
 
 const stagingDir = argument("--staging-dir", "");
 const testCommit = argument("--test-commit", "b5f073f");
+const keepProject = process.argv.includes("--keep-project");
 
 if (!stagingDir) {
   fail("Pass --staging-dir with the plaintext snapshot staging folder.");
@@ -520,20 +521,26 @@ function main() {
     assertCounts(psqlJson(container, verificationSql), manifest);
     log("RESTORE DRILL PASSED: snapshot restores faithfully with matching schema and data.");
   } finally {
-    if (isolatedStarted) {
-      log(`Stopping isolated project ${projectId} and deleting its volumes...`);
-      try {
-        runCli(["stop", "--project-id", projectId, "--no-backup", "--yes", "--workdir", restoreRoot]);
-      } catch (error) {
-        console.error(`[restore-drill] Isolated cleanup needs attention: ${error.message}`);
+    if (keepProject) {
+      log(`--keep-project: leaving ${projectId} running on the local ports.`);
+      log(`Workdir: ${restoreRoot}`);
+      log(`Rehearse against it, then stop it and restart the original project by hand.`);
+    } else {
+      if (isolatedStarted) {
+        log(`Stopping isolated project ${projectId} and deleting its volumes...`);
+        try {
+          runCli(["stop", "--project-id", projectId, "--no-backup", "--yes", "--workdir", restoreRoot]);
+        } catch (error) {
+          console.error(`[restore-drill] Isolated cleanup needs attention: ${error.message}`);
+        }
       }
-    }
-    rmSync(restoreRoot, { recursive: true, force: true });
+      rmSync(restoreRoot, { recursive: true, force: true });
 
-    if (originalWasRunning) {
-      log(`Restarting original local project ${originalProjectId}...`);
-      runCli(["start", "--workdir", repoRoot]);
-      log("Original local project restarted.");
+      if (originalWasRunning) {
+        log(`Restarting original local project ${originalProjectId}...`);
+        runCli(["start", "--workdir", repoRoot]);
+        log("Original local project restarted.");
+      }
     }
   }
 }
