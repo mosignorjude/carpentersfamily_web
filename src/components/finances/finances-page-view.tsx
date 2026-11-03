@@ -54,6 +54,8 @@ interface FinancesPageViewProps {
     dues_income?: number | string | null;
     other_income?: number | string | null;
     expenses?: number | string | null;
+    event_inflow?: number | string | null;
+    event_outflow?: number | string | null;
   } | null;
   financeUnavailable: boolean;
   categoryUnavailable: boolean;
@@ -323,6 +325,8 @@ export function FinancesPageView({
         <ClubFinancialSummary
           currentBalance={summary?.balance}
           duesIncome={summary?.dues_income}
+          eventInflow={summary?.event_inflow}
+          eventOutflow={summary?.event_outflow}
           isUnavailable={financeUnavailable}
           otherIncome={summary?.other_income}
           totalExpenses={summary?.expenses}

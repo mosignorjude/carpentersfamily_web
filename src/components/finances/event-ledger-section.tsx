@@ -49,11 +49,12 @@ export function EventLedgerSection({
               className="text-base sm:text-lg font-extrabold text-[#3D291F]"
               id="event-ledger-heading"
             >
-              Event Ledger Posts & Reversals
+              Event Close Postings
             </h2>
             <p className="text-xs text-[#54433A] font-medium">
-              Automated financial reconciliation from completed or cancelled
-              club events
+              {
+                "Audit snapshot of each completed or cancelled event - not counted in the balance"
+              }
             </p>
           </div>
         </div>
