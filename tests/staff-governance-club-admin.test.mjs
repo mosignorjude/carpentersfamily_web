@@ -74,8 +74,13 @@ test("the club admin card offers appoint, replace and revoke", () => {
   assert.match(card, /name="member_id"/);
   assert.match(
     card,
-    /Does not pay dues while holding this role/,
-    "the card must state the dues exemption",
+    /No\s+dues are billed while this role is held/,
+    "the card must state the dues exemption without implying the months are forgiven",
+  );
+  assert.match(
+    card,
+    /months\s+return when the role is withdrawn/,
+    "the revoke dialog must say the months come back for the club to settle",
   );
   assert.match(card, /cannot appoint another Club Admin/i);
 });

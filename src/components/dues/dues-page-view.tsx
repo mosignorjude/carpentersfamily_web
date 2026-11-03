@@ -537,8 +537,10 @@ export function DuesPageView({
                 Club Admin Dues Exemption Policy
               </strong>
               <span>
-                The Club Admin is exempt from statutory membership dues while
-                holding the role, under club financial policy.
+                The Club Admin is not billed statutory membership dues while
+                holding the role. Those months return when the role is
+                withdrawn, and the club then decides whether an officer writes
+                them off.
               </span>
             </div>
           </div>

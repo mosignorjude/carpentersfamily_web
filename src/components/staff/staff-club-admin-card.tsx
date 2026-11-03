@@ -30,8 +30,8 @@ export default function StaffClubAdminCard({
         </h2>
         <p className="mt-1 text-xs text-muted">
           Runs the club&apos;s records — finances, dues, events and attendance.
-          Cannot change the president and cannot appoint another Club Admin.
-          Does not pay dues while holding this role.
+          Cannot change the president and cannot appoint another Club Admin. No
+          dues are billed while this role is held.
         </p>
       </div>
 
@@ -50,7 +50,7 @@ export default function StaffClubAdminCard({
             action={staffRevokeClubAdminAction}
             confirmLabel="Revoke Club Admin"
             danger
-            description="The member keeps their account and loses every Club Admin authority immediately. The president can still run the books until a replacement is appointed."
+            description="The member keeps their account and loses every Club Admin authority immediately. Their unbilled dues months return when the role is withdrawn, for the club to settle or write off. The president can still run the books until a replacement is appointed."
             fields={{ member_id: clubAdmin.memberId }}
             reasonLabel="Reason for revoking"
             title={`Revoke ${clubAdmin.fullName} as Club Admin?`}

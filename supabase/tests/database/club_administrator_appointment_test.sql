@@ -136,6 +136,30 @@ select lives_ok(
 -- State entering this block: zero live admin assignments (Task 1 revoked it).
 -- ===========================================================================
 
+-- Baseline for the exemption ruling, taken while no admin assignment is live.
+-- The operator decision of 2026-11-02 is that the exemption suspends billing
+-- rather than forgiving it, so the schedule restored after a revoke must be
+-- identical to this one — the assertions at the end of the suite compare
+-- against these three numbers.
+create temp table admin_liable_baseline (
+  month_count bigint,
+  unpaid_ngn bigint,
+  written_off_count bigint
+);
+insert into admin_liable_baseline
+  select
+    count(*),
+    coalesce(sum(amount_ngn) filter (where status = 'unpaid'), 0),
+    count(*) filter (where status = 'written_off')
+  from public.dues_month_status
+  where member_id = '00000000-0000-0000-0000-000000000503';
+
+select is(
+  (select month_count > 0 from admin_liable_baseline),
+  true,
+  'the fixture bills this member before the grant, so the restore check below cannot be vacuous'
+);
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000501', true);
 select lives_ok(
@@ -371,7 +395,10 @@ select throws_ok(
 reset role;
 
 select is(
-  (select count(*) from public.member_role_assignments where role = 'admin'),
+  (select count(*) from public.member_role_assignments
+   where role = 'admin'
+     and member_id between '00000000-0000-0000-0000-000000000501'::uuid
+                       and '00000000-0000-0000-0000-000000000509'::uuid),
   3::bigint,
   'the rejected calls wrote no assignment rows'
 );
@@ -706,6 +733,33 @@ select ok(
   (select count(*) from public.dues_month_status
    where member_id = '00000000-0000-0000-0000-000000000503') > 0,
   'once revoked, the former administrator is dues-liable again'
+);
+
+-- The ruling, pinned: the exemption hides the schedule at read time and writes
+-- nothing down, so what returns is exactly what was there before the grant. A
+-- change that waived the months on revocation would pass the check above and
+-- fail these.
+select is(
+  (select count(*) from public.dues_month_status
+   where member_id = '00000000-0000-0000-0000-000000000503'),
+  (select month_count from admin_liable_baseline),
+  'revocation restores exactly the months the exemption hid'
+);
+
+select is(
+  (select coalesce(sum(amount_ngn) filter (where status = 'unpaid'), 0)::bigint
+   from public.dues_month_status
+   where member_id = '00000000-0000-0000-0000-000000000503'),
+  (select unpaid_ngn from admin_liable_baseline),
+  'and the months come back owed, not forgiven'
+);
+
+select is(
+  (select count(*) filter (where status = 'written_off')
+   from public.dues_month_status
+   where member_id = '00000000-0000-0000-0000-000000000503'),
+  (select written_off_count from admin_liable_baseline),
+  'the revoke wrote no waiver — only an officer may write a month off, and only after the club decides'
 );
 
 select lives_ok(

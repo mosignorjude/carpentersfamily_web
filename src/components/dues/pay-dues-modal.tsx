@@ -183,9 +183,10 @@ export function PayDuesModal({
                   Club Admin Exemption
                 </h4>
                 <p className="text-xs text-[#54433A] max-w-sm mx-auto leading-relaxed">
-                  While you hold the Club Admin role you are exempt from
-                  statutory dues obligations under club financial policy. No
-                  payment submission is required.
+                  While you hold the Club Admin role, no statutory dues are
+                  billed to you and no payment submission is required. Those
+                  months return when the role is withdrawn, for the club to
+                  settle or write off.
                 </p>
                 <div className="pt-2">
                   <button
