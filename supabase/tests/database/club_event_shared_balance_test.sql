@@ -134,6 +134,143 @@ select throws_ok(
   'a deposit cannot be recorded as event income, so deposit money is only ever an outflow'
 );
 
+-- The club balance now contains event cash while the event is still open, and
+-- event money is not a club line item.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000842', true);
+select is(
+  (select balance from public.club_finance_summary()), 1450::numeric,
+  'the club balance contains live event cash before the event closes');
+select is(
+  (select event_inflow from public.club_finance_summary()), 1700::numeric,
+  'the summary reports event inflow as its own line');
+select is(
+  (select event_outflow from public.club_finance_summary()), 250::numeric,
+  'the summary reports event outflow as its own line');
+select is(
+  (select other_income from public.club_finance_summary()), 0::numeric,
+  'event income never enters club other income');
+select is(
+  (select expenses from public.club_finance_summary()), 0::numeric,
+  'event expenses never enter club expenses');
+reset role;
+
+-- Money leaving the event leaves the club balance too, without any posting.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000841', true);
+select lives_ok(
+  $$select public.void_event_financial_transaction(current_setting('test.cbs_expense_paid')::uuid, 'Decoration cancelled')$$,
+  'Admin can void the paid event expense');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000842', true);
+select is(
+  (select event_outflow from public.club_finance_summary()), 50::numeric,
+  'a voided event expense leaves the club balance immediately');
+select is(
+  (select balance from public.club_finance_summary()), 1650::numeric,
+  'the club balance follows the voided expense');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000841', true);
+select lives_ok(
+  $$select public.refund_event_ticket_sale(current_setting('test.cbs_sale')::uuid, 'Buyer refunded')$$,
+  'Admin can refund the ticket sale');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000842', true);
+select is(
+  (select event_inflow from public.club_finance_summary()), 700::numeric,
+  'a refunded ticket sale leaves the club balance immediately');
+select is(
+  (select balance from public.club_finance_summary()), 650::numeric,
+  'the club balance follows the refund');
+reset role;
+
+-- Closing posts the same money that is already in the balance.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000841', true);
+select lives_ok(
+  $$select public.set_event_status(current_setting('test.cbs_event')::uuid, 'completed', 'Shared balance test close')$$,
+  'Admin can complete the event');
+select is(
+  (select signed_amount_ngn from public.event_ledger_entries
+    where event_id = current_setting('test.cbs_event')::uuid
+      and entry_kind = 'posting' and generation = 1),
+  650::numeric,
+  'the closing posting equals that event''s live cash net');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000842', true);
+select is(
+  (select balance from public.club_finance_summary()), 650::numeric,
+  'closing the event does not move the club balance');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000841', true);
+select lives_ok(
+  $$select public.set_event_status(current_setting('test.cbs_event')::uuid, 'scheduled', 'Shared balance test reopen')$$,
+  'Admin can reopen the completed event');
+select is(
+  (select signed_amount_ngn from public.event_ledger_entries
+    where event_id = current_setting('test.cbs_event')::uuid
+      and entry_kind = 'reversal' and generation = 1),
+  -650::numeric,
+  'reopening appends the equal opposite audit row');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000842', true);
+select is(
+  (select balance from public.club_finance_summary()), 650::numeric,
+  'reopening does not reverse money out of the club balance');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000841', true);
+select lives_ok(
+  $$select public.set_event_status(current_setting('test.cbs_event')::uuid, 'cancelled', 'Shared balance test cancel')$$,
+  'Admin can cancel the reopened event');
+select is(
+  (select count(*) from public.event_ledger_entries
+    where event_id = current_setting('test.cbs_event')::uuid and entry_kind = 'posting'),
+  2::bigint,
+  'the second close appends a fresh posting generation');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000842', true);
+select is(
+  (select balance from public.club_finance_summary()), 650::numeric,
+  'the second posting still leaves the club balance unchanged');
+reset role;
+
+-- A posting row, on its own, must not be money.
+select set_config('app.event_ledger_insert', 'on', true);
+insert into public.event_ledger_entries (
+  event_id, generation, entry_kind, event_status, signed_amount_ngn, created_by
+) values (
+  current_setting('test.cbs_event')::uuid, 98, 'posting', 'completed', 99999,
+  '00000000-0000-0000-0000-000000000841'
+);
+select set_config('app.event_ledger_insert', 'off', true);
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000842', true);
+select is(
+  (select balance from public.club_finance_summary()), 650::numeric,
+  'an event ledger row alone never moves the club balance');
+select is(
+  (select other_income from public.club_finance_summary()), 0::numeric,
+  'a positive posting row never enters club other income');
+select is(
+  (select expenses from public.club_finance_summary()), 0::numeric,
+  'a negative posting row never enters club expenses');
+reset role;
+
+-- The member gate is unchanged, and the internals are not callable.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000843', true);
+select is((select count(*) from public.club_finance_summary()), 0::bigint,
+  'a staff profile still gets no club aggregate');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000844', true);
+select is((select count(*) from public.club_finance_summary()), 0::bigint,
+  'a pending profile gets no club aggregate');
+select throws_ok($$select * from private.club_finance_summary_core()$$, '42501', null,
+  'members cannot execute the summary core');
+select throws_ok($$select * from private.event_cash_totals(null)$$, '42501', null,
+  'members cannot execute the event cash helper');
+reset role;
+
+select ok(
+  not has_function_privilege('authenticated', 'private.club_finance_summary_core()', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'private.event_cash_totals(uuid)', 'EXECUTE')
+  and has_function_privilege('authenticated', 'private.club_finance_summary()', 'EXECUTE')
+  and has_function_privilege('authenticated', 'public.club_finance_summary()', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.club_finance_summary()', 'EXECUTE'),
+  'only the gated wrappers are callable and the internals stay revoked'
+);
+
 select * from finish();
 
 rollback;

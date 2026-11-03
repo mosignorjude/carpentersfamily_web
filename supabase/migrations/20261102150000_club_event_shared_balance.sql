@@ -102,3 +102,68 @@ begin
   return new;
 end;
 $function$;
+
+-- The club formula. Event postings are no longer summed anywhere in it; live
+-- event cash is, as its own inflow and outflow lines. The return type changed,
+-- so the old four-column functions are dropped and their grants re-applied.
+drop function if exists public.club_finance_summary();
+drop function if exists private.club_finance_summary();
+drop function if exists private.club_finance_summary_core();
+
+create or replace function private.club_finance_summary_core()
+returns table (dues_income numeric, other_income numeric, expenses numeric,
+  event_inflow numeric, event_outflow numeric, balance numeric)
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select
+    coalesce((select private.club_dues_income_total()), 0)::numeric,
+    coalesce((select pg_catalog.sum(t.amount_ngn) from public.club_financial_transactions as t
+      where t.kind = 'income' and t.is_opening_balance is false and t.voided_at is null), 0)::numeric,
+    coalesce((select pg_catalog.sum(t.amount_ngn) from public.club_financial_transactions as t
+      where t.kind = 'expense' and t.voided_at is null), 0)::numeric,
+    cash.inflow,
+    cash.outflow,
+    coalesce((select pg_catalog.sum(dp.amount_ngn) from public.dues_payments as dp
+      where dp.payment_method is distinct from 'pre_launch_reconciliation'), 0)::numeric
+      + coalesce((select pg_catalog.sum(t.amount_ngn) from public.club_financial_transactions as t
+        where t.kind = 'income' and t.voided_at is null), 0)::numeric
+      - coalesce((select pg_catalog.sum(t.amount_ngn) from public.club_financial_transactions as t
+        where t.kind = 'expense' and t.voided_at is null), 0)::numeric
+      + cash.net
+  from private.event_cash_totals(null::uuid) as cash;
+$function$;
+
+create or replace function private.club_finance_summary()
+returns table (dues_income numeric, other_income numeric, expenses numeric,
+  event_inflow numeric, event_outflow numeric, balance numeric)
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select summary.* from private.club_finance_summary_core() as summary
+  where (select private.is_active_club_member());
+$function$;
+
+create or replace function public.club_finance_summary()
+returns table (dues_income numeric, other_income numeric, expenses numeric,
+  event_inflow numeric, event_outflow numeric, balance numeric)
+language sql
+stable
+security invoker
+set search_path = ''
+as $function$
+  select * from private.club_finance_summary();
+$function$;
+
+revoke all on function private.club_finance_summary_core()
+  from public, anon, authenticated, service_role;
+revoke all on function private.club_finance_summary()
+  from public, anon, service_role;
+revoke all on function public.club_finance_summary()
+  from public, anon, service_role;
+grant execute on function private.club_finance_summary() to authenticated;
+grant execute on function public.club_finance_summary() to authenticated;

@@ -478,8 +478,8 @@ select is(
   -1850::numeric,
   'reopening appends an equal opposite ledger entry'
 );
-select is((select balance from public.club_finance_summary()), 0::numeric,
-  'club balance nets the original event post and its reversal');
+select is((select balance from public.club_finance_summary()), 1850::numeric,
+  'club balance holds the event cash itself, not the post and its reversal');
 reset role;
 
 set local role authenticated;
@@ -495,7 +495,7 @@ select is(
   1::bigint,
   'each prior posting has at most one reversal');
 select is((select balance from public.club_finance_summary()), 1850::numeric,
-  'club balance includes the fresh event posting after the reversal');
+  'club balance keeps counting the live event cash after the second posting');
 reset role;
 
 select finish();
