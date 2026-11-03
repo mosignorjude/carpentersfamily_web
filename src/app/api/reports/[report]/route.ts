@@ -132,6 +132,16 @@ function financeRowsToCsv(
       ...emptyColumns,
     ],
     ["All-time expenses (NGN)", String(summary.expenses), ...emptyColumns],
+    [
+      "All-time event cash in (NGN)",
+      String(summary.event_inflow),
+      ...emptyColumns,
+    ],
+    [
+      "All-time event cash out (NGN)",
+      String(summary.event_outflow),
+      ...emptyColumns,
+    ],
     ["Current club balance (NGN)", String(summary.balance), ...emptyColumns],
     columns,
     ...transactions.map((transaction) => [
@@ -168,6 +178,8 @@ function financeRowsToPdf(
     `All-time dues income: ${formatPdfAmount(summary.dues_income)}`,
     `All-time other income: ${formatPdfAmount(summary.other_income)}`,
     `All-time expenses: ${formatPdfAmount(summary.expenses)}`,
+    `All-time event cash in: ${formatPdfAmount(summary.event_inflow)}`,
+    `All-time event cash out: ${formatPdfAmount(summary.event_outflow)}`,
     `Current club balance: ${formatPdfAmount(summary.balance)}`,
     "Text-only PDF. Unsupported glyphs are transliterated; CSV preserves original Unicode.",
     "",
@@ -319,6 +331,8 @@ async function createFinanceExport(
     "dues_income",
     "other_income",
     "expenses",
+    "event_inflow",
+    "event_outflow",
     "balance",
   ] as const) {
     if (wholeNgn(summary[field] as string | number) === null)
