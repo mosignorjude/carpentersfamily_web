@@ -257,6 +257,21 @@ Deferred to after the app deploy, because both need a real appointment: the pane
 proof in §5 (badge, own schedule All (0), second appointment refused) and the §6
 revoke-restores-months read on production.
 
+**Nothing from the event-balance programme is left to deploy.** That task ships
+exactly one migration — `20261102150000_club_event_shared_balance.sql`, built up
+across `cbdf0bf`, `751f779` and `15f822d` — and it was the fourth of the four just
+applied. After the push, `migration list --linked` reports **zero local-only and
+zero remote-only** rows: production history and main's 70 files name the same set.
+The migration adds no table and no column, so the known column-level-grant hazard
+does not apply to it; the only breaking change was the `club_finance_summary()`
+signature, and PostgREST reloads on DDL by itself because `pgrst_ddl_watch`
+(`ddl_command_end`) and `pgrst_drop_watch` (`sql_drop`) are installed on production.
+
+Four versions exist in abandoned branch history but in neither main nor production —
+`20261027130000`, `20261027133759`, `20261027145318`, `20261027170000`. They are
+reverted superseded work, correct to leave alone, but merging the branch that still
+names them would hand `db push` four migrations production has never seen.
+
 ## 7. Rollback
 
 Migrations are up-only; a rollback is hand-written. For the two Club Admin migrations
