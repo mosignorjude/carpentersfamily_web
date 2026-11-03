@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   buildDisbursementFields,
   getActiveExpenseCategories,
+  matchAllocationByName,
   matchExpenseCategoryByName,
 } from "../src/lib/record-disbursement.mjs";
 
@@ -153,5 +154,49 @@ test("record transaction modal submits a real expense category and validates it 
     modalSource,
     /No active expense categories/,
     "Submitting without an active expense category must be rejected with an actionable message",
+  );
+});
+
+const ALLOCATION_OPTIONS = [
+  { id: "alloc-stage", name: "Stage and Lighting" },
+  { id: "alloc-venue", name: "Venue" },
+  { id: "alloc-graphics", name: "Graphics, Printing & Wristband" },
+];
+
+test("an expense category name selects the allocation of the same name", () => {
+  assert.equal(
+    matchAllocationByName("Venue", ALLOCATION_OPTIONS)?.id,
+    "alloc-venue",
+    "Naming the spend must move the budget allocation off its first option",
+  );
+  assert.equal(
+    matchAllocationByName("graphics, printing and wristband", ALLOCATION_OPTIONS)
+      ?.id,
+    "alloc-graphics",
+    "& and plain spacing are the same allocation name",
+  );
+  assert.equal(
+    matchAllocationByName("Stage And Lightening", ALLOCATION_OPTIONS),
+    null,
+    "A misspelled or unrelated name must not be guessed",
+  );
+  assert.equal(matchAllocationByName(undefined, ALLOCATION_OPTIONS), null);
+});
+
+test("the expense form cannot leave an expense category on a different cost center", () => {
+  assert.match(
+    modalSource,
+    /matchAllocationByName\(/,
+    "The expense-category select must re-point the budget allocation at the matching cost center",
+  );
+  assert.doesNotMatch(
+    modalSource,
+    /return allocationOptions\[0\]\?\.id/,
+    "Expense mode must not silently default the budget allocation to whichever allocation sorts first",
+  );
+  assert.match(
+    modalSource,
+    /Select a budget allocation/,
+    "The allocation select must show an unchosen state so the default cannot pass for a decision",
   );
 });

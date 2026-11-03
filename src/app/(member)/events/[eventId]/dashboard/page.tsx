@@ -14,6 +14,7 @@ import type {
   RevenueCategory,
 } from "@/components/events/dashboard/dashboard-types";
 import { EventDashboardView } from "@/components/events/dashboard/event-dashboard-view";
+import { partitionExpensesByAllocation } from "@/lib/event-cost-centers.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const dashboardNoticeMap: Record<
@@ -428,64 +429,20 @@ export default async function EventDashboardPage({
     return latestIso;
   }
 
-  function matchesCategoryOrAlias(
-    expenseCatName: string,
-    allocName: string,
-  ): boolean {
-    const cleanExp = expenseCatName.trim().toLowerCase();
-    const cleanAlloc = allocName.trim().toLowerCase();
-    if (cleanExp === cleanAlloc) return true;
-    if (cleanAlloc === "venue" && cleanExp.startsWith("venue")) return true;
-    if (cleanExp === "venue" && cleanAlloc.startsWith("venue")) return true;
-    return false;
-  }
+  const costCenterPartition = partitionExpensesByAllocation({
+    allocations: allocationsResult.data ?? [],
+    expenses: unvoidedExpenses,
+    categoryNameById,
+  });
 
   const costCenters: DashboardCostCenter[] = [];
-  const matchedExpenseIds = new Set<string>();
 
-  for (const a of allocationsResult.data ?? []) {
-    if (a.allocation_name.toLowerCase().includes("unallocated")) {
-      continue;
-    }
+  for (const {
+    allocation: a,
+    expenses: matchingExpenses,
+  } of costCenterPartition.centers) {
     const centerKey = (a.category_id ||
       a.allocation_name.toLowerCase().replace(/\s+/g, "_")) as ExpenseCategory;
-    const matchingExpenses = unvoidedExpenses.filter((e) => {
-      if (
-        a.category_id &&
-        (e.budget_allocation_category_id === a.category_id ||
-          e.category_id === a.category_id)
-      ) {
-        return true;
-      }
-      if (e.budget_allocation_name_snapshot === a.allocation_name) {
-        return true;
-      }
-      if (e.category_name_snapshot === a.allocation_name) {
-        return true;
-      }
-      const liveCatName = e.category_id
-        ? categoryNameById.get(e.category_id)
-        : null;
-      if (liveCatName && liveCatName === a.allocation_name) {
-        return true;
-      }
-      if (
-        e.category_name_snapshot &&
-        matchesCategoryOrAlias(e.category_name_snapshot, a.allocation_name)
-      ) {
-        return true;
-      }
-      if (
-        liveCatName &&
-        matchesCategoryOrAlias(liveCatName, a.allocation_name)
-      ) {
-        return true;
-      }
-      return false;
-    });
-    for (const e of matchingExpenses) {
-      matchedExpenseIds.add(e.id);
-    }
     const spent = matchingExpenses
       .filter(
         (e) => e.payment_status === "paid" || e.payment_status === "deposit",
@@ -528,20 +485,10 @@ export default async function EventDashboardPage({
     });
   }
 
-  // Group any unvoided expenses that didn't match an allocation
-  const unmatchedByCategory = new Map<string, typeof unvoidedExpenses>();
-  for (const e of unvoidedExpenses) {
-    if (matchedExpenseIds.has(e.id)) continue;
-    const liveCatName = e.category_id
-      ? categoryNameById.get(e.category_id)
-      : null;
-    const catName =
-      liveCatName || e.category_name_snapshot || "General Expenses";
-    const list = unmatchedByCategory.get(catName) ?? [];
-    list.push(e);
-    unmatchedByCategory.set(catName, list);
-  }
-  for (const [catName, list] of unmatchedByCategory.entries()) {
+  for (const {
+    categoryName: catName,
+    expenses: list,
+  } of costCenterPartition.unmatched) {
     const spent = list
       .filter(
         (e) => e.payment_status === "paid" || e.payment_status === "deposit",

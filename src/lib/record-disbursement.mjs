@@ -23,6 +23,15 @@ export function matchExpenseCategoryByName(allocationName, categories = []) {
   );
 }
 
+export function matchAllocationByName(categoryName, options = []) {
+  const target = normalizeCategoryName(categoryName);
+  if (!target) return null;
+  return (
+    options.find((option) => normalizeCategoryName(option.name) === target) ??
+    null
+  );
+}
+
 /**
  * The finance RPC expects `category_id` to reference an expense-category row and
  * `budget_allocation_category_id` to reference a budget-allocation row. Keeping

@@ -9,6 +9,7 @@ import { formatNaira, formatPercent } from "@/lib/format";
 import {
   buildDisbursementFields,
   getActiveExpenseCategories,
+  matchAllocationByName,
   matchExpenseCategoryByName,
 } from "@/lib/record-disbursement.mjs";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
@@ -118,7 +119,7 @@ export function RecordTransactionModal({
       );
       if (match) return match.id;
     }
-    return allocationOptions[0]?.id || "";
+    return "";
   };
 
   const resolveExpenseCategory = (allocationId: string): string => {
@@ -722,11 +723,16 @@ export function RecordTransactionModal({
                       </option>
                     ))
                   ) : (
-                    allocationOptions.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.label}
+                    <>
+                      <option disabled value="">
+                        Select a budget allocation
                       </option>
-                    ))
+                      {allocationOptions.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.label}
+                        </option>
+                      ))}
+                    </>
                   )}
                 </select>
                 <FormFieldError
@@ -762,6 +768,13 @@ export function RecordTransactionModal({
                     onChange={(e) => {
                       setExpenseCategory(e.target.value);
                       clearFieldError("expenseCategory");
+                      const allocation = matchAllocationByName(
+                        expenseCategoryOptions.find(
+                          (c) => c.id === e.target.value,
+                        )?.name,
+                        allocationOptions,
+                      );
+                      if (allocation) setCategory(allocation.id);
                     }}
                     value={expenseCategory}
                   >
