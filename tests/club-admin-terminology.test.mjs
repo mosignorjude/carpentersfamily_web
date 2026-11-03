@@ -53,6 +53,41 @@ test("the officer-only money copy names the role that actually holds the gate", 
   );
 });
 
+// JSX prose wraps, and Biome chooses where, so every assertion below reads the
+// source with its whitespace collapsed instead of trusting the line breaks.
+const flatten = (file) => readFileSync(file, "utf8").replace(/\s+/g, " ");
+
+// "Club Administrator" was the pre-conversion name for the staff population.
+// The role is the Club Admin and staff are the system administrators, so this
+// phrase is either the wrong name or the wrong population wherever it appears.
+test("no source file calls the role a club administrator", () => {
+  const offenders = sourceFiles("src").filter((file) =>
+    /club\sadministrators?/i.test(flatten(file)),
+  );
+  assert.deepEqual(
+    offenders,
+    [],
+    '"Club Admin" is the canonical label (private.format_role_label); nothing may revive the old plural',
+  );
+});
+
+// Operator ruling, 2026-11-02: the exemption suspends billing, it does not
+// forgive. The months return on revocation and the club decides whether an
+// officer writes them off, so every exemption surface has to say so.
+test("the exemption copy says the months return rather than vanish", () => {
+  for (const file of [
+    "src/components/dues/dues-page-view.tsx",
+    "src/components/dues/pay-dues-modal.tsx",
+    "src/components/staff/staff-club-admin-card.tsx",
+  ]) {
+    assert.match(
+      flatten(file),
+      /return when the role is withdrawn/,
+      `${file} must not read as permanent forgiveness`,
+    );
+  }
+});
+
 test("the dues surfaces name the Club Admin in the exemption copy", () => {
   const view = readFileSync("src/components/dues/dues-page-view.tsx", "utf8");
   assert.match(view, /Club Admin Dues Exempt/);

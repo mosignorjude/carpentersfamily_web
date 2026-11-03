@@ -87,8 +87,8 @@ export function CreateEventDisclosure({
                 </span>
               </div>
               <p className="text-xs text-[#7A685D] font-medium mt-0.5">
-                Authorized for Executive Council and Club Administrators ·{" "}
-                {userRoleTitle}
+                Authorized for the Executive Council, the Club Admin and the
+                President · {userRoleTitle}
               </p>
             </div>
           </div>

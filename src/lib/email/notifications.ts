@@ -285,10 +285,10 @@ export async function queueEmailConfirmationResend(params: {
       previewText: "A fresh link to confirm your email address is waiting.",
       greeting: `Hello ${params.fullName},`,
       intro:
-        "A club administrator has re-sent your Carpenters Family email confirmation link. Open the link below to confirm your address — it works for this attempt only and expires soon. Once confirmed, your membership moves ahead to approval.",
+        "A club system administrator has re-sent your Carpenters Family email confirmation link. Open the link below to confirm your address — it works for this attempt only and expires soon. Once confirmed, your membership moves ahead to approval.",
       bodyLabel: "Need Help?",
       bodyText:
-        "If the link reports that it is no longer valid, sign in and request a new confirmation link, or contact a club administrator.",
+        "If the link reports that it is no longer valid, sign in and request a new confirmation link, or contact the club's system administrator.",
       category: "membership",
     },
   });

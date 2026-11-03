@@ -170,8 +170,8 @@ describe("PreLaunchDuesReconciliationCard component requirements", () => {
     );
     assert.match(
       source,
-      /restricted to Club Administrators|only authorized administrators/i,
-      "Must display administrative restriction advisory",
+      /restricted to the Club Admin and the President/i,
+      "Must name the two roles that actually hold the reconciliation gate",
     );
   });
 

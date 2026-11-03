@@ -38,7 +38,7 @@ export function PublishAnnouncementDisclosure({
             </h2>
             <p className="text-xs text-[#7A685D]">
               {globalPublisher
-                ? "Authorized as Club Administrator / Executive Officer"
+                ? "Authorized as Club Admin, President or Executive Officer"
                 : "Authorized as Event Lead for active assigned events"}
             </p>
           </div>

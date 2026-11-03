@@ -128,7 +128,7 @@ export function OpeningBalanceEntryCard({
         </div>
         <p className="text-xs text-[#7A685D] leading-relaxed">
           Opening cash reserve has not yet been recorded. Entry is restricted to
-          authorized club Administrators.
+          the Club Admin and the President.
         </p>
       </div>
     );
