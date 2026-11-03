@@ -117,19 +117,19 @@ describe("Page Footer Policy & Governance Relocation", () => {
     );
   });
 
-  it("relocates the system administrator exemption notice to the footer of DuesPageView", () => {
+  it("relocates the Club Admin dues exemption notice to the footer of DuesPageView", () => {
     // Must NOT be placed directly after the hero section above member switcher
     assert.doesNotMatch(
       duesView,
-      /<\/section>\s*\{isDuesExempt\s*&&[\s\S]*?System Administrator Exemption[\s\S]*?Review Individual Member Ledger/,
+      /<\/section>\s*\{isDuesExempt\s*&&[\s\S]*?Club Admin Exemption[\s\S]*?Review Individual Member Ledger/,
       "Dues page must not interpose the exemption banner between hero and member switcher"
     );
 
     // Must be placed inside the footer
     assert.match(
       duesView,
-      /<footer[\s\S]*?System Administrator Exemption Policy[\s\S]*?<\/footer>/,
-      "System administrator exemption must reside in the dues page footer"
+      /<footer[\s\S]*?Club Admin Dues Exemption Policy[\s\S]*?<\/footer>/,
+      "the Club Admin dues exemption must reside in the dues page footer"
     );
   });
 

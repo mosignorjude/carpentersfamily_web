@@ -43,7 +43,7 @@ const notices: Record<string, string> = {
   "email-confirmed":
     "Your email address is confirmed. Your membership is now waiting for club approval.",
   "confirm-link-invalid":
-    "This confirmation link is no longer valid. Sign in again or ask a club administrator to send a new link.",
+    "This confirmation link is no longer valid. Sign in again or ask the club's system administrator to send a new link.",
 };
 
 const signInErrorNotices = new Set([
@@ -194,8 +194,8 @@ export default async function HomePage({
           <p className="eyebrow">Access status</p>
           <h1>We could not verify your membership</h1>
           <p>
-            No member features have been loaded. Contact a club administrator if
-            this continues.
+            No member features have been loaded. Contact club leadership if this
+            continues.
           </p>
           <form action={signOutAction}>
             <button className="button-secondary" type="submit">
@@ -312,7 +312,7 @@ export default async function HomePage({
           <h1>Account deactivated</h1>
           <p>
             Your account does not currently have access to member features.
-            Contact a club administrator if you believe this is incorrect.
+            Contact club leadership if you believe this is incorrect.
           </p>
           <form action={signOutAction}>
             <button className="button-secondary" type="submit">
@@ -332,7 +332,7 @@ export default async function HomePage({
           <h1>Membership request declined</h1>
           <p>
             This request was not approved, so member features are unavailable.
-            Contact a club administrator if you need more information.
+            Contact club leadership if you need more information.
           </p>
           <form action={signOutAction}>
             <button className="button-secondary" type="submit">

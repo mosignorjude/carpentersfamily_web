@@ -40,6 +40,7 @@ const MESSAGE_RULES: ReadonlyArray<readonly [RegExp, string]> = [
     /\bonly (a|an) (scheduled|completed|pending)\b|\bonly scheduled\b|\brequires a scheduled\b|\bcan only be (attached|changed)\b/i,
     "invalid-state",
   ],
+  [/primary Admin must remain active/i, "revoke-club-admin-first"],
 ];
 
 export function rpcErrorNotice(

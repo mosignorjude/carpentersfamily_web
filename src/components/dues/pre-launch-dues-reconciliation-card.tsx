@@ -279,8 +279,8 @@ export function PreLaunchDuesReconciliationCard({
               Pre-Launch Dues Reconciliation Workspace
             </h3>
             <p className="text-xs text-[#7A685D] mt-0.5">
-              Access restricted to Club Administrators. Only authorized
-              administrators may reconcile historical dues.
+              Access restricted to the Club Admin and the President. Only they
+              may reconcile historical dues.
             </p>
           </div>
         </div>

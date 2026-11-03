@@ -1,0 +1,12 @@
+-- Deliberately empty.
+--
+-- Production applied this version out of band on the night of 2026-10-31, during
+-- the president/staff Phase 1 rollout, before the same SQL was committed under
+-- version 20261101010000 (fix_dues_report_and_role_notification_dedup). The
+-- definitions therefore live in that later file, which sorts after this one:
+-- repeating them here would run them before the objects they depend on.
+--
+-- This placeholder exists so the repository accounts for every row of
+-- supabase_migrations.schema_migrations on production.
+-- scripts/backup-hosted-snapshot.mjs refuses to take a snapshot while production
+-- holds a version the repo cannot name.

@@ -1,0 +1,12 @@
+-- Deliberately empty.
+--
+-- Production applied this version out of band on the night of 2026-10-31, during
+-- the president/staff Phase 1 rollout. Its function,
+-- public.get_public_ticketed_events(), is committed under version 20261101010000
+-- (fix_dues_report_and_role_notification_dedup.sql:428), which sorts after this
+-- file; repeating the definition here would run it ahead of its dependencies.
+--
+-- This placeholder exists so the repository accounts for every row of
+-- supabase_migrations.schema_migrations on production.
+-- scripts/backup-hosted-snapshot.mjs refuses to take a snapshot while production
+-- holds a version the repo cannot name.

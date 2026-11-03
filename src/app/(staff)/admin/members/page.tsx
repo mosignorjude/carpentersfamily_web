@@ -1,7 +1,7 @@
 import StaffMemberTable, {
   type StaffMemberRow,
 } from "@/components/staff/staff-member-table";
-import StaffNotice from "@/components/staff/staff-notice";
+import StaffNoticeToast from "@/components/staff/staff-notice-toast";
 import { getMemberProfileReadiness } from "@/lib/member-administration-presentation.mjs";
 import { loadEmailConfirmationState } from "@/lib/member-email-confirmation.server";
 import { requireStaffProfile } from "@/lib/staff-access.server";
@@ -89,7 +89,7 @@ export default async function StaffMembersPage({
         </p>
       </section>
 
-      <StaffNotice notice={notice} />
+      <StaffNoticeToast notice={notice} />
 
       <section className="rounded-2xl border border-linen bg-white p-5 sm:p-6 shadow-xs space-y-4">
         {error ? (

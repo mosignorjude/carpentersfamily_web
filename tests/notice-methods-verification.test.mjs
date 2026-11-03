@@ -715,9 +715,17 @@ test("notification hardening: GlobalFlashListener rejects arbitrary unallowliste
     "GlobalFlashListener must never echo raw unallowlisted noticeCode strings as toast messages",
   );
   assert.ok(
-    listenerSource.includes("INLINE_NOTICE_ROUTES") &&
-      listenerSource.includes("ROOT_INLINE_NOTICE_CODES"),
-    "GlobalFlashListener must skip public auth inline notice routes/codes to prevent duplicate alerts",
+    listenerSource.includes("handlesNoticeOnPage(pathname, noticeCode)"),
+    "GlobalFlashListener must defer to the shared routing predicate so a page-owned notice is never announced twice or cleaned up before the page reads it",
+  );
+  const routingSource = fs.readFileSync(
+    "src/lib/notice-routing.mjs",
+    "utf8",
+  );
+  assert.ok(
+    routingSource.includes('"/signup"') &&
+      routingSource.includes("ROOT_INLINE_NOTICE_CODES"),
+    "notice-routing.mjs must own the public auth inline notice allowlist",
   );
   assert.ok(
     listenerSource.includes("router.replace"),

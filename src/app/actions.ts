@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import QRCode from "qrcode";
 import { parseClubRoleRequest } from "@/lib/club-role-request.mjs";
+import { canManageDues } from "@/lib/dues-governance.mjs";
 import {
   notifyAnnouncementPublished,
   notifyClubRoleChanged,
@@ -527,7 +528,7 @@ export async function recordDuesPaymentAction(formData: FormData) {
   }
 
   const actor = await getActiveDuesActor();
-  if (!actor.roles.has("executive") && !actor.roles.has("president")) {
+  if (!canManageDues(actor.roles)) {
     redirect(duesNoticeUrl("denied", memberId));
   }
 
@@ -791,9 +792,7 @@ export async function approveDuesPaymentRequestAction(formData: FormData) {
   }
 
   const actor = await getActiveDuesActor();
-  const isOfficer =
-    actor.roles.has("executive") || actor.roles.has("president");
-  if (!isOfficer) {
+  if (!canManageDues(actor.roles)) {
     redirect(duesNoticeUrl("denied"));
   }
 
@@ -840,9 +839,7 @@ export async function rejectDuesPaymentRequestAction(formData: FormData) {
   }
 
   const actor = await getActiveDuesActor();
-  const isOfficer =
-    actor.roles.has("executive") || actor.roles.has("president");
-  if (!isOfficer) {
+  if (!canManageDues(actor.roles)) {
     redirect(duesNoticeUrl("denied"));
   }
 

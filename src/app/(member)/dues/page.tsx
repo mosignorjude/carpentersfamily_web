@@ -3,6 +3,7 @@ import { signOutAction } from "@/app/actions";
 import { DuesPageView } from "@/components/dues/dues-page-view";
 import type { DuesPaymentRequestItem } from "@/components/dues/officer-dues-approvals-card";
 import type { ReconciliationMember } from "@/components/dues/pre-launch-dues-reconciliation-card";
+import { canManageDues } from "@/lib/dues-governance.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { DuesMemberOption, DuesMonthOption } from "./dues-forms";
 
@@ -171,7 +172,7 @@ export default async function DuesPage({
   const isOfficer =
     !roleError &&
     (roles.has("executive") || roles.has("admin") || roles.has("president"));
-  const canRecord = roles.has("executive") || roles.has("president");
+  const canRecord = canManageDues(roles);
   const canWriteOff = isOfficer;
   const canCorrect = roles.has("admin") || roles.has("president");
   const canChangeRate = canCorrect;

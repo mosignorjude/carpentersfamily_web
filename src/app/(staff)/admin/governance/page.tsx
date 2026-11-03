@@ -1,10 +1,17 @@
-import StaffNotice from "@/components/staff/staff-notice";
+import StaffClubAdminCard, {
+  type ClubAdminCandidate,
+} from "@/components/staff/staff-club-admin-card";
+import StaffNoticeToast from "@/components/staff/staff-notice-toast";
 import StaffPresidentCard, {
   type PresidentCandidate,
 } from "@/components/staff/staff-president-card";
 import { requireStaffProfile } from "@/lib/staff-access.server";
 import { resolveStaffNotice } from "@/lib/staff-notices";
-import { loadExecutiveRoster, loadPresident } from "@/lib/staff-panel.server";
+import {
+  loadClubAdmin,
+  loadExecutiveRoster,
+  loadPresident,
+} from "@/lib/staff-panel.server";
 import { formatStaffTimestamp } from "@/lib/staff-presentation.mjs";
 
 const pageNotices = {
@@ -15,6 +22,15 @@ const pageNotices = {
   },
   "president-revoked": {
     message: "President role revoked and recorded in the audit history.",
+    isError: false,
+  },
+  "club-admin-granted": {
+    message:
+      "Club Admin appointed. The change is recorded in the audit history and the president has been notified.",
+    isError: false,
+  },
+  "club-admin-revoked": {
+    message: "Club Admin revoked. The change is recorded in the audit history.",
     isError: false,
   },
 };
@@ -28,8 +44,9 @@ export default async function StaffGovernancePage({
   const notice = resolveStaffNotice(params.notice, pageNotices);
   const { supabase } = await requireStaffProfile();
 
-  const [president, executives, activeMembers] = await Promise.all([
+  const [president, clubAdmin, executives, activeMembers] = await Promise.all([
     loadPresident(supabase),
+    loadClubAdmin(supabase),
     loadExecutiveRoster(supabase),
     supabase
       .from("member_profiles")
@@ -40,6 +57,16 @@ export default async function StaffGovernancePage({
 
   const candidates: PresidentCandidate[] = (activeMembers.data ?? [])
     .filter((row) => row.id !== president?.memberId)
+    .map((row) => ({
+      id: row.id,
+      fullName: row.full_name,
+      username: row.username,
+    }));
+
+  const adminCandidates: ClubAdminCandidate[] = (activeMembers.data ?? [])
+    .filter(
+      (row) => row.id !== president?.memberId && row.id !== clubAdmin?.memberId,
+    )
     .map((row) => ({
       id: row.id,
       fullName: row.full_name,
@@ -61,9 +88,11 @@ export default async function StaffGovernancePage({
         </p>
       </section>
 
-      <StaffNotice notice={notice} />
+      <StaffNoticeToast notice={notice} />
 
       <StaffPresidentCard candidates={candidates} president={president} />
+
+      <StaffClubAdminCard candidates={adminCandidates} clubAdmin={clubAdmin} />
 
       <section className="rounded-2xl border border-linen bg-white p-5 sm:p-6 shadow-xs space-y-4">
         <div>

@@ -2,7 +2,7 @@ import StaffAccountForm from "@/components/staff/staff-account-form";
 import StaffAccountTable, {
   type StaffAccountRow,
 } from "@/components/staff/staff-account-table";
-import StaffNotice from "@/components/staff/staff-notice";
+import StaffNoticeToast from "@/components/staff/staff-notice-toast";
 import { requireStaffProfile } from "@/lib/staff-access.server";
 import { resolveStaffNotice } from "@/lib/staff-notices";
 
@@ -85,7 +85,7 @@ export default async function StaffAccountsPage({
         </p>
       </section>
 
-      <StaffNotice notice={notice} />
+      <StaffNoticeToast notice={notice} />
 
       <section className="rounded-2xl border border-linen bg-white p-5 sm:p-6 shadow-xs space-y-4">
         <div>

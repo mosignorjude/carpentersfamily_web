@@ -145,7 +145,7 @@ select throws_ok(
       array[date_trunc('month', pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date]
     )$$,
   '42501',
-  'Only an active Executive, Admin, or Backup Admin may record dues payments.',
+  'Only an active Executive, Club Admin, or President may record dues payments.',
   'member cannot record a dues payment for another member'
 );
 select throws_ok(
@@ -380,7 +380,7 @@ select throws_ok(
       array[date_trunc('month', pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date]
     )$$,
   '42501',
-  'Only an active Executive, Admin, or Backup Admin may record dues payments.',
+  'Only an active Executive, Club Admin, or President may record dues payments.',
   'deactivated officer or member cannot create dues payments'
 );
 reset role;

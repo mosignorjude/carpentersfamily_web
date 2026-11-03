@@ -55,7 +55,9 @@ test("the three new database messages map to specific notices", () => {
   );
   assert.match(rules, /\bless than 15 minutes ago\b[\s\S]*"resend-cooldown"/);
   assert.match(rules, /\bonly a pending applicant\b[\s\S]*"not-pending"/);
-  const staff = fs.readFileSync("src/lib/staff-notices.ts", "utf8");
+  // Staff banners resolve any unrecognised code through SYSTEM_NOTICES, so the
+  // registry entry is what makes these failure classes visible on /admin/staff.
+  const registry = fs.readFileSync("src/lib/system-notices.ts", "utf8");
   for (const code of [
     "already-confirmed",
     "not-pending",
@@ -63,8 +65,8 @@ test("the three new database messages map to specific notices", () => {
     "confirmation-send-failed",
   ]) {
     assert.ok(
-      staff.includes(`"${code}"`),
-      `${code} must be a shared staff notice`,
+      new RegExp(`^\\s{2}"?${code}"?: \\{$`, "m").test(registry),
+      `${code} must have system notice copy`,
     );
   }
 });

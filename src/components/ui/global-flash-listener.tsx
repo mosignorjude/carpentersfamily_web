@@ -2,35 +2,9 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef } from "react";
+import { handlesNoticeOnPage } from "@/lib/notice-routing.mjs";
 import { getSystemNotice } from "@/lib/system-notices";
 import { dispatchFlashCard, FlashCardContainer } from "./flash-card";
-
-/**
- * Public auth routes render their own inline, page-specific notice banners.
- * Showing a floating toast there as well would duplicate the message.
- */
-const INLINE_NOTICE_ROUTES = new Set([
-  "/signup",
-  "/forgot-password",
-  "/reset-password",
-]);
-
-/**
- * Notice codes that the root route (`/`) renders inline on the sign-in or
- * pending-profile screens.
- */
-const ROOT_INLINE_NOTICE_CODES = new Set([
-  "auth-failed",
-  "configuration",
-  "credentials",
-  "google-unavailable",
-  "invalid-profile",
-  "password-updated",
-  "profile-complete",
-  "profile-locked",
-  "profile-update-failed",
-  "sign-in",
-]);
 
 const SILENT_READ_NOTICE_CODES = new Set([
   "announcement-read",
@@ -55,14 +29,15 @@ function UrlNoticeDetector() {
     if (lastHandledRef.current === noticeCode) return;
     lastHandledRef.current = noticeCode;
 
-    const skipToast =
-      INLINE_NOTICE_ROUTES.has(pathname) ||
-      (pathname === "/" && ROOT_INLINE_NOTICE_CODES.has(noticeCode));
+    // A page that handles its own notice needs the query parameter left in
+    // place until that page has read it; clearing it here would delete the
+    // notice before the page ever saw it.
+    const pageHandlesNotice = handlesNoticeOnPage(pathname, noticeCode);
 
     // Only allowlisted notice codes may produce a toast. Arbitrary query text is
     // never rendered, which prevents branded-toast spoofing via crafted links.
     const systemNotice =
-      skipToast || SILENT_READ_NOTICE_CODES.has(noticeCode)
+      pageHandlesNotice || SILENT_READ_NOTICE_CODES.has(noticeCode)
         ? null
         : getSystemNotice(noticeCode);
     if (systemNotice) {
@@ -73,7 +48,7 @@ function UrlNoticeDetector() {
       });
     }
 
-    if (skipToast) return;
+    if (pageHandlesNotice) return;
 
     // Remove ?notice= through the router so the next identical notice (for
     // example, two consecutive validation errors) is detected as a new change.

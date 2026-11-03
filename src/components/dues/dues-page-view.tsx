@@ -216,7 +216,7 @@ export function DuesPageView({
             {isDuesExempt ? (
               <div className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#FAF6F0] border border-[#174C37]/30 text-[#174C37] text-xs font-bold min-h-[46px] shadow-2xs">
                 <ShieldCheck className="w-4 h-4 text-[#174C37]" />
-                <span>System Administrator Dues Exempt</span>
+                <span>Club Admin Dues Exempt</span>
               </div>
             ) : (
               <button
@@ -534,12 +534,13 @@ export function DuesPageView({
             <ShieldCheck className="w-5 h-5 text-[#174C37] shrink-0 mt-0.5" />
             <div className="leading-relaxed">
               <strong className="font-bold block text-[#3D291F]">
-                System Administrator Exemption Policy
+                Club Admin Dues Exemption Policy
               </strong>
               <span>
-                System administrators are exempt from statutory membership dues
-                obligations under club financial policy. No dues obligations
-                accrue for this account.
+                The Club Admin is not billed statutory membership dues while
+                holding the role. Those months return when the role is
+                withdrawn, and the club then decides whether an officer writes
+                them off.
               </span>
             </div>
           </div>

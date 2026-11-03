@@ -387,7 +387,10 @@ authenticated browser upload/download remain unverified.
   export the already member-visible club balance, payer/payee details, ledger
   values, and available receipt filenames. It returns the summary and current
   year transactions in one database statement snapshot. It never returns
-  storage object paths or private uploader fields.
+  storage object paths or private uploader fields. Its `summary` object now
+  also carries `event_inflow` and `event_outflow`, so an export states the event
+  cash that is inside the club balance without listing any event row as a club
+  transaction.
 - `public.dues_report_data()` is `SECURITY INVOKER` and reads the existing
   `dues_month_status` view joined to member profile names. Forced RLS makes
   Member exports self-only; Executive/President retain their existing

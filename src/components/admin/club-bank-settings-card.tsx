@@ -113,7 +113,8 @@ export function ClubBankSettingsCard({
         <div className="pt-2 text-[11px] text-[#7A685D] flex items-center gap-1.5 border-t border-[#E5DDD3]">
           <Lock className="w-3 h-3 shrink-0 text-[#7A685D]" />
           <span>
-            Settlement account updates are restricted to club Administrators.
+            Settlement account updates are restricted to the Club Admin and the
+            President.
           </span>
         </div>
       </div>

@@ -192,6 +192,50 @@ export async function revokePresidentAction(formData: FormData) {
   redirect("/admin/governance?notice=president-revoked");
 }
 
+export async function staffGrantClubAdminAction(formData: FormData) {
+  const { supabase } = await requireStaffActor();
+
+  const memberId = formString(formData, "member_id", 36);
+  const reason = formString(formData, "reason", 500);
+  if (!memberId || !uuidPattern.test(memberId) || !reason) {
+    redirect("/admin/governance?notice=invalid-request");
+  }
+
+  const { error } = await supabase.rpc("staff_grant_admin", {
+    p_member_id: memberId,
+    p_reason: reason,
+  });
+  if (error) redirect(`/admin/governance?notice=${rpcErrorNotice(error)}`);
+
+  revalidatePath("/admin/governance");
+  revalidatePath("/admin");
+  revalidatePath("/officers/members");
+  revalidatePath("/dues");
+  redirect("/admin/governance?notice=club-admin-granted");
+}
+
+export async function staffRevokeClubAdminAction(formData: FormData) {
+  const { supabase } = await requireStaffActor();
+
+  const memberId = formString(formData, "member_id", 36);
+  const reason = formString(formData, "reason", 500);
+  if (!memberId || !uuidPattern.test(memberId) || !reason) {
+    redirect("/admin/governance?notice=invalid-request");
+  }
+
+  const { error } = await supabase.rpc("staff_revoke_admin", {
+    p_member_id: memberId,
+    p_reason: reason,
+  });
+  if (error) redirect(`/admin/governance?notice=${rpcErrorNotice(error)}`);
+
+  revalidatePath("/admin/governance");
+  revalidatePath("/admin");
+  revalidatePath("/officers/members");
+  revalidatePath("/dues");
+  redirect("/admin/governance?notice=club-admin-revoked");
+}
+
 export async function staffMemberLifecycleAction(formData: FormData) {
   const { supabase } = await requireStaffActor();
 

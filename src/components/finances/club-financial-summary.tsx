@@ -3,6 +3,7 @@
 import {
   AlertCircle,
   Coins,
+  Scale,
   ShieldCheck,
   TrendingDown,
   TrendingUp,
@@ -14,6 +15,8 @@ interface ClubFinancialSummaryProps {
   duesIncome: number | string | null | undefined;
   otherIncome: number | string | null | undefined;
   totalExpenses: number | string | null | undefined;
+  eventInflow: number | string | null | undefined;
+  eventOutflow: number | string | null | undefined;
   isUnavailable?: boolean;
 }
 
@@ -22,8 +25,14 @@ export function ClubFinancialSummary({
   duesIncome,
   otherIncome,
   totalExpenses,
+  eventInflow,
+  eventOutflow,
   isUnavailable = false,
 }: ClubFinancialSummaryProps) {
+  const inflow = Number(eventInflow ?? 0);
+  const outflow = Number(eventOutflow ?? 0);
+  const eventNet = inflow - outflow;
+
   return (
     <section aria-labelledby="summary-heading" className="space-y-3">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-1 border-b border-[#E5DDD3] gap-1">
@@ -53,7 +62,7 @@ export function ClubFinancialSummary({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* 1. All-time Current Balance */}
           <div className="bg-white rounded-2xl border border-[#E5DDD3] p-5 shadow-xs flex flex-col justify-between transition-all hover:border-[#174C37]/40">
             <div>
@@ -124,6 +133,31 @@ export function ClubFinancialSummary({
             </div>
             <div className="pt-3 mt-3 border-t border-[#FAF6F0] text-[11px] text-[#7A685D]">
               <span>Authorized operational disbursements</span>
+            </div>
+          </div>
+
+          {/* 5. Event Cash (Same Account) */}
+          <div className="bg-white rounded-2xl border border-[#E5DDD3] p-5 shadow-xs flex flex-col justify-between transition-all hover:border-[#D6A23A]/40">
+            <div>
+              <div className="flex items-center justify-between text-xs text-[#7A685D] mb-1.5">
+                <span className="font-bold uppercase tracking-wider text-[10px]">
+                  Event Cash (Live)
+                </span>
+                <Scale className="w-4 h-4 text-[#D6A23A]" />
+              </div>
+              <div className="text-2xl font-black font-mono text-[#3D291F] tracking-tight tabular-nums">
+                {formatNaira(eventNet)}
+              </div>
+              <div className="mt-1.5 flex items-center gap-3 text-[11px] font-mono tabular-nums text-[#54433A]">
+                <span>In {formatNaira(eventInflow)}</span>
+                <span>Out {formatNaira(eventOutflow)}</span>
+              </div>
+            </div>
+            <div className="pt-3 mt-3 border-t border-[#FAF6F0] text-[11px] text-[#7A685D]">
+              <span>
+                One account, so it counts as it moves - never as club income or
+                expenses
+              </span>
             </div>
           </div>
         </div>
