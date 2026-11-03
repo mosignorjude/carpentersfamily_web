@@ -208,8 +208,16 @@ A fix is small and contained — a visibility predicate on the view's final sele
      where role = 'admin' and revoked_at is null;                  -- still 0 until staff appoint
 
 Then, in the released panel: appoint a Club Admin, confirm the member sees the
-**Club Admin Dues Exempt** badge with an own schedule of All (0), and confirm a
-second appointment is refused while the first is live.
+**Club Admin Dues Exempt** badge with an own schedule of All (0).
+
+Appointment is **replace, not refuse**. `private.staff_grant_admin` is
+revoke-then-grant (it revokes the live assignment and writes a `club_role_revoked`
+audit row before inserting), so the singleton index never sees two live rows and a
+second appointment moves the role rather than erroring. The panel says so:
+`src/components/staff/staff-club-admin-card.tsx:69` labels the action
+**Replace Club Admin** and `:76` names the incumbent in the confirmation. Verify that
+transfer, not a refusal: appoint A, then appoint B, and expect B to hold it while A's
+assignment is revoked with the reason recorded.
 
 ## 6. The dues ruling, verified on production
 
@@ -254,8 +262,8 @@ the deployed `main` build was audited: both of its readers name keys, never posi
 readers exist only on this branch.
 
 Deferred to after the app deploy, because both need a real appointment: the panel
-proof in §5 (badge, own schedule All (0), second appointment refused) and the §6
-revoke-restores-months read on production.
+proof in §5 (badge, own schedule All (0), and the replace-transfer behaviour) and the
+§6 revoke-restores-months read on production.
 
 **Nothing from the event-balance programme is left to deploy.** That task ships
 exactly one migration — `20261102150000_club_event_shared_balance.sql`, built up
