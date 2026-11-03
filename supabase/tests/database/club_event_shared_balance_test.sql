@@ -271,6 +271,22 @@ select ok(
   'only the gated wrappers are callable and the internals stay revoked'
 );
 
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000842', true);
+select is(
+  (public.club_finance_report_data()->'summary'->>'event_inflow')::numeric, 700::numeric,
+  'the report summary exposes event inflow');
+select is(
+  (public.club_finance_report_data()->'summary'->>'event_outflow')::numeric, 50::numeric,
+  'the report summary exposes event outflow');
+select is(
+  (public.club_finance_report_data()->'summary'->>'balance')::numeric, 650::numeric,
+  'the report balance matches the live club summary');
+select is(
+  jsonb_array_length(public.club_finance_report_data()->'transactions'), 0,
+  'event money never enters the club transaction list');
+reset role;
+
 select * from finish();
 
 rollback;

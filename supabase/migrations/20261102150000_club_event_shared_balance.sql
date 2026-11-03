@@ -167,3 +167,93 @@ revoke all on function public.club_finance_summary()
   from public, anon, service_role;
 grant execute on function private.club_finance_summary() to authenticated;
 grant execute on function public.club_finance_summary() to authenticated;
+
+-- The export snapshot reports event cash as its own lines. It stays SECURITY
+-- INVOKER, so the member gate and every grant still apply, and its transaction
+-- list stays club-only.
+create or replace function public.club_finance_report_data()
+returns jsonb
+language sql
+stable
+security invoker
+set search_path = ''
+as $function$
+  with report_period as (
+    select (pg_catalog.transaction_timestamp() at time zone 'Africa/Lagos')::date as as_of
+  ),
+  bounds as (
+    select
+      extract(year from report_period.as_of)::integer as report_year,
+      pg_catalog.date_trunc('year', report_period.as_of::timestamp)::date as period_start,
+      report_period.as_of,
+      (pg_catalog.date_trunc('year', report_period.as_of::timestamp) + interval '1 year')::date as next_year
+    from report_period
+  ),
+  transaction_rows as (
+    select
+      finance_txn.id,
+      finance_txn.kind,
+      finance_txn.is_opening_balance,
+      finance_txn.amount_ngn::text as amount_ngn,
+      finance_txn.transaction_date::text as transaction_date,
+      finance_txn.description,
+      finance_txn.category_name_snapshot,
+      finance_txn.payer_payee,
+      finance_txn.source_note,
+      finance_txn.voided_at::text as voided_at,
+      finance_txn.void_reason,
+      finance_txn.created_at
+    from public.club_financial_transactions as finance_txn
+    cross join bounds
+    where finance_txn.transaction_date >= bounds.period_start
+      and finance_txn.transaction_date < bounds.next_year
+    order by finance_txn.transaction_date, finance_txn.created_at, finance_txn.id
+    limit 1001
+  )
+  select pg_catalog.jsonb_build_object(
+    'year', bounds.report_year,
+    'as_of', bounds.as_of::text,
+    'row_count', (
+      select pg_catalog.count(*)::text
+      from public.club_financial_transactions as finance_txn
+      where finance_txn.transaction_date >= bounds.period_start
+        and finance_txn.transaction_date < bounds.next_year
+    ),
+    'summary', (
+      select pg_catalog.jsonb_build_object(
+        'dues_income', summary.dues_income::text,
+        'other_income', summary.other_income::text,
+        'expenses', summary.expenses::text,
+        'event_inflow', summary.event_inflow::text,
+        'event_outflow', summary.event_outflow::text,
+        'balance', summary.balance::text
+      )
+      from public.club_finance_summary() as summary
+    ),
+    'transactions', coalesce((
+      select pg_catalog.jsonb_agg(
+        pg_catalog.jsonb_build_object(
+          'id', transaction_rows.id,
+          'kind', transaction_rows.kind,
+          'is_opening_balance', transaction_rows.is_opening_balance,
+          'amount_ngn', transaction_rows.amount_ngn,
+          'transaction_date', transaction_rows.transaction_date,
+          'description', transaction_rows.description,
+          'category_name_snapshot', transaction_rows.category_name_snapshot,
+          'payer_payee', transaction_rows.payer_payee,
+          'source_note', transaction_rows.source_note,
+          'voided_at', transaction_rows.voided_at,
+          'void_reason', transaction_rows.void_reason
+        )
+        order by transaction_rows.transaction_date, transaction_rows.created_at, transaction_rows.id
+      )
+      from transaction_rows
+    ), '[]'::jsonb)
+  )
+  from bounds
+  where (select private.is_active_club_member());
+$function$;
+
+-- The summary RPC changed row shape; without this PostgREST keeps serving the
+-- four-column signature.
+notify pgrst, 'reload schema';
