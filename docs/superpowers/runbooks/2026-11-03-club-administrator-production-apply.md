@@ -219,6 +219,44 @@ that member's schedule and expect every month back as `unpaid`, with no
 `written_off` row created by the revoke. This is pinned locally by
 `supabase/tests/database/club_administrator_appointment_test.sql` (73 assertions).
 
+## 6a. Production apply record — 2026-11-03
+
+`supabase db push --linked --include-all` against `kgihmudjdvwrvteclodl` applied
+exactly the four rehearsed versions, in order, with no abort:
+`20261101010000`, `20261101130000`, `20261102120000`, `20261102150000`. History
+66 → 70. Nothing was applied twice and the two out-of-band markers were correctly
+skipped (already in history).
+
+Every §5 check passed on production, measured after apply:
+
+| Check | Result |
+| --- | --- |
+| `private.format_role_label('admin')` | `Club Admin` |
+| `member_role_assignments_one_current_admin_uidx` | 1 index present |
+| live `admin` assignments | 0 (no appointment made) |
+| new RPCs | `public.staff_grant_admin`, `staff_revoke_admin`, `record_dues_payment`, `approve_/reject_dues_payment_request` + the `private` cores, all present |
+| `public.club_finance_summary()` | `dues_income, other_income, expenses, event_inflow, event_outflow, balance` |
+| `events_sync_ledger_status` trigger | present on `public.events`, calls `private.sync_event_status_to_ledger()` |
+| RLS on public tables | 36 tables, 36 enabled, 36 forced — unchanged from the snapshot |
+| notifications | 291 → **286**; duplicate-officer rows remaining: **0** |
+| money, read as active member `02b5bf3d…` | dues 195,000 / other 0 / expenses 0 / event inflow 368,000 / event outflow 275,900 / **balance 294,100** |
+
+The balance equals the rehearsal's prediction to the naira (202,000 + 368,000 −
+275,900) and the notification drop equals the 5 rows the cleanup query counted
+beforehand.
+
+**Old app against new schema is safe, checked not assumed.** The signature change
+dropped the four-column `club_finance_summary()` and replaced it with six columns, so
+the deployed `main` build was audited: both of its readers name keys, never positions
+— `src/app/(member)/finances/page.tsx:283` takes `data[0]` then reads properties, and
+`src/lib/home-dashboard.mjs:413-416` reads `dues_income`, `other_income`, `expenses`,
+`balance`. All four survive in the new return. The `event_inflow`/`event_outflow`
+readers exist only on this branch.
+
+Deferred to after the app deploy, because both need a real appointment: the panel
+proof in §5 (badge, own schedule All (0), second appointment refused) and the §6
+revoke-restores-months read on production.
+
 ## 7. Rollback
 
 Migrations are up-only; a rollback is hand-written. For the two Club Admin migrations
