@@ -3364,4 +3364,39 @@ Then stop. Do not push, open a pull request, or merge: this branch's push and me
 
 ---
 
+## Production apply (operator-gated)
+
+### 1. Migrations Added on Branch `feat/event-multi-day-12-hour-time`
+The following migration file was created and updated across Tasks 3, 4, and 5, committed on branch `feat/event-multi-day-12-hour-time` under `supabase/migrations/`:
+- `supabase/migrations/20261104120000_event_duration_and_12hour_time.sql` (commits `2ae276e`, `08fd8b5`, `7fe1989`)
+
+### 2. Operator Production Commands
+The human operator runs the following commands against the production database (project `kgihmudjdvwrvteclodl`):
+
+```bash
+npx supabase db push            # operator only — applies every pending migration to PRODUCTION
+npx supabase test db            # operator only — pgTAP against production
+```
+
+Post-apply production verifications:
+1. Verify column grants on production:
+```bash
+npx supabase db query "
+select pg_catalog.has_column_privilege('authenticated','public.events','duration_days','select') as duration_readable,
+       pg_catalog.has_column_privilege('authenticated','public.events','ends_at','select') as ends_readable;
+"
+```
+Expected: both return `true`.
+
+2. Verify generated `ends_at` column values for existing events:
+```bash
+npx supabase db query "
+select id, starts_at, duration_days, ends_at from public.events order by starts_at desc limit 5;
+"
+```
+Expected: existing rows show `duration_days = 1` and `ends_at = starts_at`.
+
+### 3. Agent Execution Boundary
+**No agent in this plan runs either command.** Everything in this implementation used `--local` or no database at all. Production application is strictly operator-gated.
+
 ---
