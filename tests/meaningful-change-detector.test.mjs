@@ -37,7 +37,10 @@ describe("meaningful change fingerprints", () => {
   it("produces stable lowercase SHA-256 meeting fingerprints", () => {
     const fingerprint = detector.createMeetingFingerprint(meeting);
     assert.match(fingerprint, /^[a-f0-9]{64}$/);
-    assert.equal(detector.createMeetingFingerprint({ ...meeting }), fingerprint);
+    assert.equal(
+      detector.createMeetingFingerprint({ ...meeting }),
+      fingerprint,
+    );
   });
 
   it("ignores meeting whitespace noise but reacts to schedule changes", () => {
@@ -153,5 +156,20 @@ describe("meaningful change fingerprints", () => {
     assert.match(summary, /Start changed from/);
     assert.match(summary, /Location changed from Main Hall to Grand Hall/);
     assert.doesNotMatch(summary, /Title/);
+  });
+
+  it("names event clock changes in 12-hour form, never as a raw instant", () => {
+    assert.equal(
+      detector.describeEventChanges(event, {
+        ...event,
+        startsAt: "2026-11-19T18:00:00.000Z",
+      }),
+      "Start changed from 12 Nov 2026, 7:00 PM to 19 Nov 2026, 7:00 PM",
+    );
+
+    assert.equal(
+      detector.describeEventChanges(event, { ...event, endsAt: null }),
+      "End changed from 12 Nov 2026, 10:00 PM to not set",
+    );
   });
 });

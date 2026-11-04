@@ -39,7 +39,10 @@ describe("email schedule timezone labels", () => {
     const date = "2026-01-15T12:00:00.000Z";
     const label = timeZoneLabel(new Date(date), "Africa/Lagos");
 
-    assert.equal(formatSchedule(date, "Africa/Lagos").endsWith(` ${label}`), true);
+    assert.equal(
+      formatSchedule(date, "Africa/Lagos").endsWith(` ${label}`),
+      true,
+    );
   });
 
   it("uses the configured timezone label instead of always saying WAT", () => {
@@ -58,6 +61,30 @@ describe("email schedule timezone labels", () => {
       formatSchedule("2026-01-15T12:00:00.000Z", "Not/A_Timezone"),
       "2026-01-15T12:00:00.000Z",
     );
+  });
+
+  it("renders the email clock in 12-hour form with an uppercase meridiem", () => {
+    assert.equal(
+      formatSchedule("2026-11-12T17:00:00.000Z", "Africa/Lagos"),
+      "12 Nov 2026, 6:00 PM WAT",
+    );
+    assert.equal(
+      formatSchedule("2026-11-12T23:30:00.000Z", "Africa/Lagos"),
+      "13 Nov 2026, 12:30 AM WAT",
+    );
+    assert.equal(
+      formatSchedule("2026-11-12T12:00:00.000Z", "Africa/Lagos"),
+      "12 Nov 2026, 1:00 PM WAT",
+    );
+  });
+
+  it("never prints a 24-hour hour or a narrow no-break space", () => {
+    for (let hour = 0; hour < 24; hour += 1) {
+      const iso = `2026-06-15T${String(hour).padStart(2, "0")}:15:00.000Z`;
+      const formatted = formatSchedule(iso, "Africa/Lagos");
+      assert.match(formatted, / (1[0-2]|[1-9]):\d\d (AM|PM) WAT$/, iso);
+      assert.equal(formatted.includes(String.fromCharCode(0x202f)), false, iso);
+    }
   });
 
   it("uses each event's timezone for cancellation and role-assignment dates", () => {

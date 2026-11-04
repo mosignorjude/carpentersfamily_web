@@ -27,6 +27,46 @@ function instant(value: string | null | undefined): string {
   return Number.isNaN(parsed.getTime()) ? cleaned : parsed.toISOString();
 }
 
+/**
+ * The change summary is read by a member, so it shows "12 Nov 2026, 7:00 PM"
+ * rather than an ISO instant. Reassembled from parts, not imported from
+ * src/lib/event-times.mjs, because this module's test transpiles it standalone
+ * into a data-URL import where a relative specifier cannot resolve.
+ */
+function scheduleLabel(
+  value: string | null | undefined,
+  timezone: string | null | undefined,
+): string {
+  const cleaned = clean(value);
+  if (!cleaned) return "";
+  const parsed = new Date(cleaned);
+  if (Number.isNaN(parsed.getTime())) return cleaned;
+
+  try {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: clean(timezone) || "Africa/Lagos",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }).formatToParts(parsed);
+    const read = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find((part) => part.type === type)?.value ?? "";
+    const hour = read("hour").replace(/^0/, "");
+    const minute = read("minute").replace(/\D/g, "").slice(0, 2) || "00";
+    const meridiem = read("dayPeriod")
+      .replace(/[^APapMm]/g, "")
+      .toUpperCase();
+    return `${read("day")} ${read("month")} ${read("year")}, ${hour}:${minute}${
+      meridiem ? ` ${meridiem}` : ""
+    }`;
+  } catch {
+    return cleaned;
+  }
+}
+
 function fingerprint(parts: readonly string[]): string {
   return createHash("sha256").update(parts.join("\u001f")).digest("hex");
 }
@@ -123,12 +163,16 @@ export function describeEventChanges(
 
   if (instant(before.startsAt) !== instant(after.startsAt)) {
     changes.push(
-      `Start changed from ${instant(before.startsAt)} to ${instant(after.startsAt)}`,
+      `Start changed from ${
+        scheduleLabel(before.startsAt, before.timezone) || "not set"
+      } to ${scheduleLabel(after.startsAt, after.timezone) || "not set"}`,
     );
   }
   if (instant(before.endsAt) !== instant(after.endsAt)) {
     changes.push(
-      `End changed from ${instant(before.endsAt) || "not set"} to ${instant(after.endsAt) || "not set"}`,
+      `End changed from ${
+        scheduleLabel(before.endsAt, before.timezone) || "not set"
+      } to ${scheduleLabel(after.endsAt, after.timezone) || "not set"}`,
     );
   }
   if (clean(before.timezone) !== clean(after.timezone)) {
