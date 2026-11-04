@@ -1,3 +1,4 @@
+import { isEventLiveOrUpcoming } from "./event-times.mjs";
 import { getNotificationHref } from "./notification-page-presentation.mjs";
 
 const UUID_PATTERN =
@@ -205,14 +206,13 @@ async function getMemberDuesReceipts(supabase, memberId, currentYear) {
 }
 
 function mapEventRow(row, nowTimestamp) {
-  const startsAt = Date.parse(row?.starts_at);
   if (
     !row ||
     !UUID_PATTERN.test(row.id) ||
     !validText(row.title, 120) ||
     !["meeting", "party", "other"].includes(row.event_type) ||
     !validTimestamp(row.starts_at) ||
-    startsAt < nowTimestamp ||
+    !isEventLiveOrUpcoming(row, nowTimestamp) ||
     !validText(row.location, 200) ||
     row.status !== "scheduled" ||
     row.archived_at !== null ||
@@ -452,7 +452,7 @@ async function countUpcomingEvents(supabase, nowIso) {
       .select("id", { count: "exact", head: true })
       .eq("status", "scheduled")
       .is("archived_at", null)
-      .gte("starts_at", nowIso),
+      .gte("ends_at", nowIso),
   );
   const count = safeNonNegativeInteger(result.count);
   return result.error || count === null
@@ -830,11 +830,11 @@ export async function getHomeDashboardData(
   const eventsQuery = supabase
     .from("events")
     .select(
-      "id,title,event_type,starts_at,location,status,archived_at,budget_enabled,income_enabled,expenses_enabled,ticketing_enabled,attendance_enabled",
+      "id,title,event_type,starts_at,ends_at,location,status,archived_at,budget_enabled,income_enabled,expenses_enabled,ticketing_enabled,attendance_enabled",
     )
     .eq("status", "scheduled")
     .is("archived_at", null)
-    .gte("starts_at", nowIso)
+    .gte("ends_at", nowIso)
     .order("starts_at", { ascending: true })
     .order("id", { ascending: true })
     .limit(EVENT_LIMIT);

@@ -359,7 +359,7 @@ test("ticket sales and upcoming-event totals preserve returned counts", async ()
   assert.deepEqual(eventCountQuery.filters, [
     { method: "eq", column: "status", value: "scheduled" },
     { method: "is", column: "archived_at", value: null },
-    { method: "gte", column: "starts_at", value: now.toISOString() },
+    { method: "gte", column: "ends_at", value: now.toISOString() },
   ]);
 });
 
@@ -520,6 +520,35 @@ test("invalid event rows never enter the dashboard", async () => {
   });
   const dashboard = await getHomeDashboardData(supabase, memberId, now);
   assert.deepEqual(dashboard.events, { unavailable: true, rows: [] });
+});
+
+test("an event inside its last day is still upcoming for the member", async () => {
+  const supabase = createSupabase({
+    tables: {
+      events: {
+        data: [
+          baseEvent({
+            starts_at: "2026-10-30T18:00:00+01:00",
+            ends_at: "2026-11-02T18:00:00+01:00",
+          }),
+        ],
+        error: null,
+        count: 1,
+      },
+    },
+  });
+
+  const dashboard = await getHomeDashboardData(supabase, memberId, now);
+
+  assert.equal(dashboard.events.unavailable, false);
+  assert.deepEqual(
+    dashboard.events.rows.map((event) => event.id),
+    [eventId],
+  );
+  assert.deepEqual(dashboard.upcomingEventCount, {
+    unavailable: false,
+    count: 1,
+  });
 });
 
 test("activity correctly reports unread count unavailable when notifications query fails", async () => {

@@ -1,32 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-
-// Test the event grouping logic used in EventsPageView
-function groupEvents(events, now = new Date("2026-10-16T12:00:00Z").getTime()) {
-  const upcoming = events
-    .filter(
-      (event) =>
-        !event.archived_at &&
-        event.status === "scheduled" &&
-        new Date(event.starts_at).getTime() >= now,
-    )
-    .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-
-  const recentPast = events
-    .filter(
-      (event) =>
-        !event.archived_at &&
-        (event.status !== "scheduled" ||
-          new Date(event.starts_at).getTime() < now),
-    )
-    .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
-
-  const retainedArchive = events
-    .filter((event) => Boolean(event.archived_at))
-    .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
-
-  return { upcoming, recentPast, retainedArchive };
-}
+import { groupEventRows } from "../src/lib/event-presentation.mjs";
 
 test("events grouping: only events with archived_at belong in retainedArchive", () => {
   const events = [
@@ -88,7 +62,10 @@ test("events grouping: only events with archived_at belong in retainedArchive", 
     },
   ];
 
-  const { upcoming, recentPast, retainedArchive } = groupEvents(events);
+  const { upcoming, recentPast, retainedArchive } = groupEventRows(
+    events,
+    new Date("2026-10-16T12:00:00Z").getTime(),
+  );
 
   // Future scheduled
   assert.equal(upcoming.length, 1);

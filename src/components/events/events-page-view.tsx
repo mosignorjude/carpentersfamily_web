@@ -11,6 +11,7 @@ import {
 import { useMemo, useState } from "react";
 import { FormAlertBanner } from "@/components/ui";
 import { useSuccessNotice } from "@/components/ui/use-success-notice";
+import { groupEventRows } from "@/lib/event-presentation.mjs";
 import { CreateEventDisclosure } from "./create-event-disclosure";
 import { EventCard } from "./event-card";
 import { EventEditModal } from "./event-edit-modal";
@@ -83,38 +84,8 @@ export function EventsPageView({
     };
 
     const filtered = events.filter(filterFn);
-    const now = Date.now();
 
-    // Upcoming: Scheduled future events, sorted soonest first
-    const upcoming = filtered
-      .filter(
-        (event) =>
-          !event.archived_at &&
-          event.status === "scheduled" &&
-          new Date(event.starts_at).getTime() >= now,
-      )
-      .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-
-    // Past events: Concluded, cancelled, or past scheduled (awaiting completion)
-    const past = filtered
-      .filter(
-        (event) =>
-          !event.archived_at &&
-          (event.status !== "scheduled" ||
-            new Date(event.starts_at).getTime() < now),
-      )
-      .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
-
-    // Retained Archive: ONLY events explicitly archived (archived_at is set)
-    const archive = filtered
-      .filter((event) => Boolean(event.archived_at))
-      .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
-
-    return {
-      scheduledUpcoming: upcoming,
-      recentPast: past,
-      retainedArchive: archive,
-    };
+    return groupEventRows(filtered, Date.now());
   }, [events, selectedType, searchQuery]);
 
   return (

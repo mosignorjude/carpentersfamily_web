@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import React, { useState } from "react";
 import { getEventCardAccess } from "@/lib/event-card-access.mjs";
+import { isEventLiveOrUpcoming } from "@/lib/event-times.mjs";
 import { formatNaira } from "@/lib/format";
 import type { EventLifecycleAction } from "./event-lifecycle-modal";
 import type { EventRow } from "./event-types";
@@ -76,7 +77,7 @@ export function EventCard({
 
   const startDate = new Date(event.starts_at);
   const isPastScheduled =
-    event.status === "scheduled" && startDate.getTime() < Date.now();
+    event.status === "scheduled" && !isEventLiveOrUpcoming(event, Date.now());
 
   // Active feature labels list
   const activeFeatures: string[] = [];
