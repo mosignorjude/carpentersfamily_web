@@ -729,6 +729,23 @@ minimum hit targets, `:focus-visible` 3px ochre outline, `prefers-reduced-motion
 transitions, `scroll-padding-top: 84px` under the sticky header, `aria-expanded` on the drawer
 trigger, `role="tablist"`/`aria-selected` on the filter tabs.
 
+### Metadata is new, not ported
+
+The mockup's `<head>` carries a Tailwind CDN script, an inline `tailwind.config`, a Google Fonts
+`<link>` and no social preview at all — none of which ports. `src/app/layout.tsx:40` exports a
+`metadata` object containing nothing but `title: clubBrand.name`, and no `openGraph` or `twitter`
+key appears anywhere in `src/app` or `src/lib`. So the landing page's metadata is a new capability
+rather than a ported one: `title`, `description`, and an `openGraph` + `twitter` pair pointing at
+`https://www.carpentersfamily.com.ng/landing/og-share.jpg` with `alt` naming the club. Absolute URLs
+are mandatory here; a root-relative `og:image` renders a blank preview card. The icon set that
+already exists — `src/app/icon.png`, `apple-icon.png` — keeps working unchanged.
+
+There is likewise no `robots.ts` or `sitemap.ts` in the project, which means every route is
+crawlable today. That is harmless while the whole app is a sign-in wall, and not harmless once a
+marketing page with a public till goes live: Plan B adds a `sitemap.ts` listing the public routes
+explicitly and a `robots.ts` disallowing the authenticated areas. Neither is generated as a
+side effect of the port.
+
 ## 10. Copy edits
 
 Remove the profit-sharing claim from public copy wherever it appears — three places, not one:
@@ -745,25 +762,42 @@ membership timeline's 3-month probation and majority-vote induction.
 
 ## 11. Photo manifest
 
-Local files under `public/landing/`, rendered with `next/image`. All nine Unsplash hotlinks and
-their `placehold.co` `onerror` fallbacks are deleted: a production page must not break because a
-third-party CDN is unreachable, and a broken-image fallback that calls out to another vendor is
-worse than no image. JPEG or WebP, longest edge 1600px, target under 350 KB each.
+The eight photographs the mockup hotlinked are Unsplash stock images, sourced from the asset list
+the club supplied; all eight are now on disk under `public/landing/`, and `og-share.jpg` is derived
+from the hero. Their `placehold.co` `onerror` fallbacks stay deleted: a production page must not
+break because a third-party CDN is unreachable, and a broken-image fallback that calls out to
+another vendor is worse than no image.
 
-| filename | slot | crop / notes |
-|---|---|---|
-| `hero-family.jpg` | hero band background | 16:9 or 3:2, min 1600×900; centered dark-green gradient overlay sits on top, so keep faces central and the bottom third calm |
-| `what-we-do-main.jpg` | main collage photo | 4:3, min 1200×900 |
-| `what-we-do-inset.jpg` | overlapping "One Family!" card | 4:3, min 800×600; bottom ~40% is covered by the placard, subject in the top two-thirds |
-| `tile-raves.jpg` | tile "Crowd Energy & Nightlife" | 3:2, min 900×600; tiles crop to a short band |
-| `tile-djs-hype.jpg` | tile "Pro DJs, MCs & Hype" | 3:2, min 900×600 |
-| `tile-brand-activation.jpg` | tile "Beverage & Lifestyle Sales" | 3:2, min 900×600 |
-| `tile-family-galas.jpg` | tile "Galas, Weddings & Outings" | 3:2, min 900×600 |
-| `cta-band.jpg` | "Experience the Vibe" band | 16:9, min 1600×900; an 85% forest multiply overlay darkens it, so a bright image survives |
-| `og-share.jpg` | social link preview | 1200×630 |
+| filename | slot | on disk | source `photo-` id |
+|---|---|---|---|
+| `hero-family.jpg` | hero band background | 1600×1067 · 439 KB | `1511632765486-a01980e01a18` |
+| `what-we-do-main.jpg` | main collage photo | 1200×801 · 258 KB | `1492684223066-81342ee5ff30` |
+| `what-we-do-inset.jpg` | overlapping "One Family!" card | 800×450 · 64 KB | `1529156069898-49953e39b3ac` |
+| `tile-raves.jpg` | tile "Crowd Energy & Nightlife" | 900×601 · 131 KB | `1533174072545-7a4b6ad7a6c3` |
+| `tile-djs-hype.jpg` | tile "Pro DJs, MCs & Hype" | 900×675 · 209 KB | `1514525253161-7a46d19cd819` |
+| `tile-brand-activation.jpg` | tile "Beverage & Lifestyle Sales" | 900×546 · 73 KB | `1551024709-8f23befc6f87` |
+| `tile-family-galas.jpg` | tile "Galas, Weddings & Outings" | 900×600 · 72 KB | `1519671482749-fd09be7ccebf` |
+| `cta-band.jpg` | "Experience the Vibe" band | 1600×1067 · 308 KB | `1528605248644-14dd04022da1` |
+| `og-share.jpg` | social link preview | 1200×630 · 171 KB | hero, centre-cropped |
 
-Before publishing: strip EXIF — GPS metadata in an uploaded photo would leak the assembly venue —
-and treat any identifiable member as having consented to appear on a publicly browsable site.
+Width is the binding constraint, not height: every slot renders `object-cover`, so the design
+crops vertically rather than letterboxing, and the crop the photographer chose survives. `fit=max`
+preserves each source's natural aspect; only `og-share.jpg` is force-cropped to 1200×630, because a
+`<meta property="og:image">` has no CSS to crop it and preview consumers assume that ratio.
+
+**These are placeholders, and the page must look right when they change.** Replacing a stock image
+with the club's own is a like-for-like filename swap — no component, layout or spec text moves. Two
+rules apply to any real member photo before it is committed: strip EXIF (GPS metadata in an uploaded
+photo would leak the assembly venue) and treat any identifiable member as having consented to appear
+on a publicly browsable site. Re-sourcing a file at a different size is
+`https://images.unsplash.com/photo-<id>?fm=jpg&fit=max&w=<n>`; `fm=jpg` rather than `auto=format`, so
+the bytes on disk match the `.jpg` the filename claims.
+
+The three line-art icons in the Vision/Mission/Values band are not files. They are already inline in
+the mockup at `:229`, `:246`, `:262` with `stroke="currentColor"`, which is the form to port: an
+`<img>`-referenced SVG cannot inherit the palette token, and `next/image` refuses SVG sources without
+an explicit dangerous config. The asset document's copies of these icons hardcode `#174C37` and
+`#D6A23A`; use the mockup's `currentColor` versions, not the document's.
 
 ## 12. Error handling
 
@@ -934,7 +968,8 @@ independently shippable and independently reviewable:
   lookup. Nothing here depends on the landing page or the intake forms. Highest risk, highest
   value — do it first.
 * **Plan B — routes and landing** (§3, §9, §10, §11): the `/` → `/portal` move with its redirect
-  and `cta_url` audit, the landing port, the copy edits, the photo manifest. Depends on nothing in
+  and `cta_url` audit, the landing port onto the already-committed `public/landing/` assets, and the
+  copy edits. Depends on nothing in
   Plan A except that the ribbon's ticket CTA is nicer once the till can actually take an order.
 * **Plan C — intake and invitations** (§8 (all of 8.1-8.5), §13's three action notices): both public forms, the
   officer queues, invite lifecycle, and gating `/signup`. Independent of A and B, and the last one
@@ -957,8 +992,10 @@ where unreviewed money counts.
 
 ## 18. Open items
 
-1. **Club photographs** — supplied by the human partner into `public/landing/` per §11. Slots with
-   no photo yet get a labelled local placeholder.
+1. **Club photographs** — the nine `public/landing/` files are already committed (§11), but they are
+   Unsplash stock imagery, not the club. Someone with authority should confirm that generic party
+   crowds are acceptable for a first public launch; when real photos arrive they replace the files
+   of the same name, EXIF-stripped.
 2. **Fraunces woff2 files** — one download step (SIL OFL); the plan lists it as a task rather
    than assuming the files exist.
 3. **Officer routing for intake emails** — `resolveOfficerContacts()` currently fans out to all
