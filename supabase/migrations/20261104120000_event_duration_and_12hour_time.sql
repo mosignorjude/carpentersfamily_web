@@ -412,3 +412,386 @@ grant execute on function public.update_event_details(
 ) to authenticated;
 
 notify pgrst, 'reload schema';
+
+-- 12. Reminder emails now speak a 12-hour clock. The body below is copied
+--     verbatim from 20261027000000_scalable_notification_outbox_and_reminders
+--     (lines 1347-1708); the only change is the v_when_local assignment.
+create or replace function public.evaluate_notification_reminders(
+  p_now timestamptz default pg_catalog.clock_timestamp()
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_due_ids uuid[];
+  v_reminder_id uuid;
+  v_reminder public.notification_reminders%rowtype;
+  v_event public.events%rowtype;
+  v_member public.member_profiles%rowtype;
+  v_outbox_id uuid;
+  v_timezone text;
+  v_when_local text;
+  v_subject text;
+  v_heading text;
+  v_body text;
+  v_trigger_type text;
+  v_slot_prefix text;
+  v_batch_group_key text;
+  v_cycle_month date;
+  v_expected_upcoming date;
+  v_current_week text;
+  v_month_label text;
+  v_recipient_count integer;
+  v_seeded integer;
+  v_stale_cancelled integer;
+  v_processed integer := 0;
+  v_dispatched integer := 0;
+  v_skipped integer := 0;
+  v_cancelled integer := 0;
+  v_enqueued integer := 0;
+begin
+  if p_now is null then
+    raise exception using errcode = '23514', message = 'The reminder evaluation time is required.';
+  end if;
+
+  v_seeded := private.seed_due_notification_reminders(p_now);
+  v_stale_cancelled := private.cancel_stale_dues_reminders(p_now);
+
+  select array_agg(due.id)
+  into v_due_ids
+  from (
+    select reminder.id
+    from public.notification_reminders as reminder
+    where reminder.state = 'pending'
+      and reminder.scheduled_for <= p_now
+    order by reminder.scheduled_for asc, reminder.id asc
+    limit 500
+    for update skip locked
+  ) as due;
+
+  if v_due_ids is not null then
+    foreach v_reminder_id in array v_due_ids loop
+      select reminder.* into v_reminder
+      from public.notification_reminders as reminder
+      where reminder.id = v_reminder_id
+      for update;
+      if not found or v_reminder.state <> 'pending' then
+        continue;
+      end if;
+
+      v_processed := v_processed + 1;
+
+      if v_reminder.entity_type in ('event', 'meeting') then
+        select event.* into v_event
+        from public.events as event
+        where event.id = v_reminder.entity_id;
+
+        if not found then
+          update public.notification_reminders
+          set state = 'cancelled', skip_reason = 'event_not_found', updated_at = p_now
+          where id = v_reminder.id;
+          v_cancelled := v_cancelled + 1;
+        elsif v_event.archived_at is not null or v_event.status <> 'scheduled' then
+          update public.notification_reminders
+          set state = 'cancelled', skip_reason = 'event_not_scheduled', updated_at = p_now
+          where id = v_reminder.id;
+          v_cancelled := v_cancelled + 1;
+        elsif v_event.starts_at <= p_now then
+          update public.notification_reminders
+          set state = 'skipped_past_due', skip_reason = 'event_already_started', updated_at = p_now
+          where id = v_reminder.id;
+          v_skipped := v_skipped + 1;
+        elsif (v_reminder.entity_type = 'meeting') <> (v_event.event_type = 'meeting') then
+          update public.notification_reminders
+          set state = 'cancelled', skip_reason = 'entity_type_changed', updated_at = p_now
+          where id = v_reminder.id;
+          v_cancelled := v_cancelled + 1;
+        elsif not private.event_reminder_is_due_window(
+          p_now, v_event.starts_at, v_reminder.scheduled_for, v_reminder.reminder_slot
+        ) then
+          update public.notification_reminders
+          set state = 'skipped_past_due', skip_reason = 'reminder_window_passed', updated_at = p_now
+          where id = v_reminder.id;
+          v_skipped := v_skipped + 1;
+        else
+          v_timezone := private.resolve_timezone(v_event.timezone);
+          v_slot_prefix := pg_catalog.replace(v_reminder.reminder_slot::text, '_before', '');
+          v_trigger_type := case
+            when v_reminder.entity_type = 'meeting' then 'meeting_reminder_'
+            else 'event_reminder_'
+          end || v_slot_prefix;
+          v_batch_group_key := v_trigger_type || ':' || v_event.id::text;
+          v_subject := 'Reminder: ' || v_event.title;
+          v_heading := case
+            when v_reminder.entity_type = 'meeting' then 'Meeting reminder: '
+            else 'Event reminder: '
+          end || v_event.title;
+          v_when_local := pg_catalog.to_char(
+            v_event.starts_at at time zone v_timezone,
+            'FMDay, FMDD FMMonth YYYY "at"'
+          )
+            || ' '
+            || pg_catalog.ltrim(
+              pg_catalog.to_char(
+                v_event.starts_at at time zone v_timezone,
+                'FMHH12'
+              ),
+              '0'
+            )
+            || pg_catalog.to_char(
+              v_event.starts_at at time zone v_timezone,
+              ':MI'
+            )
+            || case
+              when extract(hour from (v_event.starts_at at time zone v_timezone)) < 12
+                then ' AM'
+              else ' PM'
+            end;
+          v_body := v_event.title || ' starts on ' || v_when_local
+            || ' (' || v_timezone || ') at ' || v_event.location || '.';
+
+          insert into public.notification_outbox (
+            idempotency_key,
+            trigger_type,
+            recipient_user_id,
+            recipient_email,
+            recipient_name,
+            subject,
+            heading,
+            body_text,
+            cta_label,
+            cta_url,
+            batch_group_key,
+            template_payload
+          )
+          select
+            v_trigger_type || ':' || v_reminder.entity_type::text || ':'
+              || v_event.id::text || ':recipient:' || profile.id::text,
+            v_trigger_type,
+            profile.id,
+            pg_catalog.lower(pg_catalog.btrim(account.email)),
+            profile.full_name,
+            v_subject,
+            v_heading,
+            v_body,
+            'View event',
+            '/events/' || v_event.id::text,
+            v_batch_group_key,
+            pg_catalog.jsonb_build_object(
+              'event_id', v_event.id,
+              'event_type', v_event.event_type,
+              'title', v_event.title,
+              'starts_at', v_event.starts_at,
+              'timezone', v_timezone,
+              'location', v_event.location,
+              'reminder_slot', v_reminder.reminder_slot::text
+            )
+          from public.member_profiles as profile
+          join auth.users as account on account.id = profile.id
+          where profile.status = 'active'
+            and private.is_valid_email(account.email)
+          on conflict (idempotency_key) do nothing;
+
+          get diagnostics v_recipient_count = row_count;
+          v_enqueued := v_enqueued + v_recipient_count;
+
+          update public.notification_reminders
+          set state = 'dispatched', dispatched_at = p_now,
+              skip_reason = null, updated_at = p_now
+          where id = v_reminder.id;
+          v_dispatched := v_dispatched + 1;
+        end if;
+
+      elsif v_reminder.entity_type = 'dues_period' then
+        select profile.* into v_member
+        from public.member_profiles as profile
+        where profile.id = v_reminder.entity_id;
+
+        if not found or v_member.status <> 'active' then
+          update public.notification_reminders
+          set state = 'cancelled', skip_reason = 'member_inactive', updated_at = p_now
+          where id = v_reminder.id;
+          v_cancelled := v_cancelled + 1;
+
+        elsif v_reminder.reminder_slot = 'dues_weekly_overdue' then
+          v_current_week := pg_catalog.to_char(
+            p_now at time zone 'Africa/Lagos', 'IYYY-"W"IW'
+          );
+
+          if v_reminder.cycle_key <> v_current_week then
+            update public.notification_reminders
+            set state = 'skipped_past_due', skip_reason = 'reminder_cycle_passed', updated_at = p_now
+            where id = v_reminder.id;
+            v_skipped := v_skipped + 1;
+          elsif not private.dues_member_has_overdue(
+            v_member.id, (p_now at time zone 'Africa/Lagos')::date
+          ) then
+            update public.notification_reminders
+            set state = 'cancelled', skip_reason = 'dues_obligation_cleared', updated_at = p_now
+            where id = v_reminder.id;
+            v_cancelled := v_cancelled + 1;
+          elsif p_now > v_reminder.scheduled_for + interval '24 hours' then
+            update public.notification_reminders
+            set state = 'skipped_past_due', skip_reason = 'reminder_window_passed', updated_at = p_now
+            where id = v_reminder.id;
+            v_skipped := v_skipped + 1;
+          else
+            v_trigger_type := 'dues_overdue_weekly';
+            v_subject := 'Outstanding club dues';
+            v_heading := 'Dues follow-up';
+            v_body := 'You have unpaid club dues from an earlier month. '
+              || 'Open your private dues page to review your status.';
+            v_cycle_month := pg_catalog.date_trunc(
+              'month', p_now at time zone 'Africa/Lagos'
+            )::date;
+            v_outbox_id := public.enqueue_notification_email(
+              'dues_overdue_weekly:period:'
+                || pg_catalog.to_char(v_cycle_month, 'YYYY-MM')
+                || ':week:' || pg_catalog.lower(v_reminder.cycle_key)
+                || ':user:' || v_member.id::text,
+              v_trigger_type,
+              v_member.id,
+              (
+                select account.email
+                from auth.users as account
+                where account.id = v_member.id
+              ),
+              v_member.full_name,
+              v_subject,
+              v_heading,
+              v_body,
+              'View my dues',
+              '/dues',
+              null,
+              pg_catalog.jsonb_build_object(
+                'member_id', v_member.id,
+                'period', v_reminder.cycle_key,
+                'reminder_slot', v_reminder.reminder_slot::text
+              )
+            );
+            if v_outbox_id is not null then
+              v_enqueued := v_enqueued + 1;
+            end if;
+            update public.notification_reminders
+            set state = 'dispatched', dispatched_at = p_now,
+                skip_reason = null, updated_at = p_now
+            where id = v_reminder.id;
+            v_dispatched := v_dispatched + 1;
+          end if;
+
+        else
+          v_cycle_month := pg_catalog.to_date(
+            v_reminder.cycle_key || '-01', 'YYYY-MM-DD'
+          );
+          v_month_label := pg_catalog.to_char(v_cycle_month, 'FMMonth YYYY');
+
+          if v_reminder.reminder_slot = 'dues_upcoming' then
+            v_expected_upcoming := (
+              pg_catalog.date_trunc('month', p_now at time zone 'Africa/Lagos')::date
+              + interval '1 month'
+            )::date;
+
+            if v_cycle_month <> v_expected_upcoming then
+              update public.notification_reminders
+              set state = 'skipped_past_due', skip_reason = 'reminder_cycle_passed', updated_at = p_now
+              where id = v_reminder.id;
+              v_skipped := v_skipped + 1;
+              continue;
+            end if;
+
+            v_trigger_type := 'dues_upcoming';
+            v_subject := 'Dues reminder for ' || v_month_label;
+            v_heading := 'Monthly dues';
+            v_body := 'Your club dues for ' || v_month_label
+              || ' are due on the 1st. Open your private dues page to review your status.';
+          elsif v_reminder.reminder_slot = 'dues_on_due_date' then
+            if v_cycle_month <> pg_catalog.date_trunc(
+              'month', p_now at time zone 'Africa/Lagos'
+            )::date then
+              update public.notification_reminders
+              set state = 'skipped_past_due', skip_reason = 'reminder_cycle_passed', updated_at = p_now
+              where id = v_reminder.id;
+              v_skipped := v_skipped + 1;
+              continue;
+            end if;
+
+            v_trigger_type := 'dues_on_due_date';
+            v_subject := 'Dues due today: ' || v_month_label;
+            v_heading := 'Monthly dues';
+            v_body := 'Your club dues for ' || v_month_label
+              || ' are due today. Open your private dues page to review your status.';
+          else
+            update public.notification_reminders
+            set state = 'cancelled', skip_reason = 'unknown_reminder_slot', updated_at = p_now
+            where id = v_reminder.id;
+            v_cancelled := v_cancelled + 1;
+            continue;
+          end if;
+
+          if not private.dues_member_has_month_obligation(v_member.id, v_cycle_month) then
+            update public.notification_reminders
+            set state = 'cancelled', skip_reason = 'dues_obligation_cleared', updated_at = p_now
+            where id = v_reminder.id;
+            v_cancelled := v_cancelled + 1;
+          elsif p_now > v_reminder.scheduled_for + interval '24 hours' then
+            update public.notification_reminders
+            set state = 'skipped_past_due', skip_reason = 'reminder_window_passed', updated_at = p_now
+            where id = v_reminder.id;
+            v_skipped := v_skipped + 1;
+          else
+            v_outbox_id := public.enqueue_notification_email(
+              v_trigger_type || ':period:' || v_reminder.cycle_key
+                || ':user:' || v_member.id::text,
+              v_trigger_type,
+              v_member.id,
+              (
+                select account.email
+                from auth.users as account
+                where account.id = v_member.id
+              ),
+              v_member.full_name,
+              v_subject,
+              v_heading,
+              v_body,
+              'View my dues',
+              '/dues',
+              null,
+              pg_catalog.jsonb_build_object(
+                'member_id', v_member.id,
+                'period', v_reminder.cycle_key,
+                'reminder_slot', v_reminder.reminder_slot::text
+              )
+            );
+            if v_outbox_id is not null then
+              v_enqueued := v_enqueued + 1;
+            end if;
+            update public.notification_reminders
+            set state = 'dispatched', dispatched_at = p_now,
+                skip_reason = null, updated_at = p_now
+            where id = v_reminder.id;
+            v_dispatched := v_dispatched + 1;
+          end if;
+        end if;
+
+      else
+        update public.notification_reminders
+        set state = 'cancelled', skip_reason = 'unknown_entity_type', updated_at = p_now
+        where id = v_reminder.id;
+        v_cancelled := v_cancelled + 1;
+      end if;
+    end loop;
+  end if;
+
+  return pg_catalog.jsonb_build_object(
+    'seeded', v_seeded,
+    'stale_cancelled', v_stale_cancelled,
+    'processed', v_processed,
+    'dispatched', v_dispatched,
+    'skipped', v_skipped,
+    'cancelled', v_cancelled,
+    'enqueued', v_enqueued
+  );
+end;
+$function$;

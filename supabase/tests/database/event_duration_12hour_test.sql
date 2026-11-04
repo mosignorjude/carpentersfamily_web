@@ -185,5 +185,67 @@ select throws_ok(
   'an editor cannot omit the day count and silently reset the event to one day'
 );
 
+-- A party twelve days out leaves every slot window in the future, so the 7d slot
+-- can be evaluated deterministically while the local wall clock still reads
+-- 18:00. date_trunc + interval keeps the fixture hour pinned no matter when the
+-- suite runs.
+select set_config(
+  'test.dur12_starts',
+  (
+    select ((date_trunc('day', clock_timestamp() at time zone 'Africa/Lagos')
+             + interval '12 days 18 hours') at time zone 'Africa/Lagos')::text
+  ),
+  true
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000c01', true);
+select set_config(
+  'test.dur12_event',
+  public.create_event(
+    'Twelve day party', 'party',
+    current_setting('test.dur12_starts')::timestamptz,
+    'Garden', 'Reminder clock test',
+    false, false, false, false, false, false
+  )::text,
+  true
+);
+reset role;
+
+select set_config(
+  'test.dur12_eval',
+  (
+    select (scheduled_for + interval '5 minutes')::text
+    from public.notification_reminders
+    where entity_id = current_setting('test.dur12_event')::uuid
+      and reminder_slot = '7d_before'
+  ),
+  true
+);
+
+select public.evaluate_notification_reminders(
+  current_setting('test.dur12_eval')::timestamptz
+);
+
+select ok(
+  (select count(*) > 0
+   from public.notification_outbox
+   where trigger_type = 'event_reminder_7d'
+     and template_payload->>'event_id' = current_setting('test.dur12_event')),
+  'the due seven-day event reminder fans out into the outbox'
+);
+
+select ok(
+  (select bool_and(
+      body_text ~ ' at (1[0-2]|[1-9]):[0-5][0-9] (AM|PM) '
+      and body_text not like '%at 18:00%'
+      and body_text not like '%at 06:00%'
+    )
+   from public.notification_outbox
+   where trigger_type = 'event_reminder_7d'
+     and template_payload->>'event_id' = current_setting('test.dur12_event')),
+  'the event reminder email prints the start time on a 12-hour clock'
+);
+
 select * from finish();
 rollback;
