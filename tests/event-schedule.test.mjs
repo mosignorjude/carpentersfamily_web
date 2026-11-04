@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   MAX_DURATION_DAYS,
   MINUTE_STEPS,
+  endsAtFromStart,
   parseDurationDays,
   parseEventSchedule,
   splitInstantForForm,
@@ -207,4 +208,24 @@ test("MINUTE_STEPS is the documented five-minute grid", () => {
   assert.equal(MINUTE_STEPS.length, 12);
   assert.deepEqual(MINUTE_STEPS.slice(0, 3), [0, 5, 10]);
   assert.equal(MINUTE_STEPS.at(-1), 55);
+});
+
+test("endsAtFromStart reproduces the generated ends_at column", () => {
+  assert.equal(endsAtFromStart("2026-11-12T17:00:00.000Z", 1), "2026-11-12T17:00:00.000Z");
+  assert.equal(endsAtFromStart("2026-11-12T17:00:00.000Z", 3), "2026-11-14T17:00:00.000Z");
+  assert.equal(endsAtFromStart("2026-11-12T17:00:00.000Z", 30), "2026-12-11T17:00:00.000Z");
+});
+
+test("endsAtFromStart refuses nonsense instead of inventing an instant", () => {
+  assert.equal(endsAtFromStart("not-a-date", 3), "");
+  assert.equal(endsAtFromStart("", 3), "");
+  assert.equal(endsAtFromStart("2026-11-12T17:00:00.000Z", 0), "");
+  assert.equal(endsAtFromStart("2026-11-12T17:00:00.000Z", 2.5), "");
+  assert.equal(endsAtFromStart("2026-11-12T17:00:00.000Z", 31), "");
+  assert.equal(endsAtFromStart("2026-11-12T17:00:00.000Z", null), "");
+});
+
+test("endsAtFromStart crosses daylight-saving-free Lagos midnight on whole days", () => {
+  // 23:30 WAT on 12 November, three days: the last day starts 23:30 WAT on 14 November.
+  assert.equal(endsAtFromStart("2026-11-12T22:30:00.000Z", 3), "2026-11-14T22:30:00.000Z");
 });

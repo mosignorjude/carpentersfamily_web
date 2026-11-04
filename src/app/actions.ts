@@ -27,6 +27,11 @@ import {
   normalizeEventFinanceTab,
 } from "@/lib/event-finance-tab.mjs";
 import {
+  endsAtFromStart,
+  parseDurationDays,
+  parseEventSchedule,
+} from "@/lib/event-schedule.mjs";
+import {
   communicationFieldsOnly,
   containsControlCharacters,
   eventDateTimeToISOString,
@@ -68,6 +73,7 @@ interface EventScheduleRow {
   event_type: string;
   title: string;
   starts_at: string;
+  ends_at: string | null;
   location: string;
   description: string | null;
   timezone: string | null;
@@ -84,7 +90,7 @@ function eventFingerprint(row: EventScheduleRow): string {
   }
   return createEventFingerprint({
     startsAt: row.starts_at,
-    endsAt: "",
+    endsAt: row.ends_at ?? "",
     timezone: row.timezone ?? "Africa/Lagos",
     location: row.location,
     title: row.title,
@@ -114,14 +120,14 @@ function eventChangeSummary(
   return describeEventChanges(
     {
       startsAt: before.starts_at,
-      endsAt: "",
+      endsAt: before.ends_at ?? "",
       timezone: before.timezone ?? "Africa/Lagos",
       location: before.location,
       title: before.title,
     },
     {
       startsAt: after.starts_at,
-      endsAt: "",
+      endsAt: after.ends_at ?? "",
       timezone: after.timezone ?? "Africa/Lagos",
       location: after.location,
       title: after.title,
@@ -1677,7 +1683,11 @@ export async function createEventAction(formData: FormData) {
   const allowed = [
     "title",
     "event_type",
-    "starts_at",
+    "event_date",
+    "start_hour",
+    "start_minute",
+    "meridiem",
+    "duration_days",
     "location",
     "description",
     "minutes_enabled",
@@ -1692,10 +1702,21 @@ export async function createEventAction(formData: FormData) {
 
   const title = eventText(formData, "title", 120);
   const eventType = eventText(formData, "event_type", 20);
-  if (formData.getAll("starts_at").length !== 1) {
-    redirect(eventNoticeUrl("invalid-request"));
+  for (const key of ["event_date", "start_hour", "start_minute", "meridiem"]) {
+    if (formData.getAll(key).length !== 1) {
+      redirect(eventNoticeUrl("invalid-request"));
+    }
   }
-  const startsAt = eventDateTimeToISOString(formData.get("starts_at"));
+  const schedule = parseEventSchedule({
+    eventDate: formData.get("event_date"),
+    startHour: formData.get("start_hour"),
+    startMinute: formData.get("start_minute"),
+    meridiem: formData.get("meridiem"),
+  });
+  if (!schedule.ok) redirect(eventNoticeUrl("invalid-request"));
+  const startsAt = schedule.startsAt;
+  const durationDays = parseDurationDays(formData.get("duration_days"));
+  if (durationDays === null) redirect(eventNoticeUrl("invalid-request"));
   const location = eventText(formData, "location", 200);
   const description = optionalEventText(formData, "description", 2000);
   const minutesEnabled = eventCheckbox(formData, "minutes_enabled");
@@ -1732,6 +1753,7 @@ export async function createEventAction(formData: FormData) {
     p_income_enabled: incomeEnabled,
     p_expenses_enabled: expensesEnabled,
     p_ticketing_enabled: ticketingEnabled,
+    p_duration_days: durationDays,
   });
   if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
   if (typeof eventId !== "string" || !uuidPattern.test(eventId)) {
@@ -1767,7 +1789,11 @@ export async function updateEventDetailsAction(formData: FormData) {
     !eventFieldsOnly(formData, [
       "event_id",
       "title",
-      "starts_at",
+      "event_date",
+      "start_hour",
+      "start_minute",
+      "meridiem",
+      "duration_days",
       "location",
       "description",
       "reason",
@@ -1776,16 +1802,27 @@ export async function updateEventDetailsAction(formData: FormData) {
     redirect(eventNoticeUrl("invalid-request"));
   }
   const title = eventText(formData, "title", 120);
-  if (formData.getAll("starts_at").length !== 1) {
-    redirect(eventNoticeUrl("invalid-request"));
+  for (const key of ["event_date", "start_hour", "start_minute", "meridiem"]) {
+    if (formData.getAll(key).length !== 1) {
+      redirect(eventNoticeUrl("invalid-request"));
+    }
   }
-  const startsAt = eventDateTimeToISOString(formData.get("starts_at"));
+  const schedule = parseEventSchedule({
+    eventDate: formData.get("event_date"),
+    startHour: formData.get("start_hour"),
+    startMinute: formData.get("start_minute"),
+    meridiem: formData.get("meridiem"),
+  });
+  if (!schedule.ok) redirect(eventNoticeUrl("invalid-request"));
+  const startsAt = schedule.startsAt;
+  const durationDays = parseDurationDays(formData.get("duration_days"));
   const location = eventText(formData, "location", 200);
   const description = optionalEventText(formData, "description", 2000);
   const reason = eventText(formData, "reason", 500);
   if (
     !title ||
     !startsAt ||
+    durationDays === null ||
     !location ||
     description === undefined ||
     !reason
@@ -1793,10 +1830,12 @@ export async function updateEventDetailsAction(formData: FormData) {
     redirect(eventNoticeUrl("invalid-request"));
   }
 
+  const days = durationDays as number;
+
   const { data: beforeRow } = await actor.supabase
     .from("events")
     .select(
-      "event_type, title, starts_at, location, description, timezone, status",
+      "event_type, title, starts_at, location, description, timezone, status, duration_days",
     )
     .eq("id", eventId)
     .maybeSingle();
@@ -1808,6 +1847,7 @@ export async function updateEventDetailsAction(formData: FormData) {
     p_location: location,
     p_description: description,
     p_reason: reason,
+    p_duration_days: days,
   });
   if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
 
@@ -1820,6 +1860,10 @@ export async function updateEventDetailsAction(formData: FormData) {
       event_type: beforeRow.event_type,
       title: beforeRow.title,
       starts_at: beforeRow.starts_at,
+      ends_at: endsAtFromStart(
+        beforeRow.starts_at,
+        beforeRow.duration_days ?? 1,
+      ),
       location: beforeRow.location,
       description: beforeRow.description,
       timezone: beforeRow.timezone,
@@ -1828,6 +1872,7 @@ export async function updateEventDetailsAction(formData: FormData) {
       ...before,
       title,
       starts_at: startsAt,
+      ends_at: endsAtFromStart(startsAt, days),
       location,
       description,
     };

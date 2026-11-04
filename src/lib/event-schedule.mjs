@@ -126,3 +126,23 @@ export function splitInstantForForm(iso) {
     meridiem,
   };
 }
+
+const DAY_MS = 86_400_000;
+
+/**
+ * Reproduces public.events.ends_at, which Postgres computes as
+ * starts_at + ((duration_days - 1) * interval '1 day'). Lagos has no DST, so a
+ * fixed 24-hour step is exact.
+ *
+ * @param {unknown} startsAt
+ * @param {unknown} durationDays
+ * @returns {string} the instant, or an empty string when either input is unusable
+ */
+export function endsAtFromStart(startsAt, durationDays) {
+  if (typeof startsAt !== "string" || startsAt.length === 0) return "";
+  const milliseconds = new Date(startsAt).getTime();
+  if (Number.isNaN(milliseconds)) return "";
+  const days = parseDurationDays(durationDays);
+  if (days === null) return "";
+  return new Date(milliseconds + (days - 1) * DAY_MS).toISOString();
+}
