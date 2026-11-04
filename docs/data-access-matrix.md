@@ -158,6 +158,7 @@ rows in the same transaction.
 | Operation | Member | Committee | Event Assistant | Event Lead | Executive | President |
 | --- | --- | --- | --- | --- | --- | --- |
 | Read active/retained event details, staffing, and budgets | Allowed while active | Allowed while active | Allowed while active | Allowed while active | Allowed while active | Allowed while active |
+| Read `duration_days` and the generated `ends_at` | Allowed while active | Allowed while active | Allowed while active | Allowed while active | Allowed while active | Allowed while active |
 | Create event and assign/revoke event roles | Denied | Denied | Denied | Denied | Allowed | Allowed |
 | Edit a scheduled event within the mutable past window | Denied | Denied | Own event only | Own event only | Allowed | Allowed |
 | Set budget within the mutable past window | Denied | Denied | Own event only | Own event only | Allowed | Allowed |
@@ -173,7 +174,10 @@ with deactivation and role changes. A completed or cancelled event is locked;
 only the President can reopen it. Archived events are immutable. Past events
 outside the latest four are read-only except explicit archival. Audit reasons
 and full before/after history remain officer-only; members can still read
-retained event and budget values for transparency.
+retained event and budget values for transparency. `ends_at` is generated from
+`starts_at` and `duration_days` and is never writable: every event mutation path
+accepts a day count and Postgres derives the end of the live window, so no client
+can store a duration that disagrees with the column the read paths filter on.
 
 ## Event finance authorization
 
