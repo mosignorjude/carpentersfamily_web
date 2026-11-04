@@ -819,7 +819,8 @@ select public.update_event_details(
   pg_catalog.clock_timestamp() + interval '12 days',
   'Main Hall',
   'Outbox rescheduling event',
-  'Move the event later for the reminder state test'
+  'Move the event later for the reminder state test',
+  1
 );
 
 reset role;
@@ -862,7 +863,8 @@ select public.update_event_details(
   pg_catalog.clock_timestamp() + interval '1 day',
   'Main Hall',
   'Outbox rescheduling event',
-  'Move the event close for the past-window state test'
+  'Move the event close for the past-window state test',
+  1
 );
 
 reset role;

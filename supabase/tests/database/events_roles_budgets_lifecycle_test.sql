@@ -65,9 +65,9 @@ select ok(
   not has_table_privilege('anon', 'public.events', 'SELECT,INSERT,UPDATE,DELETE')
   and not has_table_privilege('anon', 'public.event_role_assignments', 'SELECT,INSERT,UPDATE,DELETE')
   and not has_table_privilege('anon', 'public.event_budgets', 'SELECT,INSERT,UPDATE,DELETE')
-  and not has_function_privilege('anon', 'public.create_event(text,text,timestamptz,text,text,boolean,boolean,boolean,boolean,boolean,boolean)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.create_event(text,text,timestamptz,text,text,boolean,boolean,boolean,boolean,boolean,boolean,integer)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.set_event_status(uuid,text,text)', 'EXECUTE')
-  and has_function_privilege('authenticated', 'public.create_event(text,text,timestamptz,text,text,boolean,boolean,boolean,boolean,boolean,boolean)', 'EXECUTE')
+  and has_function_privilege('authenticated', 'public.create_event(text,text,timestamptz,text,text,boolean,boolean,boolean,boolean,boolean,boolean,integer)', 'EXECUTE')
   and has_function_privilege('authenticated', 'public.assign_event_role(uuid,uuid,text,text)', 'EXECUTE')
   and has_function_privilege('authenticated', 'public.set_event_budget(uuid,bigint,jsonb,text)', 'EXECUTE'),
   'only authenticated requests can use the event procedures'
@@ -441,7 +441,7 @@ select lives_ok(
 select throws_ok(
   $$select public.update_event_details(
     current_setting('test.event_one_id')::uuid, 'Changed after completion',
-    '2026-10-10 18:00:00+01', 'Club Hall', 'Locked', 'Attempt to edit'
+    '2026-10-10 18:00:00+01', 'Club Hall', 'Locked', 'Attempt to edit', 1
   )$$,
   '42501', 'Only scheduled, unarchived events can be edited.',
   'completed event details are locked'
