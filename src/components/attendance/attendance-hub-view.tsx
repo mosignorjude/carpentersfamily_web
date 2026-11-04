@@ -30,6 +30,7 @@ import type {
 import { CheckinCard } from "@/components/events/attendance/checkin-card";
 import { MinutesCard } from "@/components/events/attendance/minutes-card";
 import { OfficerSessionControls } from "@/components/events/attendance/officer-session-controls";
+import { formatEventDateSpan, formatEventTime } from "@/lib/event-times.mjs";
 import {
   getScrollBehavior,
   parseAttendanceTab,
@@ -70,10 +71,9 @@ interface AttendanceHubViewProps {
 type HubTab = "session" | "minutes" | "history" | "audit";
 type EventTypeFilter = "all" | "meeting" | "general";
 
-const watDateTime = new Intl.DateTimeFormat("en-NG", {
+const eventDateOnly = new Intl.DateTimeFormat("en-NG", {
   timeZone: "Africa/Lagos",
-  dateStyle: "full",
-  timeStyle: "short",
+  dateStyle: "medium",
 });
 
 const watShortDate = new Intl.DateTimeFormat("en-NG", {
@@ -308,7 +308,11 @@ export function AttendanceHubView({
               <div className="flex items-center gap-2 text-xs text-[#6B5D53]">
                 <Calendar className="w-3.5 h-3.5 text-[#174C37]" />
                 <span>
-                  {watDateTime.format(new Date(selectedEvent.starts_at))} WAT
+                  {formatEventDateSpan(
+                    selectedEvent.starts_at,
+                    selectedEvent.duration_days,
+                  )}
+                  , {formatEventTime(selectedEvent.starts_at)} WAT
                 </span>
               </div>
             </div>
@@ -534,8 +538,11 @@ export function AttendanceHubView({
                     </h2>
                     <p className="text-xs text-[#7A685D]">
                       Convened on{" "}
-                      {watDateTime.format(new Date(selectedEvent.starts_at))}{" "}
-                      WAT
+                      {formatEventDateSpan(
+                        selectedEvent.starts_at,
+                        selectedEvent.duration_days,
+                      )}
+                      , {formatEventTime(selectedEvent.starts_at)} WAT
                     </p>
                   </div>
 
@@ -655,7 +662,8 @@ export function AttendanceHubView({
                         key={row.eventId}
                       >
                         <td className="py-3 px-4 font-mono font-medium text-[#5C4638]">
-                          {watShortDate.format(new Date(row.startsAt))} WAT
+                          {eventDateOnly.format(new Date(row.startsAt))},{" "}
+                          {formatEventTime(row.startsAt)} WAT
                         </td>
                         <td className="py-3 px-4 font-bold text-[#3D291F]">
                           <button

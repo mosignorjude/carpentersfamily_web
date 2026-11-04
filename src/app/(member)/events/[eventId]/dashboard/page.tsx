@@ -15,6 +15,11 @@ import type {
 } from "@/components/events/dashboard/dashboard-types";
 import { EventDashboardView } from "@/components/events/dashboard/event-dashboard-view";
 import { partitionExpensesByAllocation } from "@/lib/event-cost-centers.mjs";
+import {
+  formatEventDateSpan,
+  formatEventDurationLabel,
+  formatEventTime,
+} from "@/lib/event-times.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const dashboardNoticeMap: Record<
@@ -189,7 +194,7 @@ export default async function EventDashboardPage({
     supabase
       .from("events")
       .select(
-        "id, title, event_type, starts_at, location, status, archived_at, description, minutes_enabled, attendance_enabled, income_enabled, expenses_enabled, ticketing_enabled, budget_enabled",
+        "id, title, event_type, starts_at, duration_days, location, status, archived_at, description, minutes_enabled, attendance_enabled, income_enabled, expenses_enabled, ticketing_enabled, budget_enabled",
       )
       .eq("id", eventId)
       .maybeSingle(),
@@ -295,29 +300,18 @@ export default async function EventDashboardPage({
   const canManageCategories = (isAdmin || isEventLead) && isMutableEvent;
   const canDeleteCategories = isAdmin && isMutableEvent;
 
-  // Format Dates in Africa/Lagos WAT
-  const startDate = new Date(rawEvent.starts_at);
-  const dateFormatter = new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "Africa/Lagos",
-  });
-  const timeFormatter = new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "Africa/Lagos",
-  });
-
   const eventInfo: DashboardEventInfo = {
     id: rawEvent.id,
     title: rawEvent.title,
     type: rawEvent.event_type,
     status: rawEvent.status,
     startsAt: rawEvent.starts_at,
-    dateFormatted: dateFormatter.format(startDate),
-    timeWAT: timeFormatter.format(startDate),
+    dateFormatted: formatEventDateSpan(
+      rawEvent.starts_at,
+      rawEvent.duration_days,
+    ),
+    timeWAT: formatEventTime(rawEvent.starts_at),
+    durationLabel: formatEventDurationLabel(rawEvent.duration_days),
     location: rawEvent.location,
     details: rawEvent.description ?? undefined,
     budgetCeiling: budgetResult.data?.total_ngn ?? 0,

@@ -4,6 +4,7 @@ export interface EventRow {
   event_type?: string;
   location?: string;
   starts_at: string;
+  duration_days?: number;
   minutes_enabled: boolean;
   attendance_enabled: boolean;
   status: string;

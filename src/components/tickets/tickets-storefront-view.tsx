@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useState } from "react";
 import ClubLogo from "@/components/club-logo";
 import { clubBrand } from "@/lib/brand";
+import { formatEventTime } from "@/lib/event-times.mjs";
 import { formatNaira } from "@/lib/format";
 
 export interface PublicTicketTier {
@@ -52,13 +53,6 @@ const dateFormatter = new Intl.DateTimeFormat("en-NG", {
   year: "numeric",
   month: "short",
   day: "numeric",
-});
-
-const timeFormatter = new Intl.DateTimeFormat("en-NG", {
-  timeZone: "Africa/Lagos",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: true,
 });
 
 export function TicketsStorefrontView({
@@ -195,7 +189,7 @@ export function TicketsStorefrontView({
                       </div>
                       <div className="flex items-center gap-2 text-[#5C4638] font-medium">
                         <Clock className="w-4 h-4 text-[#174C37] shrink-0" />
-                        <span>{timeFormatter.format(eventDate)} WAT</span>
+                        <span>{formatEventTime(event.starts_at)} WAT</span>
                       </div>
                       <div className="flex items-start gap-2 text-[#5C4638] font-medium">
                         <MapPin className="w-4 h-4 text-[#174C37] shrink-0 mt-0.5" />

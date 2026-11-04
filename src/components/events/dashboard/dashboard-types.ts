@@ -154,6 +154,7 @@ export interface DashboardEventInfo {
   endsAt?: string;
   dateFormatted: string;
   timeWAT: string;
+  durationLabel?: string;
   location: string;
   details?: string;
   budgetCeiling: number;

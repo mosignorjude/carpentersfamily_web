@@ -59,7 +59,7 @@ export default async function AttendancePage({
   const { data: eventsData, error: eventsError } = await supabase
     .from("events")
     .select(
-      "id, title, event_type, starts_at, location, status, minutes_enabled, attendance_enabled, archived_at",
+      "id, title, event_type, starts_at, duration_days, location, status, minutes_enabled, attendance_enabled, archived_at",
     )
     .or(
       "event_type.eq.meeting,attendance_enabled.eq.true,minutes_enabled.eq.true",

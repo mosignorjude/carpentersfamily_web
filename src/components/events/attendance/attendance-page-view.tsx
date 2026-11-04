@@ -8,6 +8,7 @@ import {
   FileText,
 } from "lucide-react";
 import Link from "next/link";
+import { formatEventDateSpan, formatEventTime } from "@/lib/event-times.mjs";
 import { AttendanceAuditHistory } from "./attendance-audit-history";
 import { AttendanceRosterTable } from "./attendance-roster-table";
 import type {
@@ -37,12 +38,6 @@ interface AttendancePageViewProps {
   isOfficer: boolean;
   notice: string | null;
 }
-
-const watDateTime = new Intl.DateTimeFormat("en-NG", {
-  timeZone: "Africa/Lagos",
-  dateStyle: "full",
-  timeStyle: "short",
-});
 
 export function AttendancePageView({
   event,
@@ -124,7 +119,8 @@ export function AttendancePageView({
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-[#174C37]" />
                 <span className="font-semibold text-[#3D291F]">
-                  {watDateTime.format(new Date(event.starts_at))}
+                  {formatEventDateSpan(event.starts_at, event.duration_days)},{" "}
+                  {formatEventTime(event.starts_at)}
                 </span>
               </div>
             </div>

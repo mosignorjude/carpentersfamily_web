@@ -17,7 +17,11 @@ import {
 import Link from "next/link";
 import React, { useState } from "react";
 import { getEventCardAccess } from "@/lib/event-card-access.mjs";
-import { isEventLiveOrUpcoming } from "@/lib/event-times.mjs";
+import {
+  formatEventDateSpan,
+  formatEventTime,
+  isEventLiveOrUpcoming,
+} from "@/lib/event-times.mjs";
 import { formatNaira } from "@/lib/format";
 import type { EventLifecycleAction } from "./event-lifecycle-modal";
 import type { EventRow } from "./event-types";
@@ -37,13 +41,6 @@ const dateFormatter = new Intl.DateTimeFormat("en-NG", {
   year: "numeric",
   month: "long",
   day: "numeric",
-});
-
-const timeFormatter = new Intl.DateTimeFormat("en-NG", {
-  timeZone: "Africa/Lagos",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
 });
 
 export function EventCard({
@@ -75,7 +72,6 @@ export function EventCard({
   const isCancelled = event.status === "cancelled";
   const isLocked = isRetainedArchive || isCompleted || isCancelled;
 
-  const startDate = new Date(event.starts_at);
   const isPastScheduled =
     event.status === "scheduled" && !isEventLiveOrUpcoming(event, Date.now());
 
@@ -124,8 +120,11 @@ export function EventCard({
               desc: "Planning halted and locked. Only Admin or President can reopen.",
             };
 
-  const formattedDate = dateFormatter.format(startDate);
-  const formattedTime = timeFormatter.format(startDate);
+  const formattedDate = formatEventDateSpan(
+    event.starts_at,
+    event.duration_days,
+  );
+  const formattedTime = formatEventTime(event.starts_at);
 
   return (
     <article

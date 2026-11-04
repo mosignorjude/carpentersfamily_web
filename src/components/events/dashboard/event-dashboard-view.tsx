@@ -584,6 +584,17 @@ export function EventDashboardView({
                 <Clock className="w-4 h-4 text-[#174C37] shrink-0" />
                 <span className="font-mono">{event.timeWAT}</span>
               </div>
+              {event.durationLabel && (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className="text-stone-300 select-none sm:text-[#E5DDD3]"
+                  >
+                    •
+                  </span>
+                  <span>{event.durationLabel}</span>
+                </>
+              )}
             </div>
 
             {/* Location Row */}

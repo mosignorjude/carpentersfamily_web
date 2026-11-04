@@ -10,6 +10,7 @@ import type {
   OfficerRole,
 } from "@/components/admin/members/member-admin-types";
 import { DataUnavailableCard } from "@/components/ui/state-screen";
+import { formatEventTime } from "@/lib/event-times.mjs";
 import {
   getMemberAdministrationCapabilities,
   getMemberProfileReadiness,
@@ -192,7 +193,6 @@ export default async function MemberAdministrationPage({
         timeZone: "Africa/Lagos",
         hour: "2-digit",
         minute: "2-digit",
-        hour12: false,
       });
       return `${datePart} · ${timePart}`;
     } catch {
@@ -247,10 +247,7 @@ export default async function MemberAdministrationPage({
       timeZone: "Africa/Lagos",
       dateStyle: "full",
     }).format(dateObj);
-    const timeWAT = new Intl.DateTimeFormat("en-NG", {
-      timeZone: "Africa/Lagos",
-      timeStyle: "short",
-    }).format(dateObj);
+    const timeWAT = formatEventTime(evt.starts_at);
 
     const typeCapitalized =
       evt.event_type.charAt(0).toUpperCase() + evt.event_type.slice(1);

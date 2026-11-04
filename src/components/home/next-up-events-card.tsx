@@ -9,15 +9,13 @@ import {
   MapPin,
 } from "lucide-react";
 import Link from "next/link";
+import { formatEventTime } from "@/lib/event-times.mjs";
 import type { HomeDashboardEvent } from "@/lib/home-dashboard.server";
 
-function formatEventDateTime(timestamp: string) {
-  return new Intl.DateTimeFormat("en-NG", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Africa/Lagos",
-  }).format(new Date(timestamp));
-}
+const dateFormatter = new Intl.DateTimeFormat("en-NG", {
+  dateStyle: "medium",
+  timeZone: "Africa/Lagos",
+});
 
 function eventTypeLabel(eventType: HomeDashboardEvent["eventType"]) {
   if (eventType === "meeting") return "General Meeting";
@@ -142,7 +140,10 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-xs font-semibold text-[#174C37]">
                   <Clock className="w-4 h-4 text-[#174C37]" />
-                  <span>{formatEventDateTime(evt.startsAt)}</span>
+                  <span>
+                    {dateFormatter.format(new Date(evt.startsAt))},{" "}
+                    {formatEventTime(evt.startsAt)}
+                  </span>
                   <span aria-hidden="true" className="text-[#B8ACA0]">
                     ·
                   </span>
