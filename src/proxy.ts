@@ -44,27 +44,14 @@ export async function proxy(request: NextRequest) {
   const config = getSupabasePublicConfig();
   const nonce = Buffer.from(randomUUID()).toString("base64");
   const contentSecurityPolicy = createCsp(nonce, config?.url ?? null);
-  const hostHeader = (
-    request.headers.get("x-forwarded-host") ||
-    request.headers.get("host") ||
-    ""
-  ).toLowerCase();
-  const isTicketsSubdomain = hostHeader.startsWith("tickets.");
-
   function nextWithSecurityHeaders() {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-nonce", nonce);
     requestHeaders.set("Content-Security-Policy", contentSecurityPolicy);
 
-    const nextResponse =
-      isTicketsSubdomain && request.nextUrl.pathname === "/"
-        ? NextResponse.rewrite(
-            new URL(`/tickets${request.nextUrl.search}`, request.url),
-            { request: { headers: requestHeaders } },
-          )
-        : NextResponse.next({
-            request: { headers: requestHeaders },
-          });
+    const nextResponse = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
     nextResponse.headers.set("Content-Security-Policy", contentSecurityPolicy);
     return nextResponse;
   }
