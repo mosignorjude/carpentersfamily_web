@@ -93,7 +93,7 @@ Seven refinements discovered while gathering source, or by the plan's own self-r
   - `parseDurationDays(value: unknown) → number | null`
   - `splitInstantForForm(iso: unknown) → { eventDate: string, startHour: string, startMinute: string, meridiem: "AM" | "PM" } | null`
 
-`startsAt` returned by `parseEventSchedule` is a UTC `Z` ISO string, byte-compatible with what today's `eventDateTimeToISOString` produces for the same wall clock. `splitInstantForForm` is its inverse and is the only place that turns a stored instant back into form parts.
+`startsAt` returned by `parseEventSchedule` is a UTC `Z` ISO string, byte-compatible with what today's `eventDateTimeToISOString` produces for the same wall clock. `splitInstantForForm` is its inverse and is the only place that turns a stored instant back into form parts. Its `startMinute` is zero-padded to two digits, because those two digits are the shape Task 7's minute `<option>` values carry (`00`, `05`, …) and `minuteSelectOptions` only recognises a `/^\d{2}$/` selection; `startHour` is deliberately NOT padded, matching `HOUR_OPTIONS` (`"1"`…`"12"`). A bare `"0"` minute would match no option and pre-fill the edit modal's minute control empty.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -198,7 +198,7 @@ test("splitInstantForForm is the inverse of parseEventSchedule", () => {
   assert.deepEqual(splitInstantForForm("2026-11-12T17:00:00.000Z"), {
     eventDate: "2026-11-12",
     startHour: "6",
-    startMinute: "0",
+    startMinute: "00",
     meridiem: "PM",
   });
   assert.deepEqual(splitInstantForForm("2026-11-12T11:30:00.000Z"), {
