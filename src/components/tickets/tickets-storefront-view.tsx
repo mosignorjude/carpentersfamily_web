@@ -102,7 +102,7 @@ export function TicketsStorefrontView({
                 {clubBrand.name}
               </span>
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#174C37] block">
-                Official Event Box Office · tickets.carpentersfamily.com.ng
+                Official Event Box Office · carpentersfamily.com.ng/tickets
               </span>
             </div>
           </Link>
