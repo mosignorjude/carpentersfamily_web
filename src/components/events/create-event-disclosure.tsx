@@ -11,6 +11,26 @@ import {
 import { useState } from "react";
 import { createEventAction } from "@/app/actions";
 import { FormSubmitButton } from "@/components/ui";
+import {
+  MAX_DURATION_DAYS,
+  minuteSelectOptions,
+} from "@/lib/event-schedule.mjs";
+import { formatEventDurationLabel } from "@/lib/event-times.mjs";
+
+const HOUR_OPTIONS = Array.from({ length: 12 }, (_unused, index) =>
+  String(index + 1),
+);
+const DURATION_OPTIONS = Array.from(
+  { length: MAX_DURATION_DAYS },
+  (_unused, index) => index + 1,
+);
+const FIELD_CLASS =
+  "w-full h-11 px-3.5 bg-white border border-[#E5DDD3] rounded-xl text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]";
+const PART_CLASS =
+  "w-full h-11 px-2 bg-white border border-[#E5DDD3] rounded-xl text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]";
+const LABEL_CLASS =
+  "block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5";
+const HINT_CLASS = "text-[10px] text-[#7A685D] mt-1 block";
 
 interface CreateEventDisclosureProps {
   canCreate: boolean;
@@ -154,27 +174,103 @@ export function CreateEventDisclosure({
               {/* Schedule & Venue */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label
-                    className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
-                    htmlFor="create-event-starts-at"
-                  >
-                    Date & Time <span className="text-[#BA3C2A]">*</span>
+                  <label className={LABEL_CLASS} htmlFor="create-event-date">
+                    Start Date <span className="text-[#BA3C2A]">*</span>
                   </label>
                   <input
-                    className="w-full h-11 px-3.5 bg-white border border-[#E5DDD3] rounded-xl text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
-                    id="create-event-starts-at"
-                    name="starts_at"
+                    className={FIELD_CLASS}
+                    id="create-event-date"
+                    name="event_date"
                     required
-                    type="datetime-local"
+                    type="date"
                   />
-                  <span className="text-[10px] text-[#7A685D] mt-1 block">
-                    Enter the scheduled date and start time for the gathering.
+                </div>
+
+                <div>
+                  <label
+                    className={LABEL_CLASS}
+                    htmlFor="create-event-start-hour"
+                  >
+                    Start Time <span className="text-[#BA3C2A]">*</span>
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <select
+                      className={PART_CLASS}
+                      defaultValue=""
+                      id="create-event-start-hour"
+                      name="start_hour"
+                      required
+                    >
+                      <option disabled value="">
+                        Hour
+                      </option>
+                      {HOUR_OPTIONS.map((hour) => (
+                        <option key={hour} value={hour}>
+                          {hour}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className={PART_CLASS}
+                      defaultValue=""
+                      id="create-event-start-minute"
+                      name="start_minute"
+                      required
+                    >
+                      <option disabled value="">
+                        Min
+                      </option>
+                      {minuteSelectOptions("").map((minute) => (
+                        <option key={minute.value} value={minute.value}>
+                          {minute.label}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className={PART_CLASS}
+                      defaultValue="PM"
+                      id="create-event-meridiem"
+                      name="meridiem"
+                      required
+                    >
+                      <option value="AM">AM</option>
+                      <option value="PM">PM</option>
+                    </select>
+                  </div>
+                  <span className={HINT_CLASS}>
+                    12-hour clock, West Africa Time.
                   </span>
                 </div>
 
                 <div>
                   <label
-                    className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
+                    className={LABEL_CLASS}
+                    htmlFor="create-event-duration-days"
+                  >
+                    Runs For <span className="text-[#BA3C2A]">*</span>
+                  </label>
+                  <select
+                    className={FIELD_CLASS}
+                    name="duration_days"
+                    defaultValue="1"
+                    id="create-event-duration-days"
+                    required
+                  >
+                    {DURATION_OPTIONS.map((days) => (
+                      <option key={days} value={String(days)}>
+                        {formatEventDurationLabel(days)}
+                      </option>
+                    ))}
+                  </select>
+                  <span className={HINT_CLASS}>
+                    The last day keeps the event live all day, even after its
+                    start has passed.
+                  </span>
+                </div>
+
+                <div>
+                  <label
+                    className={LABEL_CLASS}
                     htmlFor="create-event-location"
                   >
                     Location / Venue <span className="text-[#BA3C2A]">*</span>

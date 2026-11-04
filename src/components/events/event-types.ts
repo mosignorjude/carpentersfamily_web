@@ -9,6 +9,8 @@ export interface EventRow {
   title: string;
   event_type: string;
   starts_at: string;
+  duration_days?: number;
+  ends_at?: string | null;
   location: string;
   description: string | null;
   minutes_enabled: boolean;

@@ -108,6 +108,31 @@ export function parseDurationDays(value) {
 }
 
 /**
+ * The minute control offers a five-minute grid, but a legacy event can sit on an
+ * off-grid minute typed into the old datetime-local field. Keeping that minute
+ * selectable is what stops an unrelated edit from silently moving the start.
+ *
+ * @param {unknown} selectedMinute
+ * @param {readonly number[]} [steps]
+ * @returns {{ value: string, label: string }[]}
+ */
+export function minuteSelectOptions(selectedMinute, steps = MINUTE_STEPS) {
+  const options = steps.map((step) => {
+    const value = padTwo(step);
+    return { value, label: value };
+  });
+  const selected = typeof selectedMinute === "string" ? selectedMinute : "";
+  if (
+    /^\d{2}$/.test(selected) &&
+    !options.some((option) => option.value === selected)
+  ) {
+    options.push({ value: selected, label: selected });
+    options.sort((left, right) => Number(left.value) - Number(right.value));
+  }
+  return options;
+}
+
+/**
  * @param {unknown} iso
  * @returns {{ eventDate: string, startHour: string, startMinute: string, meridiem: "AM" | "PM" } | null}
  */

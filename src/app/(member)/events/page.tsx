@@ -31,7 +31,7 @@ export default async function EventsPage() {
     supabase
       .from("events")
       .select(
-        "id,title,event_type,starts_at,location,description,minutes_enabled,attendance_enabled,budget_enabled,income_enabled,expenses_enabled,ticketing_enabled,status,status_changed_at,archived_at,created_at,updated_at",
+        "id,title,event_type,starts_at,duration_days,ends_at,location,description,minutes_enabled,attendance_enabled,budget_enabled,income_enabled,expenses_enabled,ticketing_enabled,status,status_changed_at,archived_at,created_at,updated_at",
       )
       .order("starts_at", { ascending: false })
       .order("id", { ascending: false })

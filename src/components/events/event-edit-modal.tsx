@@ -5,17 +5,32 @@ import { useEffect, useRef, useState } from "react";
 import { updateEventDetailsAction } from "@/app/actions";
 import { FormFieldHint } from "@/components/ui";
 import { dispatchActionStatusToast } from "@/components/ui/flash-card";
+import {
+  MAX_DURATION_DAYS,
+  minuteSelectOptions,
+  splitInstantForForm,
+} from "@/lib/event-schedule.mjs";
+import { formatEventDurationLabel } from "@/lib/event-times.mjs";
 import type { EventRow } from "./event-types";
+
+const HOUR_OPTIONS = Array.from({ length: 12 }, (_unused, index) =>
+  String(index + 1),
+);
+const DURATION_OPTIONS = Array.from(
+  { length: MAX_DURATION_DAYS },
+  (_unused, index) => index + 1,
+);
+const FIELD_CLASS =
+  "w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]";
+const PART_CLASS =
+  "w-full h-10 px-2 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]";
+const LABEL_CLASS =
+  "block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5";
 
 interface EventEditModalProps {
   isOpen: boolean;
   event: EventRow | null;
   onClose: () => void;
-}
-
-function dateTimeLocalValue(value: string) {
-  const date = new Date(new Date(value).getTime() + 60 * 60 * 1000);
-  return date.toISOString().slice(0, 16);
 }
 
 export function EventEditModal({
@@ -80,6 +95,9 @@ export function EventEditModal({
   }, [isOpen, onClose]);
 
   if (!isOpen || !event) return null;
+
+  const schedule = splitInstantForForm(event.starts_at);
+  const minuteOptions = minuteSelectOptions(schedule?.startMinute);
 
   return (
     <div
@@ -152,22 +170,90 @@ export function EventEditModal({
             />
           </div>
 
-          {/* Date & Time */}
-          <div>
-            <label
-              className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
-              htmlFor="edit-event-starts-at"
-            >
-              Date and Time <span className="text-[#BA3C2A]">*</span>
-            </label>
-            <input
-              id="edit-event-starts-at"
-              defaultValue={dateTimeLocalValue(event.starts_at)}
-              className="w-full h-10 px-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
-              name="starts_at"
-              required
-              type="datetime-local"
-            />
+          {/* Start date, 12-hour clock, and length */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className={LABEL_CLASS} htmlFor="edit-event-date">
+                Start Date <span className="text-[#BA3C2A]">*</span>
+              </label>
+              <input
+                className={FIELD_CLASS}
+                defaultValue={schedule?.eventDate ?? ""}
+                id="edit-event-date"
+                name="event_date"
+                required
+                type="date"
+              />
+            </div>
+
+            <div>
+              <label className={LABEL_CLASS} htmlFor="edit-event-duration-days">
+                Runs For <span className="text-[#BA3C2A]">*</span>
+              </label>
+              <select
+                className={FIELD_CLASS}
+                defaultValue={String(event.duration_days ?? 1)}
+                id="edit-event-duration-days"
+                name="duration_days"
+                required
+              >
+                {DURATION_OPTIONS.map((days) => (
+                  <option key={days} value={String(days)}>
+                    {formatEventDurationLabel(days)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className={LABEL_CLASS} htmlFor="edit-event-start-hour">
+                Start Time <span className="text-[#BA3C2A]">*</span>
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <select
+                  className={PART_CLASS}
+                  defaultValue={schedule?.startHour ?? ""}
+                  id="edit-event-start-hour"
+                  name="start_hour"
+                  required
+                >
+                  <option disabled value="">
+                    Hour
+                  </option>
+                  {HOUR_OPTIONS.map((hour) => (
+                    <option key={hour} value={hour}>
+                      {hour}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className={PART_CLASS}
+                  defaultValue={schedule?.startMinute ?? ""}
+                  id="edit-event-start-minute"
+                  name="start_minute"
+                  required
+                >
+                  <option disabled value="">
+                    Min
+                  </option>
+                  {minuteOptions.map((minute) => (
+                    <option key={minute.value} value={minute.value}>
+                      {minute.label}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className={PART_CLASS}
+                  defaultValue={schedule?.meridiem ?? "PM"}
+                  id="edit-event-meridiem"
+                  name="meridiem"
+                  required
+                >
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           {/* Location */}

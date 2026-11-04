@@ -4,6 +4,7 @@ import {
   MAX_DURATION_DAYS,
   MINUTE_STEPS,
   endsAtFromStart,
+  minuteSelectOptions,
   parseDurationDays,
   parseEventSchedule,
   splitInstantForForm,
@@ -228,4 +229,30 @@ test("endsAtFromStart refuses nonsense instead of inventing an instant", () => {
 test("endsAtFromStart crosses daylight-saving-free Lagos midnight on whole days", () => {
   // 23:30 WAT on 12 November, three days: the last day starts 23:30 WAT on 14 November.
   assert.equal(endsAtFromStart("2026-11-12T22:30:00.000Z", 3), "2026-11-14T22:30:00.000Z");
+});
+
+test("minuteSelectOptions offers the five-minute grid in ascending order", () => {
+  const options = minuteSelectOptions("");
+  assert.equal(options.length, 12);
+  assert.deepEqual(options.slice(0, 3), [
+    { value: "00", label: "00" },
+    { value: "05", label: "05" },
+    { value: "10", label: "10" },
+  ]);
+  assert.deepEqual(options.at(-1), { value: "55", label: "55" });
+});
+
+test("minuteSelectOptions keeps an off-grid minute selectable and in order", () => {
+  const options = minuteSelectOptions("37");
+  assert.equal(options.length, 13);
+  assert.ok(options.some((option) => option.value === "37"));
+  const values = options.map((option) => Number(option.value));
+  assert.deepEqual(values, [...values].sort((left, right) => left - right));
+});
+
+test("minuteSelectOptions ignores a grid minute or junk instead of duplicating it", () => {
+  assert.equal(minuteSelectOptions("30").length, 12);
+  assert.equal(minuteSelectOptions(null).length, 12);
+  assert.equal(minuteSelectOptions("7").length, 12);
+  assert.equal(minuteSelectOptions(undefined).length, 12);
 });
