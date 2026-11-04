@@ -1087,14 +1087,16 @@ Also re-assert that `private` remains unexecutable from outside: copy the corres
 - [ ] **Step 5: Apply and verify the arity**
 
 ```bash
-npx supabase db push --local --include-all
+npx supabase db reset --local
 npx supabase db query --local "
   select p.proname, pg_get_function_arguments(p.oid) as args
-  from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid = p.pronamespace
+  from pg_catalog.pg_namespace n join pg_catalog.pg_proc p on p.pronamespace = n.oid
   where n.nspname in ('public','private')
     and p.proname in ('create_event','update_event_details')
   order by n.nspname, p.proname;"
 ```
+
+Replay with `db reset --local`, not `db push --local --include-all`: this task appends to the migration file Task 3 already applied, and `db push` tracks migrations by version, so an edited-but-applied file is skipped without error. A skipped push would show the OLD arity here and read like a broken `drop function` / `create function` pair.
 
 Expected: exactly four rows, each ending with the duration parameter — `public.create_event` and `private.create_event` showing `p_duration_days integer default 1`, and both `update_event_details` showing `p_duration_days integer` with no default. Any fifth row is a surviving old overload: drop it before proceeding.
 
@@ -1432,16 +1434,11 @@ Expected: four rows whose clock suffixes are exactly `6:00 PM`, `9:05 AM`, `12:3
 - [ ] **Step 6: Replay and re-run the suite**
 
 ```bash
-npx supabase db push --local --include-all
-npx supabase test db --local supabase/tests/database/event_duration_12hour_test.sql
-```
-
-`db push` records migrations by version, so an edit to a file the local database already applied may be skipped silently. If the suite still fails on `at 18:00` after Step 4 is definitely on disk, replay from scratch instead:
-
-```bash
 npx supabase db reset --local
 npx supabase test db --local supabase/tests/database/event_duration_12hour_test.sql
 ```
+
+Replay with `db reset --local`, not `db push --local --include-all`: this task appends the re-created `evaluate_notification_reminders` to a migration file the local database already applied, and `db push` tracks migrations by version — a skipped push leaves the OLD 24-hour body installed, which is exactly the failure this step is meant to clear. The reset also gives the pgTAP run the clean database the project baseline requires.
 
 Expected: every `ok`, no `not ok`, ending with `# Completed successfully`.
 
