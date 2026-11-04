@@ -556,8 +556,21 @@ function unpadded(hour12) {
 }
 
 function parse(iso) {
+  if (typeof iso !== "string" || iso.length === 0) return null;
   const instant = new Date(iso);
   return Number.isNaN(instant.getTime()) ? null : instant;
+}
+
+/**
+ * ICU gives en-GB a lower-case "pm", so filtering letters would keep only the
+ * "p". The first letter is the whole signal: AM or PM, or nothing at all.
+ * @param {string} dayPeriod
+ */
+function meridiemFromDayPeriod(dayPeriod) {
+  const first = (dayPeriod ?? "").trim().charAt(0).toLowerCase();
+  if (first === "a") return "AM";
+  if (first === "p") return "PM";
+  return "";
 }
 
 /**
@@ -571,7 +584,7 @@ export function formatEventTime(iso) {
   const hour = unpadded(parts.find((part) => part.type === "hour")?.value ?? "");
   const minute = parts.find((part) => part.type === "minute")?.value ?? "00";
   const dayPeriod = parts.find((part) => part.type === "dayPeriod")?.value ?? "";
-  const meridiem = dayPeriod.replace(/[^APap]/g, "").toUpperCase();
+  const meridiem = meridiemFromDayPeriod(dayPeriod);
   return meridiem ? `${hour}:${minute} ${meridiem}` : `${hour}:${minute}`;
 }
 
