@@ -12619,6 +12619,6 @@ textarea:focus-visible {
   .btn-landing,
   .btn-pill {
     transition: none;
-    transform: none !important;
+    transform: none;
   }
 }

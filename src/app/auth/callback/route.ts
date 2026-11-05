@@ -29,7 +29,9 @@ export async function GET(request: NextRequest) {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error)
-      return NextResponse.redirect(new URL("/portal?notice=auth-failed", origin));
+      return NextResponse.redirect(
+        new URL("/portal?notice=auth-failed", origin),
+      );
     if (data.user?.email_confirmed_at) {
       await notifyRegistrationReceivedIfPending(data.user.id);
       await notifyWelcomeIfActive(data.user.id);

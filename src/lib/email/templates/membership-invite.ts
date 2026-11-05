@@ -8,7 +8,11 @@ export function renderMembershipInviteEmail({
   email,
   token,
   siteUrl = "https://carpentersfamily.com.ng",
-}: MembershipInviteEmailProps): { subject: string; html: string; text: string } {
+}: MembershipInviteEmailProps): {
+  subject: string;
+  html: string;
+  text: string;
+} {
   const subject = "Your Invitation to Join Carpenters Family Social Club";
   const inviteUrl = `${siteUrl.replace(/\/+$/, "")}/signup?token=${token}`;
 
@@ -24,7 +28,7 @@ export function renderMembershipInviteEmail({
           <h1 style="font-size: 22px; color: #174C37; margin-top: 0;">You're Invited to Carpenters Family</h1>
           <p>Hello,</p>
           <p>Following review by the Executive Committee, we are pleased to invite you to complete your registration as a member of <strong>Carpenters Family Social Club</strong>.</p>
-          <p>This personal invitation is <strong>valid for 7 days</strong> and can be used once to create your official account.</p>
+          <p>This personal invitation for <strong>${email}</strong> is <strong>valid for 7 days</strong> and can be used once to create your official account.</p>
           <div style="margin: 32px 0; text-align: center;">
             <a href="${inviteUrl}" style="background-color: #174C37; color: #FFFFFF; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 600; display: inline-block;">
               Accept Invitation &amp; Register

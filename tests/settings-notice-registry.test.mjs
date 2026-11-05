@@ -16,7 +16,7 @@ const SETTINGS_ONLY_CODES = [
 // The sign-in screen keeps a private copy table. Where a code is shared with
 // /settings, the registry must say exactly what that screen says.
 function signInTableCopy(code) {
-  const source = readFileSync("src/app/page.tsx", "utf8");
+  const source = readFileSync("src/app/portal/page.tsx", "utf8");
   const key = `"${code}"`;
   const start = source.indexOf(key);
   if (start === -1) return undefined;

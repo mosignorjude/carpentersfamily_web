@@ -67,7 +67,7 @@ test("HomeDashboardView: renders greeting and updated family overview copy", () 
     "src/components/home-dashboard-view.tsx",
     "utf8",
   );
-  const pageSource = fs.readFileSync("src/app/page.tsx", "utf8");
+  const pageSource = fs.readFileSync("src/app/portal/page.tsx", "utf8");
 
   // View template check
   assert.ok(
@@ -87,6 +87,6 @@ test("HomeDashboardView: renders greeting and updated family overview copy", () 
       pageSource.includes(
         "username={profile.username || userProfile.username}",
       ),
-    "src/app/page.tsx must compute time-of-day greeting and pass username to HomeDashboardView",
+    "src/app/portal/page.tsx must compute time-of-day greeting and pass username to HomeDashboardView",
   );
 });

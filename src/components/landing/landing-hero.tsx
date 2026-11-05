@@ -22,10 +22,14 @@ export function LandingHero() {
             Asaba · Delta State · Nigeria
           </p>
           <h1 className="mt-3 font-serif font-bold text-4xl sm:text-5xl md:text-6xl leading-[1.08]">
-            Rooted in Family.<br />Driven by the Vibe.
+            Rooted in Family.
+            <br />
+            Driven by the Vibe.
           </h1>
           <p className="mt-4 text-sm sm:text-base text-cream/90 leading-relaxed max-w-lg mx-auto">
-            Asaba’s premier family and entertainment collective—creating landmark shows, elevating lifestyle brands, and standing together for life.
+            Asaba’s premier family and entertainment collective—creating
+            landmark shows, elevating lifestyle brands, and standing together
+            for life.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Link

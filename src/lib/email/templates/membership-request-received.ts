@@ -5,7 +5,11 @@ export interface MembershipRequestReceivedEmailProps {
 
 export function renderMembershipRequestReceivedEmail({
   fullName,
-}: MembershipRequestReceivedEmailProps): { subject: string; html: string; text: string } {
+}: MembershipRequestReceivedEmailProps): {
+  subject: string;
+  html: string;
+  text: string;
+} {
   const subject = "Carpenters Family — Application Received";
   const html = `
     <!DOCTYPE html>

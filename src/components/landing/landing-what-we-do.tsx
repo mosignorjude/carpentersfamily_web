@@ -49,8 +49,9 @@ export function LandingWhatWeDo() {
           </h2>
           <p className="mt-4 text-sm sm:text-base text-body leading-relaxed">
             Carpenters Family is both a close-knit family and a professional
-            entertainment powerhouse. We create the city’s most talked-about shows
-            while building lasting wealth, network, and welfare for our members.
+            entertainment powerhouse. We create the city’s most talked-about
+            shows while building lasting wealth, network, and welfare for our
+            members.
           </p>
 
           <div className="mt-6 space-y-3.5 text-sm">
@@ -63,8 +64,9 @@ export function LandingWhatWeDo() {
                   Shows, DJ, Hype & Event Hosting
                 </h3>
                 <p className="text-umber text-xs sm:text-sm mt-0.5">
-                  We organize flagship parties and provide top-tier DJs, hype men,
-                  MCs, and crowd engagement for corporate and private clients.
+                  We organize flagship parties and provide top-tier DJs, hype
+                  men, MCs, and crowd engagement for corporate and private
+                  clients.
                 </p>
               </div>
             </div>
@@ -78,8 +80,9 @@ export function LandingWhatWeDo() {
                   Beverage & Lifestyle Brand Promotion
                 </h3>
                 <p className="text-umber text-xs sm:text-sm mt-0.5">
-                  We partner with beverage companies and lifestyle brands to drive
-                  real visibility, culture, and product sales at major events.
+                  We partner with beverage companies and lifestyle brands to
+                  drive real visibility, culture, and product sales at major
+                  events.
                 </p>
               </div>
             </div>

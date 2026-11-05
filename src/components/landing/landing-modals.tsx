@@ -20,7 +20,9 @@ export function LandingModals({ initialModal }: LandingModalsProps) {
     const params = new URLSearchParams(searchParams?.toString() ?? "");
     params.delete("modal");
     const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
   };
 
   return (

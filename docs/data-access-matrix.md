@@ -412,3 +412,23 @@ authenticated browser upload/download remain unverified.
   prefixes. PDF output is a bounded text-only document with inert hex-encoded
   text and no embedded scripts, links, or HTML. The PDF's built-in font can
   transliterate unsupported glyphs; CSV retains the original Unicode.
+
+## Public intake and invitation gating — Plan B+C
+
+### Tables
+
+| Table | SELECT | INSERT | UPDATE | DELETE / retention | Constraints and audit |
+| --- | --- | --- | --- | --- | --- |
+| `public.membership_requests` | Active Executive/President only via RLS. Anon and regular members have 0 SELECT grants. | No direct table insert. Anon/authenticated submit strictly through `submit_membership_request()` RPC. | No direct table update. Officers update decision via `review_membership_request()` RPC. | No client delete. All intake history is retained for executive audit. | Email normalized and validated; phone 7-25 chars; unique pending request per email; review decision restricted to `pending`, `approved`, `rejected`; timestamps tracked. |
+| `public.partnership_enquiries` | Active Executive/President only via RLS. Anon and regular members have 0 SELECT grants. | No direct table insert. Anon/authenticated submit strictly through `submit_partnership_enquiry()` RPC. | No direct table update. Officers handle enquiries via admin action. | No client delete. History retained for business records. | Contact name, org name, email, phone constraints; enquiry type restricted to `brand_activation`, `sponsorship`, `corporate_booking`, `general`. |
+| `public.member_invites` | Active Executive/President only via RLS. Anon and regular members have 0 SELECT grants. | No direct table insert. Generated exclusively by `create_member_invite()` RPC or officer review approval. | No direct table update. Marked consumed exclusively by `consume_invite_token()` RPC. | No client delete. Invitation tokens and redemption lifecycle retained. | Cryptographic token (64 hex characters, SHA-256 format), unique token constraint, 7-day default expiration, foreign key to `auth.users(id)` upon consumption, reference to `membership_requests(id)`. |
+
+### Security definer RPCs
+
+- `public.submit_membership_request`: `SECURITY DEFINER`, granted to `anon` and `authenticated`. Inserts into `membership_requests` with status `pending`. Rejects duplicate pending requests for the same email.
+- `public.submit_partnership_enquiry`: `SECURITY DEFINER`, granted to `anon` and `authenticated`. Inserts into `partnership_enquiries` with status `new`.
+- `public.validate_invite_token`: `SECURITY DEFINER`, granted to `anon` and `authenticated`. Verifies token existence, expiration (`expires_at > now()`), and unconsumed status (`consumed_at IS NULL`). Returns invited email and validity boolean without exposing tokens or user IDs.
+- `public.consume_invite_token`: `SECURITY DEFINER`, granted to `anon` and `authenticated`. Atomically binds token to `p_user_id` and stamps `consumed_at = now()`.
+- `public.create_member_invite`: `SECURITY DEFINER`, granted to `authenticated`. Rechecks caller is active Executive or President. Generates 64-hex cryptographically random token with expiration.
+- `public.review_membership_request`: `SECURITY DEFINER`, granted to `authenticated`. Rechecks caller is active Executive or President. Updates request status and optionally calls `create_member_invite` on approval.
+

@@ -1253,8 +1253,7 @@ export async function notifyPartnershipEnquiryReceived(params: {
       recipientName: params.contactName,
       subject: "Carpenters Family — Partnership Enquiry Received",
       heading: "Partnership Proposal Received",
-      bodyText:
-        `Thank you for submitting a partnership enquiry on behalf of ${params.organizationName}. A club representative will review your proposal promptly.`,
+      bodyText: `Thank you for submitting a partnership enquiry on behalf of ${params.organizationName}. A club representative will review your proposal promptly.`,
       ctaLabel: "Visit Club",
       ctaUrl: "/",
       templatePayload: {

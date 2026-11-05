@@ -21,7 +21,8 @@ const INLINE_NOTICE_PATHS = new Set([
  * @returns {boolean} true when the pathname has inline notice handling.
  */
 export function isInlineNoticePath(pathname) {
-  const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  const normalized =
+    pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   return (
     INLINE_NOTICE_PATHS.has(normalized) ||
     normalized === "/" ||
@@ -52,7 +53,8 @@ const PAGE_OWNED_ROUTE_ROOT = "admin";
  * @returns {boolean} true when the page deals with the notice itself.
  */
 export function handlesNoticeOnPage(pathname, noticeCode) {
-  const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  const normalized =
+    pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   if (INLINE_NOTICE_PATHS.has(normalized)) return true;
   if (normalized.split("/")[1] === PAGE_OWNED_ROUTE_ROOT) return true;
   return (

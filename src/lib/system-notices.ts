@@ -548,7 +548,8 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
   "invite-expired": {
     type: "error",
     title: "Invitation Expired",
-    message: "This invitation link has expired. Please submit a new membership request.",
+    message:
+      "This invitation link has expired. Please submit a new membership request.",
   },
   "invalid-intake": {
     type: "error",
@@ -558,7 +559,8 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
   "membership-approved": {
     type: "success",
     title: "Application Approved",
-    message: "The membership application was approved and an invitation was issued.",
+    message:
+      "The membership application was approved and an invitation was issued.",
   },
   "membership-rejected": {
     type: "success",

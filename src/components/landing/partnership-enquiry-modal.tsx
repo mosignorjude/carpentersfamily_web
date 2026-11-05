@@ -28,17 +28,21 @@ export function PartnershipEnquiryModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-deep/60 backdrop-blur-xs p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="partner-modal-title"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
     >
+      <button
+        type="button"
+        className="fixed inset-0 bg-deep/60 backdrop-blur-xs cursor-default -z-10 border-0"
+        aria-label="Close modal overlay"
+        tabIndex={-1}
+        onClick={onClose}
+      />
       <div
         ref={dialogRef}
-        className="w-full max-w-md rounded-2xl bg-cream p-6 shadow-2xl border border-linen animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-md rounded-2xl bg-cream p-6 shadow-2xl border border-linen animate-in fade-in zoom-in-95 duration-200"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -63,11 +67,14 @@ export function PartnershipEnquiryModal({
         </div>
 
         <p className="mt-2 text-xs text-umber leading-relaxed">
-          Book our DJs, hype men/MCs, and event hosts, or partner with us for beverage
-          and lifestyle brand activations across Delta State.
+          Book our DJs, hype men/MCs, and event hosts, or partner with us for
+          beverage and lifestyle brand activations across Delta State.
         </p>
 
-        <form action={submitPartnershipEnquiryAction} className="mt-4 space-y-3 text-sm">
+        <form
+          action={submitPartnershipEnquiryAction}
+          className="mt-4 space-y-3 text-sm"
+        >
           <div>
             <label htmlFor="partner-org-name" className="sr-only">
               Organization Name
@@ -134,10 +141,18 @@ export function PartnershipEnquiryModal({
               name="enquiry_type"
               className="w-full rounded-lg border border-linen bg-white px-3.5 py-2.5 text-espresso focus:border-forest focus:outline-hidden"
             >
-              <option value="brand_activation">Beverage &amp; Product Promotion at Events</option>
-              <option value="corporate_booking">Book DJ / Hype Man / MC &amp; Crowd Engagement</option>
-              <option value="sponsorship">Event Sponsorship (SLK Rave / Annual Gala)</option>
-              <option value="general">Full Event Hosting &amp; Management</option>
+              <option value="brand_activation">
+                Beverage &amp; Product Promotion at Events
+              </option>
+              <option value="corporate_booking">
+                Book DJ / Hype Man / MC &amp; Crowd Engagement
+              </option>
+              <option value="sponsorship">
+                Event Sponsorship (SLK Rave / Annual Gala)
+              </option>
+              <option value="general">
+                Full Event Hosting &amp; Management
+              </option>
             </select>
           </div>
 

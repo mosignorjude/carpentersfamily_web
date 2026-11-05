@@ -15,7 +15,8 @@ export function LandingRibbon({ nextEvent }: LandingRibbonProps) {
       <div className="mx-auto max-w-6xl px-4 py-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-center">
         <span>
           Next gathering:{" "}
-          <strong className="text-ochre font-bold">{displayTitle}</strong> · Asaba
+          <strong className="text-ochre font-bold">{displayTitle}</strong> ·
+          Asaba
         </span>
         <span className="rounded-full bg-ochre/20 text-ochre px-3 py-0.5 font-bold text-xs">
           2026 Season

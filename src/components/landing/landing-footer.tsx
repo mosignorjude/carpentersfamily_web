@@ -8,7 +8,10 @@ export function LandingFooter() {
     >
       <div className="mx-auto max-w-6xl px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-6">
         {/* Left: Logo */}
-        <Link href="/" className="flex items-center gap-3 group focus:outline-hidden">
+        <Link
+          href="/"
+          className="flex items-center gap-3 group focus:outline-hidden"
+        >
           <span className="grid place-items-center h-9 w-9 rounded-full bg-deep text-ochre font-serif font-bold text-base ring-2 ring-ochre/60 group-hover:scale-105 transition-transform">
             C
           </span>
@@ -30,7 +33,10 @@ export function LandingFooter() {
             </a>
           </li>
           <li>
-            <Link href="/tickets" className="hover:text-ochre transition-colors">
+            <Link
+              href="/tickets"
+              className="hover:text-ochre transition-colors"
+            >
               Box Office
             </Link>
           </li>
@@ -58,7 +64,7 @@ export function LandingFooter() {
         </ul>
 
         {/* Right: 4 Circular Social Icons */}
-        <div className="flex items-center gap-2" aria-label="Social links">
+        <div className="flex items-center gap-2">
           <a
             href="#footer"
             aria-label="LinkedIn"
@@ -90,7 +96,8 @@ export function LandingFooter() {
         </div>
       </div>
       <div className="bg-deep/60 py-3 text-center text-[11px] text-cream/70">
-        © 2026 Carpenters Family Social Club. One Family, Endless Vibes — Asaba, Delta State, Nigeria.
+        © 2026 Carpenters Family Social Club. One Family, Endless Vibes — Asaba,
+        Delta State, Nigeria.
       </div>
     </footer>
   );

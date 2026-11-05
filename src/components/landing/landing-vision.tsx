@@ -16,7 +16,13 @@ export function LandingVision() {
               aria-hidden="true"
             >
               <path d="M8 34c7-11 15-16 24-16s17 5 24 16c-7 11-15 16-24 16S15 45 8 34Z" />
-              <circle cx="32" cy="34" r="7" stroke="#D6A23A" strokeWidth="2.2" />
+              <circle
+                cx="32"
+                cy="34"
+                r="7"
+                stroke="#D6A23A"
+                strokeWidth="2.2"
+              />
               <circle cx="32" cy="34" r="2.5" fill="currentColor" />
               <path d="M32 10v4M21 12l2 3.5M43 12l-2 3.5" stroke="#D6A23A" />
               <path d="M22 50c4 3 16 3 20 0" />
@@ -26,8 +32,8 @@ export function LandingVision() {
             Our Vision
           </h2>
           <p className="mt-2 text-xs sm:text-sm text-umber leading-relaxed max-w-xs">
-            To be Delta State’s foremost family and lifestyle powerhouse—where unity,
-            culture, and unforgettable entertainment meet.
+            To be Delta State’s foremost family and lifestyle powerhouse—where
+            unity, culture, and unforgettable entertainment meet.
           </p>
         </article>
 
@@ -100,8 +106,8 @@ export function LandingVision() {
             Our Values
           </h2>
           <p className="mt-2 text-xs sm:text-sm text-umber leading-relaxed max-w-xs">
-            Family loyalty, discipline, open-book accountability, and excellence in
-            every event, celebration, and brand partnership.
+            Family loyalty, discipline, open-book accountability, and excellence
+            in every event, celebration, and brand partnership.
           </p>
         </article>
       </div>

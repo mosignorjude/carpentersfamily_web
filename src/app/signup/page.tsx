@@ -18,7 +18,8 @@ const notices: Record<string, string> = {
   "signup-unavailable": "Sign-up is temporarily unavailable. Try again later.",
   configuration: "Account requests are unavailable in this environment.",
   "invite-invalid": "This invitation link is invalid or has already been used.",
-  "invite-expired": "This invitation link has expired. Please submit a new membership request.",
+  "invite-expired":
+    "This invitation link has expired. Please submit a new membership request.",
 };
 
 const errorNotices = new Set([
@@ -58,10 +59,16 @@ function SignupInvitationRequired({
       <div className="signin-content signup-auth-content text-center">
         <AuthBrand />
         <header className="signin-heading">
-          <h1 id="signup-heading" className="text-2xl font-serif text-[#3D291F]">
+          <h1
+            id="signup-heading"
+            className="text-2xl font-serif text-[#3D291F]"
+          >
             {title}
           </h1>
-          <p className="signin-intro mt-2 text-[#7A6B63] max-w-sm mx-auto" role="alert">
+          <p
+            className="signin-intro mt-2 text-[#7A6B63] max-w-sm mx-auto"
+            role="alert"
+          >
             {message}
           </p>
         </header>
@@ -75,7 +82,10 @@ function SignupInvitationRequired({
           </Link>
           <p className="signin-account-prompt mt-4 text-sm text-[#7A6B63]">
             Already a member?{" "}
-            <Link href="/portal" className="text-[#174C37] font-semibold underline">
+            <Link
+              href="/portal"
+              className="text-[#174C37] font-semibold underline"
+            >
               Sign in
             </Link>
           </p>
@@ -122,7 +132,11 @@ export default async function SignupPage({
   if (!token) {
     return (
       <SignupInvitationRequired
-        title={params.notice === "invite-expired" ? "Invitation Expired" : "Invitation Required"}
+        title={
+          params.notice === "invite-expired"
+            ? "Invitation Expired"
+            : "Invitation Required"
+        }
         message={notice}
       />
     );
@@ -131,7 +145,7 @@ export default async function SignupPage({
   // Validate the cryptographic token via security definer RPC
   const { data: inviteValidation, error: validateError } = await supabase.rpc(
     "validate_invite_token",
-    { p_token: token }
+    { p_token: token },
   );
 
   if (validateError || !inviteValidation?.valid) {
@@ -148,7 +162,8 @@ export default async function SignupPage({
     );
   }
 
-  const invitedEmail = typeof inviteValidation.email === "string" ? inviteValidation.email : "";
+  const invitedEmail =
+    typeof inviteValidation.email === "string" ? inviteValidation.email : "";
 
   return (
     <AuthPageLayout variant="signup">

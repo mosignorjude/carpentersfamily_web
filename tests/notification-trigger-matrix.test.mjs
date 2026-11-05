@@ -210,6 +210,9 @@ const SUPPLEMENTAL_TRIGGER_TYPES = [
   "event_role_assigned",
   "event_attendance_opened",
   "poll_created",
+  "membership_request_received",
+  "membership_invite",
+  "partnership_enquiry_received",
 ];
 
 const SOURCES = { app: appSource, sql: sqlSource, callback: callbackSource, actions: actionsSource };

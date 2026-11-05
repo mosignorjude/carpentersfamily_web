@@ -46,7 +46,8 @@ export default async function AdminPartnershipsPage({
             Partnership &amp; Brand Enquiries
           </h1>
           <p className="text-sm text-stone-600 mt-1">
-            Manage proposals, corporate bookings, sponsorships, and brand activations.
+            Manage proposals, corporate bookings, sponsorships, and brand
+            activations.
           </p>
         </div>
 
@@ -73,7 +74,9 @@ export default async function AdminPartnershipsPage({
         </div>
       ) : !enquiries || enquiries.length === 0 ? (
         <div className="p-8 text-center bg-stone-50 border border-stone-200 rounded-2xl">
-          <p className="text-stone-600 text-sm">No {currentStatus} partnership enquiries found.</p>
+          <p className="text-stone-600 text-sm">
+            No {currentStatus} partnership enquiries found.
+          </p>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -101,8 +104,8 @@ export default async function AdminPartnershipsPage({
                     enq.status === "closed"
                       ? "bg-stone-100 text-stone-800"
                       : enq.status === "contacted"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-amber-100 text-amber-800"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-amber-100 text-amber-800"
                   }`}
                 >
                   {enq.status}
@@ -126,7 +129,10 @@ export default async function AdminPartnershipsPage({
               )}
 
               <div className="pt-2 border-t border-stone-100 flex flex-wrap items-center justify-end gap-2">
-                <form action={handlePartnershipEnquiryAction} className="inline-flex gap-2 items-center">
+                <form
+                  action={handlePartnershipEnquiryAction}
+                  className="inline-flex gap-2 items-center"
+                >
                   <input type="hidden" name="enquiry_id" value={enq.id} />
                   {enq.status !== "contacted" && (
                     <button

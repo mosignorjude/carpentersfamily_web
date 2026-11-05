@@ -6,7 +6,11 @@ export interface PartnershipEnquiryReceivedEmailProps {
 export function renderPartnershipEnquiryReceivedEmail({
   contactName,
   organizationName,
-}: PartnershipEnquiryReceivedEmailProps): { subject: string; html: string; text: string } {
+}: PartnershipEnquiryReceivedEmailProps): {
+  subject: string;
+  html: string;
+  text: string;
+} {
   const subject = "Carpenters Family — Partnership Enquiry Received";
   const html = `
     <!DOCTYPE html>

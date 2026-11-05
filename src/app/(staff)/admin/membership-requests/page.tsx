@@ -6,7 +6,8 @@ import { resolveStaffNotice } from "@/lib/staff-notices";
 
 const pageNotices = {
   "membership-approved": {
-    message: "Membership request approved and single-use invitation token created.",
+    message:
+      "Membership request approved and single-use invitation token created.",
     isError: false,
   },
   "membership-rejected": {
@@ -14,7 +15,8 @@ const pageNotices = {
     isError: false,
   },
   "invalid-request": {
-    message: "Invalid review parameters. Rejection requires a reason of at least 5 characters.",
+    message:
+      "Invalid review parameters. Rejection requires a reason of at least 5 characters.",
     isError: true,
   },
 };
@@ -50,7 +52,8 @@ export default async function AdminMembershipRequestsPage({
             Membership Intake Requests
           </h1>
           <p className="text-sm text-stone-600 mt-1">
-            Review prospective member applications and issue cryptographic invitations.
+            Review prospective member applications and issue cryptographic
+            invitations.
           </p>
         </div>
 
@@ -77,7 +80,9 @@ export default async function AdminMembershipRequestsPage({
         </div>
       ) : !requests || requests.length === 0 ? (
         <div className="p-8 text-center bg-stone-50 border border-stone-200 rounded-2xl">
-          <p className="text-stone-600 text-sm">No {currentStatus} membership requests found.</p>
+          <p className="text-stone-600 text-sm">
+            No {currentStatus} membership requests found.
+          </p>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -88,11 +93,15 @@ export default async function AdminMembershipRequestsPage({
             >
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                 <div>
-                  <h3 className="text-lg font-bold text-stone-900">{req.full_name}</h3>
+                  <h3 className="text-lg font-bold text-stone-900">
+                    {req.full_name}
+                  </h3>
                   <div className="text-sm text-stone-500 flex flex-wrap gap-x-4 gap-y-1 mt-1">
                     <span>{req.email}</span>
                     <span>{req.phone}</span>
-                    <span className="font-medium text-stone-700">{req.profession}</span>
+                    <span className="font-medium text-stone-700">
+                      {req.profession}
+                    </span>
                   </div>
                 </div>
                 <span
@@ -100,8 +109,8 @@ export default async function AdminMembershipRequestsPage({
                     req.status === "approved"
                       ? "bg-emerald-100 text-emerald-800"
                       : req.status === "rejected"
-                      ? "bg-red-100 text-red-800"
-                      : "bg-amber-100 text-amber-800"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-amber-100 text-amber-800"
                   }`}
                 >
                   {req.status}
@@ -126,7 +135,10 @@ export default async function AdminMembershipRequestsPage({
 
               {req.status === "pending" && (
                 <div className="pt-2 border-t border-stone-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                  <form action={reviewMembershipRequestAction} className="inline-block">
+                  <form
+                    action={reviewMembershipRequestAction}
+                    className="inline-block"
+                  >
                     <input type="hidden" name="request_id" value={req.id} />
                     <input type="hidden" name="decision" value="approved" />
                     <button

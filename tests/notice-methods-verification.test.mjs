@@ -566,7 +566,7 @@ test("auth brand: form sections display logo only without brand name or slogan",
   );
 
   // Check form pages render <AuthBrand /> without showText
-  const signInContent = fs.readFileSync("src/app/page.tsx", "utf8");
+  const signInContent = fs.readFileSync("src/app/portal/page.tsx", "utf8");
   assert.ok(
     signInContent.includes("<AuthBrand />"),
     "Sign in page must use logo-only AuthBrand in form section",
@@ -682,7 +682,7 @@ test("user profile badge: component supports desktop inline, mobile dropdown, an
     "Member layout must forward userProfile to AppShell",
   );
 
-  const homePageContent = fs.readFileSync("src/app/page.tsx", "utf8");
+  const homePageContent = fs.readFileSync("src/app/portal/page.tsx", "utf8");
   assert.ok(
     homePageContent.includes('from "@/lib/user-profile"'),
     "Home page must import formatPrimaryRole from @/lib/user-profile (server-safe)",

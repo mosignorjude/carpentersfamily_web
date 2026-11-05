@@ -28,17 +28,21 @@ export function MembershipIntakeModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-deep/60 backdrop-blur-xs p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="membership-modal-title"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
     >
+      <button
+        type="button"
+        className="fixed inset-0 bg-deep/60 backdrop-blur-xs cursor-default -z-10 border-0"
+        aria-label="Close modal overlay"
+        tabIndex={-1}
+        onClick={onClose}
+      />
       <div
         ref={dialogRef}
-        className="w-full max-w-md rounded-2xl bg-cream p-6 shadow-2xl border border-linen animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-md rounded-2xl bg-cream p-6 shadow-2xl border border-linen animate-in fade-in zoom-in-95 duration-200"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -63,11 +67,14 @@ export function MembershipIntakeModal({
         </div>
 
         <p className="mt-2 text-xs text-umber leading-relaxed">
-          Prospective members must be recommended by an active financial member and
-          complete a 3-month probationary vetting period.
+          Prospective members must be recommended by an active financial member
+          and complete a 3-month probationary vetting period.
         </p>
 
-        <form action={submitMembershipRequestAction} className="mt-4 space-y-3 text-sm">
+        <form
+          action={submitMembershipRequestAction}
+          className="mt-4 space-y-3 text-sm"
+        >
           <div>
             <label htmlFor="intake-full-name" className="sr-only">
               Full Name

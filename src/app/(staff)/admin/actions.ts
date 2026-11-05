@@ -352,24 +352,34 @@ export async function reviewMembershipRequestAction(formData: FormData) {
     redirect("/admin/membership-requests?notice=invalid-request");
   }
 
-  if (decision === "rejected" && (!rejectionReason || rejectionReason.length < 5)) {
+  if (
+    decision === "rejected" &&
+    (!rejectionReason || rejectionReason.length < 5)
+  ) {
     redirect("/admin/membership-requests?notice=invalid-request");
   }
 
   const admin = createSupabaseAdminClient();
   if (!admin) redirect("/admin/membership-requests?notice=configuration");
 
-  const { data: reviewResult, error } = await admin.rpc("review_membership_request", {
-    p_request_id: requestId,
-    p_decision: decision,
-    p_rejection_reason: decision === "rejected" ? rejectionReason : null,
-  });
+  const { data: reviewResult, error } = await admin.rpc(
+    "review_membership_request",
+    {
+      p_request_id: requestId,
+      p_decision: decision,
+      p_rejection_reason: decision === "rejected" ? rejectionReason : null,
+    },
+  );
 
   if (error) {
     redirect(`/admin/membership-requests?notice=${rpcErrorNotice(error)}`);
   }
 
-  if (decision === "approved" && reviewResult && typeof reviewResult === "object") {
+  if (
+    decision === "approved" &&
+    reviewResult &&
+    typeof reviewResult === "object"
+  ) {
     const res = reviewResult as { token?: string };
     if (res.token) {
       const { data: reqData } = await admin

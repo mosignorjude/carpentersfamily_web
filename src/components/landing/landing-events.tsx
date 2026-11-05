@@ -11,8 +11,13 @@ interface LandingEventsProps {
 }
 
 export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
+  const hasDynamicEvents = Boolean(ticketedEvents && ticketedEvents.length > 0);
+
   return (
-    <section id="events" className="bg-white border-y border-linen py-16 sm:py-20">
+    <section
+      id="events"
+      className="bg-white border-y border-linen py-16 sm:py-20"
+    >
       <div className="mx-auto max-w-6xl px-4">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
@@ -23,8 +28,15 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
               The Lifestyle &amp; Flagship Gatherings
             </h2>
             <p className="mt-2 text-sm text-umber max-w-xl">
-              A glimpse into our past raves, brand activations, traditional outings,
-              and upcoming gatherings across Delta State.
+              A glimpse into our past raves, brand activations, traditional
+              outings, and upcoming gatherings across Delta State.
+              {hasDynamicEvents && ticketedEvents && (
+                <span className="block mt-1 text-xs text-forest font-semibold">
+                  {ticketedEvents.length} live ticketed{" "}
+                  {ticketedEvents.length === 1 ? "gathering" : "gatherings"}{" "}
+                  currently on sale.
+                </span>
+              )}
             </p>
           </div>
 
@@ -128,8 +140,8 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
               Annual End-of-Year Gala
             </h3>
             <p className="mt-2 text-sm text-body flex-1">
-              A night of family honours, awards, dining, and celebration to close
-              the club year in grand style.
+              A night of family honours, awards, dining, and celebration to
+              close the club year in grand style.
             </p>
             <span className="mt-4 self-start rounded-full bg-ochre/20 text-espresso text-xs font-bold px-3 py-1">
               Black Tie &amp; Velvet

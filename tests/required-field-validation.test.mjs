@@ -7,7 +7,7 @@ const authFormSource = readFileSync(
   "utf8",
 );
 const pageSource = readFileSync(
-  new URL("../src/app/page.tsx", import.meta.url),
+  new URL("../src/app/portal/page.tsx", import.meta.url),
   "utf8",
 );
 const recordModalSource = readFileSync(

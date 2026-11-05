@@ -13,6 +13,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SYSTEM_NOTICES } from "@/lib/system-notices";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://carpentersfamily.com.ng"),
   title: "Carpenters Family Social Club · Asaba, Nigeria",
   description:
     "Asaba’s premier family and entertainment collective—creating landmark shows, elevating lifestyle brands, and standing together for life. One Family, Endless Vibes.",
@@ -80,10 +81,7 @@ export default async function HomePage({
 
       {/* Notice Banner */}
       {noticeDef && (
-        <div
-          role="status"
-          className="mx-auto max-w-6xl px-4 pt-4"
-        >
+        <div role="status" className="mx-auto max-w-6xl px-4 pt-4">
           <div
             className={`rounded-xl border p-4 shadow-sm flex items-start justify-between gap-3 ${
               noticeDef.type === "error"
@@ -122,10 +120,10 @@ export default async function HomePage({
                 Financial Integrity &amp; Stewardship
               </h2>
               <p className="mt-4 text-cream/85 text-sm sm:text-base leading-relaxed max-w-xl">
-                Governance you can see: transparent welfare tracking, accountable
-                reserves, democratic consensus, and disciplined leadership under the
-                Chairman, Secretary General, Provost/Welfare, and Treasurer/Financial
-                Secretary.
+                Governance you can see: transparent welfare tracking,
+                accountable reserves, democratic consensus, and disciplined
+                leadership under the Chairman, Secretary General,
+                Provost/Welfare, and Treasurer/Financial Secretary.
               </p>
               <ul className="mt-6 space-y-2.5 text-sm text-cream/90">
                 <li className="flex gap-3">
@@ -134,11 +132,13 @@ export default async function HomePage({
                 </li>
                 <li className="flex gap-3">
                   <span className="text-ochre">◆</span>
-                  Open books and periodic financial reports for every active member
+                  Open books and periodic financial reports for every active
+                  member
                 </li>
                 <li className="flex gap-3">
                   <span className="text-ochre">◆</span>
-                  Decisions and confirmations by majority vote, preserved in minutes
+                  Decisions and confirmations by majority vote, preserved in
+                  minutes
                 </li>
               </ul>
             </div>
@@ -156,8 +156,8 @@ export default async function HomePage({
                     </span>
                   </summary>
                   <p className="pb-4 text-cream/80">
-                    We answer to one another for our words, our commitments, our event
-                    duties, and the family’s funds.
+                    We answer to one another for our words, our commitments, our
+                    event duties, and the family’s funds.
                   </p>
                 </details>
                 <details className="group">
@@ -168,8 +168,8 @@ export default async function HomePage({
                     </span>
                   </summary>
                   <p className="pb-4 text-cream/80">
-                    We carry ourselves with dignity at every gathering and show, and
-                    settle differences as one family.
+                    We carry ourselves with dignity at every gathering and show,
+                    and settle differences as one family.
                   </p>
                 </details>
                 <details className="group">
@@ -180,8 +180,8 @@ export default async function HomePage({
                     </span>
                   </summary>
                   <p className="pb-4 text-cream/80">
-                    Our success is measured by the welfare of our members and the
-                    standard of every event we deliver.
+                    Our success is measured by the welfare of our members and
+                    the standard of every event we deliver.
                   </p>
                 </details>
               </div>
@@ -190,7 +190,10 @@ export default async function HomePage({
         </section>
 
         {/* 6. MEMBERSHIP TIMELINE & TESTIMONIALS */}
-        <section id="membership" className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+        <section
+          id="membership"
+          className="mx-auto max-w-6xl px-4 py-16 sm:py-20"
+        >
           <div className="grid lg:grid-cols-12 gap-12 items-start">
             {/* Left: 3-Step Membership Timeline */}
             <div className="lg:col-span-6">
@@ -209,8 +212,8 @@ export default async function HomePage({
                     Nomination &amp; Referral
                   </h3>
                   <p className="mt-1 text-sm text-umber">
-                    You must be duly recommended by an active financial member in
-                    good standing.
+                    You must be duly recommended by an active financial member
+                    in good standing.
                   </p>
                 </li>
                 <li className="pl-7 relative">
@@ -221,8 +224,8 @@ export default async function HomePage({
                     Character &amp; Probationary Vetting
                   </h3>
                   <p className="mt-1 text-sm text-umber">
-                    Your conduct, participation, and contribution are observed over a
-                    3-month probationary period.
+                    Your conduct, participation, and contribution are observed
+                    over a 3-month probationary period.
                   </p>
                 </li>
                 <li className="pl-7 relative">
@@ -233,8 +236,8 @@ export default async function HomePage({
                     Assembly Induction
                   </h3>
                   <p className="mt-1 text-sm text-umber">
-                    Confirmed by majority vote of the house, pledging to the family’s
-                    welfare and constitution.
+                    Confirmed by majority vote of the house, pledging to the
+                    family’s welfare and constitution.
                   </p>
                 </li>
               </ol>
@@ -255,28 +258,32 @@ export default async function HomePage({
                     behind my personal growth and every milestone at home.”
                   </blockquote>
                   <figcaption className="mt-2.5 text-xs text-umber">
-                    <strong className="text-forest font-bold">Chairman</strong> ·
-                    Executive Council
+                    <strong className="text-forest font-bold">Chairman</strong>{" "}
+                    · Executive Council
                   </figcaption>
                 </figure>
                 <figure className="rounded-2xl bg-white border border-linen p-5 shadow-xs">
                   <blockquote className="font-serif text-lg text-espresso leading-snug">
-                    “When Carpenters Family hosts a show or represents a brand, the
-                    discipline and crowd energy are unmatched in Delta.”
+                    “When Carpenters Family hosts a show or represents a brand,
+                    the discipline and crowd energy are unmatched in Delta.”
                   </blockquote>
                   <figcaption className="mt-2.5 text-xs text-umber">
-                    <strong className="text-forest font-bold">Secretary General</strong> ·
-                    Executive Council
+                    <strong className="text-forest font-bold">
+                      Secretary General
+                    </strong>{" "}
+                    · Executive Council
                   </figcaption>
                 </figure>
                 <figure className="rounded-2xl bg-white border border-linen p-5 shadow-xs">
                   <blockquote className="font-serif text-lg text-espresso leading-snug">
-                    “Accountable finances, collective welfare for active members, and
-                    celebrations we will never forget.”
+                    “Accountable finances, collective welfare for active
+                    members, and celebrations we will never forget.”
                   </blockquote>
                   <figcaption className="mt-2.5 text-xs text-umber">
-                    <strong className="text-forest font-bold">Active Member</strong> ·
-                    Carpenters Family
+                    <strong className="text-forest font-bold">
+                      Active Member
+                    </strong>{" "}
+                    · Carpenters Family
                   </figcaption>
                 </figure>
               </div>
@@ -304,8 +311,9 @@ export default async function HomePage({
               </span>
             </h2>
             <p className="mt-4 text-sm sm:text-base text-cream/90 leading-relaxed max-w-xl mx-auto">
-              Know a member in the club to request an introduction, or looking to book
-              our DJs, hype team, and brand promotion crew for your next big event?
+              Know a member in the club to request an introduction, or looking
+              to book our DJs, hype team, and brand promotion crew for your next
+              big event?
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link

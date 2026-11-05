@@ -12,8 +12,15 @@ export function LandingNav() {
         setMobileMenuOpen(false);
       }
     }
+    function handleHashChange() {
+      setMobileMenuOpen(false);
+    }
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("hashchange", handleHashChange);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("hashchange", handleHashChange);
+    };
   }, [mobileMenuOpen]);
 
   // Lock body scroll when mobile menu is open
@@ -114,7 +121,7 @@ export function LandingNav() {
               Member Portal
             </Link>
 
-            <div className="flex items-center gap-1.5" aria-label="Social Media">
+            <div className="flex items-center gap-1.5">
               <a
                 href="#footer"
                 title="LinkedIn"
@@ -209,47 +216,27 @@ export function LandingNav() {
         </div>
         <ul className="mt-3 font-serif text-xl text-espresso">
           <li>
-            <a
-              className="block py-3 border-b border-linen"
-              href="#about"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <a className="block py-3 border-b border-linen" href="#about">
               About
             </a>
           </li>
           <li>
-            <a
-              className="block py-3 border-b border-linen"
-              href="#what-we-do"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <a className="block py-3 border-b border-linen" href="#what-we-do">
               What We Do
             </a>
           </li>
           <li>
-            <a
-              className="block py-3 border-b border-linen"
-              href="#events"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <a className="block py-3 border-b border-linen" href="#events">
               Events &amp; Lifestyle
             </a>
           </li>
           <li>
-            <a
-              className="block py-3 border-b border-linen"
-              href="#leadership"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <a className="block py-3 border-b border-linen" href="#leadership">
               Stewardship
             </a>
           </li>
           <li>
-            <a
-              className="block py-3 border-b border-linen"
-              href="#membership"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <a className="block py-3 border-b border-linen" href="#membership">
               Membership
             </a>
           </li>

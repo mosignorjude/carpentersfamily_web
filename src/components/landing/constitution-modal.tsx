@@ -7,10 +7,7 @@ interface ConstitutionModalProps {
   onClose: () => void;
 }
 
-export function ConstitutionModal({
-  isOpen,
-  onClose,
-}: ConstitutionModalProps) {
+export function ConstitutionModal({ isOpen, onClose }: ConstitutionModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,17 +24,21 @@ export function ConstitutionModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-deep/60 backdrop-blur-xs p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="constitution-modal-title"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
     >
+      <button
+        type="button"
+        className="fixed inset-0 bg-deep/60 backdrop-blur-xs cursor-default -z-10 border-0"
+        aria-label="Close modal overlay"
+        tabIndex={-1}
+        onClick={onClose}
+      />
       <div
         ref={dialogRef}
-        className="w-full max-w-lg rounded-2xl bg-cream p-6 shadow-2xl border border-linen animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-lg rounded-2xl bg-cream p-6 shadow-2xl border border-linen animate-in fade-in zoom-in-95 duration-200"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -63,24 +64,26 @@ export function ConstitutionModal({
 
         <ul className="mt-4 space-y-2.5 text-xs sm:text-sm text-body">
           <li className="p-3 rounded-xl bg-white border border-linen">
-            <strong className="text-espresso">Purpose:</strong> Event management,
-            DJ/MC/hype services, beverage and brand promotion, and mutual family
-            welfare in Asaba and across Delta State.
+            <strong className="text-espresso">Purpose:</strong> Event
+            management, DJ/MC/hype services, beverage and brand promotion, and
+            mutual family welfare in Asaba and across Delta State.
           </li>
           <li className="p-3 rounded-xl bg-white border border-linen">
-            <strong className="text-espresso">Executive Council:</strong> Led by the
-            Chairman, Secretary General, Provost/Welfare, and Treasurer/Financial
-            Secretary serving 2-year terms.
+            <strong className="text-espresso">Executive Council:</strong> Led by
+            the Chairman, Secretary General, Provost/Welfare, and
+            Treasurer/Financial Secretary serving 2-year terms.
           </li>
           <li className="p-3 rounded-xl bg-white border border-linen">
-            <strong className="text-espresso">Regular Meetings:</strong> Held on the
-            last Sunday of every month at 4:00 PM prompt in Asaba.
+            <strong className="text-espresso">Regular Meetings:</strong> Held on
+            the last Sunday of every month at 4:00 PM prompt in Asaba.
           </li>
           <li className="p-3 rounded-xl bg-white border border-linen">
-            <strong className="text-espresso">Stewardship &amp; Welfare:</strong> Dual-signatory
-            bank authorization, open books, transparent accounting, and standing
-            support for active members during weddings, childbirth, and life
-            milestones.
+            <strong className="text-espresso">
+              Stewardship &amp; Welfare:
+            </strong>{" "}
+            Dual-signatory bank authorization, open books, transparent
+            accounting, and standing support for active members during weddings,
+            childbirth, and life milestones.
           </li>
         </ul>
 

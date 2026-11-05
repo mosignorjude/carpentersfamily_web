@@ -17,9 +17,9 @@ import {
   notifyEventChanged,
   notifyEventRoleAssigned,
   notifyMemberLifecycleChanged,
+  notifyMembershipRequestReceived,
   notifyNewEventScheduled,
   notifyNewMemberSignUp,
-  notifyMembershipRequestReceived,
   notifyPartnershipEnquiryReceived,
   notifyPasswordUpdated,
   notifyPollCreated,
@@ -1351,27 +1351,38 @@ export async function signUpAction(formData: FormData) {
     password.length > 128 ||
     password !== confirmPassword
   ) {
-    redirect(`/signup?token=${encodeURIComponent(token)}&notice=invalid-signup`);
+    redirect(
+      `/signup?token=${encodeURIComponent(token)}&notice=invalid-signup`,
+    );
   }
 
   const emailRedirectTo = safeSiteUrl("/auth/callback");
-  if (!emailRedirectTo) redirect(`/signup?token=${encodeURIComponent(token)}&notice=configuration`);
+  if (!emailRedirectTo)
+    redirect(`/signup?token=${encodeURIComponent(token)}&notice=configuration`);
 
-  const supabase = await clientOrRedirect(`/signup?token=${encodeURIComponent(token)}&notice=configuration`);
+  const supabase = await clientOrRedirect(
+    `/signup?token=${encodeURIComponent(token)}&notice=configuration`,
+  );
 
   // Validate the invitation token via security definer RPC
   const { data: inviteValidation, error: validateError } = await supabase.rpc(
     "validate_invite_token",
-    { p_token: token }
+    { p_token: token },
   );
 
   if (validateError || !inviteValidation?.valid) {
-    const noticeCode = inviteValidation?.reason === "expired" ? "invite-expired" : "invite-invalid";
+    const noticeCode =
+      inviteValidation?.reason === "expired"
+        ? "invite-expired"
+        : "invite-invalid";
     redirect(`/signup?notice=${noticeCode}`);
   }
 
   // Ensure submitted email matches invited email
-  if (inviteValidation.email && inviteValidation.email.toLowerCase() !== email) {
+  if (
+    inviteValidation.email &&
+    inviteValidation.email.toLowerCase() !== email
+  ) {
     redirect("/signup?notice=invite-invalid");
   }
 
@@ -1386,7 +1397,10 @@ export async function signUpAction(formData: FormData) {
 
   // Keep the response indistinguishable for an existing address to reduce
   // account enumeration. Auth metadata is validated again by the DB trigger.
-  if (error) redirect(`/signup?token=${encodeURIComponent(token)}&notice=signup-unavailable`);
+  if (error)
+    redirect(
+      `/signup?token=${encodeURIComponent(token)}&notice=signup-unavailable`,
+    );
 
   if (signUpData.user?.id) {
     await supabase.rpc("consume_invite_token", {
@@ -3940,7 +3954,11 @@ export async function submitPartnershipEnquiryAction(formData: FormData) {
     redirect(`/?notice=${encodeURIComponent(rpcErrorNotice(error))}`);
   }
 
-  await notifyPartnershipEnquiryReceived({ contactName, organizationName, email });
+  await notifyPartnershipEnquiryReceived({
+    contactName,
+    organizationName,
+    email,
+  });
 
   revalidatePath("/");
   redirect("/?notice=partnership-enquiry-submitted");
