@@ -24,7 +24,7 @@ export function LandingWhatWeDo() {
                 alt="Carpenters Family members smiling together"
                 className="absolute inset-0 h-full w-full object-cover"
               />
-              <div className="absolute inset-x-2 bottom-2 bg-[#D8B589] text-espresso px-3 py-2 rounded shadow-md text-center border border-espresso/20">
+              <div className="absolute inset-x-2 bottom-2 bg-ochre/85 text-espresso px-3 py-2 rounded shadow-md text-center border border-espresso/20">
                 <span className="block font-serif italic font-bold text-lg sm:text-xl leading-none">
                   One Family!
                 </span>

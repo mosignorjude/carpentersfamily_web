@@ -20,11 +20,14 @@ export function LandingVision() {
                 cx="32"
                 cy="34"
                 r="7"
-                stroke="#D6A23A"
+                className="stroke-ochre"
                 strokeWidth="2.2"
               />
               <circle cx="32" cy="34" r="2.5" fill="currentColor" />
-              <path d="M32 10v4M21 12l2 3.5M43 12l-2 3.5" stroke="#D6A23A" />
+              <path
+                d="M32 10v4M21 12l2 3.5M43 12l-2 3.5"
+                className="stroke-ochre"
+              />
               <path d="M22 50c4 3 16 3 20 0" />
             </svg>
           </div>
@@ -55,7 +58,7 @@ export function LandingVision() {
               <path d="M32 38v10M22 48h20M25 53h14" />
               <path
                 d="M32 20l1.8 3.6 4 .6-2.9 2.8.7 4-3.6-1.9-3.6 1.9.7-4-2.9-2.8 4-.6L32 20Z"
-                stroke="#D6A23A"
+                className="stroke-ochre"
               />
             </svg>
           </div>
@@ -97,8 +100,7 @@ export function LandingVision() {
               />
               <path
                 d="M32 37s-5-3.2-5-6.2a2.8 2.8 0 0 1 5-1.7 2.8 2.8 0 0 1 5 1.7c0 3-5 6.2-5 6.2Z"
-                fill="#D6A23A"
-                stroke="#D6A23A"
+                className="fill-ochre stroke-ochre"
               />
             </svg>
           </div>

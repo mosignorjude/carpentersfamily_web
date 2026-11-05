@@ -30,6 +30,18 @@ const ibmPlexSans = localFont({
   display: "swap",
 });
 
+const fraunces = localFont({
+  src: [
+    {
+      path: "../fonts/fraunces-latin.woff2",
+      weight: "100 900",
+      style: "normal",
+    },
+  ],
+  variable: "--font-fraunces",
+  display: "swap",
+});
+
 // Must equal .app-sticky-header's background in globals.css; the viewport test reads that rule back.
 export const viewport: Viewport = {
   themeColor: "#f7f6f2",
@@ -56,7 +68,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html className={`${dmSans.variable} ${ibmPlexSans.variable}`} lang="en">
+    <html className={`${dmSans.variable} ${ibmPlexSans.variable} ${fraunces.variable}`} lang="en">
       <body className="antialiased">
         <NavigationProgressBar />
         <GlobalFlashListener />
