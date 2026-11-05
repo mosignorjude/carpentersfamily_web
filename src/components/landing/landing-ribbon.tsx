@@ -34,7 +34,7 @@ export function LandingRibbon({ ticketedEvents }: LandingRibbonProps) {
           href="/tickets"
           className="underline underline-offset-4 min-h-[44px] inline-flex items-center hover:text-ochre font-medium transition-colors"
         >
-          RSVP / Tickets
+          Tickets / Reservations
         </Link>
       </div>
     </div>

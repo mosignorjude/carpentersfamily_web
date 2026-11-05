@@ -124,10 +124,18 @@ export function LandingNav() {
             <LandingSocialLinks />
           </div>
 
+          {/* Phones keep the member door one tap away, drawer or not. */}
+          <Link
+            href="/portal"
+            className="md:hidden ml-auto min-h-[44px] inline-flex items-center rounded-full border border-forest/30 bg-forest/5 px-3 text-[11px] font-bold text-forest transition-colors hover:bg-forest hover:text-cream"
+          >
+            Member Portal
+          </Link>
+
           {/* Mobile Menu Trigger Button */}
           <button
             type="button"
-            className="lg:hidden h-11 w-11 grid place-items-center rounded-lg border border-linen bg-white text-espresso"
+            className="lg:hidden ml-1 h-11 w-11 grid place-items-center rounded-lg border border-linen bg-white text-espresso"
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileMenuOpen}
             aria-controls="drawer"

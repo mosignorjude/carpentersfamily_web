@@ -91,25 +91,31 @@ export function TicketsStorefrontView({
       <header className="sticky top-0 z-30 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E5DDD3]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <Link
-            className="flex items-center gap-3 no-underline text-[#3D291F]"
+            className="flex items-center gap-3 min-w-0 no-underline text-[#3D291F]"
             href="/tickets"
           >
             <div className="p-2 rounded-xl bg-white border border-[#E5DDD3] shadow-2xs">
               <ClubLogo size="sm" variant="dark" />
             </div>
-            <div>
-              <span className="text-sm font-extrabold tracking-tight block leading-tight text-[#3D291F]">
+            <div className="min-w-0">
+              <span className="text-sm font-extrabold tracking-tight block leading-tight text-[#3D291F] truncate sm:hidden">
+                {clubBrand.shortName}
+              </span>
+              <span className="text-sm font-extrabold tracking-tight hidden sm:block leading-tight text-[#3D291F]">
                 {clubBrand.name}
               </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#174C37] block">
-                Official Event Box Office · carpentersfamily.com.ng/tickets
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#174C37] block truncate">
+                Official Event Box Office{" "}
+                <span className="hidden sm:inline">
+                  · carpentersfamily.com.ng/tickets
+                </span>
               </span>
             </div>
           </Link>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 shrink-0">
             <Link
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E5DDD3] bg-white hover:bg-[#FAF6F0] text-xs font-bold text-[#174C37] transition-colors no-underline shadow-2xs"
+              className="inline-flex items-center gap-1.5 min-h-[44px] whitespace-nowrap px-3.5 py-2 rounded-xl border border-[#E5DDD3] bg-white hover:bg-[#FAF6F0] text-xs font-bold text-[#174C37] transition-colors no-underline shadow-2xs"
               href={isAuthenticatedMember ? "/events" : "/"}
             >
               <span>

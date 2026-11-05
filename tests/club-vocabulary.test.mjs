@@ -7,12 +7,14 @@ import test from "node:test";
 //   • "Beverage" -> "Drinks" (the club promotes liquor, wine and everything else
 //     that is poured, alcoholic or not — "beverage" reads like a supplier category)
 //   • "Gathering" -> "Event", or "Family" when the sentence means the people
+//   • "RSVP" -> "Tickets / Reservations"
 // Scoped to the whole source tree rather than a file list, so a component added
 // next month cannot quietly revive the old vocabulary.
 const BANNED = {
   assembly: "say Meeting",
   beverage: "say Drinks",
   gathering: "say Event, or Family when you mean the people",
+  rsvp: "say Tickets / Reservations",
 };
 
 function sourceFiles(dir, found = []) {
