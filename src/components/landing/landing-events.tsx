@@ -1,16 +1,14 @@
 import Link from "next/link";
+import type { PublicTicketedEvent } from "@/components/tickets/tickets-storefront-view";
+import { formatNaira } from "@/lib/format";
+import { selectLandingEvents } from "@/lib/landing-events.mjs";
 
 interface LandingEventsProps {
-  ticketedEvents?: Array<{
-    id: string;
-    title: string;
-    starts_at: string;
-    location: string;
-  }>;
+  ticketedEvents?: PublicTicketedEvent[];
 }
 
 export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
-  const hasDynamicEvents = Boolean(ticketedEvents && ticketedEvents.length > 0);
+  const cards = selectLandingEvents(ticketedEvents);
 
   return (
     <section
@@ -29,11 +27,11 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
             <p className="mt-2 text-sm text-umber max-w-xl">
               A glimpse into our past raves, brand activations, traditional
               outings, and upcoming gatherings across Delta State.
-              {hasDynamicEvents && ticketedEvents && (
+              {cards.length > 0 && (
                 <span className="block mt-1 text-xs text-forest font-semibold">
-                  {ticketedEvents.length} live ticketed{" "}
-                  {ticketedEvents.length === 1 ? "gathering" : "gatherings"}{" "}
-                  currently on sale.
+                  {cards.length} live ticketed{" "}
+                  {cards.length === 1 ? "gathering" : "gatherings"} currently on
+                  sale.
                 </span>
               )}
             </p>
@@ -56,7 +54,7 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
             <img
               src="/landing/tile-raves.jpg"
               alt="Signature Rave Crowd Energy & Nightlife"
-              className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-500"
+              className="absolute inset-0 h-full w-full object-cover motion-safe:transition motion-safe:duration-500 motion-safe:group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-deep/90 via-deep/20 to-transparent p-4 flex flex-col justify-end text-cream">
               <span className="text-[10px] uppercase tracking-widest text-ochre font-bold">
@@ -73,7 +71,7 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
             <img
               src="/landing/tile-djs-hype.jpg"
               alt="Pro DJs, MCs & Hype Services"
-              className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-500"
+              className="absolute inset-0 h-full w-full object-cover motion-safe:transition motion-safe:duration-500 motion-safe:group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-deep/90 via-deep/20 to-transparent p-4 flex flex-col justify-end text-cream">
               <span className="text-[10px] uppercase tracking-widest text-ochre font-bold">
@@ -90,7 +88,7 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
             <img
               src="/landing/tile-brand-activation.jpg"
               alt="Beverage & Lifestyle Brand Activations"
-              className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-500"
+              className="absolute inset-0 h-full w-full object-cover motion-safe:transition motion-safe:duration-500 motion-safe:group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-deep/90 via-deep/20 to-transparent p-4 flex flex-col justify-end text-cream">
               <span className="text-[10px] uppercase tracking-widest text-ochre font-bold">
@@ -107,7 +105,7 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
             <img
               src="/landing/tile-family-galas.jpg"
               alt="Family Galas, Weddings & Outings"
-              className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-500"
+              className="absolute inset-0 h-full w-full object-cover motion-safe:transition motion-safe:duration-500 motion-safe:group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-deep/90 via-deep/20 to-transparent p-4 flex flex-col justify-end text-cream">
               <span className="text-[10px] uppercase tracking-widest text-ochre font-bold">
@@ -120,89 +118,83 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
           </figure>
         </div>
 
-        {/* 3 Flagship Event Cards */}
-        <div className="mt-8 grid md:grid-cols-3 gap-5">
-          <article className="rounded-2xl bg-cream border border-linen p-6 flex flex-col">
-            <div className="flex justify-between gap-2 text-xs font-bold">
-              <span className="rounded-full bg-forest/10 text-forest px-3 py-1">
-                Dec 2026 · Asaba
-              </span>
-              <span className="rounded-full bg-terra/10 text-terra px-3 py-1">
-                Members &amp; Invitees
-              </span>
-            </div>
-            <h3 className="mt-4 font-serif text-2xl font-bold text-espresso">
-              Annual End-of-Year Gala
+        {/* Flagship gatherings — every card below is a row from
+            public.get_public_ticketed_events(), never a hand-written schedule. */}
+        {cards.length > 0 ? (
+          <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {cards.map((card) => (
+              <article
+                key={card.id}
+                className="rounded-2xl bg-cream border border-linen p-6 flex flex-col"
+              >
+                <div className="flex flex-wrap justify-between gap-2 text-xs font-bold">
+                  <span className="rounded-full bg-forest/10 text-forest px-3 py-1">
+                    {[card.whenLabel, card.timeLabel]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                  {card.location && (
+                    <span className="rounded-full bg-ochre/25 text-espresso px-3 py-1">
+                      {card.location}
+                    </span>
+                  )}
+                </div>
+                <h3 className="mt-4 font-serif text-2xl font-bold text-espresso">
+                  {card.title}
+                </h3>
+                {card.blurb && (
+                  <p className="mt-2 text-sm text-body flex-1">{card.blurb}</p>
+                )}
+                <span
+                  className={`mt-4 self-start rounded-full text-xs font-bold px-3 py-1 ${
+                    card.soldOut
+                      ? "bg-terra/10 text-terra"
+                      : "bg-ochre/20 text-espresso"
+                  }`}
+                >
+                  {card.soldOut
+                    ? "Sold out"
+                    : card.cheapestPrice === null
+                      ? "Tickets at the box office"
+                      : `From ${formatNaira(card.cheapestPrice)}`}
+                </span>
+                <Link
+                  href="/tickets"
+                  className="btn mt-5 bg-forest text-cream hover:bg-ochre hover:text-deep text-xs font-bold transition-colors"
+                >
+                  {card.soldOut
+                    ? "See the box office"
+                    : "Get tickets at the box office"}
+                </Link>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-8 rounded-2xl border border-dashed border-linen bg-cream p-8 text-center">
+            <h3 className="font-serif text-xl font-bold text-espresso">
+              No gathering is on sale right now
             </h3>
-            <p className="mt-2 text-sm text-body flex-1">
-              A night of family honours, awards, dining, and celebration to
-              close the club year in grand style.
+            <p className="mt-2 text-sm text-umber max-w-md mx-auto">
+              Ticketed shows open for sale as soon as the family confirms the
+              date. Members hear first — the box office lists every event the
+              moment it goes live.
             </p>
-            <span className="mt-4 self-start rounded-full bg-ochre/20 text-espresso text-xs font-bold px-3 py-1">
-              Black Tie &amp; Velvet
-            </span>
-            <Link
-              href="/tickets"
-              className="btn mt-5 bg-forest text-cream hover:bg-ochre hover:text-deep text-xs font-bold transition-colors"
-            >
-              View Schedule &amp; Tickets
-            </Link>
-          </article>
-
-          <article className="rounded-2xl bg-cream border border-linen p-6 flex flex-col">
-            <div className="flex justify-between gap-2 text-xs font-bold">
-              <span className="rounded-full bg-forest/10 text-forest px-3 py-1">
-                Delta State
-              </span>
-              <span className="rounded-full bg-ochre/25 text-espresso px-3 py-1">
-                Public Tickets &amp; Tables
-              </span>
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <Link
+                href="/tickets"
+                className="btn border border-forest text-forest hover:bg-forest hover:text-cream text-xs font-bold transition-colors"
+              >
+                Check the box office
+              </Link>
+              <Link
+                href="/?modal=membership"
+                className="btn bg-forest text-cream hover:bg-ochre hover:text-deep text-xs font-bold transition-colors"
+              >
+                Ask about membership
+              </Link>
             </div>
-            <h3 className="mt-4 font-serif text-2xl font-bold text-espresso">
-              The SLK Rave &amp; Shows
-            </h3>
-            <p className="mt-2 text-sm text-body flex-1">
-              Our high-energy signature rave experience: headline DJs, hype men,
-              brand activations, and the family at its loudest.
-            </p>
-            <span className="mt-4 self-start rounded-full bg-ochre/20 text-espresso text-xs font-bold px-3 py-1">
-              Vibrant &amp; Colourful
-            </span>
-            <Link
-              href="/tickets"
-              className="btn mt-5 bg-forest text-cream hover:bg-ochre hover:text-deep text-xs font-bold transition-colors"
-            >
-              Get Tickets at Box Office
-            </Link>
-          </article>
-
-          <article className="rounded-2xl bg-cream border border-linen p-6 flex flex-col">
-            <div className="flex justify-between gap-2 text-xs font-bold">
-              <span className="rounded-full bg-forest/10 text-forest px-3 py-1">
-                Last Sunday · 4:00 PM
-              </span>
-              <span className="rounded-full bg-terra/10 text-terra px-3 py-1">
-                Members Only
-              </span>
-            </div>
-            <h3 className="mt-4 font-serif text-2xl font-bold text-espresso">
-              Monthly General Assembly
-            </h3>
-            <p className="mt-2 text-sm text-body flex-1">
-              Where the family reviews accounts, tracks event performance, votes
-              on resolutions, and plans upcoming shows.
-            </p>
-            <span className="mt-4 self-start rounded-full bg-ochre/20 text-espresso text-xs font-bold px-3 py-1">
-              Smart / Traditional
-            </span>
-            <Link
-              href="/portal"
-              className="btn mt-5 bg-forest text-cream hover:bg-ochre hover:text-deep text-xs font-bold transition-colors"
-            >
-              Member Portal Login
-            </Link>
-          </article>
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );

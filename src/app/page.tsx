@@ -8,6 +8,7 @@ import { LandingNav } from "@/components/landing/landing-nav";
 import { LandingRibbon } from "@/components/landing/landing-ribbon";
 import { LandingVision } from "@/components/landing/landing-vision";
 import { LandingWhatWeDo } from "@/components/landing/landing-what-we-do";
+import type { PublicTicketedEvent } from "@/components/tickets/tickets-storefront-view";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SYSTEM_NOTICES } from "@/lib/system-notices";
 
@@ -42,13 +43,6 @@ export const metadata: Metadata = {
   },
 };
 
-interface PublicTicketedEvent {
-  id: string;
-  title: string;
-  starts_at: string;
-  location: string;
-}
-
 export default async function HomePage({
   searchParams,
 }: {
@@ -71,11 +65,9 @@ export default async function HomePage({
     // Render public landing gracefully if database is temporarily unavailable
   }
 
-  const nextEvent = ticketedEvents.length > 0 ? ticketedEvents[0] : null;
-
   return (
     <div className="min-h-screen bg-cream text-body selection:bg-ochre selection:text-deep">
-      <LandingRibbon nextEvent={nextEvent} />
+      <LandingRibbon ticketedEvents={ticketedEvents} />
       <LandingNav />
 
       {/* Notice Banner */}

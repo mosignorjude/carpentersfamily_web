@@ -148,7 +148,7 @@ export function PartnershipEnquiryModal({
                 Book DJ / Hype Man / MC &amp; Crowd Engagement
               </option>
               <option value="sponsorship">
-                Event Sponsorship (SLK Rave / Annual Gala)
+                Event Sponsorship (flagship shows &amp; raves)
               </option>
               <option value="general">
                 Full Event Hosting &amp; Management
