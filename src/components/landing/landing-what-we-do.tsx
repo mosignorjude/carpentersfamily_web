@@ -11,6 +11,8 @@ export function LandingWhatWeDo() {
             <img
               src="/landing/what-we-do-main.jpg"
               alt="Carpenters Family hosting a live show and lifestyle experience"
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 h-full w-full object-cover"
             />
           </div>
@@ -22,13 +24,15 @@ export function LandingWhatWeDo() {
               <img
                 src="/landing/what-we-do-inset.jpg"
                 alt="Carpenters Family members smiling together"
+                loading="lazy"
+                decoding="async"
                 className="absolute inset-0 h-full w-full object-cover"
               />
-              <div className="absolute inset-x-2 bottom-2 bg-ochre/85 text-espresso px-3 py-2 rounded shadow-md text-center border border-espresso/20">
+              <div className="absolute inset-x-2 bottom-2 bg-ochre text-espresso px-3 py-2 rounded shadow-md text-center border border-espresso/20">
                 <span className="block font-serif italic font-bold text-lg sm:text-xl leading-none">
                   One Family!
                 </span>
-                <span className="block text-[10px] uppercase tracking-widest font-bold mt-0.5">
+                <span className="block text-[11px] uppercase tracking-widest font-bold mt-0.5">
                   Endless Vibes · Asaba
                 </span>
               </div>
@@ -53,7 +57,7 @@ export function LandingWhatWeDo() {
 
           <div className="mt-6 space-y-3.5 text-sm">
             <div className="p-3.5 rounded-xl bg-white border border-linen flex gap-3.5 items-start">
-              <span className="h-7 w-7 rounded-full bg-forest text-ochre font-serif font-bold text-xs grid place-items-center shrink-0 mt-0.5">
+              <span className="h-7 w-7 rounded-full bg-ochre text-espresso font-serif font-bold text-xs grid place-items-center shrink-0 mt-0.5">
                 01
               </span>
               <div>
@@ -69,7 +73,7 @@ export function LandingWhatWeDo() {
             </div>
 
             <div className="p-3.5 rounded-xl bg-white border border-linen flex gap-3.5 items-start">
-              <span className="h-7 w-7 rounded-full bg-forest text-ochre font-serif font-bold text-xs grid place-items-center shrink-0 mt-0.5">
+              <span className="h-7 w-7 rounded-full bg-ochre text-espresso font-serif font-bold text-xs grid place-items-center shrink-0 mt-0.5">
                 02
               </span>
               <div>
@@ -84,7 +88,7 @@ export function LandingWhatWeDo() {
             </div>
 
             <div className="p-3.5 rounded-xl bg-white border border-linen flex gap-3.5 items-start">
-              <span className="h-7 w-7 rounded-full bg-forest text-ochre font-serif font-bold text-xs grid place-items-center shrink-0 mt-0.5">
+              <span className="h-7 w-7 rounded-full bg-ochre text-espresso font-serif font-bold text-xs grid place-items-center shrink-0 mt-0.5">
                 03
               </span>
               <div>

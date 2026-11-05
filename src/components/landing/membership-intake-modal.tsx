@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useActionState } from "react";
 import { submitMembershipRequestAction } from "@/app/actions";
+import {
+  MODAL_INPUT,
+  ModalField,
+  ModalShell,
+  ModalSubmit,
+} from "./modal-shell";
 
 interface MembershipIntakeModalProps {
   isOpen: boolean;
@@ -12,156 +18,112 @@ export function MembershipIntakeModal({
   isOpen,
   onClose,
 }: MembershipIntakeModalProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
-
   if (!isOpen) return null;
 
+  return <MembershipIntakeForm onClose={onClose} />;
+}
+
+// Closing unmounts the form, so a refusal cannot survive its dialog and reopen over empty fields.
+function MembershipIntakeForm({ onClose }: { onClose: () => void }) {
+  const [state, formAction] = useActionState(
+    submitMembershipRequestAction,
+    null,
+  );
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="membership-modal-title"
+    <ModalShell
+      isOpen
+      onClose={onClose}
+      titleId="membership-modal-title"
+      eyebrow="By Invitation & Vetted Merit"
+      title="Request Membership Introduction"
+      notice={state ?? undefined}
     >
-      <button
-        type="button"
-        className="fixed inset-0 bg-deep/60 backdrop-blur-xs cursor-default -z-10 border-0"
-        aria-label="Close modal overlay"
-        tabIndex={-1}
-        onClick={onClose}
-      />
-      <div
-        ref={dialogRef}
-        className="relative z-10 w-full max-w-md rounded-2xl bg-cream p-6 shadow-2xl border border-linen animate-in fade-in zoom-in-95 duration-200"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <span className="text-[10px] uppercase tracking-widest font-bold text-terra">
-              By Invitation &amp; Vetted Merit
-            </span>
-            <h3
-              id="membership-modal-title"
-              className="font-serif text-2xl font-bold text-espresso"
-            >
-              Request Membership Introduction
-            </h3>
-          </div>
+      <p className="mt-2 text-xs leading-relaxed text-umber">
+        Prospective members must be recommended by an active financial member
+        and complete a 3-month probationary vetting period.
+      </p>
+
+      <form action={formAction} className="mt-4 space-y-3 text-sm">
+        <ModalField label="Full Name" htmlFor="intake-full-name">
+          <input
+            id="intake-full-name"
+            required
+            type="text"
+            name="full_name"
+            defaultValue={state?.values.full_name}
+            autoComplete="name"
+            placeholder="As it appears on your ID"
+            className={MODAL_INPUT}
+          />
+        </ModalField>
+
+        <ModalField label="Email Address" htmlFor="intake-email">
+          <input
+            id="intake-email"
+            required
+            type="email"
+            name="email"
+            defaultValue={state?.values.email}
+            autoComplete="email"
+            placeholder="you@example.com"
+            className={MODAL_INPUT}
+          />
+        </ModalField>
+
+        <ModalField label="Phone / WhatsApp Number" htmlFor="intake-phone">
+          <input
+            id="intake-phone"
+            required
+            type="tel"
+            name="phone"
+            defaultValue={state?.values.phone}
+            autoComplete="tel"
+            placeholder="+234 800 000 0000"
+            className={MODAL_INPUT}
+          />
+        </ModalField>
+
+        <ModalField label="Profession / Occupation" htmlFor="intake-profession">
+          <input
+            id="intake-profession"
+            required
+            type="text"
+            name="profession"
+            defaultValue={state?.values.profession}
+            placeholder="What you do for a living"
+            className={MODAL_INPUT}
+          />
+        </ModalField>
+
+        <ModalField
+          label="Reason for Joining & Referring Member"
+          htmlFor="intake-reason"
+        >
+          <textarea
+            id="intake-reason"
+            required
+            rows={3}
+            name="reason_for_joining"
+            defaultValue={state?.values.reason_for_joining}
+            placeholder="Why you wish to join, and the name of any referring member."
+            className={`${MODAL_INPUT} resize-none`}
+          />
+        </ModalField>
+
+        <div className="flex gap-2 pt-2">
+          <ModalSubmit className="bg-forest text-cream hover:bg-ochre hover:text-deep">
+            Submit to Secretariat
+          </ModalSubmit>
           <button
             type="button"
             onClick={onClose}
-            className="h-8 w-8 rounded-lg border border-linen grid place-items-center text-espresso hover:bg-linen/40 transition-colors"
-            aria-label="Close modal"
+            className="btn border border-linen bg-white text-espresso text-xs font-bold hover:bg-linen/40 transition-colors"
           >
-            ✕
+            Close
           </button>
         </div>
-
-        <p className="mt-2 text-xs text-umber leading-relaxed">
-          Prospective members must be recommended by an active financial member
-          and complete a 3-month probationary vetting period.
-        </p>
-
-        <form
-          action={submitMembershipRequestAction}
-          className="mt-4 space-y-3 text-sm"
-        >
-          <div>
-            <label htmlFor="intake-full-name" className="sr-only">
-              Full Name
-            </label>
-            <input
-              id="intake-full-name"
-              required
-              type="text"
-              name="full_name"
-              placeholder="Your Full Name"
-              className="w-full rounded-lg border border-linen bg-white px-3.5 py-2.5 text-espresso placeholder:text-umber/60 focus:border-forest focus:outline-hidden"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="intake-email" className="sr-only">
-              Email Address
-            </label>
-            <input
-              id="intake-email"
-              required
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              className="w-full rounded-lg border border-linen bg-white px-3.5 py-2.5 text-espresso placeholder:text-umber/60 focus:border-forest focus:outline-hidden"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="intake-phone" className="sr-only">
-              Phone / WhatsApp Number
-            </label>
-            <input
-              id="intake-phone"
-              required
-              type="tel"
-              name="phone"
-              placeholder="Phone / WhatsApp Number (e.g. +234...)"
-              className="w-full rounded-lg border border-linen bg-white px-3.5 py-2.5 text-espresso placeholder:text-umber/60 focus:border-forest focus:outline-hidden"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="intake-profession" className="sr-only">
-              Profession / Occupation
-            </label>
-            <input
-              id="intake-profession"
-              required
-              type="text"
-              name="profession"
-              placeholder="Profession / Occupation"
-              className="w-full rounded-lg border border-linen bg-white px-3.5 py-2.5 text-espresso placeholder:text-umber/60 focus:border-forest focus:outline-hidden"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="intake-reason" className="sr-only">
-              Reason for Joining & Referring Member
-            </label>
-            <textarea
-              id="intake-reason"
-              required
-              rows={3}
-              name="reason_for_joining"
-              placeholder="Why do you wish to join? Include referring member name if any."
-              className="w-full rounded-lg border border-linen bg-white px-3.5 py-2.5 text-espresso placeholder:text-umber/60 focus:border-forest focus:outline-hidden resize-none"
-            />
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <button
-              type="submit"
-              className="btn flex-1 bg-forest text-cream hover:bg-ochre hover:text-deep text-xs font-bold transition-colors"
-            >
-              Submit to Secretariat
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn border border-linen bg-white text-espresso text-xs font-bold hover:bg-linen/40 transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </ModalShell>
   );
 }

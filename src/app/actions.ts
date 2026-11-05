@@ -42,6 +42,7 @@ import {
 } from "@/lib/event-validation.mjs";
 import { parseExecutiveRoleRequest } from "@/lib/executive-role-request.mjs";
 import { validateFinanceReceiptUpload } from "@/lib/finance-receipt-validation";
+import type { IntakeRejection } from "@/lib/intake-notice";
 import {
   createEventFingerprint,
   createMeetingFingerprint,
@@ -58,6 +59,7 @@ import { getR2StorageAdapter } from "@/lib/receipt-storage";
 import { rpcErrorNotice } from "@/lib/rpc-error-notice";
 import { getSiteOrigin, isGoogleAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSystemNotice, SYSTEM_NOTICES } from "@/lib/system-notices";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const usernamePattern = /^[A-Za-z0-9_]{3,30}$/;
@@ -155,6 +157,28 @@ async function clientOrRedirect(destination = "/portal?notice=configuration") {
   } catch {
     redirect(destination);
   }
+}
+
+async function clientOrNull() {
+  try {
+    return await createSupabaseServerClient();
+  } catch {
+    return null;
+  }
+}
+
+/** Refusal copy plus the rejected draft — React resets the form when the action settles. */
+function intakeRejection(
+  noticeKey: string,
+  formData: FormData,
+): IntakeRejection {
+  const found =
+    getSystemNotice(noticeKey) ?? SYSTEM_NOTICES["operation-failed"];
+  const values: Record<string, string> = {};
+  for (const [key, value] of formData.entries()) {
+    if (typeof value === "string") values[key] = value.slice(0, 3000);
+  }
+  return { title: found.title, message: found.message, values };
 }
 
 function parseDuesMonths(
@@ -3863,7 +3887,10 @@ export async function updateMemberPasswordAction(formData: FormData) {
   redirect("/settings?notice=password-updated");
 }
 
-export async function submitMembershipRequestAction(formData: FormData) {
+export async function submitMembershipRequestAction(
+  _prevState: IntakeRejection | null,
+  formData: FormData,
+): Promise<IntakeRejection | null> {
   const fullName = formString(formData, "full_name", 120);
   const email = formString(formData, "email", 254)?.toLowerCase();
   const phone = formString(formData, "phone", 25);
@@ -3884,10 +3911,12 @@ export async function submitMembershipRequestAction(formData: FormData) {
     !reason ||
     reason.length < 10
   ) {
-    redirect("/?notice=invalid-intake");
+    return intakeRejection("invalid-intake", formData);
   }
 
-  const supabase = await clientOrRedirect("/?notice=configuration");
+  const supabase = await clientOrNull();
+  if (!supabase) return intakeRejection("configuration", formData);
+
   const { error } = await supabase.rpc("submit_membership_request", {
     p_full_name: fullName,
     p_email: email,
@@ -3896,9 +3925,7 @@ export async function submitMembershipRequestAction(formData: FormData) {
     p_reason_for_joining: reason,
   });
 
-  if (error) {
-    redirect(`/?notice=${encodeURIComponent(rpcErrorNotice(error))}`);
-  }
+  if (error) return intakeRejection(rpcErrorNotice(error), formData);
 
   await notifyMembershipRequestReceived({ fullName, email });
 
@@ -3906,7 +3933,10 @@ export async function submitMembershipRequestAction(formData: FormData) {
   redirect("/?notice=membership-request-submitted");
 }
 
-export async function submitPartnershipEnquiryAction(formData: FormData) {
+export async function submitPartnershipEnquiryAction(
+  _prevState: IntakeRejection | null,
+  formData: FormData,
+): Promise<IntakeRejection | null> {
   const contactName = formString(formData, "contact_name", 120);
   const organizationName = formString(formData, "organization_name", 160);
   const email = formString(formData, "email", 254)?.toLowerCase();
@@ -3937,10 +3967,12 @@ export async function submitPartnershipEnquiryAction(formData: FormData) {
     !message ||
     message.length < 10
   ) {
-    redirect("/?notice=invalid-intake");
+    return intakeRejection("invalid-intake", formData);
   }
 
-  const supabase = await clientOrRedirect("/?notice=configuration");
+  const supabase = await clientOrNull();
+  if (!supabase) return intakeRejection("configuration", formData);
+
   const { error } = await supabase.rpc("submit_partnership_enquiry", {
     p_contact_name: contactName,
     p_organization_name: organizationName,
@@ -3950,9 +3982,7 @@ export async function submitPartnershipEnquiryAction(formData: FormData) {
     p_message: message,
   });
 
-  if (error) {
-    redirect(`/?notice=${encodeURIComponent(rpcErrorNotice(error))}`);
-  }
+  if (error) return intakeRejection(rpcErrorNotice(error), formData);
 
   await notifyPartnershipEnquiryReceived({
     contactName,

@@ -86,25 +86,25 @@ export function TicketsStorefrontView({
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF6F0] text-[#3D291F] font-sans antialiased">
+    <div className="min-h-screen bg-cream text-espresso font-sans antialiased">
       {/* Top Bar */}
-      <header className="sticky top-0 z-30 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E5DDD3]">
+      <header className="sticky top-0 z-30 bg-cream/95 backdrop-blur-md border-b border-linen">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <Link
-            className="flex items-center gap-3 min-w-0 no-underline text-[#3D291F]"
+            className="flex items-center gap-3 min-w-0 no-underline text-espresso"
             href="/tickets"
           >
-            <div className="p-2 rounded-xl bg-white border border-[#E5DDD3] shadow-2xs">
+            <div className="p-2 rounded-xl bg-white border border-linen shadow-2xs">
               <ClubLogo size="sm" variant="dark" />
             </div>
             <div className="min-w-0">
-              <span className="text-sm font-extrabold tracking-tight block leading-tight text-[#3D291F] truncate sm:hidden">
+              <span className="text-sm font-extrabold tracking-tight block leading-tight text-espresso truncate sm:hidden">
                 {clubBrand.shortName}
               </span>
-              <span className="text-sm font-extrabold tracking-tight hidden sm:block leading-tight text-[#3D291F]">
+              <span className="text-sm font-extrabold tracking-tight hidden sm:block leading-tight text-espresso">
                 {clubBrand.name}
               </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#174C37] block truncate">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-forest block truncate">
                 Official Event Box Office{" "}
                 <span className="hidden sm:inline">
                   · carpentersfamily.com.ng/tickets
@@ -115,7 +115,7 @@ export function TicketsStorefrontView({
 
           <div className="flex items-center gap-2.5 shrink-0">
             <Link
-              className="inline-flex items-center gap-1.5 min-h-[44px] whitespace-nowrap px-3.5 py-2 rounded-xl border border-[#E5DDD3] bg-white hover:bg-[#FAF6F0] text-xs font-bold text-[#174C37] transition-colors no-underline shadow-2xs"
+              className="inline-flex items-center gap-1.5 min-h-[44px] whitespace-nowrap px-3.5 py-2 rounded-xl border border-linen bg-white hover:bg-cream text-xs font-bold text-forest transition-colors no-underline shadow-2xs"
               href={isAuthenticatedMember ? "/events" : "/"}
             >
               <span>
@@ -128,8 +128,8 @@ export function TicketsStorefrontView({
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
         {/* Hero Banner */}
-        <section className="rounded-2xl bg-[#0C3325] text-white p-6 sm:p-10 shadow-md border border-[#174C37] space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-widest text-[#D6A23A]">
+        <section className="rounded-2xl bg-deep text-white p-6 sm:p-10 shadow-md border border-forest space-y-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-widest text-ochre">
             <Ticket className="w-3.5 h-3.5" />
             <span>Official Event Passes & Reservations</span>
           </div>
@@ -143,12 +143,12 @@ export function TicketsStorefrontView({
         </section>
 
         {events.length === 0 ? (
-          <section className="rounded-2xl bg-white border border-[#E5DDD3] p-10 text-center space-y-3 shadow-xs">
-            <Ticket className="w-10 h-10 text-[#174C37] mx-auto opacity-75" />
-            <h2 className="text-lg font-extrabold text-[#3D291F]">
+          <section className="rounded-2xl bg-white border border-linen p-10 text-center space-y-3 shadow-xs">
+            <Ticket className="w-10 h-10 text-forest mx-auto opacity-75" />
+            <h2 className="text-lg font-extrabold text-espresso">
               No Ticketed Events Currently Open
             </h2>
-            <p className="text-xs sm:text-sm text-[#5C4638] max-w-md mx-auto leading-relaxed">
+            <p className="text-xs sm:text-sm text-body max-w-md mx-auto leading-relaxed">
               Upcoming club celebrations and ticketed events will appear here as
               soon as box office sales open.
             </p>
@@ -170,42 +170,42 @@ export function TicketsStorefrontView({
 
               return (
                 <article
-                  className="rounded-2xl bg-white border border-[#E5DDD3] p-6 sm:p-8 shadow-xs space-y-6"
+                  className="rounded-2xl bg-white border border-linen p-6 sm:p-8 shadow-xs space-y-6"
                   key={event.id}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 pb-5 border-b border-[#E5DDD3]">
+                  <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 pb-5 border-b border-linen">
                     <div className="space-y-2">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#174C37]/10 text-[#174C37] text-[11px] font-bold uppercase tracking-wider">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-forest/10 text-forest text-[11px] font-bold uppercase tracking-wider">
                         Box Office Open
                       </span>
-                      <h2 className="text-xl sm:text-2xl font-extrabold text-[#3D291F]">
+                      <h2 className="text-xl sm:text-2xl font-extrabold text-espresso">
                         {event.title}
                       </h2>
                       {event.description && (
-                        <p className="text-xs sm:text-sm text-[#5C4638] max-w-2xl leading-relaxed">
+                        <p className="text-xs sm:text-sm text-body max-w-2xl leading-relaxed">
                           {event.description}
                         </p>
                       )}
                     </div>
 
-                    <div className="bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] p-4 space-y-2 text-xs shrink-0 min-w-[240px]">
-                      <div className="flex items-center gap-2 font-bold text-[#3D291F]">
-                        <Calendar className="w-4 h-4 text-[#174C37] shrink-0" />
+                    <div className="bg-cream rounded-xl border border-linen p-4 space-y-2 text-xs shrink-0 min-w-[240px]">
+                      <div className="flex items-center gap-2 font-bold text-espresso">
+                        <Calendar className="w-4 h-4 text-forest shrink-0" />
                         <span>{dateFormatter.format(eventDate)}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-[#5C4638] font-medium">
-                        <Clock className="w-4 h-4 text-[#174C37] shrink-0" />
+                      <div className="flex items-center gap-2 text-body font-medium">
+                        <Clock className="w-4 h-4 text-forest shrink-0" />
                         <span>{formatEventTime(event.starts_at)} WAT</span>
                       </div>
-                      <div className="flex items-start gap-2 text-[#5C4638] font-medium">
-                        <MapPin className="w-4 h-4 text-[#174C37] shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2 text-body font-medium">
+                        <MapPin className="w-4 h-4 text-forest shrink-0 mt-0.5" />
                         <span>{event.location}</span>
                       </div>
                     </div>
                   </div>
 
                   {tiers.length === 0 ? (
-                    <div className="p-5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#5C4638] font-medium">
+                    <div className="p-5 rounded-xl bg-cream border border-linen text-xs text-body font-medium">
                       Ticket tiers for this event are being finalized. Please
                       check back shortly.
                     </div>
@@ -213,7 +213,7 @@ export function TicketsStorefrontView({
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                       {/* Tier Selection */}
                       <div className="lg:col-span-7 space-y-4">
-                        <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#54433A]">
+                        <h3 className="text-xs font-extrabold uppercase tracking-wider text-body">
                           1. Select Ticket Tier
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -230,8 +230,8 @@ export function TicketsStorefrontView({
                               <button
                                 className={`p-4 rounded-xl border text-left transition-all cursor-pointer space-y-1.5 ${
                                   isSelected
-                                    ? "border-[#174C37] bg-[#174C37]/5 ring-2 ring-[#174C37]/20"
-                                    : "border-[#E5DDD3] bg-[#FAF6F0]/60 hover:bg-white"
+                                    ? "border-forest bg-forest/5 ring-2 ring-forest/20"
+                                    : "border-linen bg-cream/60 hover:bg-white"
                                 } ${soldOut ? "opacity-50 cursor-not-allowed" : ""}`}
                                 disabled={soldOut}
                                 key={tier.id}
@@ -244,14 +244,14 @@ export function TicketsStorefrontView({
                                 type="button"
                               >
                                 <div className="flex items-center justify-between gap-2">
-                                  <span className="text-xs font-extrabold uppercase tracking-wider text-[#3D291F]">
+                                  <span className="text-xs font-extrabold uppercase tracking-wider text-espresso">
                                     {tier.name}
                                   </span>
-                                  <span className="text-sm font-mono font-extrabold text-[#174C37]">
+                                  <span className="text-sm font-mono font-extrabold text-forest">
                                     {formatNaira(Number(tier.price_ngn))}
                                   </span>
                                 </div>
-                                <p className="text-[11px] text-[#7A685D] font-medium">
+                                <p className="text-[11px] text-umber font-medium">
                                   {soldOut
                                     ? "Sold out"
                                     : remaining !== null
@@ -266,13 +266,13 @@ export function TicketsStorefrontView({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                           <div>
                             <label
-                              className="block text-[11px] font-bold uppercase tracking-wider text-[#54433A] mb-1"
+                              className="block text-[11px] font-bold uppercase tracking-wider text-body mb-1"
                               htmlFor={`qty-${event.id}`}
                             >
                               Number of Passes
                             </label>
                             <select
-                              className="w-full h-11 px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-bold text-[#3D291F]"
+                              className="w-full h-11 px-3 rounded-xl border border-linen bg-white text-xs font-bold text-espresso"
                               id={`qty-${event.id}`}
                               onChange={(e) =>
                                 setQuantityByEvent((prev) => ({
@@ -292,13 +292,13 @@ export function TicketsStorefrontView({
 
                           <div>
                             <label
-                              className="block text-[11px] font-bold uppercase tracking-wider text-[#54433A] mb-1"
+                              className="block text-[11px] font-bold uppercase tracking-wider text-body mb-1"
                               htmlFor={`buyer-${event.id}`}
                             >
                               Guest / Buyer Name (for Transfer Narration)
                             </label>
                             <input
-                              className="w-full h-11 px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F]"
+                              className="w-full h-11 px-3 rounded-xl border border-linen bg-white text-xs font-medium text-espresso"
                               id={`buyer-${event.id}`}
                               maxLength={80}
                               onChange={(e) =>
@@ -316,46 +316,46 @@ export function TicketsStorefrontView({
                       </div>
 
                       {/* Checkout & Payment Box */}
-                      <div className="lg:col-span-5 rounded-2xl bg-[#FAF6F0] border border-[#E5DDD3] p-5 space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD3]">
+                      <div className="lg:col-span-5 rounded-2xl bg-cream border border-linen p-5 space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-linen">
                           <div>
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A685D] block">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-umber block">
                               Selected Order Total
                             </span>
-                            <span className="text-xs font-semibold text-[#5C4638]">
+                            <span className="text-xs font-semibold text-body">
                               {quantity} × {selectedTier?.name}
                             </span>
                           </div>
-                          <span className="text-xl font-mono font-extrabold text-[#174C37]">
+                          <span className="text-xl font-mono font-extrabold text-forest">
                             {formatNaira(totalNgn)}
                           </span>
                         </div>
 
-                        <div className="p-3.5 rounded-xl bg-white border border-[#E5DDD3] space-y-2.5">
-                          <div className="flex items-center gap-2 text-xs font-bold text-[#3D291F]">
-                            <Building2 className="w-4 h-4 text-[#174C37]" />
+                        <div className="p-3.5 rounded-xl bg-white border border-linen space-y-2.5">
+                          <div className="flex items-center gap-2 text-xs font-bold text-espresso">
+                            <Building2 className="w-4 h-4 text-forest" />
                             <span>
                               {bankName} · {accountName}
                             </span>
                           </div>
 
-                          <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3]">
+                          <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-cream border border-linen">
                             <div>
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A685D] block">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-umber block">
                                 Account Number
                               </span>
-                              <span className="text-base font-mono font-extrabold text-[#174C37] tracking-wider">
+                              <span className="text-base font-mono font-extrabold text-forest tracking-wider">
                                 {accountNumber}
                               </span>
                             </div>
                             <button
-                              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-bold transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest hover:bg-deep-forest-hover text-white text-xs font-bold transition-colors cursor-pointer"
                               onClick={handleCopyAccount}
                               type="button"
                             >
                               {copiedAccount ? (
                                 <>
-                                  <Check className="w-3.5 h-3.5 text-[#D6A23A]" />
+                                  <Check className="w-3.5 h-3.5 text-ochre" />
                                   <span>Copied</span>
                                 </>
                               ) : (
@@ -367,19 +367,19 @@ export function TicketsStorefrontView({
                             </button>
                           </div>
 
-                          <div className="text-[11px] text-[#5C4638] leading-relaxed">
-                            <strong className="text-[#3D291F]">
+                          <div className="text-[11px] text-body leading-relaxed">
+                            <strong className="text-espresso">
                               Transfer Narration:{" "}
                             </strong>
-                            <span className="font-mono bg-[#FAF6F0] px-1.5 py-0.5 rounded border border-[#E5DDD3]">
+                            <span className="font-mono bg-cream px-1.5 py-0.5 rounded border border-linen">
                               TICKET - {event.title.slice(0, 20)} -{" "}
                               {buyerName.trim() || "YOUR NAME"}
                             </span>
                           </div>
                         </div>
 
-                        <div className="flex items-start gap-2 text-[11px] text-[#5C4638] leading-relaxed">
-                          <ShieldCheck className="w-4 h-4 text-[#174C37] shrink-0 mt-0.5" />
+                        <div className="flex items-start gap-2 text-[11px] text-body leading-relaxed">
+                          <ShieldCheck className="w-4 h-4 text-forest shrink-0 mt-0.5" />
                           <span>
                             Use the transfer narration above when sending your
                             payment so the Event Committee can immediately issue

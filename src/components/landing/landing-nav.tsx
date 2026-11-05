@@ -171,6 +171,8 @@ export function LandingNav() {
       )}
       <aside
         id="drawer"
+        inert={!mobileMenuOpen}
+        aria-hidden={!mobileMenuOpen}
         className={`fixed top-0 right-0 z-50 h-full w-[85%] max-w-sm bg-cream p-6 transition-transform duration-300 overflow-y-auto shadow-2xl border-l border-linen ${
           mobileMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}

@@ -19,6 +19,17 @@ function landingSourceFiles() {
     .map((f) => `src/components/landing/${f}`);
 }
 
+/**
+ * The other public surfaces shipped on this branch. They carry the same brand
+ * palette, so they answer to the same token and type-size rules.
+ */
+function publicSurfaceFiles() {
+  return [
+    "src/components/tickets/tickets-storefront-view.tsx",
+    "src/app/tickets/page.tsx",
+  ];
+}
+
 test("required landing images exist in public/landing", () => {
   const files = [
     "cta-band.jpg",
@@ -103,9 +114,29 @@ test("no landing control sets a height floor below 44px", () => {
   );
 });
 
+test("no landing text sits below the 11px floor", () => {
+  const offenders = [];
+  for (const file of [
+    ...landingSourceFiles(),
+    ...publicSurfaceFiles(),
+    "src/app/page.tsx",
+  ]) {
+    const src = fs.readFileSync(file, "utf8");
+    for (const token of src.match(/text-\[(\d+(?:\.\d+)?)px\]/g) ?? []) {
+      const px = Number.parseFloat(/(\d+(?:\.\d+)?)px/.exec(token)[1]);
+      if (px < 11) offenders.push(`${file}: ${token}`);
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    "Below 11px the uppercase eyebrows and captions are unreadable on a phone.",
+  );
+});
+
 test("landing components carry no hard-coded hex colors", () => {
   const offenders = [];
-  for (const file of landingSourceFiles()) {
+  for (const file of [...landingSourceFiles(), ...publicSurfaceFiles()]) {
     const src = fs.readFileSync(file, "utf8");
     for (const hex of src.match(/#[0-9a-fA-F]{6}\b/g) ?? []) {
       offenders.push(`${file}: ${hex}`);

@@ -264,6 +264,11 @@ input[type="datetime-local"]::-webkit-date-and-time-value {
   --accent: var(--color-primary);
 }
 
+/* Anchor jumps must land below the sticky 72px header, not under it. */
+html {
+  scroll-padding-top: 84px;
+}
+
 html,
 body {
   min-height: 100%;

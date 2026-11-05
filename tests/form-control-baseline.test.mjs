@@ -77,7 +77,8 @@ const PHASE1_CONTROL_FILES = [
   "src/components/finances/void-transaction-modal.tsx",
 ];
 
-/** The seven dialogs of `PHASE1_CONTROL_FILES` that own a close affordance. */
+/** Dialogs whose close affordance was measured and clears the 44px floor: the
+ *  seven Phase 1 finance modals plus the landing shell all three dialogs share. */
 const PHASE1_CLOSE_BUTTON_FILES = [
   "src/components/dues/pay-dues-modal.tsx",
   "src/components/finances/category-management-modal.tsx",
@@ -86,6 +87,7 @@ const PHASE1_CLOSE_BUTTON_FILES = [
   "src/components/finances/record-expense-modal.tsx",
   "src/components/finances/record-income-modal.tsx",
   "src/components/finances/void-transaction-modal.tsx",
+  "src/components/landing/modal-shell.tsx",
 ];
 
 /** Per-file control counts, measured at this commit. Exact on purpose: if the

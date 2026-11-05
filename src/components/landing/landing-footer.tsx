@@ -68,7 +68,7 @@ export function LandingFooter() {
         {/* Right: the two channels the club actually runs */}
         <LandingSocialLinks tone="onDark" showHandle />
       </div>
-      <div className="bg-deep/60 py-3 text-center text-[11px] text-cream/70">
+      <div className="bg-deep/60 px-4 py-3 text-center text-[11px] text-cream/70">
         © 2026 Carpenters Family Social Club. One Family, Endless Vibes — Asaba,
         Delta State, Nigeria.
       </div>

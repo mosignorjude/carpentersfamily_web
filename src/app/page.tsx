@@ -78,7 +78,7 @@ export default async function HomePage({
           <div
             className={`rounded-xl border p-4 shadow-sm flex items-start justify-between gap-3 ${
               noticeDef.type === "error"
-                ? "bg-terra/10 border-terra/30 text-terra"
+                ? "bg-terra/5 border-terra/30 text-terra"
                 : "bg-forest/10 border-forest/30 text-forest"
             }`}
           >
@@ -142,7 +142,7 @@ export default async function HomePage({
               </h3>
               <div className="mt-4 divide-y divide-cream/15 text-sm">
                 <details className="group" open>
-                  <summary className="flex items-center justify-between font-bold py-2 cursor-pointer">
+                  <summary className="flex items-center justify-between gap-3 font-bold py-2 text-cream cursor-pointer">
                     Mutual Accountability{" "}
                     <span className="text-ochre group-open:rotate-45 transition text-lg">
                       +
@@ -154,7 +154,7 @@ export default async function HomePage({
                   </p>
                 </details>
                 <details className="group">
-                  <summary className="flex items-center justify-between font-bold py-2 cursor-pointer">
+                  <summary className="flex items-center justify-between gap-3 font-bold py-2 text-cream cursor-pointer">
                     Decorum &amp; Respect{" "}
                     <span className="text-ochre group-open:rotate-45 transition text-lg">
                       +
@@ -166,7 +166,7 @@ export default async function HomePage({
                   </p>
                 </details>
                 <details className="group">
-                  <summary className="flex items-center justify-between font-bold py-2 cursor-pointer">
+                  <summary className="flex items-center justify-between gap-3 font-bold py-2 text-cream cursor-pointer">
                     Family &amp; Shared Growth{" "}
                     <span className="text-ochre group-open:rotate-45 transition text-lg">
                       +
@@ -290,6 +290,8 @@ export default async function HomePage({
           <img
             src="/landing/cta-band.jpg"
             alt="Carpenters Family celebrating together"
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-forest/85 mix-blend-multiply" />

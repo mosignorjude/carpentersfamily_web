@@ -8,14 +8,17 @@ export function LandingHero() {
         <img
           src="/landing/hero-family.jpg"
           alt="Carpenters Family members united in celebration"
+          fetchPriority="high"
+          decoding="async"
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
         {/* Warm Forest & Deep Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-deep/75 via-forest/70 to-deep/85" />
+        <div className="absolute inset-0 bg-gradient-to-b from-deep/90 via-forest/88 to-deep/92" />
 
         {/* Centered Hero Copy */}
         <div className="relative z-10 max-w-2xl mx-auto text-cream">
-          <p className="text-xs tracking-[.25em] uppercase font-bold text-ochre">
+          <div className="h-px w-10 bg-ochre mx-auto" />
+          <p className="mt-3 text-xs tracking-[.25em] uppercase font-bold text-cream">
             Asaba · Delta State · Nigeria
           </p>
           <h1 className="mt-3 font-serif font-bold text-4xl sm:text-5xl md:text-6xl leading-[1.08]">
@@ -42,7 +45,7 @@ export function LandingHero() {
               Explore Events
             </a>
           </div>
-          <p className="mt-4 font-serif italic text-sm text-ochre/95">
+          <p className="mt-4 font-serif italic text-sm text-cream">
             “One Family, Endless Vibes.”
           </p>
         </div>

@@ -53,10 +53,12 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
             <img
               src="/landing/tile-raves.jpg"
               alt="Signature Rave Crowd Energy & Nightlife"
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 h-full w-full object-cover motion-safe:transition motion-safe:duration-500 motion-safe:group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-deep/90 via-deep/20 to-transparent p-4 flex flex-col justify-end text-cream">
-              <span className="text-[10px] uppercase tracking-widest text-ochre font-bold">
+            <div className="absolute inset-0 bg-gradient-to-t from-deep/97 via-deep/92 to-deep/25 p-4 flex flex-col justify-end text-cream">
+              <span className="text-[11px] uppercase tracking-widest text-ochre font-bold">
                 Signature Rave
               </span>
               <figcaption className="font-serif font-bold text-base">
@@ -70,10 +72,12 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
             <img
               src="/landing/tile-djs-hype.jpg"
               alt="Pro DJs, MCs & Hype Services"
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 h-full w-full object-cover motion-safe:transition motion-safe:duration-500 motion-safe:group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-deep/90 via-deep/20 to-transparent p-4 flex flex-col justify-end text-cream">
-              <span className="text-[10px] uppercase tracking-widest text-ochre font-bold">
+            <div className="absolute inset-0 bg-gradient-to-t from-deep/97 via-deep/92 to-deep/25 p-4 flex flex-col justify-end text-cream">
+              <span className="text-[11px] uppercase tracking-widest text-ochre font-bold">
                 Talent &amp; Production
               </span>
               <figcaption className="font-serif font-bold text-base">
@@ -87,10 +91,12 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
             <img
               src="/landing/tile-brand-activation.jpg"
               alt="Drinks & Lifestyle Brand Activations"
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 h-full w-full object-cover motion-safe:transition motion-safe:duration-500 motion-safe:group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-deep/90 via-deep/20 to-transparent p-4 flex flex-col justify-end text-cream">
-              <span className="text-[10px] uppercase tracking-widest text-ochre font-bold">
+            <div className="absolute inset-0 bg-gradient-to-t from-deep/97 via-deep/92 to-deep/25 p-4 flex flex-col justify-end text-cream">
+              <span className="text-[11px] uppercase tracking-widest text-ochre font-bold">
                 Brand Partnerships
               </span>
               <figcaption className="font-serif font-bold text-base">
@@ -104,10 +110,12 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
             <img
               src="/landing/tile-family-galas.jpg"
               alt="Family Galas, Weddings & Outings"
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 h-full w-full object-cover motion-safe:transition motion-safe:duration-500 motion-safe:group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-deep/90 via-deep/20 to-transparent p-4 flex flex-col justify-end text-cream">
-              <span className="text-[10px] uppercase tracking-widest text-ochre font-bold">
+            <div className="absolute inset-0 bg-gradient-to-t from-deep/97 via-deep/92 to-deep/25 p-4 flex flex-col justify-end text-cream">
+              <span className="text-[11px] uppercase tracking-widest text-ochre font-bold">
                 One Family
               </span>
               <figcaption className="font-serif font-bold text-base">
