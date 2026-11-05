@@ -9,19 +9,21 @@ import { LandingRibbon } from "@/components/landing/landing-ribbon";
 import { LandingVision } from "@/components/landing/landing-vision";
 import { LandingWhatWeDo } from "@/components/landing/landing-what-we-do";
 import type { PublicTicketedEvent } from "@/components/tickets/tickets-storefront-view";
+import { SITE_ORIGIN } from "@/lib/site.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SYSTEM_NOTICES } from "@/lib/system-notices";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://carpentersfamily.com.ng"),
   title: "Carpenters Family Social Club · Asaba, Nigeria",
   description:
     "Asaba’s premier family and entertainment collective—creating landmark shows, elevating lifestyle brands, and standing together for life. One Family, Endless Vibes.",
+  robots: { index: true, follow: true },
+  alternates: { canonical: "/" },
   openGraph: {
     title: "Carpenters Family Social Club · Asaba, Nigeria",
     description:
       "Asaba’s premier family and entertainment collective—creating landmark shows, elevating lifestyle brands, and standing together for life. One Family, Endless Vibes.",
-    url: "https://carpentersfamily.com.ng",
+    url: SITE_ORIGIN,
     siteName: "Carpenters Family Social Club",
     images: [
       {

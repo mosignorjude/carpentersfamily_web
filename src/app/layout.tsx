@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { GlobalFlashListener } from "@/components/ui/global-flash-listener";
 import { NavigationProgressBar } from "@/components/ui/navigation-progress-bar";
 import { clubBrand } from "@/lib/brand";
+import { SITE_ORIGIN } from "@/lib/site.mjs";
 import "./globals.css";
 
 const dmSans = localFont({
@@ -50,6 +51,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_ORIGIN),
   title: clubBrand.name,
   description: clubBrand.description,
   icons: {

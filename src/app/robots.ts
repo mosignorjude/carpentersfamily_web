@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { siteUrl } from "@/lib/site.mjs";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -7,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: ["/", "/tickets"],
       disallow: ["/admin", "/portal", "/officers", "/settings", "/api/"],
     },
-    sitemap: "https://carpentersfamily.com.ng/sitemap.xml",
+    sitemap: siteUrl("/sitemap.xml"),
   };
 }

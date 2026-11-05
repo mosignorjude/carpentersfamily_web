@@ -1,11 +1,46 @@
+import type { Metadata } from "next";
 import {
   type PublicBankInfo,
   type PublicTicketedEvent,
   TicketsStorefrontView,
 } from "@/components/tickets/tickets-storefront-view";
+import { siteUrl } from "@/lib/site.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+const TITLE = "Box Office & Event Tickets · Carpenters Family Social Club";
+const DESCRIPTION =
+  "The official Carpenters Family Social Club box office — ticket tiers, prices and reservations for our shows and celebrations in Asaba, Delta State.";
+
+export const metadata: Metadata = {
+  title: TITLE,
+  description: DESCRIPTION,
+  robots: { index: true, follow: true },
+  alternates: { canonical: "/tickets" },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: siteUrl("/tickets"),
+    siteName: "Carpenters Family Social Club",
+    images: [
+      {
+        url: "/landing/og-share.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Carpenters Family Social Club box office",
+      },
+    ],
+    locale: "en_NG",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ["/landing/og-share.jpg"],
+  },
+};
 
 export default async function TicketsStorefrontPage() {
   let events: PublicTicketedEvent[] = [];
