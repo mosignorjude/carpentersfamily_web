@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ClubLogo } from "@/components/club-logo";
+import { LandingSocialLinks } from "@/components/landing/landing-social-links";
 
 export function LandingFooter() {
   return (
@@ -12,8 +14,8 @@ export function LandingFooter() {
           href="/"
           className="flex items-center gap-3 group focus:outline-hidden"
         >
-          <span className="grid place-items-center h-9 w-9 rounded-full bg-deep text-ochre font-serif font-bold text-base ring-2 ring-ochre/60 group-hover:scale-105 transition-transform">
-            C
+          <span className="rounded-full bg-cream p-1.5 leading-none shrink-0">
+            <ClubLogo size="sm" className="shrink-0" />
           </span>
           <span className="leading-tight">
             <span className="block font-serif font-bold text-cream text-base">
@@ -63,37 +65,8 @@ export function LandingFooter() {
           </li>
         </ul>
 
-        {/* Right: 4 Circular Social Icons */}
-        <div className="flex items-center gap-2">
-          <a
-            href="#footer"
-            aria-label="LinkedIn"
-            className="h-8 w-8 rounded-full bg-deep text-cream grid place-items-center text-xs font-bold hover:bg-ochre hover:text-deep transition-colors"
-          >
-            in
-          </a>
-          <a
-            href="#footer"
-            aria-label="Instagram"
-            className="h-8 w-8 rounded-full bg-terra text-cream grid place-items-center text-xs font-bold hover:bg-ochre hover:text-deep transition-colors"
-          >
-            IG
-          </a>
-          <a
-            href="#footer"
-            aria-label="X"
-            className="h-8 w-8 rounded-full bg-deep text-cream grid place-items-center text-xs font-bold hover:bg-ochre hover:text-deep transition-colors"
-          >
-            𝕏
-          </a>
-          <a
-            href="#footer"
-            aria-label="Facebook"
-            className="h-8 w-8 rounded-full bg-deep text-cream grid place-items-center text-xs font-bold hover:bg-ochre hover:text-deep transition-colors"
-          >
-            f
-          </a>
-        </div>
+        {/* Right: the two channels the club actually runs */}
+        <LandingSocialLinks tone="onDark" showHandle />
       </div>
       <div className="bg-deep/60 py-3 text-center text-[11px] text-cream/70">
         © 2026 Carpenters Family Social Club. One Family, Endless Vibes — Asaba,

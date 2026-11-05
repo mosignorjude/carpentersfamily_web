@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ClubLogo } from "@/components/club-logo";
+import { LandingSocialLinks } from "@/components/landing/landing-social-links";
 
 export function LandingNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -48,9 +50,7 @@ export function LandingNav() {
               href="/"
               className="flex items-center gap-3 min-h-[44px] shrink-0 group focus:outline-hidden"
             >
-              <span className="grid place-items-center h-10 w-10 rounded-full bg-forest text-ochre font-serif font-bold text-lg ring-2 ring-ochre/60 group-hover:scale-105 transition-transform">
-                C
-              </span>
+              <ClubLogo size="sm" className="shrink-0" />
               <span className="leading-tight">
                 <span className="block font-serif font-bold text-espresso text-base sm:text-lg tracking-tight">
                   Carpenters Family
@@ -109,52 +109,19 @@ export function LandingNav() {
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/tickets"
-              className="text-xs font-bold text-forest border border-forest/30 bg-forest/5 hover:bg-forest hover:text-cream px-3.5 py-2 rounded-full transition-all min-h-[38px] inline-flex items-center justify-center"
+              className="text-xs font-bold text-forest border border-forest/30 bg-forest/5 hover:bg-forest hover:text-cream px-3.5 py-2 rounded-full transition-all min-h-[44px] inline-flex items-center justify-center"
             >
               Box Office
             </Link>
 
             <Link
               href="/portal"
-              className="text-xs font-bold text-espresso border border-linen bg-white hover:border-forest px-3.5 py-2 rounded-full transition-all min-h-[38px] inline-flex items-center justify-center shadow-xs"
+              className="text-xs font-bold text-espresso border border-linen bg-white hover:border-forest px-3.5 py-2 rounded-full transition-all min-h-[44px] inline-flex items-center justify-center shadow-xs"
             >
               Member Portal
             </Link>
 
-            <div className="flex items-center gap-1.5">
-              <a
-                href="#footer"
-                title="LinkedIn"
-                aria-label="LinkedIn"
-                className="h-7 w-7 rounded-full bg-forest text-cream grid place-items-center text-[11px] font-bold hover:bg-ochre hover:text-deep transition-colors"
-              >
-                in
-              </a>
-              <a
-                href="#footer"
-                title="Instagram"
-                aria-label="Instagram"
-                className="h-7 w-7 rounded-full bg-terra text-cream grid place-items-center text-[11px] font-bold hover:bg-ochre hover:text-deep transition-colors"
-              >
-                IG
-              </a>
-              <a
-                href="#footer"
-                title="X"
-                aria-label="X"
-                className="h-7 w-7 rounded-full bg-deep text-cream grid place-items-center text-[11px] font-bold hover:bg-ochre hover:text-deep transition-colors"
-              >
-                𝕏
-              </a>
-              <a
-                href="#footer"
-                title="Facebook"
-                aria-label="Facebook"
-                className="h-7 w-7 rounded-full bg-forest text-cream grid place-items-center text-[11px] font-bold hover:bg-ochre hover:text-deep transition-colors"
-              >
-                f
-              </a>
-            </div>
+            <LandingSocialLinks />
           </div>
 
           {/* Mobile Menu Trigger Button */}

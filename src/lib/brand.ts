@@ -7,4 +7,18 @@ export const clubBrand = {
   logoSrc: "/brand/carpenters-family-mark.png",
   eventHeroSrc: "/brand/carpenters-family-event-hero.webp",
   logoAlt: "Carpenters Family logo",
+  // The only two channels the club runs. Instagram is spelled @capenters_family
+  // on purpose — that is how the handle was registered.
+  socials: [
+    {
+      network: "TikTok",
+      handle: "@carpenters_family",
+      url: "https://www.tiktok.com/@carpenters_family",
+    },
+    {
+      network: "Instagram",
+      handle: "@capenters_family",
+      url: "https://www.instagram.com/capenters_family",
+    },
+  ],
 } as const;
