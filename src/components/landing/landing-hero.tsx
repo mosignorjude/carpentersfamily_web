@@ -1,17 +1,14 @@
-import Image from "next/image";
 import Link from "next/link";
 
 export function LandingHero() {
   return (
     <section id="about" className="mx-auto max-w-6xl px-4 pt-6 pb-12">
       <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-linen min-h-[430px] sm:min-h-[490px] flex items-center justify-center text-center px-6 py-16">
-        <Image
+        {/* biome-ignore lint/performance/noImgElement: CSS positioning avoids Next/Image inline styles blocked by the production CSP. */}
+        <img
           src="/landing/hero-family.jpg"
           alt="Carpenters Family members united in celebration"
-          fill
-          priority
-          sizes="(max-width: 1280px) 100vw, 1280px"
-          className="object-cover object-center"
+          className="absolute inset-0 h-full w-full object-cover object-center"
         />
         {/* Warm Forest & Deep Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-deep/75 via-forest/70 to-deep/85" />

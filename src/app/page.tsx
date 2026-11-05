@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { LandingEvents } from "@/components/landing/landing-events";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -293,12 +292,11 @@ export default async function HomePage({
 
         {/* 7. FULL-WIDTH CTA BANNER */}
         <section className="relative overflow-hidden py-20 sm:py-24 text-center text-cream">
-          <Image
+          {/* biome-ignore lint/performance/noImgElement: CSS positioning avoids Next/Image inline styles blocked by the production CSP. */}
+          <img
             src="/landing/cta-band.jpg"
             alt="Carpenters Family celebrating together"
-            fill
-            sizes="100vw"
-            className="object-cover object-center"
+            className="absolute inset-0 h-full w-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-forest/85 mix-blend-multiply" />
           <div className="absolute inset-0 bg-deep/50" />

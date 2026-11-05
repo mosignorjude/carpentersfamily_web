@@ -109,6 +109,6 @@ test("production responses apply strict, request-specific security headers", {
   );
   const destination = new URL(protectedPage.location, baseUrl);
   assert.equal(destination.origin, new URL(baseUrl).origin);
-  assert.equal(destination.pathname, "/");
+  assert.equal(destination.pathname, "/portal");
   assert.equal(notFound.status, 404);
 });

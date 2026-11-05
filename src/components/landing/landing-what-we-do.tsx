@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 export function LandingWhatWeDo() {
@@ -8,24 +7,22 @@ export function LandingWhatWeDo() {
         {/* Left Column: Overlapping Photo Collage with Inset Card */}
         <div className="lg:col-span-6 relative pb-12 sm:pb-16 pr-6 sm:pr-12">
           <div className="relative rounded-2xl overflow-hidden shadow-md border border-linen aspect-[4/3] bg-deep">
-            <Image
+            {/* biome-ignore lint/performance/noImgElement: CSS positioning avoids Next/Image inline styles blocked by the production CSP. */}
+            <img
               src="/landing/what-we-do-main.jpg"
               alt="Carpenters Family hosting a live show and lifestyle experience"
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           </div>
 
           {/* Overlapping Bottom-Right Inset Card */}
           <div className="absolute right-0 bottom-0 w-52 sm:w-64 rounded-2xl bg-cream p-2.5 shadow-xl border border-linen">
             <div className="relative rounded-xl overflow-hidden aspect-[4/3] bg-forest">
-              <Image
+              {/* biome-ignore lint/performance/noImgElement: CSS positioning avoids Next/Image inline styles blocked by the production CSP. */}
+              <img
                 src="/landing/what-we-do-inset.jpg"
                 alt="Carpenters Family members smiling together"
-                fill
-                sizes="(max-width: 640px) 208px, 256px"
-                className="object-cover"
+                className="absolute inset-0 h-full w-full object-cover"
               />
               <div className="absolute inset-x-2 bottom-2 bg-[#D8B589] text-espresso px-3 py-2 rounded shadow-md text-center border border-espresso/20">
                 <span className="block font-serif italic font-bold text-lg sm:text-xl leading-none">

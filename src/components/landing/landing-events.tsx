@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 interface LandingEventsProps {
@@ -53,12 +52,11 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
         {/* 4-Tile Lifestyle Photo Showcase */}
         <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-3.5">
           <figure className="relative rounded-2xl overflow-hidden h-48 sm:h-56 group bg-deep">
-            <Image
+            {/* biome-ignore lint/performance/noImgElement: CSS positioning avoids Next/Image inline styles blocked by the production CSP. */}
+            <img
               src="/landing/tile-raves.jpg"
               alt="Signature Rave Crowd Energy & Nightlife"
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 300px"
-              className="object-cover group-hover:scale-105 transition duration-500"
+              className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-500"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-deep/90 via-deep/20 to-transparent p-4 flex flex-col justify-end text-cream">
               <span className="text-[10px] uppercase tracking-widest text-ochre font-bold">
@@ -71,12 +69,11 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
           </figure>
 
           <figure className="relative rounded-2xl overflow-hidden h-48 sm:h-56 group bg-deep">
-            <Image
+            {/* biome-ignore lint/performance/noImgElement: CSS positioning avoids Next/Image inline styles blocked by the production CSP. */}
+            <img
               src="/landing/tile-djs-hype.jpg"
               alt="Pro DJs, MCs & Hype Services"
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 300px"
-              className="object-cover group-hover:scale-105 transition duration-500"
+              className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-500"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-deep/90 via-deep/20 to-transparent p-4 flex flex-col justify-end text-cream">
               <span className="text-[10px] uppercase tracking-widest text-ochre font-bold">
@@ -89,12 +86,11 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
           </figure>
 
           <figure className="relative rounded-2xl overflow-hidden h-48 sm:h-56 group bg-deep">
-            <Image
+            {/* biome-ignore lint/performance/noImgElement: CSS positioning avoids Next/Image inline styles blocked by the production CSP. */}
+            <img
               src="/landing/tile-brand-activation.jpg"
               alt="Beverage & Lifestyle Brand Activations"
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 300px"
-              className="object-cover group-hover:scale-105 transition duration-500"
+              className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-500"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-deep/90 via-deep/20 to-transparent p-4 flex flex-col justify-end text-cream">
               <span className="text-[10px] uppercase tracking-widest text-ochre font-bold">
@@ -107,12 +103,11 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
           </figure>
 
           <figure className="relative rounded-2xl overflow-hidden h-48 sm:h-56 group bg-deep">
-            <Image
+            {/* biome-ignore lint/performance/noImgElement: CSS positioning avoids Next/Image inline styles blocked by the production CSP. */}
+            <img
               src="/landing/tile-family-galas.jpg"
               alt="Family Galas, Weddings & Outings"
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 300px"
-              className="object-cover group-hover:scale-105 transition duration-500"
+              className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-500"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-deep/90 via-deep/20 to-transparent p-4 flex flex-col justify-end text-cream">
               <span className="text-[10px] uppercase tracking-widest text-ochre font-bold">
