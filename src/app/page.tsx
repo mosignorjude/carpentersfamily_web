@@ -1,435 +1,332 @@
+import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import {
-  completeProfileAction,
-  googleSignInAction,
-  signInAction,
-  signOutAction,
-} from "@/app/actions";
-import AppShell from "@/components/app-shell";
-import { AuthBrand, AuthPageLayout } from "@/components/auth-page-layout";
-import AuthPasswordInput from "@/components/auth-password-input";
-import AuthSubmitButton from "@/components/auth-submit-button";
-import AuthValidatedForm, {
-  AuthFieldError,
-} from "@/components/auth-validated-form";
-import { ClubIcon } from "@/components/club-icon";
-import GoogleMark from "@/components/google-mark";
-import HomeDashboardView from "@/components/home-dashboard-view";
-import type { AppNotification } from "@/components/notifications/notifications-drawer";
-import { getNavigationItems } from "@/lib/app-navigation.mjs";
-import { clubBrand } from "@/lib/brand";
-import { getTimeOfDayGreeting } from "@/lib/greeting";
-import { getHomeDashboardData } from "@/lib/home-dashboard.server";
-import { isGoogleAuthConfigured } from "@/lib/supabase/config";
+import { LandingEvents } from "@/components/landing/landing-events";
+import { LandingFooter } from "@/components/landing/landing-footer";
+import { LandingHero } from "@/components/landing/landing-hero";
+import { LandingModals } from "@/components/landing/landing-modals";
+import { LandingNav } from "@/components/landing/landing-nav";
+import { LandingRibbon } from "@/components/landing/landing-ribbon";
+import { LandingVision } from "@/components/landing/landing-vision";
+import { LandingWhatWeDo } from "@/components/landing/landing-what-we-do";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { formatPrimaryRole } from "@/lib/user-profile";
+import { SYSTEM_NOTICES } from "@/lib/system-notices";
 
-const notices: Record<string, string> = {
-  credentials: "The email or password could not be verified.",
-  "auth-failed":
-    "Sign in could not be completed. Try again or use a different sign-in method.",
-  configuration: "Authentication is not configured for this environment.",
-  "google-unavailable": "Google isn’t available in this environment.",
-  "password-updated": "Your password was updated.",
-  "sign-in": "Sign in again to continue.",
-  denied: "Your account does not have access to that area.",
-  "invalid-profile":
-    "Use a name of at most 120 characters and a username of 3–30 letters, numbers, or underscores.",
-  "profile-locked": "This profile can no longer be edited.",
-  "profile-update-failed":
-    "The profile could not be saved. The username may already be in use.",
-  "profile-complete": "Your profile is complete and is waiting for approval.",
-  "email-confirmed":
-    "Your email address is confirmed. Your membership is now waiting for club approval.",
-  "confirm-link-invalid":
-    "This confirmation link is no longer valid. Sign in again or ask the club's system administrator to send a new link.",
+export const metadata: Metadata = {
+  title: "Carpenters Family Social Club · Asaba, Nigeria",
+  description:
+    "Asaba’s premier family and entertainment collective—creating landmark shows, elevating lifestyle brands, and standing together for life. One Family, Endless Vibes.",
+  openGraph: {
+    title: "Carpenters Family Social Club · Asaba, Nigeria",
+    description:
+      "Asaba’s premier family and entertainment collective—creating landmark shows, elevating lifestyle brands, and standing together for life. One Family, Endless Vibes.",
+    url: "https://carpentersfamily.com.ng",
+    siteName: "Carpenters Family Social Club",
+    images: [
+      {
+        url: "/landing/og-share.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Carpenters Family Social Club · Asaba, Delta State",
+      },
+    ],
+    locale: "en_NG",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Carpenters Family Social Club · Asaba, Nigeria",
+    description:
+      "Asaba’s premier family and entertainment collective—creating landmark shows, elevating lifestyle brands, and standing together for life.",
+    images: ["/landing/og-share.jpg"],
+  },
 };
 
-const signInErrorNotices = new Set([
-  "credentials",
-  "configuration",
-  "google-unavailable",
-  "sign-in",
-  "auth-failed",
-  "confirm-link-invalid",
-]);
+interface PublicTicketedEvent {
+  id: string;
+  title: string;
+  starts_at: string;
+  location: string;
+}
 
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string }>;
+  searchParams: Promise<{ notice?: string; modal?: string }>;
 }) {
   const params = await searchParams;
-  const notice = params.notice ? notices[params.notice] : undefined;
-  const noticeIsError = signInErrorNotices.has(params.notice ?? "");
-  const googleEnabled = isGoogleAuthConfigured();
+  const noticeDef = params.notice ? SYSTEM_NOTICES[params.notice] : undefined;
 
-  let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
+  let ticketedEvents: PublicTicketedEvent[] = [];
   try {
-    supabase = await createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
+    const { data: rpcData } = await supabase.rpc("get_public_ticketed_events");
+    if (rpcData && typeof rpcData === "object") {
+      const payload = rpcData as { events?: PublicTicketedEvent[] };
+      if (Array.isArray(payload.events)) {
+        ticketedEvents = payload.events;
+      }
+    }
   } catch {
-    return (
-      <AuthPageLayout variant="signin">
-        <div className="signin-content signin-config-state">
-          <AuthBrand />
-          <p className="signin-eyebrow">Private member portal</p>
-          <h1>{clubBrand.name}</h1>
-          <p className="signin-intro" role="alert">
-            Authentication is not configured. Add the public Supabase URL and
-            publishable key to the local environment, then restart the app.
-          </p>
-        </div>
-      </AuthPageLayout>
-    );
+    // Render public landing gracefully if database is temporarily unavailable
   }
 
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData.user) {
-    return (
-      <AuthPageLayout variant="signin">
-        <div className="signin-content">
-          <AuthBrand />
-          <header className="signin-heading">
-            <h1 id="sign-in-heading">Sign in</h1>
-            <p className="signin-intro">
-              Access your account to continue with Carpenters Family.
-            </p>
-          </header>
-
-          {notice ? (
-            <p
-              className={`signin-notice${noticeIsError ? " signin-notice-error" : " signin-notice-success"}`}
-              role={noticeIsError ? "alert" : "status"}
-            >
-              {notice}
-            </p>
-          ) : null}
-
-          <section className="signin-google-section">
-            <form action={googleSignInAction}>
-              <AuthSubmitButton
-                className="signin-secondary-button signin-google-button"
-                disabled={!googleEnabled}
-                pendingLabel="Connecting to Google…"
-              >
-                <GoogleMark />
-                Continue with Google
-              </AuthSubmitButton>
-            </form>
-          </section>
-
-          <div className="signin-divider" aria-hidden="true">
-            <span>or</span>
-          </div>
-
-          <AuthValidatedForm
-            action={signInAction}
-            className="signin-credentials-form"
-          >
-            <label className="signin-field">
-              <span>Email</span>
-              <span className="signin-field-control">
-                <ClubIcon className="signin-field-icon" name="mail" />
-                <input
-                  autoComplete="email"
-                  aria-describedby="sign-in-email-error"
-                  data-field-name="email address"
-                  id="sign-in-email"
-                  maxLength={254}
-                  name="email"
-                  required
-                  placeholder="you@example.com"
-                  type="email"
-                />
-              </span>
-              <AuthFieldError id="sign-in-email-error" />
-            </label>
-            <label className="signin-field" htmlFor="sign-in-password">
-              <span>Password</span>
-              <AuthPasswordInput
-                autoComplete="current-password"
-                aria-describedby="sign-in-password-error"
-                data-field-name="password"
-                id="sign-in-password"
-                maxLength={128}
-                name="password"
-                placeholder="Enter your password"
-                required
-              />
-              <AuthFieldError id="sign-in-password-error" />
-            </label>
-            <Link className="signin-forgot-link" href="/forgot-password">
-              Forgot your password?
-            </Link>
-            <AuthSubmitButton
-              className="signin-primary-button"
-              pendingLabel="Signing in…"
-            >
-              Sign in
-              <ClubIcon name="arrow-right" />
-            </AuthSubmitButton>
-          </AuthValidatedForm>
-
-          <p className="signin-account-prompt">
-            New to the club? <Link href="/signup">Request account access</Link>
-          </p>
-        </div>
-      </AuthPageLayout>
-    );
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from("member_profiles")
-    .select(
-      "id, full_name, username, avatar_url, status, profile_completed_at, staff_disabled_at",
-    )
-    .eq("id", authData.user.id)
-    .maybeSingle();
-
-  if (profileError || !profile) {
-    return (
-      <main className="shell">
-        <section className="panel">
-          <p className="eyebrow">Access status</p>
-          <h1>We could not verify your membership</h1>
-          <p>
-            No member features have been loaded. Contact club leadership if this
-            continues.
-          </p>
-          <form action={signOutAction}>
-            <button className="button-secondary" type="submit">
-              Sign out
-            </button>
-          </form>
-        </section>
-      </main>
-    );
-  }
-
-  if (profile.status === "staff") {
-    if (profile.staff_disabled_at === null) redirect("/admin");
-    return (
-      <main className="shell">
-        <section className="panel narrow-panel">
-          <p className="eyebrow">Staff access</p>
-          <h1>Staff access disabled</h1>
-          <p>
-            This staff administrator account has been disabled. Contact another
-            staff administrator if you believe this is incorrect.
-          </p>
-          <form action={signOutAction}>
-            <button className="button-secondary" type="submit">
-              Sign out
-            </button>
-          </form>
-        </section>
-      </main>
-    );
-  }
-
-  if (profile.status === "pending") {
-    return (
-      <main className="shell">
-        <section className="panel narrow-panel">
-          <p className="eyebrow">Membership request</p>
-          <h1>
-            Welcome,{" "}
-            {profile.full_name === "Pending member"
-              ? "new member"
-              : profile.full_name}
-          </h1>
-          {notice ? (
-            <p className="notice" role="status">
-              {notice}
-            </p>
-          ) : null}
-          {profile.profile_completed_at ? (
-            <p>
-              Your email is confirmed and your profile is complete. An
-              authorized officer must approve the request before member access
-              is enabled.
-            </p>
-          ) : (
-            <>
-              <p>
-                Complete your profile. An authorized officer must approve the
-                request before member access is enabled.
-              </p>
-              <AuthValidatedForm
-                action={completeProfileAction}
-                className="form-stack"
-              >
-                <label>
-                  Full name
-                  <input
-                    autoComplete="name"
-                    aria-describedby="complete-profile-full-name-error"
-                    defaultValue={
-                      profile.full_name === "Pending member"
-                        ? ""
-                        : profile.full_name
-                    }
-                    maxLength={120}
-                    name="full_name"
-                    required
-                  />
-                  <AuthFieldError id="complete-profile-full-name-error" />
-                </label>
-                <label>
-                  Username
-                  <input
-                    autoComplete="username"
-                    aria-describedby="complete-profile-username-error"
-                    defaultValue={profile.username}
-                    maxLength={30}
-                    minLength={3}
-                    name="username"
-                    pattern="[A-Za-z0-9_]{3,30}"
-                    required
-                  />
-                  <AuthFieldError id="complete-profile-username-error" />
-                </label>
-                <button type="submit">Save profile</button>
-              </AuthValidatedForm>
-            </>
-          )}
-          <form action={signOutAction}>
-            <button className="button-secondary" type="submit">
-              Sign out
-            </button>
-          </form>
-        </section>
-      </main>
-    );
-  }
-
-  if (profile.status === "deactivated") {
-    return (
-      <main className="shell">
-        <section className="panel narrow-panel">
-          <p className="eyebrow">Membership status</p>
-          <h1>Account deactivated</h1>
-          <p>
-            Your account does not currently have access to member features.
-            Contact club leadership if you believe this is incorrect.
-          </p>
-          <form action={signOutAction}>
-            <button className="button-secondary" type="submit">
-              Sign out
-            </button>
-          </form>
-        </section>
-      </main>
-    );
-  }
-
-  if (profile.status === "rejected") {
-    return (
-      <main className="shell">
-        <section className="panel narrow-panel">
-          <p className="eyebrow">Membership status</p>
-          <h1>Membership request declined</h1>
-          <p>
-            This request was not approved, so member features are unavailable.
-            Contact club leadership if you need more information.
-          </p>
-          <form action={signOutAction}>
-            <button className="button-secondary" type="submit">
-              Sign out
-            </button>
-          </form>
-        </section>
-      </main>
-    );
-  }
-
-  const [
-    assignmentResult,
-    dashboard,
-    notificationResult,
-    eventsResult,
-    announcementsResult,
-  ] = await Promise.all([
-    supabase
-      .from("member_role_assignments")
-      .select("role")
-      .eq("member_id", authData.user.id)
-      .is("revoked_at", null),
-    getHomeDashboardData(supabase, authData.user.id),
-    supabase
-      .from("notifications")
-      .select(
-        "id,category,title,body,event_id,source_type,source_id,created_at,read_at",
-      )
-      .eq("recipient_id", authData.user.id)
-      .order("created_at", { ascending: false })
-      .limit(30),
-    supabase
-      .from("events")
-      .select("id,title")
-      .order("starts_at", { ascending: false })
-      .limit(20),
-    supabase
-      .from("announcements")
-      .select("id,title")
-      .order("created_at", { ascending: false })
-      .limit(20),
-  ]);
-  const roles = assignmentResult.error
-    ? []
-    : (assignmentResult.data ?? []).map((assignment) => assignment.role);
-  const navigationItems = getNavigationItems(roles);
-  const notifications = (notificationResult.data ?? []) as AppNotification[];
-  const unreadCount =
-    typeof dashboard.activity.unreadCount === "number"
-      ? dashboard.activity.unreadCount
-      : notifications.filter((n) => n.read_at === null).length;
-  const searchData = {
-    events: (eventsResult.data ?? []).map((e) => ({
-      id: e.id,
-      title: e.title,
-    })),
-    announcements: (announcementsResult.data ?? []).map((a) => ({
-      id: a.id,
-      title: a.title,
-    })),
-  };
-
-  const userProfile = {
-    fullName:
-      profile.full_name ||
-      (authData.user.user_metadata?.full_name as string) ||
-      "Club Member",
-    username:
-      profile.username ||
-      (authData.user.user_metadata?.username as string) ||
-      authData.user.email?.split("@")[0] ||
-      "member",
-    role: formatPrimaryRole(roles),
-    avatarUrl: profile.avatar_url ?? null,
-  };
-
-  const greeting = getTimeOfDayGreeting();
+  const nextEvent = ticketedEvents.length > 0 ? ticketedEvents[0] : null;
 
   return (
-    <AppShell
-      currentUserId={authData.user.id}
-      dashboard
-      initialNotifications={notifications}
-      items={navigationItems}
-      searchData={searchData}
-      unreadCount={unreadCount}
-      userProfile={userProfile}
-    >
-      <HomeDashboardView
-        dashboard={dashboard}
-        greeting={greeting}
-        memberName={profile.full_name}
-        notice={notice}
-        roles={roles}
-        username={profile.username || userProfile.username}
-      />
-    </AppShell>
+    <div className="min-h-screen bg-cream text-body selection:bg-ochre selection:text-deep">
+      <LandingRibbon nextEvent={nextEvent} />
+      <LandingNav />
+
+      {/* Notice Banner */}
+      {noticeDef && (
+        <div
+          role="status"
+          className="mx-auto max-w-6xl px-4 pt-4"
+        >
+          <div
+            className={`rounded-xl border p-4 shadow-sm flex items-start justify-between gap-3 ${
+              noticeDef.type === "error"
+                ? "bg-terra/10 border-terra/30 text-terra"
+                : "bg-forest/10 border-forest/30 text-forest"
+            }`}
+          >
+            <div>
+              <p className="font-bold text-sm">{noticeDef.title}</p>
+              <p className="text-xs sm:text-sm mt-0.5">{noticeDef.message}</p>
+            </div>
+            <Link
+              href="/"
+              className="text-xs font-bold underline underline-offset-2 shrink-0 hover:opacity-80"
+            >
+              Dismiss
+            </Link>
+          </div>
+        </div>
+      )}
+
+      <main id="top">
+        <LandingHero />
+        <LandingVision />
+        <LandingWhatWeDo />
+        <LandingEvents ticketedEvents={ticketedEvents} />
+
+        {/* 5. FINANCIAL INTEGRITY & STEWARDSHIP */}
+        <section id="leadership" className="bg-deep text-cream py-16 sm:py-20">
+          <div className="mx-auto max-w-6xl px-4 grid lg:grid-cols-2 gap-10 items-start">
+            <div>
+              <p className="text-xs tracking-[.25em] uppercase font-bold text-ochre">
+                The Club Distinction
+              </p>
+              <h2 className="mt-2 font-serif font-bold text-3xl sm:text-4xl">
+                Financial Integrity &amp; Stewardship
+              </h2>
+              <p className="mt-4 text-cream/85 text-sm sm:text-base leading-relaxed max-w-xl">
+                Governance you can see: transparent welfare tracking, accountable
+                reserves, democratic consensus, and disciplined leadership under the
+                Chairman, Secretary General, Provost/Welfare, and Treasurer/Financial
+                Secretary.
+              </p>
+              <ul className="mt-6 space-y-2.5 text-sm text-cream/90">
+                <li className="flex gap-3">
+                  <span className="text-ochre">◆</span>
+                  Every naira recorded, with dual-signatory bank authorization
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-ochre">◆</span>
+                  Open books and periodic financial reports for every active member
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-ochre">◆</span>
+                  Decisions and confirmations by majority vote, preserved in minutes
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-2xl border border-ochre/40 bg-forest/40 p-6 sm:p-8">
+              <h3 className="font-serif text-2xl font-bold text-ochre">
+                Charter of Values
+              </h3>
+              <div className="mt-4 divide-y divide-cream/15 text-sm">
+                <details className="group" open>
+                  <summary className="flex items-center justify-between font-bold py-2 cursor-pointer">
+                    Mutual Accountability{" "}
+                    <span className="text-ochre group-open:rotate-45 transition text-lg">
+                      +
+                    </span>
+                  </summary>
+                  <p className="pb-4 text-cream/80">
+                    We answer to one another for our words, our commitments, our event
+                    duties, and the family’s funds.
+                  </p>
+                </details>
+                <details className="group">
+                  <summary className="flex items-center justify-between font-bold py-2 cursor-pointer">
+                    Decorum &amp; Respect{" "}
+                    <span className="text-ochre group-open:rotate-45 transition text-lg">
+                      +
+                    </span>
+                  </summary>
+                  <p className="pb-4 text-cream/80">
+                    We carry ourselves with dignity at every gathering and show, and
+                    settle differences as one family.
+                  </p>
+                </details>
+                <details className="group">
+                  <summary className="flex items-center justify-between font-bold py-2 cursor-pointer">
+                    Family &amp; Shared Growth{" "}
+                    <span className="text-ochre group-open:rotate-45 transition text-lg">
+                      +
+                    </span>
+                  </summary>
+                  <p className="pb-4 text-cream/80">
+                    Our success is measured by the welfare of our members and the
+                    standard of every event we deliver.
+                  </p>
+                </details>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 6. MEMBERSHIP TIMELINE & TESTIMONIALS */}
+        <section id="membership" className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+          <div className="grid lg:grid-cols-12 gap-12 items-start">
+            {/* Left: 3-Step Membership Timeline */}
+            <div className="lg:col-span-6">
+              <p className="text-xs tracking-[.25em] uppercase font-bold text-terra">
+                Membership
+              </p>
+              <h2 className="mt-2 font-serif font-bold text-espresso text-3xl sm:text-4xl">
+                By Invitation &amp; Vetted Merit
+              </h2>
+              <ol className="mt-8 relative border-l-2 border-ochre/60 ml-4 space-y-7">
+                <li className="pl-7 relative">
+                  <span className="absolute -left-[17px] top-0 h-8 w-8 rounded-full bg-forest text-cream grid place-items-center text-xs font-bold">
+                    1
+                  </span>
+                  <h3 className="font-serif text-xl font-bold text-espresso">
+                    Nomination &amp; Referral
+                  </h3>
+                  <p className="mt-1 text-sm text-umber">
+                    You must be duly recommended by an active financial member in
+                    good standing.
+                  </p>
+                </li>
+                <li className="pl-7 relative">
+                  <span className="absolute -left-[17px] top-0 h-8 w-8 rounded-full bg-forest text-cream grid place-items-center text-xs font-bold">
+                    2
+                  </span>
+                  <h3 className="font-serif text-xl font-bold text-espresso">
+                    Character &amp; Probationary Vetting
+                  </h3>
+                  <p className="mt-1 text-sm text-umber">
+                    Your conduct, participation, and contribution are observed over a
+                    3-month probationary period.
+                  </p>
+                </li>
+                <li className="pl-7 relative">
+                  <span className="absolute -left-[17px] top-0 h-8 w-8 rounded-full bg-forest text-cream grid place-items-center text-xs font-bold">
+                    3
+                  </span>
+                  <h3 className="font-serif text-xl font-bold text-espresso">
+                    Assembly Induction
+                  </h3>
+                  <p className="mt-1 text-sm text-umber">
+                    Confirmed by majority vote of the house, pledging to the family’s
+                    welfare and constitution.
+                  </p>
+                </li>
+              </ol>
+            </div>
+
+            {/* Right: Voices of the Family */}
+            <div className="lg:col-span-6">
+              <p className="text-xs tracking-[.25em] uppercase font-bold text-terra">
+                Testimonials
+              </p>
+              <h2 className="mt-2 font-serif font-bold text-espresso text-3xl sm:text-4xl">
+                Voices of the Family
+              </h2>
+              <div className="mt-8 space-y-4">
+                <figure className="rounded-2xl bg-white border border-linen p-5 shadow-xs">
+                  <blockquote className="font-serif text-lg text-espresso leading-snug">
+                    “More than an entertainment powerhouse—this family has stood
+                    behind my personal growth and every milestone at home.”
+                  </blockquote>
+                  <figcaption className="mt-2.5 text-xs text-umber">
+                    <strong className="text-forest font-bold">Chairman</strong> ·
+                    Executive Council
+                  </figcaption>
+                </figure>
+                <figure className="rounded-2xl bg-white border border-linen p-5 shadow-xs">
+                  <blockquote className="font-serif text-lg text-espresso leading-snug">
+                    “When Carpenters Family hosts a show or represents a brand, the
+                    discipline and crowd energy are unmatched in Delta.”
+                  </blockquote>
+                  <figcaption className="mt-2.5 text-xs text-umber">
+                    <strong className="text-forest font-bold">Secretary General</strong> ·
+                    Executive Council
+                  </figcaption>
+                </figure>
+                <figure className="rounded-2xl bg-white border border-linen p-5 shadow-xs">
+                  <blockquote className="font-serif text-lg text-espresso leading-snug">
+                    “Accountable finances, collective welfare for active members, and
+                    celebrations we will never forget.”
+                  </blockquote>
+                  <figcaption className="mt-2.5 text-xs text-umber">
+                    <strong className="text-forest font-bold">Active Member</strong> ·
+                    Carpenters Family
+                  </figcaption>
+                </figure>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 7. FULL-WIDTH CTA BANNER */}
+        <section className="relative overflow-hidden py-20 sm:py-24 text-center text-cream">
+          <Image
+            src="/landing/cta-band.jpg"
+            alt="Carpenters Family celebrating together"
+            fill
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-forest/85 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-deep/50" />
+
+          <div className="relative z-10 mx-auto max-w-2xl px-4">
+            <h2 className="font-serif font-bold text-3xl sm:text-5xl tracking-tight">
+              Experience the Vibe. Join the{" "}
+              <span className="underline decoration-ochre decoration-4 underline-offset-8">
+                FAMILY
+              </span>
+            </h2>
+            <p className="mt-4 text-sm sm:text-base text-cream/90 leading-relaxed max-w-xl mx-auto">
+              Know a member in the club to request an introduction, or looking to book
+              our DJs, hype team, and brand promotion crew for your next big event?
+            </p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href="/?modal=membership"
+                className="btn bg-ochre text-deep hover:bg-cream text-xs sm:text-sm uppercase tracking-wider px-7 shadow-md font-bold transition-colors"
+              >
+                Request Membership
+              </Link>
+              <Link
+                href="/?modal=partnership"
+                className="btn bg-ochre text-deep hover:bg-cream text-xs sm:text-sm uppercase tracking-wider px-7 shadow-md font-bold transition-colors"
+              >
+                Partner With Us
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <LandingFooter />
+      <LandingModals initialModal={params.modal} />
+    </div>
   );
 }
