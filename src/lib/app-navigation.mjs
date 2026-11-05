@@ -11,8 +11,9 @@ export function getNavigationItems(roles) {
   const canSeeOfficerAreas = roles.some((role) => clubOfficerRoles.has(role));
 
   return [
-    { href: "/", label: "Home" },
+    { href: "/portal", label: "Home" },
     { href: "/events", label: "Events" },
+    { href: "/tickets", label: "Box office" },
     { href: "/attendance", label: "Minutes & attendance" },
     { href: "/dues", label: "Dues" },
     { href: "/finances", label: "Finances" },

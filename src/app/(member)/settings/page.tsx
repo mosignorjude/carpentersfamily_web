@@ -9,7 +9,7 @@ export default async function ProfileSettingsPage() {
   const supabase = await createSupabaseServerClient();
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData.user) {
-    redirect("/?notice=sign-in");
+    redirect("/portal?notice=sign-in");
   }
 
   const [profileResult, roleResult] = await Promise.all([
@@ -30,7 +30,7 @@ export default async function ProfileSettingsPage() {
     !profileResult.data ||
     profileResult.data.status !== "active"
   ) {
-    redirect("/");
+    redirect("/portal");
   }
 
   const roles = (roleResult.data ?? []).map((r) => r.role);

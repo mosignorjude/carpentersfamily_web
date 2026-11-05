@@ -9,11 +9,11 @@ export default async function EventsPage() {
   try {
     supabase = await createSupabaseServerClient();
   } catch {
-    redirect("/?notice=configuration");
+    redirect("/portal?notice=configuration");
   }
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { data: profile, error: profileError } = await supabase
     .from("member_profiles")
@@ -21,7 +21,7 @@ export default async function EventsPage() {
     .eq("id", authData.user.id)
     .maybeSingle();
 
-  if (profileError || profile?.status !== "active") redirect("/");
+  if (profileError || profile?.status !== "active") redirect("/portal");
 
   const [
     { data: eventData, error: eventsError },

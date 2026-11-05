@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const params = readConfirmRequest(new URL(request.url).searchParams);
   if (!params)
     return NextResponse.redirect(
-      new URL(`/?notice=${confirmNotice(false)}`, origin),
+      new URL(`/portal?notice=${confirmNotice(false)}`, origin),
     );
 
   try {
@@ -29,16 +29,16 @@ export async function GET(request: NextRequest) {
     });
     if (error || !data.user)
       return NextResponse.redirect(
-        new URL(`/?notice=${confirmNotice(false)}`, origin),
+        new URL(`/portal?notice=${confirmNotice(false)}`, origin),
       );
 
     await notifyRegistrationReceivedIfPending(data.user.id);
     return NextResponse.redirect(
-      new URL(`/?notice=${confirmNotice(true)}`, origin),
+      new URL(`/portal?notice=${confirmNotice(true)}`, origin),
     );
   } catch {
     return NextResponse.redirect(
-      new URL(`/?notice=${confirmNotice(false)}`, origin),
+      new URL(`/portal?notice=${confirmNotice(false)}`, origin),
     );
   }
 }

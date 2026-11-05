@@ -44,11 +44,11 @@ async function requireStaffActor() {
   try {
     supabase = await createSupabaseServerClient();
   } catch {
-    redirect("/?notice=configuration");
+    redirect("/portal?notice=configuration");
   }
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { data: profile, error: profileError } = await supabase
     .from("member_profiles")
@@ -62,7 +62,7 @@ async function requireStaffActor() {
     profile.status !== "staff" ||
     profile.staff_disabled_at !== null
   ) {
-    redirect("/?notice=denied");
+    redirect("/portal?notice=denied");
   }
 
   return { supabase, user: authData.user };

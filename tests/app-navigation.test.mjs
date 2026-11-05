@@ -11,8 +11,9 @@ function hrefs(roles) {
 
 test("ordinary members see the shared finance ledger but not officer-only areas", () => {
   const links = hrefs(["member"]);
-  assert.ok(links.includes("/"));
+  assert.ok(links.includes("/portal"));
   assert.ok(links.includes("/events"));
+  assert.ok(links.includes("/tickets"));
   assert.ok(links.includes("/dues"));
   assert.ok(links.includes("/announcements"));
   assert.ok(!links.includes("/notifications"));

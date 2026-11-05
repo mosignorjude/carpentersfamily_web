@@ -372,9 +372,9 @@ describe("exactly one primary navigation at every width", () => {
     );
     assert.ok(toggleHost, "cannot find the <div> that wraps <MobileAppMenu>");
     const brand = [...header.matchAll(/<Link\b([^>]*)>/g)].find((m) =>
-      m[1].includes('href="/"'),
+      m[1].includes('href="/portal"'),
     );
-    assert.ok(brand, 'cannot find the <Link href="/"> in app-header.tsx');
+    assert.ok(brand, 'cannot find the <Link href="/portal"> in app-header.tsx');
     const brandClass = brand[1].match(/className="([^"]*)"/);
     assert.ok(
       brandClass,

@@ -182,7 +182,7 @@ test("notification href routes accurately to domain areas and section anchors", 
       category: "officer_member",
       body: "Your role changed to Member (was Executive).",
     }),
-    "/",
+    "/portal",
   );
   assert.equal(
     getNotificationHref({
@@ -282,5 +282,5 @@ test("event income alerts open the revenue tab, not ticketing", () => {
 });
 
 test("notifications page route redirects to home since notifications are in the header drawer", () => {
-  assert.match(page, /redirect\("\/"\)/);
+  assert.match(page, /redirect\("\/portal"\)/);
 });

@@ -137,7 +137,7 @@ export default async function DuesPage({
   }
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { data: ownProfile, error: ownProfileError } = await supabase
     .from("member_profiles")

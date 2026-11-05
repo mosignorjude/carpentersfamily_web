@@ -81,7 +81,7 @@ export default async function FinancesPage({
   }
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { data: profile, error: profileError } = await supabase
     .from("member_profiles")

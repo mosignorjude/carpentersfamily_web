@@ -241,7 +241,7 @@ export default function AppHeader({
           <Link
             aria-label={`${clubBrand.shortName} home`}
             className="app-mobile-nav items-center gap-2 text-inherit no-underline focus-visible:outline-2 focus-visible:outline-[#174C37] rounded-lg"
-            href="/"
+            href="/portal"
           >
             {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
             <img

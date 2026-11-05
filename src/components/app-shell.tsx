@@ -46,7 +46,7 @@ export default function AppShell({
         <Link
           aria-label={`${clubBrand.shortName} home`}
           className="app-brand"
-          href="/"
+          href="/portal"
         >
           {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
           <img

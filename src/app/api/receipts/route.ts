@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   const supabase = await createSupabaseServerClient();
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData.user) {
-    return NextResponse.redirect(new URL("/?notice=sign-in", request.url));
+    return NextResponse.redirect(new URL("/portal?notice=sign-in", request.url));
   }
 
   const formData = await request.formData();

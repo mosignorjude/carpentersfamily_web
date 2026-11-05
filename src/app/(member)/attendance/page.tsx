@@ -23,10 +23,10 @@ export default async function AttendancePage({
   const query = await searchParams;
 
   const supabase = await createSupabaseServerClient().catch(() => null);
-  if (!supabase) redirect("/?notice=configuration");
+  if (!supabase) redirect("/portal?notice=configuration");
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
   const memberId = authData.user.id;
 
   const { data: profile, error: profileError } = await supabase
@@ -36,7 +36,7 @@ export default async function AttendancePage({
     .maybeSingle();
 
   if (profileError || profile?.status !== "active") {
-    redirect("/?notice=sign-in");
+    redirect("/portal?notice=sign-in");
   }
 
   // 1. Fetch Global Roles

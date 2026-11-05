@@ -159,7 +159,7 @@ export default async function CommunicationsPage({
               : "Announcements are available to active members."}
           </p>
           <div className="pt-2">
-            <Link href="/" className="cf-btn cf-btn--primary">
+            <Link href="/portal" className="cf-btn cf-btn--primary">
               Return to Member Portal
             </Link>
           </div>

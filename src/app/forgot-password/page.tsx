@@ -80,7 +80,7 @@ export default async function ForgotPasswordPage({
         </AuthValidatedForm>
 
         <p className="signin-account-prompt">
-          Remember your password? <Link href="/">Sign in</Link>
+          Remember your password? <Link href="/portal">Sign in</Link>
         </p>
       </div>
     </AuthPageLayout>

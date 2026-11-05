@@ -147,7 +147,7 @@ function safeSiteUrl(path: string) {
   return origin ? new URL(path, origin).toString() : null;
 }
 
-async function clientOrRedirect(destination = "/?notice=configuration") {
+async function clientOrRedirect(destination = "/portal?notice=configuration") {
   try {
     return await createSupabaseServerClient();
   } catch {
@@ -283,9 +283,9 @@ function optionalFormString(
 }
 
 async function getActiveFinanceActor() {
-  const supabase = await clientOrRedirect("/?notice=configuration");
+  const supabase = await clientOrRedirect("/portal?notice=configuration");
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { data: profile, error: profileError } = await supabase
     .from("member_profiles")
@@ -293,7 +293,7 @@ async function getActiveFinanceActor() {
     .eq("id", authData.user.id)
     .maybeSingle();
   if (profileError || profile?.status !== "active")
-    redirect("/?notice=sign-in");
+    redirect("/portal?notice=sign-in");
 
   const { data: assignments, error: assignmentsError } = await supabase
     .from("member_role_assignments")
@@ -424,9 +424,9 @@ function eventAttendanceCutoff(formData: FormData, required: boolean) {
 }
 
 async function getActiveEventActor(eventId?: string) {
-  const supabase = await clientOrRedirect("/?notice=configuration");
+  const supabase = await clientOrRedirect("/portal?notice=configuration");
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { data: profile, error: profileError } = await supabase
     .from("member_profiles")
@@ -434,7 +434,7 @@ async function getActiveEventActor(eventId?: string) {
     .eq("id", authData.user.id)
     .maybeSingle();
   if (profileError || profile?.status !== "active")
-    redirect("/?notice=sign-in");
+    redirect("/portal?notice=sign-in");
 
   const { data: assignments, error: assignmentError } = await supabase
     .from("member_role_assignments")
@@ -483,9 +483,9 @@ function duesNoticeUrl(notice: string, memberId?: string) {
 }
 
 async function getActiveDuesActor() {
-  const supabase = await clientOrRedirect("/?notice=configuration");
+  const supabase = await clientOrRedirect("/portal?notice=configuration");
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { data: profile, error: profileError } = await supabase
     .from("member_profiles")
@@ -493,7 +493,7 @@ async function getActiveDuesActor() {
     .eq("id", authData.user.id)
     .maybeSingle();
   if (profileError || profile?.status !== "active")
-    redirect("/?notice=sign-in");
+    redirect("/portal?notice=sign-in");
 
   const { data: assignments, error: assignmentsError } = await supabase
     .from("member_role_assignments")
@@ -1316,13 +1316,13 @@ export async function signInAction(formData: FormData) {
   const email = formString(formData, "email", 254)?.toLowerCase();
   const password = formData.get("password");
   if (!email || !emailPattern.test(email) || typeof password !== "string") {
-    redirect("/?notice=credentials");
+    redirect("/portal?notice=credentials");
   }
 
   const supabase = await clientOrRedirect();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) redirect("/?notice=credentials");
-  redirect("/");
+  if (error) redirect("/portal?notice=credentials");
+  redirect("/portal");
 }
 
 export async function signUpAction(formData: FormData) {
@@ -1373,17 +1373,17 @@ export async function signUpAction(formData: FormData) {
 }
 
 export async function googleSignInAction() {
-  if (!isGoogleAuthConfigured()) redirect("/?notice=google-unavailable");
+  if (!isGoogleAuthConfigured()) redirect("/portal?notice=google-unavailable");
 
   const redirectTo = safeSiteUrl("/auth/callback");
-  if (!redirectTo) redirect("/?notice=configuration");
+  if (!redirectTo) redirect("/portal?notice=configuration");
 
   const supabase = await clientOrRedirect();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: { redirectTo },
   });
-  if (error || !data.url) redirect("/?notice=google-unavailable");
+  if (error || !data.url) redirect("/portal?notice=google-unavailable");
   redirect(data.url);
 }
 
@@ -1427,7 +1427,7 @@ export async function updatePasswordAction(formData: FormData) {
     email: data.user.email,
     userId: data.user.id,
   });
-  redirect("/?notice=password-updated");
+  redirect("/portal?notice=password-updated");
 }
 
 export async function completeProfileAction(formData: FormData) {
@@ -1439,12 +1439,12 @@ export async function completeProfileAction(formData: FormData) {
     !username ||
     !usernamePattern.test(username)
   ) {
-    redirect("/?notice=invalid-profile");
+    redirect("/portal?notice=invalid-profile");
   }
 
   const supabase = await clientOrRedirect();
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { data: profile, error: profileError } = await supabase
     .from("member_profiles")
@@ -1456,16 +1456,16 @@ export async function completeProfileAction(formData: FormData) {
     profile?.status !== "pending" ||
     profile.profile_completed_at
   ) {
-    redirect("/?notice=profile-locked");
+    redirect("/portal?notice=profile-locked");
   }
 
   const { error } = await supabase.rpc("complete_member_profile", {
     p_full_name: fullName,
     p_username: username,
   });
-  if (error) redirect("/?notice=profile-update-failed");
-  revalidatePath("/");
-  redirect("/?notice=profile-complete");
+  if (error) redirect("/portal?notice=profile-update-failed");
+  revalidatePath("/portal");
+  redirect("/portal?notice=profile-complete");
 }
 
 export async function memberLifecycleAction(formData: FormData) {
@@ -1483,9 +1483,9 @@ export async function memberLifecycleAction(formData: FormData) {
     redirect("/officers/members?notice=invalid-request");
   }
 
-  const supabase = await clientOrRedirect("/?notice=configuration");
+  const supabase = await clientOrRedirect("/portal?notice=configuration");
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { data: profile, error: profileError } = await supabase
     .from("member_profiles")
@@ -1550,9 +1550,9 @@ export async function executiveRoleAction(formData: FormData) {
   const request = parseExecutiveRoleRequest(formData);
   if (!request) redirect("/officers/members?notice=invalid-request");
 
-  const supabase = await clientOrRedirect("/?notice=configuration");
+  const supabase = await clientOrRedirect("/portal?notice=configuration");
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { data: profile, error: profileError } = await supabase
     .from("member_profiles")
@@ -1603,9 +1603,9 @@ export async function clubRoleChangeAction(formData: FormData) {
   const request = parseClubRoleRequest(formData);
   if (!request) redirect("/officers/members?notice=invalid-request");
 
-  const supabase = await clientOrRedirect("/?notice=configuration");
+  const supabase = await clientOrRedirect("/portal?notice=configuration");
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   if (request.memberId === authData.user.id) {
     redirect("/officers/members?notice=self-action-denied");
@@ -1674,7 +1674,7 @@ export async function signOutAction() {
   } catch {
     // Clear the local browser flow by returning to the public sign-in screen.
   }
-  redirect("/");
+  redirect("/portal");
 }
 
 export async function createEventAction(formData: FormData) {
@@ -3205,9 +3205,9 @@ export async function issueEventAttendanceQrAction(
 }
 
 async function getActiveCommunicationActor() {
-  const supabase = await clientOrRedirect("/?notice=configuration");
+  const supabase = await clientOrRedirect("/portal?notice=configuration");
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { data: profile, error: profileError } = await supabase
     .from("member_profiles")
@@ -3215,7 +3215,7 @@ async function getActiveCommunicationActor() {
     .eq("id", authData.user.id)
     .maybeSingle();
   if (profileError || profile?.status !== "active")
-    redirect("/?notice=sign-in");
+    redirect("/portal?notice=sign-in");
   return supabase;
 }
 
@@ -3597,7 +3597,7 @@ const inAppPreferenceCategories = new Set([
 ]);
 
 function notificationNotice(notice: string) {
-  return `/?notice=${encodeURIComponent(notice)}`;
+  return `/portal?notice=${encodeURIComponent(notice)}`;
 }
 
 export async function markNotificationReadAction(formData: FormData) {
@@ -3753,7 +3753,7 @@ export async function updateMemberProfileSettingsAction(formData: FormData) {
 
   const supabase = await clientOrRedirect();
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { error } = await supabase.rpc("update_own_member_profile", {
     p_username: username,
@@ -3780,7 +3780,7 @@ export async function updateMemberEmailAction(formData: FormData) {
 
   const supabase = await clientOrRedirect();
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { error } = await supabase.auth.updateUser({ email });
   if (error) {
@@ -3806,7 +3806,7 @@ export async function updateMemberPasswordAction(formData: FormData) {
 
   const supabase = await clientOrRedirect();
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { error } = await supabase.auth.updateUser({ password });
   if (error) {

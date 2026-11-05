@@ -36,7 +36,7 @@ export default async function ResetPasswordPage({
             Authentication is not configured for this environment.
           </p>
           <p className="signup-return-link">
-            <Link href="/">Return to sign in</Link>
+            <Link href="/portal">Return to sign in</Link>
           </p>
         </div>
       </AuthPageLayout>
@@ -44,7 +44,7 @@ export default async function ResetPasswordPage({
   }
 
   const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) redirect("/?notice=sign-in");
+  if (error || !data.user) redirect("/portal?notice=sign-in");
 
   const notice = params.notice ? notices[params.notice] : undefined;
   return (

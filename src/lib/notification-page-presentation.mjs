@@ -98,7 +98,7 @@ function sanitizeId(id) {
  */
 export function getNotificationHref(notification) {
   if (!notification || typeof notification !== "object") {
-    return "/";
+    return "/portal";
   }
 
   const validEventId = sanitizeId(notification.event_id);
@@ -224,7 +224,7 @@ export function getNotificationHref(notification) {
         !body.startsWith("Your role changed to Admin") &&
         !body.startsWith("Your role changed to President")
       ) {
-        return "/";
+        return "/portal";
       }
       if (
         titleLower.includes("request") ||

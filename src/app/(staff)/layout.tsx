@@ -14,11 +14,11 @@ export default async function StaffLayout({
   try {
     supabase = await createSupabaseServerClient();
   } catch {
-    redirect("/?notice=configuration");
+    redirect("/portal?notice=configuration");
   }
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) redirect("/?notice=sign-in");
+  if (authError || !authData.user) redirect("/portal?notice=sign-in");
 
   const { data: profile } = await supabase
     .from("member_profiles")
@@ -38,7 +38,7 @@ export default async function StaffLayout({
         redirect("/officers/members");
       }
     }
-    redirect("/?notice=denied");
+    redirect("/portal?notice=denied");
   }
 
   return (

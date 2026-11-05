@@ -39,7 +39,7 @@ function SignupUnavailable({ children }: { children: string }) {
           {children}
         </p>
         <p className="signup-return-link">
-          <Link href="/">Return to sign in</Link>
+          <Link href="/portal">Return to sign in</Link>
         </p>
       </div>
     </AuthPageLayout>
@@ -67,7 +67,7 @@ export default async function SignupPage({
   }
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authData.user) redirect("/");
+  if (authData.user) redirect("/portal");
   if (authError && !isAuthSessionMissingError(authError)) {
     return (
       <SignupUnavailable>
@@ -214,7 +214,7 @@ export default async function SignupPage({
         </section>
 
         <p className="signin-account-prompt">
-          Already have an account? <Link href="/">Sign in</Link>
+          Already have an account? <Link href="/portal">Sign in</Link>
         </p>
       </div>
     </AuthPageLayout>

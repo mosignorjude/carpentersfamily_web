@@ -195,7 +195,7 @@ async function queueWelcome(params: {
     subject: "Welcome to Carpenters Family — Membership Approved",
     heading: "Membership Approved",
     ctaLabel: "Open Member Portal",
-    ctaPath: "/",
+    ctaPath: "/portal",
     copy: {
       previewText: "Your Carpenters Family membership has been approved.",
       greeting: `Hello ${params.contact.name},`,
@@ -339,7 +339,7 @@ export async function notifyRegistrationReceivedIfPending(
       subject: "Carpenters Family — Email Confirmed. Approval Is Pending.",
       heading: "Your Membership Request Is Awaiting Club Approval",
       ctaLabel: "Visit Member Portal",
-      ctaPath: "/",
+      ctaPath: "/portal",
       copy: {
         previewText:
           "Your email is confirmed and your membership request is with the club executives.",
@@ -393,7 +393,7 @@ export async function notifyMemberLifecycleChanged(params: {
         subject: "Update on Your Carpenters Family Membership Request",
         heading: "Membership Request Not Approved",
         ctaLabel: "Open Member Portal",
-        ctaPath: "/",
+        ctaPath: "/portal",
         copy: {
           previewText:
             "Club leadership reviewed your Carpenters Family membership request.",
@@ -430,7 +430,7 @@ export async function notifyMemberLifecycleChanged(params: {
         ? "Membership Account Deactivated"
         : "Membership Account Reactivated",
       ctaLabel: "Open Member Portal",
-      ctaPath: "/",
+      ctaPath: "/portal",
       copy: {
         previewText: suspended
           ? "Your Carpenters Family portal account has been deactivated."
@@ -502,7 +502,7 @@ export async function notifyClubRoleChanged(params: {
       subject: `Carpenters Family — Club Role Updated (${roleLabel})`,
       heading: "Your Club Role Was Updated",
       ctaLabel: "Open Member Portal",
-      ctaPath: "/",
+      ctaPath: "/portal",
       copy: {
         previewText: actionDescription,
         greeting: `Hello ${contact.name},`,
@@ -548,7 +548,7 @@ export async function notifyPasswordUpdated(params: {
       subject: "Carpenters Family — Password Updated",
       heading: "Your Password Was Updated",
       ctaLabel: "Sign In to Portal",
-      ctaPath: "/",
+      ctaPath: "/portal",
       copy: {
         previewText:
           "Your Carpenters Family portal password was recently updated.",
