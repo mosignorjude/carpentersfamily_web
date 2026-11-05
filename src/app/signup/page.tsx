@@ -1,7 +1,7 @@
 import { isAuthSessionMissingError } from "@supabase/supabase-js";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { googleSignInAction, signUpAction } from "@/app/actions";
+import { signUpAction } from "@/app/actions";
 import { AuthBrand, AuthPageLayout } from "@/components/auth-page-layout";
 import AuthPasswordInput from "@/components/auth-password-input";
 import AuthSubmitButton from "@/components/auth-submit-button";
@@ -9,8 +9,6 @@ import AuthValidatedForm, {
   AuthFieldError,
 } from "@/components/auth-validated-form";
 import { ClubIcon } from "@/components/club-icon";
-import GoogleMark from "@/components/google-mark";
-import { isGoogleAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const notices: Record<string, string> = {
@@ -19,14 +17,16 @@ const notices: Record<string, string> = {
   "invalid-signup": "Check the name, username, email, and password fields.",
   "signup-unavailable": "Sign-up is temporarily unavailable. Try again later.",
   configuration: "Account requests are unavailable in this environment.",
-  "google-unavailable": "Google isn’t available in this environment.",
+  "invite-invalid": "This invitation link is invalid or has already been used.",
+  "invite-expired": "This invitation link has expired. Please submit a new membership request.",
 };
 
 const errorNotices = new Set([
   "invalid-signup",
   "signup-unavailable",
   "configuration",
-  "google-unavailable",
+  "invite-invalid",
+  "invite-expired",
 ]);
 
 function SignupUnavailable({ children }: { children: string }) {
@@ -46,14 +46,55 @@ function SignupUnavailable({ children }: { children: string }) {
   );
 }
 
+function SignupInvitationRequired({
+  title = "Invitation Required",
+  message = "Membership in Carpenters Family Social Club is strictly by invitation and vetted merit. Prospective members must first submit an application for review by the Executive Committee.",
+}: {
+  title?: string;
+  message?: string;
+}) {
+  return (
+    <AuthPageLayout variant="signup">
+      <div className="signin-content signup-auth-content text-center">
+        <AuthBrand />
+        <header className="signin-heading">
+          <h1 id="signup-heading" className="text-2xl font-serif text-[#3D291F]">
+            {title}
+          </h1>
+          <p className="signin-intro mt-2 text-[#7A6B63] max-w-sm mx-auto" role="alert">
+            {message}
+          </p>
+        </header>
+
+        <div className="mt-8 flex flex-col gap-3 max-w-xs mx-auto">
+          <Link
+            href="/?modal=membership"
+            className="w-full inline-flex justify-center items-center px-6 py-3 rounded-xl bg-[#174C37] text-white font-medium hover:bg-[#123D2C] transition-colors"
+          >
+            Request Membership
+          </Link>
+          <p className="signin-account-prompt mt-4 text-sm text-[#7A6B63]">
+            Already a member?{" "}
+            <Link href="/portal" className="text-[#174C37] font-semibold underline">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+    </AuthPageLayout>
+  );
+}
+
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string }>;
+  searchParams: Promise<{ notice?: string; token?: string }>;
 }) {
   const params = await searchParams;
   const notice = params.notice ? notices[params.notice] : undefined;
   const noticeIsError = errorNotices.has(params.notice ?? "");
+  const token = params.token ? params.token.trim().toLowerCase() : undefined;
+
   let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
 
   try {
@@ -67,7 +108,7 @@ export default async function SignupPage({
   }
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authData.user) redirect("/portal");
+  if (authData?.user) redirect("/portal");
   if (authError && !isAuthSessionMissingError(authError)) {
     return (
       <SignupUnavailable>
@@ -77,15 +118,46 @@ export default async function SignupPage({
     );
   }
 
-  const googleEnabled = isGoogleAuthConfigured();
+  // Invitation-only gate: without a token, show Invitation Required screen
+  if (!token) {
+    return (
+      <SignupInvitationRequired
+        title={params.notice === "invite-expired" ? "Invitation Expired" : "Invitation Required"}
+        message={notice}
+      />
+    );
+  }
+
+  // Validate the cryptographic token via security definer RPC
+  const { data: inviteValidation, error: validateError } = await supabase.rpc(
+    "validate_invite_token",
+    { p_token: token }
+  );
+
+  if (validateError || !inviteValidation?.valid) {
+    const isExpired = inviteValidation?.reason === "expired";
+    return (
+      <SignupInvitationRequired
+        title={isExpired ? "Invitation Expired" : "Invitation Required"}
+        message={
+          isExpired
+            ? "This invitation link has expired. Please submit a new membership request to obtain a fresh invitation."
+            : "This invitation link is invalid or has already been used. Please request an invitation to join."
+        }
+      />
+    );
+  }
+
+  const invitedEmail = typeof inviteValidation.email === "string" ? inviteValidation.email : "";
+
   return (
     <AuthPageLayout variant="signup">
       <div className="signin-content signup-auth-content">
         <AuthBrand />
         <header className="signin-heading">
-          <h1 id="signup-heading">Request account access</h1>
+          <h1 id="signup-heading">Accept Club Invitation</h1>
           <p className="signin-intro">
-            Create your profile to join the Carpenters Family
+            Complete your profile to register your account
           </p>
         </header>
 
@@ -103,6 +175,23 @@ export default async function SignupPage({
           aria-labelledby="signup-heading"
           className="signin-credentials-form signup-request-form"
         >
+          <input type="hidden" name="token" value={token} />
+          <input type="hidden" name="email" value={invitedEmail} />
+
+          <label className="signin-field">
+            <span>Email</span>
+            <span className="signin-field-control">
+              <ClubIcon className="signin-field-icon" name="mail" />
+              <input
+                disabled
+                id="signup-email-display"
+                value={invitedEmail}
+                type="email"
+                className="opacity-75 cursor-not-allowed bg-stone-50"
+              />
+            </span>
+          </label>
+
           <label className="signin-field">
             <span>Full name</span>
             <input
@@ -117,6 +206,7 @@ export default async function SignupPage({
             />
             <AuthFieldError id="signup-full-name-error" />
           </label>
+
           <label className="signin-field">
             <span>Username</span>
             <input
@@ -137,24 +227,7 @@ export default async function SignupPage({
               3–30 letters, numbers, or underscores.
             </span>
           </label>
-          <label className="signin-field">
-            <span>Email</span>
-            <span className="signin-field-control">
-              <ClubIcon className="signin-field-icon" name="mail" />
-              <input
-                autoComplete="email"
-                aria-describedby="signup-email-error"
-                data-field-name="email address"
-                id="signup-email"
-                maxLength={254}
-                name="email"
-                placeholder="you@example.com"
-                required
-                type="email"
-              />
-            </span>
-            <AuthFieldError id="signup-email-error" />
-          </label>
+
           <label className="signin-field" htmlFor="signup-password">
             <span>Password</span>
             <AuthPasswordInput
@@ -173,6 +246,7 @@ export default async function SignupPage({
               Use at least 12 characters.
             </span>
           </label>
+
           <label className="signin-field" htmlFor="signup-confirm-password">
             <span>Confirm password</span>
             <AuthPasswordInput
@@ -188,30 +262,14 @@ export default async function SignupPage({
             />
             <AuthFieldError id="signup-confirm-password-error" />
           </label>
+
           <AuthSubmitButton
             className="signin-primary-button"
-            pendingLabel="Submitting request…"
+            pendingLabel="Registering account…"
           >
-            Request access
+            Create account
           </AuthSubmitButton>
         </AuthValidatedForm>
-
-        <div className="signin-divider" aria-hidden="true">
-          <span>or</span>
-        </div>
-
-        <section aria-label="Google sign-in" className="signin-google-section">
-          <form action={googleSignInAction}>
-            <AuthSubmitButton
-              className="signin-secondary-button signin-google-button"
-              disabled={!googleEnabled}
-              pendingLabel="Connecting to Google…"
-            >
-              <GoogleMark />
-              Continue with Google
-            </AuthSubmitButton>
-          </form>
-        </section>
 
         <p className="signin-account-prompt">
           Already have an account? <Link href="/portal">Sign in</Link>

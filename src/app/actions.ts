@@ -1326,6 +1326,11 @@ export async function signInAction(formData: FormData) {
 }
 
 export async function signUpAction(formData: FormData) {
+  const token = formString(formData, "token", 64)?.toLowerCase();
+  if (!token) {
+    redirect("/signup?notice=invite-invalid");
+  }
+
   const email = formString(formData, "email", 254)?.toLowerCase();
   const fullName = formString(formData, "full_name", 120);
   const username = formString(formData, "username", 30);
@@ -1344,13 +1349,30 @@ export async function signUpAction(formData: FormData) {
     password.length > 128 ||
     password !== confirmPassword
   ) {
-    redirect("/signup?notice=invalid-signup");
+    redirect(`/signup?token=${encodeURIComponent(token)}&notice=invalid-signup`);
   }
 
   const emailRedirectTo = safeSiteUrl("/auth/callback");
-  if (!emailRedirectTo) redirect("/signup?notice=configuration");
+  if (!emailRedirectTo) redirect(`/signup?token=${encodeURIComponent(token)}&notice=configuration`);
 
-  const supabase = await clientOrRedirect("/signup?notice=configuration");
+  const supabase = await clientOrRedirect(`/signup?token=${encodeURIComponent(token)}&notice=configuration`);
+
+  // Validate the invitation token via security definer RPC
+  const { data: inviteValidation, error: validateError } = await supabase.rpc(
+    "validate_invite_token",
+    { p_token: token }
+  );
+
+  if (validateError || !inviteValidation?.valid) {
+    const noticeCode = inviteValidation?.reason === "expired" ? "invite-expired" : "invite-invalid";
+    redirect(`/signup?notice=${noticeCode}`);
+  }
+
+  // Ensure submitted email matches invited email
+  if (inviteValidation.email && inviteValidation.email.toLowerCase() !== email) {
+    redirect("/signup?notice=invite-invalid");
+  }
+
   const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password,
@@ -1362,7 +1384,15 @@ export async function signUpAction(formData: FormData) {
 
   // Keep the response indistinguishable for an existing address to reduce
   // account enumeration. Auth metadata is validated again by the DB trigger.
-  if (error) redirect("/signup?notice=signup-unavailable");
+  if (error) redirect(`/signup?token=${encodeURIComponent(token)}&notice=signup-unavailable`);
+
+  if (signUpData.user?.id) {
+    await supabase.rpc("consume_invite_token", {
+      p_token: token,
+      p_user_id: signUpData.user.id,
+    });
+  }
+
   await notifyNewMemberSignUp({
     email,
     fullName,
