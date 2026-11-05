@@ -56,13 +56,17 @@
     ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   --color-forest: #174c37;
+  --color-deep: #0c3325;
   --color-deep-forest: #0c3325;
   --color-deep-forest-hover: #103d2b;
   --color-espresso: #3d291f;
   --color-ochre: #d6a23a;
+  --color-cream: #faf6f0;
   --color-warm-canvas: #faf6f0;
   --color-linen: #e5ddd3;
+  --color-terra: #ba3c2a;
   --color-terracotta: #ba3c2a;
+  --color-umber: #7a685d;
   --color-muted: #7a685d;
   --color-body: #5c4638;
 
