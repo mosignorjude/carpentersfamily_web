@@ -334,3 +334,80 @@ export async function staffResendConfirmationAction(formData: FormData) {
   revalidatePath("/admin");
   redirect("/admin/members?notice=confirmation-resent");
 }
+
+export async function reviewMembershipRequestAction(formData: FormData) {
+  await requireStaffActor();
+
+  const requestId = formString(formData, "request_id", 36);
+  const decision = formString(formData, "decision", 20);
+  const rejectionReason = formString(formData, "rejection_reason", 500);
+
+  if (
+    !requestId ||
+    !uuidPattern.test(requestId) ||
+    !decision ||
+    !["approved", "rejected"].includes(decision)
+  ) {
+    redirect("/admin/membership-requests?notice=invalid-request");
+  }
+
+  if (decision === "rejected" && (!rejectionReason || rejectionReason.length < 5)) {
+    redirect("/admin/membership-requests?notice=invalid-request");
+  }
+
+  const admin = createSupabaseAdminClient();
+  if (!admin) redirect("/admin/membership-requests?notice=configuration");
+
+  const { error } = await admin.rpc("review_membership_request", {
+    p_request_id: requestId,
+    p_decision: decision,
+    p_rejection_reason: decision === "rejected" ? rejectionReason : null,
+  });
+
+  if (error) {
+    redirect(`/admin/membership-requests?notice=${rpcErrorNotice(error)}`);
+  }
+
+  revalidatePath("/admin/membership-requests");
+  redirect(
+    `/admin/membership-requests?notice=${
+      decision === "approved" ? "membership-approved" : "membership-rejected"
+    }`,
+  );
+}
+
+export async function handlePartnershipEnquiryAction(formData: FormData) {
+  await requireStaffActor();
+
+  const enquiryId = formString(formData, "enquiry_id", 36);
+  const status = formString(formData, "status", 20);
+  const notes = formString(formData, "notes", 1000);
+
+  if (
+    !enquiryId ||
+    !uuidPattern.test(enquiryId) ||
+    !status ||
+    !["contacted", "closed"].includes(status)
+  ) {
+    redirect("/admin/partnerships?notice=invalid-request");
+  }
+
+  const admin = createSupabaseAdminClient();
+  if (!admin) redirect("/admin/partnerships?notice=configuration");
+
+  const { error } = await admin
+    .from("partnership_enquiries")
+    .update({
+      status,
+      notes: notes ?? null,
+      handled_at: new Date().toISOString(),
+    })
+    .eq("id", enquiryId);
+
+  if (error) {
+    redirect(`/admin/partnerships?notice=${rpcErrorNotice(error)}`);
+  }
+
+  revalidatePath("/admin/partnerships");
+  redirect("/admin/partnerships?notice=enquiry-updated");
+}

@@ -555,6 +555,21 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     title: "Invalid Submission",
     message: "Please fill in all required fields accurately before submitting.",
   },
+  "membership-approved": {
+    type: "success",
+    title: "Application Approved",
+    message: "The membership application was approved and an invitation was issued.",
+  },
+  "membership-rejected": {
+    type: "success",
+    title: "Application Rejected",
+    message: "The membership application was rejected.",
+  },
+  "enquiry-updated": {
+    type: "success",
+    title: "Enquiry Updated",
+    message: "The partnership enquiry status was updated.",
+  },
 };
 
 /**
