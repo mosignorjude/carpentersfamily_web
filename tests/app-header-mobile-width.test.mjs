@@ -29,7 +29,7 @@ describe("mobile app header width", () => {
   it("keeps an accessible name on the home link when the visual label is hidden", () => {
     assert.match(
       header,
-      /aria-label=\{`\$\{clubBrand\.shortName\} home`\}[\s\S]*?href="\/"/,
+      /aria-label=\{`\$\{clubBrand\.shortName\} home`\}[\s\S]*?href="\/portal"/,
       "the logo-only home link must keep a descriptive accessible name",
     );
   });

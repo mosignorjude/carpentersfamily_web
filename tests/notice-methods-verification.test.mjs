@@ -437,7 +437,7 @@ test("mobile header: renders mobile brand logo and shortName gated to the nav br
 
   // Verified brand import and mobile Link existence
   assert.ok(headerContent.includes('import { clubBrand } from "@/lib/brand"'));
-  assert.ok(headerContent.includes('href="/"'));
+  assert.ok(headerContent.includes('href="/portal"'));
   assert.ok(headerContent.includes("clubBrand.logoSrc"));
   assert.ok(headerContent.includes("clubBrand.shortName"));
   assert.ok(headerContent.includes("app-mobile-nav"));

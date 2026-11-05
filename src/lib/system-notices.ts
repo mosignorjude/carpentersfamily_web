@@ -521,6 +521,40 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     message:
       "The profile could not be saved. The username may already be in use.",
   },
+
+  // Public Intake & Member Invites
+  "membership-request-submitted": {
+    type: "success",
+    title: "Application Received",
+    message:
+      "Your membership application has been received and is currently under review by the Executive Committee.",
+  },
+  "partnership-enquiry-submitted": {
+    type: "success",
+    title: "Enquiry Received",
+    message:
+      "Thank you for reaching out. A club representative will review your proposal and respond promptly.",
+  },
+  "request-already-pending": {
+    type: "error",
+    title: "Application Pending",
+    message: "A membership request with this email is already awaiting review.",
+  },
+  "invite-invalid": {
+    type: "error",
+    title: "Invalid Invitation",
+    message: "This invitation link is invalid or has already been used.",
+  },
+  "invite-expired": {
+    type: "error",
+    title: "Invitation Expired",
+    message: "This invitation link has expired. Please submit a new membership request.",
+  },
+  "invalid-intake": {
+    type: "error",
+    title: "Invalid Submission",
+    message: "Please fill in all required fields accurately before submitting.",
+  },
 };
 
 /**

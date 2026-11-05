@@ -3816,3 +3816,96 @@ export async function updateMemberPasswordAction(formData: FormData) {
   revalidatePath("/settings");
   redirect("/settings?notice=password-updated");
 }
+
+export async function submitMembershipRequestAction(formData: FormData) {
+  const fullName = formString(formData, "full_name", 120);
+  const email = formString(formData, "email", 254)?.toLowerCase();
+  const phone = formString(formData, "phone", 25);
+  const profession = formString(formData, "profession", 120);
+  const reason = formString(formData, "reason_for_joining", 2000);
+
+  if (
+    !fullName ||
+    fullName.length < 2 ||
+    containsControlCharacters(fullName) ||
+    !email ||
+    !emailPattern.test(email) ||
+    !phone ||
+    phone.length < 7 ||
+    !profession ||
+    profession.length < 2 ||
+    containsControlCharacters(profession) ||
+    !reason ||
+    reason.length < 10
+  ) {
+    redirect("/?notice=invalid-intake");
+  }
+
+  const supabase = await clientOrRedirect("/?notice=configuration");
+  const { error } = await supabase.rpc("submit_membership_request", {
+    p_full_name: fullName,
+    p_email: email,
+    p_phone: phone,
+    p_profession: profession,
+    p_reason_for_joining: reason,
+  });
+
+  if (error) {
+    redirect(`/?notice=${encodeURIComponent(rpcErrorNotice(error))}`);
+  }
+
+  revalidatePath("/");
+  redirect("/?notice=membership-request-submitted");
+}
+
+export async function submitPartnershipEnquiryAction(formData: FormData) {
+  const contactName = formString(formData, "contact_name", 120);
+  const organizationName = formString(formData, "organization_name", 160);
+  const email = formString(formData, "email", 254)?.toLowerCase();
+  const phone = formString(formData, "phone", 25);
+  const enquiryType = formString(formData, "enquiry_type", 50);
+  const message = formString(formData, "message", 3000);
+
+  const allowedTypes = new Set([
+    "brand_activation",
+    "sponsorship",
+    "corporate_booking",
+    "general",
+  ]);
+
+  if (
+    !contactName ||
+    contactName.length < 2 ||
+    containsControlCharacters(contactName) ||
+    !organizationName ||
+    organizationName.length < 2 ||
+    containsControlCharacters(organizationName) ||
+    !email ||
+    !emailPattern.test(email) ||
+    !phone ||
+    phone.length < 7 ||
+    !enquiryType ||
+    !allowedTypes.has(enquiryType) ||
+    !message ||
+    message.length < 10
+  ) {
+    redirect("/?notice=invalid-intake");
+  }
+
+  const supabase = await clientOrRedirect("/?notice=configuration");
+  const { error } = await supabase.rpc("submit_partnership_enquiry", {
+    p_contact_name: contactName,
+    p_organization_name: organizationName,
+    p_email: email,
+    p_phone: phone,
+    p_enquiry_type: enquiryType,
+    p_message: message,
+  });
+
+  if (error) {
+    redirect(`/?notice=${encodeURIComponent(rpcErrorNotice(error))}`);
+  }
+
+  revalidatePath("/");
+  redirect("/?notice=partnership-enquiry-submitted");
+}

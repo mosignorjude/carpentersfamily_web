@@ -32,6 +32,9 @@ const MESSAGE_RULES: ReadonlyArray<readonly [RegExp, string]> = [
     "budget-exceeded",
   ],
   [/already been (reviewed|refunded)/i, "already-processed"],
+  [/already exists for this email/i, "request-already-pending"],
+  [/invite.*expired/i, "invite-expired"],
+  [/invite.*(invalid|not found|already been consumed)/i, "invite-invalid"],
   [
     /\balready (in use|has|covers|used)\b|\bduplicate\b|\bmust be unique\b/i,
     "duplicate-record",
