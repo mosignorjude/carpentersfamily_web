@@ -1,13 +1,13 @@
 import Link from "next/link";
 import type { PublicTicketedEvent } from "@/components/tickets/tickets-storefront-view";
-import { selectNextGathering } from "@/lib/landing-events.mjs";
+import { selectNextEvent } from "@/lib/landing-events.mjs";
 
 interface LandingRibbonProps {
   ticketedEvents?: PublicTicketedEvent[];
 }
 
 export function LandingRibbon({ ticketedEvents }: LandingRibbonProps) {
-  const next = selectNextGathering(ticketedEvents);
+  const next = selectNextEvent(ticketedEvents);
   const season = next?.whenLabel.slice(-4);
 
   return (
@@ -15,15 +15,14 @@ export function LandingRibbon({ ticketedEvents }: LandingRibbonProps) {
       <div className="mx-auto max-w-6xl px-4 py-1 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-center">
         {next ? (
           <span>
-            Next gathering:{" "}
+            Next event:{" "}
             <strong className="text-ochre font-bold">{next.title}</strong>
             {next.location ? ` · ${next.location}` : ""}
             {next.whenLabel ? ` · ${next.whenLabel}` : ""}
           </span>
         ) : (
           <span>
-            Ticketed gatherings open for sale as soon as the family confirms a
-            date
+            Ticketed events open for sale as soon as the family confirms a date
           </span>
         )}
         {season && (

@@ -179,7 +179,7 @@ export function DuesPageView({
 
             <p className="hidden sm:block text-xs sm:text-sm text-[#443A33] max-w-2xl leading-relaxed font-normal">
               Statutory monthly contributions supporting club governance, member
-              welfare, benevolent grants, and official gatherings.
+              welfare, benevolent grants, and official events.
             </p>
 
             {/* Member Trust Metadata */}

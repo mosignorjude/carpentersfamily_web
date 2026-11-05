@@ -166,7 +166,7 @@ export function CreateEventDisclosure({
                   >
                     <option value="meeting">General Meeting</option>
                     <option value="party">Party / Gala Banquet</option>
-                    <option value="other">Other Gathering / Outreach</option>
+                    <option value="other">Other Event / Outreach</option>
                   </select>
                 </div>
               </div>

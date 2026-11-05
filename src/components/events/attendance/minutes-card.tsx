@@ -47,7 +47,7 @@ export function MinutesCard({
               </h2>
             </div>
             <p className="text-xs text-[#7A685D]">
-              Official proceedings transcribed for the General Assembly
+              Official proceedings transcribed for the General Meeting
             </p>
           </div>
         </div>

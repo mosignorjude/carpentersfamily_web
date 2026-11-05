@@ -152,7 +152,7 @@ export function OfficerSessionControls({
               <p className="text-xs text-[#5C4638]">
                 {mutableForSession
                   ? "Check-in has not been opened yet. Set the event-specific cutoff or use the club default to begin recording."
-                  : "This event is locked or concluded. Attendance sessions can only be opened for scheduled active gatherings."}
+                  : "This event is locked or concluded. Attendance sessions can only be opened for scheduled active events."}
               </p>
             )}
           </div>
@@ -220,7 +220,7 @@ export function OfficerSessionControls({
                   </h3>
                 </div>
                 <p className="text-xs text-[#7A685D]">
-                  Project or display this cryptographic token on the assembly
+                  Project or display this cryptographic token on the meeting
                   screen. The token automatically expires every 90 seconds.
                 </p>
                 <div className="pt-2">

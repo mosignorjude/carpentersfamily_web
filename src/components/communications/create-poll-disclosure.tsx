@@ -131,7 +131,7 @@ export function CreatePollDisclosure({
                 required
                 rows={2}
                 maxLength={300}
-                placeholder="e.g. Do you support the proposed banquet schedule adjustment for the flagship gathering?"
+                placeholder="e.g. Do you support the proposed banquet schedule adjustment for the flagship event?"
                 className="w-full p-2.5 bg-white border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
               />
             </div>

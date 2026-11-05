@@ -148,7 +148,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
             <p className="text-xs text-[#7A685D] leading-relaxed">
               Approving this request will immediately activate{" "}
               <strong>{selectedMember.fullName}</strong> as an Active Member of
-              Carpenters Family Social Club with access to member assembly and
+              Carpenters Family Social Club with access to member meetings and
               personal dues records.
             </p>
 
@@ -530,7 +530,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                 htmlFor="role-change-reason"
                 className="text-xs font-bold text-[#3D291F]"
               >
-                Constitutional / Assembly Reason (Mandatory)
+                Constitutional / Meeting Reason (Mandatory)
               </label>
               <textarea
                 id="role-change-reason"
@@ -540,7 +540,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                   setReasonInput(e.target.value);
                   setActionError(null);
                 }}
-                placeholder="e.g. Ratified by Executive Assembly for the 2026/2027 tenure..."
+                placeholder="e.g. Ratified by the General Meeting for the 2026/2027 tenure..."
                 className="w-full p-3 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
               />
               {actionError && (

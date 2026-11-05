@@ -4,7 +4,7 @@ import test from "node:test";
 
 import {
   selectLandingEvents,
-  selectNextGathering,
+  selectNextEvent,
 } from "../src/lib/landing-events.mjs";
 
 const TIER = (price, capacity, sold) => ({
@@ -88,10 +88,10 @@ test("selectLandingEvents tolerates junk from the database", () => {
   assert.equal(card.cheapestPrice, null);
 });
 
-test("selectNextGathering returns the earliest row, or null", () => {
-  assert.equal(selectNextGathering(EVENTS)?.id, "e-1");
-  assert.equal(selectNextGathering([]), null);
-  assert.equal(selectNextGathering(null), null);
+test("selectNextEvent returns the earliest row, or null", () => {
+  assert.equal(selectNextEvent(EVENTS)?.id, "e-1");
+  assert.equal(selectNextEvent([]), null);
+  assert.equal(selectNextEvent(null), null);
 });
 
 test("landing surfaces carry no invented event schedule", () => {

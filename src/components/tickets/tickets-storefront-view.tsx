@@ -143,8 +143,8 @@ export function TicketsStorefrontView({
               No Ticketed Events Currently Open
             </h2>
             <p className="text-xs sm:text-sm text-[#5C4638] max-w-md mx-auto leading-relaxed">
-              Upcoming club celebrations and ticketed gatherings will appear
-              here as soon as box office sales open.
+              Upcoming club celebrations and ticketed events will appear here as
+              soon as box office sales open.
             </p>
           </section>
         ) : (

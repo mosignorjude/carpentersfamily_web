@@ -85,7 +85,7 @@ const watShortDate = new Intl.DateTimeFormat("en-NG", {
 function formatEventTypeLabel(eventType?: string) {
   if (eventType === "meeting") return "General Meeting";
   if (eventType === "party") return "General Event";
-  return "Official Gathering";
+  return "Official Event";
 }
 
 export function AttendanceHubView({
@@ -211,7 +211,7 @@ export function AttendanceHubView({
           <div>
             <div className="flex items-center gap-2 text-xs text-[#7A685D] mb-1.5">
               <span className="font-extrabold text-[#174C37] uppercase tracking-wider text-[11px]">
-                Secretariat & Assembly Roll Call
+                Secretariat & Meeting Roll Call
               </span>
             </div>
 
@@ -220,7 +220,7 @@ export function AttendanceHubView({
             </h1>
             <p className="text-xs sm:text-sm text-[#7A685D] mt-1 max-w-2xl">
               Official meeting minutes transcribed by the Secretariat, live
-              assembly check-in sessions, and permanent club attendance ledgers.
+              meeting check-in sessions, and permanent club attendance ledgers.
             </p>
           </div>
 
@@ -534,7 +534,7 @@ export function AttendanceHubView({
                       {selectedEvent.id.slice(0, 8).toUpperCase()}
                     </span>
                     <h2 className="text-lg font-extrabold text-[#3D291F]">
-                      Official Minutes of Assembly — {selectedEvent.title}
+                      Official Meeting Minutes — {selectedEvent.title}
                     </h2>
                     <p className="text-xs text-[#7A685D]">
                       Convened on{" "}
@@ -596,7 +596,7 @@ export function AttendanceHubView({
               </h2>
               <p className="text-xs text-[#5C4638] max-w-sm mx-auto">
                 Official minutes transcription is not active for this event.
-                Select another assembly above.
+                Select another meeting above.
               </p>
             </div>
           )}
@@ -644,7 +644,7 @@ export function AttendanceHubView({
                         Meeting Date (WAT)
                       </th>
                       <th className="py-3 px-4 font-extrabold">
-                        Assembly Title
+                        Meeting Title
                       </th>
                       <th className="py-3 px-4 font-extrabold">
                         Verified Check-In

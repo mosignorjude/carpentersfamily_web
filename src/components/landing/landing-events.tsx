@@ -22,16 +22,15 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
               Events, Impact &amp; Lifestyle
             </p>
             <h2 className="mt-2 font-serif font-bold text-espresso text-3xl sm:text-4xl">
-              The Lifestyle &amp; Flagship Gatherings
+              Upcoming Events
             </h2>
             <p className="mt-2 text-sm text-umber max-w-xl">
               A glimpse into our past raves, brand activations, traditional
-              outings, and upcoming gatherings across Delta State.
+              outings, and upcoming events across Delta State.
               {cards.length > 0 && (
                 <span className="block mt-1 text-xs text-forest font-semibold">
                   {cards.length} live ticketed{" "}
-                  {cards.length === 1 ? "gathering" : "gatherings"} currently on
-                  sale.
+                  {cards.length === 1 ? "event" : "events"} currently on sale.
                 </span>
               )}
             </p>
@@ -87,7 +86,7 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
             {/* biome-ignore lint/performance/noImgElement: CSS positioning avoids Next/Image inline styles blocked by the production CSP. */}
             <img
               src="/landing/tile-brand-activation.jpg"
-              alt="Beverage & Lifestyle Brand Activations"
+              alt="Drinks & Lifestyle Brand Activations"
               className="absolute inset-0 h-full w-full object-cover motion-safe:transition motion-safe:duration-500 motion-safe:group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-deep/90 via-deep/20 to-transparent p-4 flex flex-col justify-end text-cream">
@@ -95,7 +94,7 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
                 Brand Partnerships
               </span>
               <figcaption className="font-serif font-bold text-base">
-                Beverage &amp; Lifestyle Sales
+                Drinks &amp; Lifestyle Sales
               </figcaption>
             </div>
           </figure>
@@ -118,7 +117,7 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
           </figure>
         </div>
 
-        {/* Flagship gatherings — every card below is a row from
+        {/* Upcoming events — every card below is a row from
             public.get_public_ticketed_events(), never a hand-written schedule. */}
         {cards.length > 0 ? (
           <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -172,7 +171,7 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
         ) : (
           <div className="mt-8 rounded-2xl border border-dashed border-linen bg-cream p-8 text-center">
             <h3 className="font-serif text-xl font-bold text-espresso">
-              No gathering is on sale right now
+              No event is on sale right now
             </h3>
             <p className="mt-2 text-sm text-umber max-w-md mx-auto">
               Ticketed shows open for sale as soon as the family confirms the

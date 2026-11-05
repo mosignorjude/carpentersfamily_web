@@ -74,12 +74,11 @@ export function LandingWhatWeDo() {
               </span>
               <div>
                 <h3 className="font-bold text-espresso">
-                  Beverage & Lifestyle Brand Promotion
+                  Drinks & Lifestyle Brand Promotion
                 </h3>
                 <p className="text-umber text-xs sm:text-sm mt-0.5">
-                  We partner with beverage companies and lifestyle brands to
-                  drive real visibility, culture, and product sales at major
-                  events.
+                  We partner with drinks companies and lifestyle brands to drive
+                  real visibility, culture, and product sales at major events.
                 </p>
               </div>
             </div>

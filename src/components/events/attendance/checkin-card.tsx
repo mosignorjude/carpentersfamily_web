@@ -20,7 +20,7 @@ const statusConfig: Record<
   present: {
     label: "Present (On Time)",
     badge: "text-[#174C37] bg-[#174C37]/10 border-[#174C37]/30",
-    desc: "Your attendance was verified within the scheduled assembly time.",
+    desc: "Your attendance was verified within the scheduled meeting time.",
   },
   late: {
     label: "Late Arrival",
@@ -147,8 +147,8 @@ export function CheckinCard({
         <div className="pt-2 border-t border-[#E5DDD3] flex items-center gap-2 text-[11px] text-[#7A685D]">
           <Shield className="w-3.5 h-3.5 text-[#174C37]" />
           <span>
-            Under General Assembly privacy policy, only your personal attendance
-            record is visible.
+            Under the General Meeting privacy policy, only your personal
+            attendance record is visible.
           </span>
         </div>
       )}

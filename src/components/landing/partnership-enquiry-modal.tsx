@@ -68,7 +68,7 @@ export function PartnershipEnquiryModal({
 
         <p className="mt-2 text-xs text-umber leading-relaxed">
           Book our DJs, hype men/MCs, and event hosts, or partner with us for
-          beverage and lifestyle brand activations across Delta State.
+          drinks and lifestyle brand activations across Delta State.
         </p>
 
         <form
@@ -142,7 +142,7 @@ export function PartnershipEnquiryModal({
               className="w-full rounded-lg border border-linen bg-white px-3.5 py-2.5 text-espresso focus:border-forest focus:outline-hidden"
             >
               <option value="brand_activation">
-                Beverage &amp; Product Promotion at Events
+                Drinks &amp; Product Promotion at Events
               </option>
               <option value="corporate_booking">
                 Book DJ / Hype Man / MC &amp; Crowd Engagement

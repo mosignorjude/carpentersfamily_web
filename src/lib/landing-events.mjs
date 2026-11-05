@@ -2,7 +2,7 @@
  * @fileoverview The public landing's only view of the events table. Every card,
  * ribbon line and count rendered by `src/app/page.tsx` is built here from rows
  * returned by public.get_public_ticketed_events(), so the page can never name a
- * gathering, a date, a place or a dress code that the database does not carry.
+ * event, a date, a place or a dress code that the database does not carry.
  */
 
 import { formatEventTime } from "./event-times.mjs";
@@ -62,7 +62,7 @@ export function selectLandingEvents(events) {
     const instant = parse(event?.starts_at);
     return {
       id: text(event?.id) ?? "",
-      title: text(event?.title) ?? "Untitled gathering",
+      title: text(event?.title) ?? "Untitled event",
       whenLabel: instant ? dateFormatter.format(instant) : "",
       timeLabel: instant ? formatEventTime(event.starts_at) : "",
       location: text(event?.location),
@@ -74,11 +74,11 @@ export function selectLandingEvents(events) {
 }
 
 /**
- * The earliest gathering in the set — the one the ribbon and the hero announce.
+ * The earliest event in the set — the one the ribbon and the hero announce.
  * The RPC already orders by starts_at, but an unsorted caller must not change
  * what the public sees, so the ordering is decided here.
  */
-export function selectNextGathering(events) {
+export function selectNextEvent(events) {
   const cards = selectLandingEvents(events);
   if (cards.length === 0) return null;
   const withDates = events

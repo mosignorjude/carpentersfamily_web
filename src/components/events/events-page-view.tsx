@@ -112,7 +112,7 @@ export function EventsPageView({
               Official Calendar
             </span>
             <span className="text-xs sm:text-sm font-bold text-[#3D291F] block">
-              Scheduled Assemblies &amp; Gatherings
+              Scheduled Meetings &amp; Events
             </span>
             <div className="flex items-center gap-1.5 text-xs font-semibold text-[#174C37] justify-start lg:justify-end">
               <Calendar className="w-3.5 h-3.5 text-[#174C37]" />
@@ -136,7 +136,7 @@ export function EventsPageView({
             { id: "all", label: "All Types" },
             { id: "meeting", label: "Meetings" },
             { id: "party", label: "Parties & Banquets" },
-            { id: "other", label: "Other Gatherings" },
+            { id: "other", label: "Other Events" },
           ].map((typeItem) => (
             <button
               aria-pressed={selectedType === typeItem.id}
@@ -181,7 +181,7 @@ export function EventsPageView({
             </h2>
           </div>
           <span className="text-xs text-[#7A685D] font-medium sm:text-right">
-            {scheduledUpcoming.length} Scheduled Gathering
+            {scheduledUpcoming.length} Scheduled Event
             {scheduledUpcoming.length === 1 ? "" : "s"} · Soonest First
           </span>
         </div>
@@ -228,7 +228,7 @@ export function EventsPageView({
             </h2>
           </div>
           <span className="text-xs text-[#7A685D] font-medium sm:text-right">
-            Past Gatherings, Concluded Sessions, & Overdue Schedules
+            Past Events, Concluded Sessions, & Overdue Schedules
           </span>
         </div>
 

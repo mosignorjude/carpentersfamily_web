@@ -115,7 +115,7 @@ export function EventLifecycleModal({
       iconBg: "bg-[#BA3C2A]",
       serverAction: setEventStatusAction,
       statusValue: "cancelled",
-      confirmLabel: "I confirm that this gathering is officially cancelled",
+      confirmLabel: "I confirm that this event is officially cancelled",
       desc: "Cancelling locks event planning immediately and records the cancellation in the audit log.",
     },
     reopen: {

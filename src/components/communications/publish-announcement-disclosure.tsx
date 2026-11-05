@@ -74,7 +74,7 @@ export function PublishAnnouncementDisclosure({
               >
                 {globalPublisher && (
                   <option value="">
-                    Club-Wide (General Assembly & All Members)
+                    Club-Wide (General Meeting & All Members)
                   </option>
                 )}
                 {publishEvents.map((event) => (

@@ -435,7 +435,7 @@ export function DuesRateForm({ nextMonth }: { nextMonth: string }) {
           className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
           maxLength={500}
           name="reason"
-          placeholder="e.g. General Assembly Resolution GA-2026-03"
+          placeholder="e.g. General Meeting Resolution GM-2026-03"
           required
         />
       </label>

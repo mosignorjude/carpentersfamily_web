@@ -170,7 +170,7 @@ export default async function EventsPage() {
       ? "President"
       : rolesSet.has("executive")
         ? "Executive Officer"
-        : "General Assembly Member";
+        : "Member";
 
   const userName = profile?.full_name || profile?.username || "Club Member";
 

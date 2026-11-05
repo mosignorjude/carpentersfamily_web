@@ -104,7 +104,7 @@ export function EventCard({
             text: "Status: Scheduled",
             badge: "text-[#174C37] bg-[#174C37]/10 border-[#174C37]/30",
             border: "border-[#174C37]/30",
-            desc: "Active gathering. Open for member attendance & logistics planning.",
+            desc: "Active event. Open for member attendance & logistics planning.",
           }
         : isCompleted
           ? {
@@ -205,7 +205,7 @@ export function EventCard({
             </React.Fragment>
           ))
         ) : (
-          <span className="italic text-[#7A685D]">Standard Gathering</span>
+          <span className="italic text-[#7A685D]">Standard Event</span>
         )}
       </div>
 
@@ -311,7 +311,7 @@ export function EventCard({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#E5DDD3]">
               <div>
                 <span className="font-bold text-[11px] uppercase tracking-wider text-[#7A685D] block mb-1">
-                  Event Venue / Assembly Point
+                  Event Venue / Meeting Point
                 </span>
                 <p className="font-medium text-[#3D291F]">{event.location}</p>
               </div>

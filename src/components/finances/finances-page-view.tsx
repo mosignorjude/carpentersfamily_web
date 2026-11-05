@@ -178,7 +178,7 @@ export function FinancesPageView({
               <div>
                 Access:{" "}
                 <strong className="text-[#3D291F] font-bold">
-                  General Assembly Ledger
+                  General Meeting Ledger
                 </strong>
               </div>
               <span aria-hidden="true" className="text-[#B8ACA0]">

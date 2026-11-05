@@ -86,7 +86,7 @@ export interface AccessDeniedCardProps {
  * Dignified 403 / Access Denied state screen for unauthorized member roles.
  */
 export function AccessDeniedCard({
-  title = "Restricted Assembly Access",
+  title = "Restricted Access",
   description = "You do not have the required club leadership clearance or executive assignment to access this management desk.",
   backHref = "/",
   backLabel = "Return to Dashboard",

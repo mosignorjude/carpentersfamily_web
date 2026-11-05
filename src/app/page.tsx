@@ -159,8 +159,8 @@ export default async function HomePage({
                     </span>
                   </summary>
                   <p className="pb-4 text-cream/80">
-                    We carry ourselves with dignity at every gathering and show,
-                    and settle differences as one family.
+                    We carry ourselves with dignity at every event and show, and
+                    settle differences as one family.
                   </p>
                 </details>
                 <details className="group">
@@ -224,7 +224,7 @@ export default async function HomePage({
                     3
                   </span>
                   <h3 className="font-serif text-xl font-bold text-espresso">
-                    Assembly Induction
+                    Family Induction
                   </h3>
                   <p className="mt-1 text-sm text-umber">
                     Confirmed by majority vote of the house, pledging to the

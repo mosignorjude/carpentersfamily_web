@@ -65,7 +65,7 @@ export function ConstitutionModal({ isOpen, onClose }: ConstitutionModalProps) {
         <ul className="mt-4 space-y-2.5 text-xs sm:text-sm text-body">
           <li className="p-3 rounded-xl bg-white border border-linen">
             <strong className="text-espresso">Purpose:</strong> Event
-            management, DJ/MC/hype services, beverage and brand promotion, and
+            management, DJ/MC/hype services, drinks and brand promotion, and
             mutual family welfare in Asaba and across Delta State.
           </li>
           <li className="p-3 rounded-xl bg-white border border-linen">
