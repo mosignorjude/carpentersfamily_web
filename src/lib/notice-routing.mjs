@@ -16,7 +16,20 @@ const INLINE_NOTICE_PATHS = new Set([
   "/reset-password",
 ]);
 
-/** Notice codes the root route (`/`) renders on the sign-in screen. */
+/**
+ * @param {string} pathname
+ * @returns {boolean} true when the pathname has inline notice handling.
+ */
+export function isInlineNoticePath(pathname) {
+  const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  return (
+    INLINE_NOTICE_PATHS.has(normalized) ||
+    normalized === "/" ||
+    normalized === "/portal"
+  );
+}
+
+/** Notice codes the root route (`/`) and portal route (`/portal`) render on the sign-in screen. */
 const ROOT_INLINE_NOTICE_CODES = new Set([
   "auth-failed",
   "configuration",
@@ -39,7 +52,11 @@ const PAGE_OWNED_ROUTE_ROOT = "admin";
  * @returns {boolean} true when the page deals with the notice itself.
  */
 export function handlesNoticeOnPage(pathname, noticeCode) {
-  if (INLINE_NOTICE_PATHS.has(pathname)) return true;
-  if (pathname.split("/")[1] === PAGE_OWNED_ROUTE_ROOT) return true;
-  return pathname === "/" && ROOT_INLINE_NOTICE_CODES.has(noticeCode);
+  const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  if (INLINE_NOTICE_PATHS.has(normalized)) return true;
+  if (normalized.split("/")[1] === PAGE_OWNED_ROUTE_ROOT) return true;
+  return (
+    (normalized === "/" || normalized === "/portal") &&
+    ROOT_INLINE_NOTICE_CODES.has(noticeCode)
+  );
 }
