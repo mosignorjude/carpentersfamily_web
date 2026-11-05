@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   notifyMemberLifecycleChanged,
+  notifyMembershipInvite,
   queueEmailConfirmationResend,
 } from "@/lib/email/notifications";
 import { rpcErrorNotice } from "@/lib/rpc-error-notice";
@@ -358,7 +359,7 @@ export async function reviewMembershipRequestAction(formData: FormData) {
   const admin = createSupabaseAdminClient();
   if (!admin) redirect("/admin/membership-requests?notice=configuration");
 
-  const { error } = await admin.rpc("review_membership_request", {
+  const { data: reviewResult, error } = await admin.rpc("review_membership_request", {
     p_request_id: requestId,
     p_decision: decision,
     p_rejection_reason: decision === "rejected" ? rejectionReason : null,
@@ -366,6 +367,23 @@ export async function reviewMembershipRequestAction(formData: FormData) {
 
   if (error) {
     redirect(`/admin/membership-requests?notice=${rpcErrorNotice(error)}`);
+  }
+
+  if (decision === "approved" && reviewResult && typeof reviewResult === "object") {
+    const res = reviewResult as { token?: string };
+    if (res.token) {
+      const { data: reqData } = await admin
+        .from("membership_requests")
+        .select("email")
+        .eq("id", requestId)
+        .maybeSingle();
+      if (reqData?.email) {
+        await notifyMembershipInvite({
+          email: reqData.email,
+          token: res.token,
+        });
+      }
+    }
   }
 
   revalidatePath("/admin/membership-requests");

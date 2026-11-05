@@ -1180,3 +1180,92 @@ export async function notifyPollCreated(params: {
     reportNotificationError("[Email Service] notifyPollCreated failed:", err);
   }
 }
+
+export async function notifyMembershipRequestReceived(params: {
+  fullName: string;
+  email: string;
+}): Promise<void> {
+  try {
+    await enqueueNotificationEmail({
+      idempotencyKey: `membership_request_received_${params.email}`,
+      triggerType: "membership_request_received",
+      recipientEmail: params.email,
+      recipientName: params.fullName,
+      subject: "Carpenters Family — Application Received",
+      heading: "Membership Application Received",
+      bodyText:
+        "Thank you for expressing interest in joining Carpenters Family Social Club. Your application has been received and is currently under review by the Executive Committee.",
+      ctaLabel: "Visit Club",
+      ctaUrl: "/",
+      templatePayload: {
+        fullName: params.fullName,
+        email: params.email,
+      },
+    });
+  } catch (err) {
+    reportNotificationError(
+      "[Email Service] notifyMembershipRequestReceived failed:",
+      err,
+    );
+  }
+}
+
+export async function notifyMembershipInvite(params: {
+  email: string;
+  token: string;
+  siteUrl?: string;
+}): Promise<void> {
+  try {
+    const signupUrl = `/signup?token=${params.token}`;
+    await enqueueNotificationEmail({
+      idempotencyKey: `membership_invite_${params.token}`,
+      triggerType: "membership_invite",
+      recipientEmail: params.email,
+      subject: "Your Invitation to Join Carpenters Family Social Club",
+      heading: "You're Invited to Carpenters Family",
+      bodyText:
+        "Following review by the Executive Committee, we are pleased to invite you to complete your registration as a member of Carpenters Family Social Club. This personal invitation is valid for 7 days.",
+      ctaLabel: "Accept Invitation",
+      ctaUrl: signupUrl,
+      templatePayload: {
+        email: params.email,
+        token: params.token,
+      },
+    });
+  } catch (err) {
+    reportNotificationError(
+      "[Email Service] notifyMembershipInvite failed:",
+      err,
+    );
+  }
+}
+
+export async function notifyPartnershipEnquiryReceived(params: {
+  contactName: string;
+  organizationName: string;
+  email: string;
+}): Promise<void> {
+  try {
+    await enqueueNotificationEmail({
+      idempotencyKey: `partnership_enquiry_received_${params.email}_${Date.now()}`,
+      triggerType: "partnership_enquiry_received",
+      recipientEmail: params.email,
+      recipientName: params.contactName,
+      subject: "Carpenters Family — Partnership Enquiry Received",
+      heading: "Partnership Proposal Received",
+      bodyText:
+        `Thank you for submitting a partnership enquiry on behalf of ${params.organizationName}. A club representative will review your proposal promptly.`,
+      ctaLabel: "Visit Club",
+      ctaUrl: "/",
+      templatePayload: {
+        contactName: params.contactName,
+        organizationName: params.organizationName,
+      },
+    });
+  } catch (err) {
+    reportNotificationError(
+      "[Email Service] notifyPartnershipEnquiryReceived failed:",
+      err,
+    );
+  }
+}

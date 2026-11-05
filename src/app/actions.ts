@@ -19,6 +19,8 @@ import {
   notifyMemberLifecycleChanged,
   notifyNewEventScheduled,
   notifyNewMemberSignUp,
+  notifyMembershipRequestReceived,
+  notifyPartnershipEnquiryReceived,
   notifyPasswordUpdated,
   notifyPollCreated,
 } from "@/lib/email/notifications";
@@ -3884,6 +3886,8 @@ export async function submitMembershipRequestAction(formData: FormData) {
     redirect(`/?notice=${encodeURIComponent(rpcErrorNotice(error))}`);
   }
 
+  await notifyMembershipRequestReceived({ fullName, email });
+
   revalidatePath("/");
   redirect("/?notice=membership-request-submitted");
 }
@@ -3935,6 +3939,8 @@ export async function submitPartnershipEnquiryAction(formData: FormData) {
   if (error) {
     redirect(`/?notice=${encodeURIComponent(rpcErrorNotice(error))}`);
   }
+
+  await notifyPartnershipEnquiryReceived({ contactName, organizationName, email });
 
   revalidatePath("/");
   redirect("/?notice=partnership-enquiry-submitted");
