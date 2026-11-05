@@ -68,7 +68,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html className={`${dmSans.variable} ${ibmPlexSans.variable} ${fraunces.variable}`} lang="en">
+    <html
+      className={`${dmSans.variable} ${ibmPlexSans.variable} ${fraunces.variable}`}
+      lang="en"
+    >
       <body className="antialiased">
         <NavigationProgressBar />
         <GlobalFlashListener />

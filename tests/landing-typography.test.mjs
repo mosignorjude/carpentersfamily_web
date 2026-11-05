@@ -1,6 +1,6 @@
-import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import test from "node:test";
 
 const CSS = "src/app/globals.css";
 const LAYOUT = "src/app/layout.tsx";
@@ -33,11 +33,24 @@ test("Fraunces woff2 files are vendored into src/fonts", () => {
 
 test("globals.css declares the Fraunces faces with subset unicode-ranges", () => {
   const css = fs.readFileSync(CSS, "utf8");
-  const faces = css.match(/@font-face\s*\{[^}]*font-family:\s*["']Fraunces["'][^}]*\}/g) ?? [];
-  assert.equal(faces.length, 4, `Expected 4 Fraunces @font-face blocks, found ${faces.length}`);
-  assert.ok(faces.some((f) => /font-style:\s*italic/.test(f)), "No italic Fraunces face");
+  const faces =
+    css.match(/@font-face\s*\{[^}]*font-family:\s*["']Fraunces["'][^}]*\}/g) ??
+    [];
+  assert.equal(
+    faces.length,
+    4,
+    `Expected 4 Fraunces @font-face blocks, found ${faces.length}`,
+  );
+  assert.ok(
+    faces.some((f) => /font-style:\s*italic/.test(f)),
+    "No italic Fraunces face",
+  );
   for (const face of faces) {
-    assert.match(face, /unicode-range:/, "Every Fraunces face must be subset-scoped");
+    assert.match(
+      face,
+      /unicode-range:/,
+      "Every Fraunces face must be subset-scoped",
+    );
     assert.match(face, /font-display:\s*swap/);
   }
 });
@@ -46,7 +59,11 @@ test("@theme exposes --font-serif so font-serif stops resolving to the Tailwind 
   const css = fs.readFileSync(CSS, "utf8");
   const theme = themeBlock(css);
   assert.match(theme, /--font-serif:/, "@theme has no --font-serif token");
-  assert.match(theme, /--font-serif:[^;]*Fraunces/, "--font-serif must name the Fraunces display face");
+  assert.match(
+    theme,
+    /--font-serif:[^;]*Fraunces/,
+    "--font-serif must name the Fraunces display face",
+  );
 });
 
 test("layout.tsx registers Fraunces as a local font variable on <html>", () => {
@@ -56,5 +73,9 @@ test("layout.tsx registers Fraunces as a local font variable on <html>", () => {
     /localFont\(\{[\s\S]*?fraunces-latin\.woff2[\s\S]*?variable:\s*"--font-fraunces"/,
     "layout.tsx must localFont() the vendored Fraunces latin file",
   );
-  assert.match(layout, /\$\{fraunces\.variable\}/, "fraunces.variable must be applied to <html>");
+  assert.match(
+    layout,
+    /\$\{fraunces\.variable\}/,
+    "fraunces.variable must be applied to <html>",
+  );
 });
