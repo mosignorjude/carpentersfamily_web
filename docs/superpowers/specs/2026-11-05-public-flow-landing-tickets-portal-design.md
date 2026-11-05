@@ -66,6 +66,20 @@ silently deleted.
     on 2026-11-05.
 16. Partner With Us / Book Services is its own public intake form.
 17. The profit-sharing claim is removed from public copy. Everything else the mockup says stays.
+18. The box-office prototype
+    (`C:\Users\HomePC\Downloads\carpenters_family_box_office.tsx`) is the **source of truth for
+    the `/tickets` interface**, the same way the landing mockup is for `/` (§2.12): layout,
+    interaction and copy come from it, not from invented design. Ruled 2026-11-05. Its scope is
+    deliberately narrower than the landing mockup's, because it is a design reference and not a
+    data model — the schema, statuses and arithmetic of §4–§7 govern, and §6 names the two places
+    where this ruling overrules the prototype's own numbers.
+19. The checkout is addressable. A buyer who refreshes on step 2 is on step 2 afterwards, with
+    their event, tier, quantity and typed details intact. Ruled 2026-11-05 in answer to the note
+    that a modal cannot be deep-linked. §3 and §6 define what survives and what cannot.
+20. Buyer-facing nouns are about **tickets**; the transaction is still an **order**. "Buy tickets",
+    "Select ticket tier", "Number of tickets", "Check ticket status", "Continue to checkout" — but
+    "Submit Order" and "Order reference" stay, per the ruling of 2026-11-05 that "Order submitted
+    is fine." No pass/passenger vocabulary survives anywhere (§10).
 
 ## 3. Routes and flow
 
@@ -75,8 +89,8 @@ silently deleted.
 |---|---|---|
 | `/` | auth-state router: sign-in form, staff → `/admin`, member → home dashboard | public landing page, no session read |
 | `/portal` | does not exist | sign-in form + all auth-state screens + member home dashboard |
-| `/tickets` | storefront, no write path | storefront + guest checkout |
-| `/tickets/order` | does not exist | public order-status lookup (reference + email) |
+| `/tickets` | storefront, no write path | storefront + guest checkout, with the buyer's position in the query string |
+| `/tickets/order` | does not exist | public status lookup (reference + email), and the post-submit acknowledgement |
 | `/signup` | public self-registration | gated: valid invite token or the invitation-only notice + request form |
 | `/forgot-password`, `/reset-password` | public | **unchanged** — closing signup must not lock out a member who forgot a password |
 
@@ -103,19 +117,89 @@ this ships; those rows need a corrective update or a mapping in the reader.
 ### The guest purchase, end to end
 
 1. A stranger lands on `/`, reads the club, taps "Box office" → `/tickets`.
-2. They pick an event and tier, choose a quantity, copy the account number and the suggested
-   narration, and transfer the money through their own banking app. Nothing is reserved.
-3. They complete the order form: buyer name, phone, email, and a proof-of-payment file
-   (pdf/jpg/png, ≤ 4 MB).
-4. The submit calls `submit_ticket_order`, which inserts one row: `source='online'`,
+2. They pick an event and a tier, choose a quantity, copy the account number and the suggested
+   narration, and transfer the money through their own banking app. Nothing is reserved. Opening a
+   checkout writes `?event=&tier=&qty=` to the address bar.
+3. They continue to checkout and complete the order form: buyer name, phone, email, and a
+   proof-of-payment file (pdf/jpg/jpeg/png, ≤ 4 MB). `step=2` now names where they are.
+4. Submitting calls `submit_ticket_order`, which inserts one row: `source='online'`,
    `verification_status='recorded'`, `seller_id` null, a generated `public_reference`, and the
    receipt attached through the existing R2 receipt pipeline.
-5. They immediately receive an acknowledgment email with the reference and what happens next.
+5. The action redirects to `/tickets/order?ref=…`, which shows the acknowledgement and a status
+   card for a `recorded` row labelled **"Awaiting confirmation"** — the buyer-facing word for that
+   status, the same one the `ticket_order_received` email uses (§6) — and the email arrives with
+   the same link and the reference in it.
 6. An officer opens the event dashboard → Tickets tab → Inspect, compares the voucher against
    the bank statement, and approves, rejects, or cancels.
 7. The buyer receives the outcome email. On approval the row enters capacity and both cash
    totals; on rejection or cancellation it enters neither.
 8. At any time they can return to `/tickets/order` and enter reference + email to see status.
+
+### Checkout state: the address bar is the session
+
+Per §2.19, the buyer's position in the till is recoverable from a refresh. `/tickets` is one route
+carrying one checkout, and its state lives in the query string, because that is the only mechanism
+that survives a reload, a back gesture, and being pasted into a chat. Prototype and production
+agree on the parameter names:
+
+| parameter | values | restored |
+|---|---|---|
+| `event` | an event's `id` (`evt-…`) | which checkout overlay is open |
+| `tier` | that event's price `id` (`tpr-…`) | selected tier |
+| `qty` | integer 1–10, clamped to the tier's remaining | quantity |
+| `step` | `1` or `2` | which checkout step is showing |
+
+`id`s are load-bearing, not decorative: they are why the URL can be reopened against a list that
+reordered itself. The storefront view reads today's `get_public_ticketed_events()` rows by array
+position in a couple of places; those become id lookups, and a stale id from an old bookmark simply
+renders the storefront with no overlay rather than an error or the wrong event.
+
+Writing happens on every change with `history.replaceState`, never `pushState`. A buyer who taps
+back from step 2 goes to the page they were on, not through six entries of their own quantity
+selections.
+
+**What is not in the URL.** Name, phone and email go to `sessionStorage` under one key, and are
+read back on mount. They must not become query parameters: URLs are sent to Vercel request logs,
+appear in browser history on the shared device a club event actually uses, and leak through
+`Referer`. A buyer who refreshes gets their typing back because it is the same tab; a buyer who
+opens the link in another browser gets position without PII, which is the right trade.
+
+**What cannot survive at all: the receipt file.** A `File` from an `<input type=file>` is not
+reconstructable by any client-side storage, and staging it in the R2 bucket before submit was
+considered and rejected — it would need a new anon write path, and §6's throttles have no IP
+visibility to bound it. So step 2 after a refresh restores everything except the attachment, and
+says so in those words rather than presenting an empty dropzone as if nothing happened. The
+`restoredDraft` notice in the prototype is the copy to port; it clears the moment a valid file is
+attached again.
+
+Private browsing and a full quota throw from `sessionStorage`, so the write is wrapped; failing it
+loses the typed details and keeps the position. No feature depends on it.
+
+### The acknowledgement is the status page, not a third screen
+
+The prototype's screen 2 ("order submitted") and screen 3 ("check ticket status") render the same
+fields from the same shape, and screen 2 already contains a button that jumps to screen 3 with the
+reference prefilled. That is one page pretending to be two, and splitting them costs the ability to
+reload: screen 2 exists only in the memory left behind by a POST, so refreshing it resubmits or
+lands on an empty storefront.
+
+So a successful `submit_ticket_order` **redirects to `/tickets/order?ref=CF-K7M2QX9B`**, and that
+page renders the acknowledgement band — the reference, what happens next, the email arriving —
+above a status card for the new `recorded` row (§4), shown as "Awaiting confirmation". Consequences:
+
+* Refreshing the confirmation is a GET, not a replayed POST. The duplicate-submit path the
+  idempotency key exists to catch stops being a thing a buyer can accidentally reach.
+* The link in the `ticket_order_received` email and the link on the confirmation page are the same
+  URL, so there is one screen to build and test rather than two shaped alike.
+* A bookmarked status page keeps working for the life of the order.
+
+**The URL carries the reference and never the email.** `lookup_ticket_order` requires both to
+match, and that pair is the only thing standing between `anon` and every other buyer's order: the
+reference is 40 bits, the address is not guessable in bulk. A URL holding both halves is a bearer
+token — one link readable by anyone who sees it in a log, a history file, or a forwarded message.
+Prefilling `ref` alone is what keeps the lookup's no-enumeration property (§6) intact, and the
+buyer types their own address to see the result. The prototype stores the pair in its sample data
+and renders `ref`+`email` into a demo lookup; production prefills one field.
 
 ### The member/officer path (unchanged in shape)
 
@@ -170,6 +254,23 @@ create unique index event_ticket_sales_public_reference_key
   on public.event_ticket_sales (public_reference)
   where public_reference is not null;
 ```
+
+**Stored shape: `CF-` + the eight characters** (`CF-K7M2QX9B`). The box-office prototype renders
+`CF-2026-8492`, and §2.18 makes it the source of truth for how a reference *looks* — prefixed,
+monospace, shown large, copyable. Two of its three parts are adopted and one is refused, so this
+is the exception the ruling names:
+
+* `CF-` is adopted. A constant prefix costs no entropy; the 32^8 space is unchanged.
+* The four random digits are **refused**. 9000 values, generated by `Math.random()`, is a lookup
+  an officer could brute-force in seconds. The prototype invented them because it invents
+  everything; the database's eight unambiguous characters are the real value.
+* `2026` is **refused**. A year baked into a stored column goes stale on 1 January and would then
+  misdescribe orders it is supposed to identify. Year grouping, if the club ever wants it, belongs
+  in `created_at`.
+
+The column CHECK becomes `public_reference ~ '^CF-[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$'`, so a
+row written by any future path that forgot the prefix is rejected rather than silently rendered as
+a broken-looking reference. Manual rows stay null.
 
 ### Grants — the trap to avoid
 
@@ -292,10 +393,17 @@ service_role`, then `grant execute ... to anon`. Only this function can create a
 `anon` holds no `INSERT` on the table, and the guard's new branch (below) only accepts a row that
 already matches the online shape.
 
-The function validates, in this order: quantity 1–1000 and buyer-name rules matching the table
+The function validates, in this order: quantity **1–10**, buyer-name rules matching the table
 CHECKs; `private.is_valid_email(p_buyer_email)`; phone shape; tier belongs to the event and is
 not retired; event is `scheduled`, unarchived, `ticketing_enabled`; `unit_price_ngn` equals
 `tier.price_ngn`; the throttle counts; the idempotency key has not already produced an order.
+
+The quantity ceiling is tighter than the table's `between 1 and 1000`
+(`20261003102501:116`), which exists so an officer can record a bulk sale of 30 chairs. `anon`
+should not be able to POST a number the storefront will not offer — a stranger ordering quantity
+1000 against a 200-seat tier is an approval a distracted officer could grant. 10 matches the UI
+ceiling in §3, so the form, the URL and the database agree on one number; the table CHECK stays
+unchanged because the manual path still needs it.
 It locks the event row `for update`, generates `public_reference`, inserts, appends the audit
 entry, and returns the reference. A duplicate `p_idempotency_key` returns the existing row's
 reference instead of raising, so a double-clicked submit cannot create two orders and the client
@@ -378,15 +486,65 @@ review cannot send two emails.
 
 ### Status lookup
 
-`GET /tickets/order?ref=…&email=…` renders from a `stable` definer function
+`GET /tickets/order?ref=…` renders from a `stable` definer function
 `public.lookup_ticket_order(p_reference text, p_email text)`, granted to `anon`, that returns a
 single row's event title, tier name, quantity, amount, reference, created date, status, and —
-for rejected or cancelled — the stored reason. Both inputs must match; any mismatch returns no
-rows rather than an error, so the endpoint cannot be used to confirm that a reference exists.
+for rejected or cancelled — the stored reason. The `email` argument is typed by the buyer, never
+supplied by the URL (§3). Both inputs must match; any mismatch returns no rows rather than an
+error, so the endpoint cannot be used to confirm that a reference exists.
 Returns exactly the fields above, never the receipt, never the buyer's phone, never another
-buyer's row. 128 bits of reference space behind an email match is not enumerable.
+buyer's row.
+
+**Reference entropy.** The eight characters come from a 32-symbol alphabet, so the space is
+32^8 = 2^40 ≈ 1.1 trillion, not the "128 bits" an earlier draft of this section claimed. That
+correction matters because the number is the actual security argument, and 2^40 is a different
+answer from 2^128: per guessed email address there are 2^40 candidate references, and an attacker
+who does not know the address is guessing across both at once. `anon` can call the lookup, so the
+count is bounded by whatever rate limit the platform applies to RPC calls, not by anything in this
+spec. Unenumerable enough, at 40 bits and with a mismatch that returns no rows rather than an
+error, that no additional throttle is added here — but the claim is now the true one.
+
+The lookup **normalizes case** before comparing: `upper(btrim(p_reference))` against the stored
+value, with the alphabet already excluding I/O/0/1 so a reference retyped from the confirmation
+email cannot be misread. The prototype does this (`reference.toUpperCase()`), and it is the right
+call — a buyer who typed a lowercase `k` must not be told their order does not exist.
 
 The page itself is a plain form with no session dependency, and its results are never cached.
+
+### The till's visual source of truth
+
+Per §2.18, `carpenters_family_box_office.tsx` in Downloads is to `/tickets` what the landing mockup
+is to `/`: the port copies its layout, section order, interaction and copy rather than inventing a
+design. Its palette is already the app's `@theme` tokens — the file uses `forest`, `espresso`,
+`linen`, `warm-canvas`, `ochre`, `body`, `muted`, `terracotta` by name — so unlike the landing page
+this is a straight move, and §9's note that `tickets-storefront-view.tsx` hardcodes the same colors
+as literals is the cleanup that comes with it.
+
+What the prototype specifies that this spec had left undecided:
+
+* **Checkout is a full-screen overlay, not an inline expansion of the event card.** Fixed,
+  `z-[60]` (the sticky header is `z-30` and the WhatsApp FAB is `z-[50]` and appears later in the
+  DOM, so anything lower is clickable through it), `role="dialog"` + `aria-modal` + labelled by the
+  event title, scroll-locking the body while open and releasing it on unmount, Escape and backdrop
+  dismissal both closing, and the trigger reading "Close" while open. Full-bleed on mobile,
+  `max-w-5xl` rounded card from `sm:` up.
+* **A three-step indicator over two overlay steps and one page.** Step 1 chooses event, tier and
+  quantity and carries no payment content; step 2 shows the account number, the transfer narration
+  and the receipt upload together, which is the right grouping — the proof attaches on the same
+  screen as the transfer it proves, so the two cannot drift apart. Step 3 is the acknowledgement,
+  and per §3 it is `/tickets/order?ref=…` rather than a third overlay panel, so the `step`
+  parameter only ever holds `1` or `2`.
+* **`aria-live` on the totals**, validation messages tied with `aria-describedby`, 44px minimum
+  targets, and `font-mono` + a Copy button on the account number, all already present.
+
+Two things in it are overruled, both recorded where they bite: the reference format (§4) and the
+email never joining the reference in a URL (§3). Its sample data is fiction by design —
+`evt-demo-rave-2026`, "Issele-Uku Rave 2026", "First Sunday Highlife & Grill", the
+`pending_review`/`confirmed`/`not_approved`/`cancelled` status vocabulary of its own devising, and
+the `INITIAL_ORDERS_DB` rows — and none of it is a data contract. Statuses are §4's
+`recorded`/`approved`/`rejected`/`cancelled`, prices and capacity come from
+`get_public_ticketed_events()`, and the file's own comment about being strictly typed to real
+backend fields is the promise the port keeps.
 
 ## 7. Officer review queue
 
@@ -398,7 +556,7 @@ and already opens `voucher-inspection-drawer.tsx`, which already calls
 
 | Ref & Date | Description & Counterparty | Category | Amount (NGN) | Voucher Evidence | Review Status | Actions |
 |---|---|---|---|---|---|---|
-| `K7M2QX9B` · 5 Nov 2026 | `3 × Standard — Chidi Obi` | Online sales | ₦45,000 | View uploaded receipt | Pending | Inspect |
+| `CF-K7M2QX9B` · 5 Nov 2026 | `3 × Standard — Chidi Obi` | Online sales | ₦45,000 | View uploaded receipt | Pending | Inspect |
 
 Manual rows keep today's "Sold by <member>" attribution
 (`dashboard/page.tsx:708` reads `sellerId`); online rows read "Online", because `seller_id` is
@@ -760,6 +918,29 @@ Everything else the mockup asserts stays, including "Every naira recorded, with 
 bank authorization", "Open books and periodic financial reports for every active member", and the
 membership timeline's 3-month probation and majority-vote induction.
 
+### Ticket vocabulary on the till
+
+Ruled 2026-11-05, and the split is deliberate rather than a find-and-replace. The prototype shipped
+with "pass" language inherited from the landing mockup's event-ticketing metaphor; the objects a
+buyer buys are **tickets**, and that is now the only noun in buyer-facing copy:
+
+| was | now |
+|---|---|
+| "Official passes to…" | "Official tickets to…" |
+| "Select pass tier" | "Select ticket tier" |
+| "Number of passes" | "Number of tickets" |
+| singular `pass` in "1 pass" | `ticket` |
+| "Check order status" | "Check ticket status" |
+| "Place order" | "Continue to checkout" |
+
+Two words survive the sweep, and saying so prevents a later cleanup from undoing a ruling: **"Order
+submitted"** and **"Order reference"** stay, because the transaction is an order even when the
+things inside it are tickets — an officer's review queue, a rejection reason and a bank statement
+all describe an order, not a ticket. "Submit Order" as the final verb of step 2 is the same case
+(§2.20). The prototype's internal names — a `passes-count` element id, `maxSelectablePasses`, its
+sample tier labels — are not copy and are not ported; production gets §4's columns and the real
+tier names from `get_public_ticketed_events()`.
+
 ## 11. Photo manifest
 
 The eight photographs the mockup hotlinked are Unsplash stock images, sourced from the asset list
@@ -807,6 +988,12 @@ Fail closed everywhere, and tell a stranger what to do next rather than that som
   between page render and submit is a normal race, not an error, and reads "This event is no
   longer accepting orders"; throttle messages name their own codes (§13); receipt failures reuse
   the existing `finance-receipt-validation` reasons, already surfaced by the officer flow.
+* **A failed submit keeps its place.** The redirect back to `/tickets` carries `event`, `tier`,
+  `qty` and `step` alongside `notice`, because §2.19's promise cannot stop working only on the
+  happy path — a buyer rejected for a too-large receipt who lands back on a bare storefront has
+  lost their tier, their quantity and their typed details for a mistake they can correct in
+  seconds. `notice` is the only parameter the redirect is allowed to *add*; the other four are
+  echoed from the submitted form, never trusted from it.
 * **Never a partial order.** The row insert, its audit entry, the receipt metadata and the email
   enqueue each live in the transaction they already use; a receipt upload that succeeds and an RPC
   that fails leaves an orphan object and no row, which the existing officer flow already tolerates
@@ -890,6 +1077,15 @@ invariants this design holds to:
   control were bypassed.
 * Invite tokens appear in URLs and therefore in platform request logs. High entropy (128 bits),
   72-hour life, single use, and nothing on the other side but the right to register.
+* **The order's two secrets stay apart.** `lookup_ticket_order` needs a 40-bit reference *and* the
+  buyer's address, so neither the reference nor the pair may be assembled by a URL that then
+  travels. The post-submit redirect carries `ref` only (§3); `buyer_email` and `buyer_phone` are
+  never query parameters on any public route, and checkout drafts go to `sessionStorage`, which is
+  per-tab and never leaves the device. An email address in a query string is stranger PII in Vercel
+  request logs, in the browser history of a shared phone, and in a link pasted into WhatsApp — and
+  pasting `ref`+`email` into a chat is exactly what a bearer-shaped URL invites.
+* The `CF-`-prefixed reference format is a CHECK constraint (§4), so a row that a future code path
+  writes without it fails loudly instead of rendering a lookup that cannot find its own order.
 * Authorization stays in RLS, RPCs and server actions. `src/proxy.ts:90` remains routing-agnostic;
   no route protection is added to middleware.
 
@@ -906,11 +1102,13 @@ pgTAP carries the load-bearing rules, because the rules live in the database:
   `refunded_at` set, refuses a closed/archived/unticketed event, refuses an authenticated actor.
 * close gate: fires with pending sales only, pending transactions only, both; passes with neither;
   no-op when the status is unchanged; reopen unaffected.
-* `submit_ticket_order`: shape validation, price taken from tier, reference uniqueness and format,
+* `submit_ticket_order`: shape validation, price taken from tier, quantity 11 refused while 10 is
+  accepted, reference uniqueness and format
+  (`^CF-[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$`, and two orders from the same buyer differing),
   idempotency returning the original reference, each throttle ceiling, and no row for a closed
   event.
-* `lookup_ticket_order`: both inputs required, mismatch returns nothing, and the returned field
-  set excludes the receipt object key and the buyer phone.
+* `lookup_ticket_order`: both inputs required, mismatch returns nothing, a lowercase reference
+  still matches, and the returned field set excludes the receipt object key and the buyer phone.
 * intake: request/enquiry validation, one-live-request dedupe, `backup_admin`/admin/president/
   executive pass and a plain active member and a staff account are refused.
 * invites: creation revokes the previous live invite, expiry refuses, claim requires the matching
@@ -925,11 +1123,24 @@ Node tests (`npm test` = `node --test`; a single file is `npm test -- tests/x.te
 "no events" versus "temporarily unavailable" states. Source-text assertions are kept few and
 targeted — they break across refactors, which this project has already been bitten by.
 
+The address-bar contract (§3) is logic, so it lives in a tested module rather than inside a
+component — a small pure helper that takes the incoming `URLSearchParams` and the loaded events and
+returns `{ event, tierIndex, quantity, step }` or null. Its cases: an unknown or retired `event` id
+resolves to null (the storefront opens with no overlay, not to the wrong event); a `tier` id from
+another event resolves to null; `qty` clamps into `1..min(10, remaining)` and a non-integer or a
+negative becomes 1; `step` outside `1`/`2` becomes 1. A separate test asserts that the failure
+redirect's target contains `event`, `tier`, `qty`, `step` and `notice` and **no** `email` or
+`phone` key, which is §14's rule expressed as something a CI run can catch.
+
 Manual verification before merge: the production build at `127.0.0.1:3001`, an anonymous browser
 session through the whole guest purchase with a real receipt file, the officer approve/reject/
 cancel loop with a second officer account, the close gate tripping and then clearing, an invite
 round trip end to end including the expired-token path, and a signed-in member confirming the
-moved routes still carry their notices.
+moved routes still carry their notices. §2.19's ruling is only provable in a browser, so it gets
+its own pass: open a checkout, pick a tier, reach step 2, type a name and email, **reload**, and
+confirm the overlay reopens on step 2 for that event and tier with the fields filled and the
+receipt notice visible; then copy the URL into a second browser and confirm the position survives
+and the typed details do not.
 
 ## 16. Migration and deployment ordering
 
@@ -962,11 +1173,12 @@ Non-negotiables learned the hard way in this repository:
 This spec is too large for one implementation plan and splits along three seams that are each
 independently shippable and independently reviewable:
 
-* **Plan A — ledger and till** (§4–§7, plus §13's four mapped codes and §15's pgTAP rules): the
-  schema, approved-only arithmetic across all nine read sites, the guard branch, the close gate,
-  `submit_ticket_order`, the review drawer's third decision, the two buyer emails, and the status
-  lookup. Nothing here depends on the landing page or the intake forms. Highest risk, highest
-  value — do it first.
+* **Plan A — ledger and till** (§4–§7, plus §3's checkout-state contract and §13's four mapped
+  codes and §15's pgTAP rules): the schema, approved-only arithmetic across all nine read sites,
+  the guard branch, the close gate, `submit_ticket_order`, the review drawer's third decision, the
+  two buyer emails, the status lookup, the overlay port of §6's visual source of truth, and the
+  `?event=&tier=&qty=&step=` state module of §3. Nothing here depends on the landing page or the
+  intake forms. Highest risk, highest value — do it first.
 * **Plan B — routes and landing** (§3, §9, §10, §11): the `/` → `/portal` move with its redirect
   and `cta_url` audit, the landing port onto the already-committed `public/landing/` assets, and the
   copy edits. Depends on nothing in
@@ -1005,3 +1217,10 @@ where unreviewed money counts.
    strictly Admin, President and Executive.
 5. **Existing pending accounts** — people who already self-registered sit in `pending` with auth
    users. They keep flowing through today's approval UI untouched; no migration touches them.
+6. **The two source-of-truth files live in `C:\Users\HomePC\Downloads\`** — the landing mockup
+   (§2.12) and the box-office prototype (§2.18). A plan that says "port the mockup" is not
+   reproducible once those files move or get overwritten, and an executor with a different machine
+   cannot open them at all. Recommendation: copy both into `docs/superpowers/specs/assets/` in the
+   Plan-A/Plan-B first task, verbatim and unmodified, and let this spec cite the repo paths. The
+   prototypes are throwaway by design — their sample data, their `Math.random()` references and
+   their inline `INITIAL_EVENTS` are inputs to the port, not code to import.
