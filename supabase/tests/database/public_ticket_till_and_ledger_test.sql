@@ -50,11 +50,12 @@ select set_config('request.jwt.claim.sub', '7a7a7a7a-0000-0000-0000-000000000002
 select lives_ok($$
   insert into public.event_ticket_sales (
     event_id, tier_id, seller_id, buyer_name, quantity, unit_price_ngn,
-    payment_method, idempotency_key, verification_status
+    payment_method, idempotency_key, verification_status, created_at, updated_at
   ) values (
     current_setting('test.till_event')::uuid, current_setting('test.till_tier')::uuid,
     '7a7a7a7a-0000-0000-0000-000000000002', 'Cancelled Probe', 1, 15000,
-    'bank_transfer', '7b7b7b7b-0000-0000-0000-0000000000a1', 'cancelled'
+    'bank_transfer', '7b7b7b7b-0000-0000-0000-0000000000a1', 'cancelled',
+    now(), now()
   )
 $$, 'cancelled is accepted by the status check');
 
@@ -467,6 +468,125 @@ select is((select pg_catalog.count(*) from public.lookup_ticket_order(
 
 select is((select pg_catalog.count(*) from public.lookup_ticket_order(
     current_setting('test.till_guest'), NULL))::integer, 0, 'a reference alone returns nothing');
+
+-- ── The review lifecycle ────────────────────────────────────────────────────────────────
+reset role;
+
+-- A staged row counts as nothing before it is approved and as something after.
+select is((select net from private.event_cash_totals(current_setting('test.till_event')::uuid)) > 0,
+  true, 'baseline: the approved sale already counts');
+
+select set_config('request.jwt.claim.sub', '', true);
+
+with appr_ins as (
+  insert into public.event_ticket_sales (
+    event_id, tier_id, seller_id, buyer_name, quantity, unit_price_ngn, payment_method,
+    idempotency_key, source, buyer_email, buyer_phone, public_reference, verification_status
+  ) values (
+    current_setting('test.till_event')::uuid, current_setting('test.till_tier')::uuid,
+    null, 'To Approve', 1, 15000, 'bank_transfer',
+    '7b7b7b7b-0000-0000-0000-000000000011', 'online',
+    'approve@example.test', '08031234581', 'CF-K7M2QX9K', 'recorded'
+  ) returning id
+)
+select set_config('test.till_appr', id::text, true) from appr_ins;
+
+select is((select pg_catalog.sum(s.quantity) from public.event_ticket_sales as s
+  where s.tier_id = current_setting('test.till_tier')::uuid
+    and s.verification_status = 'approved'), 2::bigint,
+  'the newly staged row is not yet counted');
+
+select set_config('request.jwt.claim.sub', '7a7a7a7a-0000-0000-0000-000000000001', true);
+
+select lives_ok($$
+  select public.verify_event_ticket_sale(
+    current_setting('test.till_appr')::uuid, 'approved', null)
+$$, 'an officer may approve an online order');
+
+select is(
+  (select s.verification_status from public.event_ticket_sales as s
+    where s.id = current_setting('test.till_appr')::uuid), 'approved',
+  'approval flips the status');
+select is(
+  (select s.refunded_at is null from public.event_ticket_sales as s
+    where s.id = current_setting('test.till_appr')::uuid), true,
+  'approval never refunds');
+
+-- Cancel: sets the reason, touches neither refund column, and is terminal.
+select set_config('request.jwt.claim.sub', '', true);
+
+with canc_ins as (
+  insert into public.event_ticket_sales (
+    event_id, tier_id, quantity, unit_price_ngn, payment_method, idempotency_key,
+    source, buyer_email, buyer_phone, public_reference, verification_status
+  ) values (
+    current_setting('test.till_event')::uuid, current_setting('test.till_tier')::uuid,
+    1, 15000, 'bank_transfer', '7b7b7b7b-0000-0000-0000-000000000012', 'online',
+    'cancel@example.test', '08031234582', 'CF-K7M2QX9M', 'recorded'
+  ) returning id
+)
+select set_config('test.till_canc', id::text, true) from canc_ins;
+
+select set_config('request.jwt.claim.sub', '7a7a7a7a-0000-0000-0000-000000000001', true);
+
+select lives_ok($$
+  select public.verify_event_ticket_sale(
+    current_setting('test.till_canc')::uuid, 'cancelled', 'Transfers closed')
+$$, 'an officer may cancel an online order');
+
+select is(
+  (select s.refunded_at is null and s.refund_reason is null and s.refunded_by is null
+    from public.event_ticket_sales as s where s.id = current_setting('test.till_canc')::uuid),
+  true, 'cancellation touches no refund column: nothing arrived, so nothing returns');
+select is(
+  (select s.rejection_reason from public.event_ticket_sales as s
+    where s.id = current_setting('test.till_canc')::uuid), 'Transfers closed',
+  'cancellation records the reason the buyer is emailed');
+
+select throws_ok($$
+  select public.verify_event_ticket_sale(
+    current_setting('test.till_canc')::uuid, 'approved', null)
+$$, '23514', 'This ticket sale has already been reviewed.', 'cancelled is terminal');
+
+select throws_ok($$
+  select public.verify_event_ticket_sale(
+    current_setting('test.till_canc')::uuid, 'cancelled', 'again')
+$$, '23514', 'This ticket sale has already been reviewed.', 'a second cancellation is refused');
+
+select throws_ok($$
+  select public.verify_event_ticket_sale(
+    current_setting('test.till_canc')::uuid, 'cancelled', 'abc')
+$$, '22023', 'A rejection or cancellation reason is required.', 'a cancellation needs the same 5-character reason as a rejection');
+
+-- Deviation 12: approving past capacity must fail, because the write guard's capacity block is
+-- bypassed by the app.event_verification_active early return.
+reset role;
+alter table public.event_ticket_tiers disable trigger event_ticket_tiers_write_guard;
+update public.event_ticket_tiers set capacity = 2
+where id = current_setting('test.till_tier')::uuid;
+alter table public.event_ticket_tiers enable trigger event_ticket_tiers_write_guard;
+
+select set_config('request.jwt.claim.sub', '', true);
+
+with over_ins as (
+  insert into public.event_ticket_sales (
+    event_id, tier_id, quantity, unit_price_ngn, payment_method, idempotency_key,
+    source, buyer_email, buyer_phone, public_reference, verification_status
+  ) values (
+    current_setting('test.till_event')::uuid, current_setting('test.till_tier')::uuid,
+    9, 15000, 'bank_transfer', '7b7b7b7b-0000-0000-0000-000000000013', 'online',
+    'oversell@example.test', '08031234583', 'CF-K7M2QX9N', 'recorded'
+  ) returning id
+)
+select set_config('test.till_over', id::text, true) from over_ins;
+
+select set_config('request.jwt.claim.sub', '7a7a7a7a-0000-0000-0000-000000000001', true);
+
+select throws_ok($$
+  select public.verify_event_ticket_sale(
+    current_setting('test.till_over')::uuid, 'approved', null)
+$$, '23514', 'Ticket tier capacity has been reached.',
+  'approval refuses to oversell a tier, reusing the guard raise text and code');
 
 reset role;
 

@@ -1224,3 +1224,153 @@ $function$;
 revoke all on function public.lookup_ticket_order(text, text)
   from public, anon, authenticated, service_role;
 grant execute on function public.lookup_ticket_order(text, text) to anon;
+
+
+-- 10. verify_event_ticket_sale with cancelled decision and approval-time capacity check.
+create or replace function public.verify_event_ticket_sale(
+  p_sale_id uuid,
+  p_decision text,
+  p_reason text default null
+)
+returns void language plpgsql security definer set search_path = '' as $$
+declare
+  v_actor_id uuid := (select auth.uid());
+  v_actor_role text;
+  v_sale public.event_ticket_sales%rowtype;
+  v_event public.events%rowtype;
+  v_trimmed_reason text := pg_catalog.btrim(coalesce(p_reason, ''));
+  v_now timestamptz := pg_catalog.clock_timestamp();
+  v_approved_sold bigint;
+begin
+  if v_actor_id is null or not (select private.is_active_club_member()) then
+    raise exception using errcode = '42501', message = 'Active member account is required.';
+  end if;
+
+  if p_decision is null or p_decision not in ('approved', 'rejected', 'cancelled') then
+    raise exception using errcode = '23514', message = 'The review decision is invalid.';
+  end if;
+
+  if p_decision in ('rejected', 'cancelled')
+     and pg_catalog.char_length(coalesce(v_trimmed_reason, '')) < 5 then
+    raise exception using errcode = '22023',
+      message = 'A rejection or cancellation reason is required.';
+  end if;
+
+  perform 1 from private.administration_guard where singleton_id for update;
+
+  select * into v_sale
+  from public.event_ticket_sales
+  where id = p_sale_id
+  for update;
+
+  if not found then
+    raise exception using errcode = 'P0002', message = 'Ticket sale not found.';
+  end if;
+
+  select * into v_event
+  from public.events
+  where id = v_sale.event_id;
+
+  if not found or v_event.archived_at is not null then
+    raise exception using errcode = '42501', message = 'Cannot modify ticket sales for an archived event.';
+  end if;
+
+  -- Determine reviewing actor role
+  v_actor_role := case
+    when (select private.has_club_role('admin')) then 'admin'
+    when (select private.has_club_role('backup_admin')) then 'backup_admin'
+    when (select private.has_club_role('executive')) then 'executive'
+    else null
+  end;
+
+  if v_actor_role is null and not (select private.has_event_role(v_sale.event_id, 'lead')) then
+    raise exception using errcode = '42501', message = 'Only authorized officers or event leads may verify ticket sales.';
+  end if;
+
+  -- Enforce Segregation of Duties:
+  if v_actor_role = 'executive' and v_sale.seller_id = v_actor_id then
+    raise exception using errcode = '42501', message = 'Segregation of duties: Executives cannot verify or reverse their own ticket sales.';
+  end if;
+
+  if v_actor_role is null and v_sale.seller_id = v_actor_id then
+    raise exception using errcode = '42501', message = 'Segregation of duties: Event leads cannot verify or reverse their own ticket sales.';
+  end if;
+
+  -- Enforce Terminal State: Rejections, cancellations or refunds cannot be reversed
+  if v_sale.verification_status in ('rejected', 'cancelled')
+     or v_sale.refunded_at is not null then
+    raise exception using errcode = '23514',
+      message = 'This ticket sale has already been reviewed.';
+  end if;
+
+  perform pg_catalog.set_config('app.event_verification_active', 'on', true);
+
+  if p_decision = 'approved' then
+    select coalesce(pg_catalog.sum(s.quantity), 0) into v_approved_sold
+    from public.event_ticket_sales as s
+    where s.tier_id = v_sale.tier_id and s.refunded_at is null
+      and s.verification_status = 'approved'
+      and s.id <> v_sale.id;
+
+    if exists (
+      select 1 from public.event_ticket_tiers as t
+      where t.id = v_sale.tier_id
+        and t.capacity is not null
+        and v_approved_sold + v_sale.quantity > t.capacity
+    ) then
+      raise exception using errcode = '23514',
+        message = 'Ticket tier capacity has been reached.';
+    end if;
+
+    update public.event_ticket_sales
+    set verification_status = 'approved',
+        verified_by = v_actor_id,
+        verified_at = v_now,
+        rejection_reason = null,
+        updated_at = v_now
+    where id = p_sale_id;
+  elsif p_decision = 'cancelled' then
+    update public.event_ticket_sales
+      set verification_status = 'cancelled',
+          verified_by = v_actor_id,
+          verified_at = v_now,
+          rejection_reason = v_trimmed_reason,
+          updated_at = v_now
+      where id = p_sale_id;
+  else
+    update public.event_ticket_sales
+    set verification_status = 'rejected',
+        verified_by = v_actor_id,
+        verified_at = v_now,
+        rejection_reason = v_trimmed_reason,
+        refunded_at = v_now,
+        refunded_by = v_actor_id,
+        refund_reason = v_trimmed_reason,
+        updated_at = v_now
+    where id = p_sale_id;
+  end if;
+
+  perform private.append_event_finance_audit(
+    v_actor_id,
+    'event_ticket_sale_verified',
+    'event_ticket_sale',
+    p_sale_id,
+    pg_catalog.jsonb_build_object(
+      'previous_status', v_sale.verification_status,
+      'tier_id', v_sale.tier_id,
+      'quantity', v_sale.quantity,
+      'amount_ngn', v_sale.amount_ngn
+    ),
+    pg_catalog.jsonb_build_object(
+      'decision', p_decision,
+      'reason', v_trimmed_reason
+    ),
+    'Event ticket sale ' || p_decision
+  );
+end;
+$$;
+
+revoke all on function public.verify_event_ticket_sale(uuid, text, text)
+  from public, anon, authenticated, service_role;
+grant execute on function public.verify_event_ticket_sale(uuid, text, text)
+  to authenticated;
