@@ -23,6 +23,8 @@ import {
   notifyPartnershipEnquiryReceived,
   notifyPasswordUpdated,
   notifyPollCreated,
+  notifyTicketOrderAlerted,
+  notifyTicketOrderReceived,
 } from "@/lib/email/notifications";
 import {
   buildEventFinanceNoticeUrl,
@@ -4121,6 +4123,35 @@ export async function submitTicketOrderAction(
 
   revalidatePath("/tickets");
   revalidatePath("/tickets/order");
-  // Task 13 adds the two notify calls here, between revalidatePath and redirect.
+  // The order is committed and the buyer is about to be redirected to it. A notification that
+  // cannot be queued is reported, not thrown: failing the action here would tell the buyer their
+  // order was lost when it was not, and a retry would come back deduplicated. The dues twin
+  // (`actions.ts:780`) lets the throw escape and has the same shape as a bug — the payment is
+  // already recorded when the officer sees "failed". Not fixed here; out of this plan's scope.
+  const saleIdForEmail = entryResult.id;
+  await Promise.all([
+    notifyTicketOrderReceived({
+      saleId: saleIdForEmail,
+      publicReference: reference,
+      buyerEmail,
+      buyerName,
+      eventTitle: submitted.event_title ?? "your event",
+      tierName: submitted.tier_name ?? "your ticket",
+      quantity: submitted.quantity ?? Number.parseInt(quantity, 10),
+      amountNgn: Number(submitted.amount_ngn ?? 0),
+    }).catch((err) => console.error("[Ticket order] buyer email failed:", err)),
+    notifyTicketOrderAlerted({
+      saleId: saleIdForEmail,
+      eventId: submitted.event_id ?? eventId,
+      publicReference: reference,
+      buyerName,
+      eventTitle: submitted.event_title ?? "your event",
+      tierName: submitted.tier_name ?? "your ticket",
+      quantity: submitted.quantity ?? Number.parseInt(quantity, 10),
+      amountNgn: Number(submitted.amount_ngn ?? 0),
+    }).catch((err) =>
+      console.error("[Ticket order] officer alert failed:", err),
+    ),
+  ]);
   redirect(`/tickets/order?ref=${encodeURIComponent(reference)}`);
 }

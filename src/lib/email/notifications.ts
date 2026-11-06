@@ -29,6 +29,9 @@ import {
   roleChangedKey,
   roleUpgradeKey,
   signupReceiptKey,
+  ticketOrderOfficerAlertKey,
+  ticketOrderReceivedKey,
+  ticketOrderReviewedKey,
   welcomeKey,
 } from "@/lib/notifications/idempotency";
 import {
@@ -1264,6 +1267,210 @@ export async function notifyPartnershipEnquiryReceived(params: {
   } catch (err) {
     reportNotificationError(
       "[Email Service] notifyPartnershipEnquiryReceived failed:",
+      err,
+    );
+  }
+}
+
+// ============================================================================
+// 3b. BOX OFFICE — guest ticket orders (no member profile behind the buyer)
+// ============================================================================
+
+/**
+ * The buyer's own copy. `buyerEmail` and `buyerName` come from the order, not from a profile, so
+ * there is no `resolveMemberContact` call and no `userId` to hang the row on.
+ */
+export async function notifyTicketOrderReceived(params: {
+  saleId: string;
+  publicReference: string;
+  buyerEmail: string;
+  buyerName: string;
+  eventTitle: string;
+  tierName: string;
+  quantity: number;
+  amountNgn: number;
+}): Promise<void> {
+  const contact: NotificationContact = {
+    email: params.buyerEmail,
+    userId: null,
+    name: params.buyerName,
+  };
+  try {
+    await queueSingle({
+      idempotencyKey: ticketOrderReceivedKey(params.saleId),
+      triggerType: "ticket_order_received",
+      contact,
+      subject: `Ticket order ${params.publicReference} received`,
+      heading: "Your ticket order is waiting for confirmation",
+      ctaLabel: "Track this order",
+      ctaPath: `/tickets/order?ref=${encodeURIComponent(params.publicReference)}`,
+      copy: {
+        previewText: `${params.quantity} × ${params.tierName} for ${params.eventTitle}.`,
+        greeting: `Hello ${params.buyerName},`,
+        intro:
+          "We have your order and your transfer receipt. An event officer checks payments by hand, " +
+          "so nothing is confirmed until they approve it. Keep your reference — it is how you and the " +
+          "gate find this order.",
+        detailsTitle: "Order Summary",
+        details: [
+          { label: "Reference", value: params.publicReference },
+          { label: "Event", value: params.eventTitle },
+          { label: "Ticket type", value: params.tierName },
+          { label: "Quantity", value: String(params.quantity) },
+          { label: "Amount to transfer", value: formatNgn(params.amountNgn) },
+        ],
+        footerNote:
+          "This reference is your proof of order. It does not guarantee a seat until the payment is approved.",
+        category: "event",
+      },
+    });
+  } catch (err) {
+    reportNotificationError(
+      "[Email Service] notifyTicketOrderReceived failed:",
+      err,
+    );
+  }
+}
+
+/** The officer alert. Same facts, different reader and different call to action. */
+export async function notifyTicketOrderAlerted(params: {
+  saleId: string;
+  eventId: string;
+  publicReference: string;
+  buyerName: string;
+  eventTitle: string;
+  tierName: string;
+  quantity: number;
+  amountNgn: number;
+}): Promise<void> {
+  try {
+    const officers = await resolveOfficerContacts();
+    const queueResults = await Promise.allSettled(
+      officers.map((officer) =>
+        queueSingle({
+          idempotencyKey: ticketOrderOfficerAlertKey({
+            saleId: params.saleId,
+            officerEmail: officer.email,
+          }),
+          triggerType: "ticket_order_alert",
+          contact: officer,
+          subject: `New ticket order ${params.publicReference} — ${params.buyerName}`,
+          heading: "A guest submitted a ticket order",
+          ctaLabel: "Review the receipt",
+          ctaPath: `/events/${params.eventId}/dashboard?tab=tickets`,
+          copy: {
+            previewText: `${params.buyerName} ordered ${params.quantity} × ${params.tierName}.`,
+            intro:
+              "A buyer without a member account submitted this order with a transfer receipt. Verify the " +
+              "voucher against the amount before approving; the tickets do not count until you do.",
+            detailsTitle: "Order Under Review",
+            details: [
+              { label: "Reference", value: params.publicReference },
+              { label: "Event", value: params.eventTitle },
+              { label: "Buyer", value: params.buyerName },
+              { label: "Ticket type", value: params.tierName },
+              { label: "Quantity", value: String(params.quantity) },
+              { label: "Amount claimed", value: formatNgn(params.amountNgn) },
+            ],
+            category: "event",
+          },
+        }),
+      ),
+    );
+    const failure = queueResults.find(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+    if (failure) throw failure.reason;
+  } catch (err) {
+    reportNotificationError(
+      "[Email Service] notifyTicketOrderAlerted failed:",
+      err,
+    );
+  }
+}
+
+/** One email per decision, with the wording the outcome deserves. */
+export async function notifyTicketOrderReviewed(params: {
+  saleId: string;
+  publicReference: string;
+  buyerEmail: string;
+  buyerName: string;
+  eventTitle: string;
+  tierName: string;
+  quantity: number;
+  amountNgn: number;
+  decision: "approved" | "rejected" | "cancelled";
+  reason?: string | null;
+}): Promise<void> {
+  const copy =
+    params.decision === "approved"
+      ? {
+          subject: `Tickets confirmed — ${params.publicReference}`,
+          heading: "Your tickets are confirmed",
+          ctaLabel: "See your order",
+          intro:
+            "An officer matched your transfer to the order and confirmed it. Your tickets are held " +
+            "against the reference below.",
+          footerNote:
+            "Bring this reference to the entrance. Payment matched, tickets confirmed.",
+        }
+      : params.decision === "rejected"
+        ? {
+            subject: `Ticket order ${params.publicReference} was not approved`,
+            heading: "We could not confirm your payment",
+            ctaLabel: "Read the reason",
+            intro:
+              "An officer reviewed the payment and could not match it to the amount owed. No payment " +
+              "is recorded against this order. You can transfer again and submit a new order.",
+            footerNote:
+              "If you believe this is a mistake, reply to this email with your reference.",
+          }
+        : {
+            subject: `Ticket order ${params.publicReference} cancelled`,
+            heading: "This order has been cancelled",
+            ctaLabel: "See your order",
+            intro:
+              "This order was cancelled. It never counted as revenue and no ticket is held against it.",
+            footerNote:
+              "Cancelled means no money moved, so there is nothing to refund on this reference.",
+          };
+
+  const contact: NotificationContact = {
+    email: params.buyerEmail,
+    userId: null,
+    name: params.buyerName,
+  };
+
+  try {
+    await queueSingle({
+      idempotencyKey: ticketOrderReviewedKey(params.saleId, params.decision),
+      triggerType: "ticket_order_reviewed",
+      contact,
+      subject: copy.subject,
+      heading: copy.heading,
+      ctaLabel: copy.ctaLabel,
+      ctaPath: `/tickets/order?ref=${encodeURIComponent(params.publicReference)}`,
+      copy: {
+        previewText: `${params.quantity} × ${params.tierName} — ${params.eventTitle}.`,
+        greeting: `Hello ${params.buyerName},`,
+        intro: copy.intro,
+        detailsTitle: "Order",
+        details: [
+          { label: "Reference", value: params.publicReference },
+          { label: "Event", value: params.eventTitle },
+          { label: "Ticket type", value: params.tierName },
+          { label: "Quantity", value: String(params.quantity) },
+          { label: "Amount", value: formatNgn(params.amountNgn) },
+        ],
+        bodyLabel: params.reason ? "Officer's note" : undefined,
+        bodyText: params.reason ?? null,
+        footerNote: copy.footerNote,
+        category: "event",
+      },
+    });
+  } catch (err) {
+    reportNotificationError(
+      "[Email Service] notifyTicketOrderReviewed failed:",
       err,
     );
   }

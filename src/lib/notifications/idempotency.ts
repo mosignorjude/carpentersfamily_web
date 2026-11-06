@@ -212,6 +212,25 @@ export function eventRoleAssignedKey(params: {
   );
 }
 
+export function ticketOrderReceivedKey(saleId: string): string {
+  return finalize(`ticket_order_received:sale:${normalizedId(saleId)}`);
+}
+
+export function ticketOrderOfficerAlertKey(params: {
+  saleId: string;
+  officerEmail: string;
+}): string {
+  return finalize(
+    `ticket_order_alert:sale:${normalizedId(params.saleId)}:officer:${slug(params.officerEmail)}`,
+  );
+}
+
+export function ticketOrderReviewedKey(saleId: string, status: string): string {
+  return finalize(
+    `ticket_order_reviewed:sale:${normalizedId(saleId)}:status:${slug(status)}`,
+  );
+}
+
 export function attendanceOpenedKey(eventId: string): string {
   return idKey("event_attendance_opened", "event", eventId);
 }

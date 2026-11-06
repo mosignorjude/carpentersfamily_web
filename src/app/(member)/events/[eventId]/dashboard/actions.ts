@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { notifyTicketOrderReviewed } from "@/lib/email/notifications";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface VerifyTransactionParams {
@@ -81,7 +82,7 @@ export async function verifyEventTicketSaleAction(
 
   try {
     const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.rpc("verify_event_ticket_sale", {
+    const { data, error } = await supabase.rpc("verify_event_ticket_sale", {
       p_sale_id: params.saleId,
       p_decision: params.decision,
       p_reason: params.reason ? params.reason.trim() : null,
@@ -89,6 +90,38 @@ export async function verifyEventTicketSaleAction(
 
     if (error) {
       return { success: false, error: error.message };
+    }
+
+    const row = (Array.isArray(data) ? data[0] : data) as
+      | {
+          buyer_email: string | null;
+          buyer_name: string;
+          public_reference: string | null;
+          event_id: string;
+          event_title: string;
+          tier_name: string;
+          quantity: number;
+          amount_ngn: number;
+        }
+      | undefined;
+
+    // A guest order has a buyer email; an officer-recorded sale may have none, and then there is
+    // nothing to send. The decision itself is already committed.
+    if (row?.buyer_email && row.public_reference) {
+      await notifyTicketOrderReviewed({
+        saleId: params.saleId,
+        publicReference: row.public_reference,
+        buyerEmail: row.buyer_email,
+        buyerName: row.buyer_name,
+        eventTitle: row.event_title,
+        tierName: row.tier_name,
+        quantity: row.quantity,
+        amountNgn: Number(row.amount_ngn),
+        decision: params.decision,
+        reason: params.reason?.trim() ?? null,
+      }).catch((err) =>
+        console.error("[Ticket review] confirmation email failed:", err),
+      );
     }
 
     revalidatePath(`/events/${params.eventId}/dashboard`);

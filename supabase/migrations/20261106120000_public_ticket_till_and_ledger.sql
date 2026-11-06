@@ -1019,6 +1019,7 @@ declare
   v_live_per_email_event bigint;
   v_live_per_event bigint;
   v_reference text;
+  v_event_title text;
   v_bytes bytea;
   v_chars text;
   v_index integer;
@@ -1056,8 +1057,13 @@ begin
     raise exception using errcode = '23503', message = 'Ticket tier not found.';
   end if;
 
-  -- One event row per order, and it serialises the throttle counts below.
-  perform 1 from public.events where id = p_event_id for update;
+  -- One event row per order: this both serialises the throttle counts below and gives the
+  -- confirmation email a title without a second read.
+  select e.title into v_event_title from public.events as e
+    where e.id = p_event_id for update;
+  if not found then
+    raise exception using errcode = '23503', message = 'Event not found.';
+  end if;
 
   select * into v_existing
   from public.event_ticket_sales as s
@@ -1068,7 +1074,11 @@ begin
       return pg_catalog.jsonb_build_object(
         'sale_id', v_existing.id,
         'public_reference', v_existing.public_reference,
-        'deduplicated', true);
+        'deduplicated', true,
+        'event_id', v_existing.event_id, 'event_title', v_event_title,
+        'tier_name', v_tier.name,
+        'unit_price_ngn', v_existing.unit_price_ngn,
+        'amount_ngn', v_existing.amount_ngn);
     end if;
     raise exception using errcode = '23505',
       message = 'This submission key was already used for different ticket order data.';
@@ -1169,7 +1179,11 @@ begin
         return pg_catalog.jsonb_build_object(
           'sale_id', v_existing.id,
           'public_reference', v_existing.public_reference,
-          'deduplicated', true);
+          'deduplicated', true,
+          'event_id', v_existing.event_id, 'event_title', v_event_title,
+          'tier_name', v_tier.name,
+          'unit_price_ngn', v_existing.unit_price_ngn,
+          'amount_ngn', v_existing.amount_ngn);
       end if;
     end if;
     raise;
@@ -1187,7 +1201,10 @@ begin
 
   -- No audit row: audit_log.actor_id is `not null` and a stranger has no profile (deviation 19).
   return pg_catalog.jsonb_build_object(
-    'sale_id', v_sid, 'public_reference', v_reference, 'deduplicated', false);
+    'sale_id', v_sid, 'public_reference', v_reference, 'deduplicated', false,
+    'event_id', p_event_id, 'event_title', v_event_title, 'tier_name', v_tier.name,
+    'unit_price_ngn', v_tier.price_ngn,
+    'amount_ngn', (v_tier.price_ngn::bigint * p_quantity));
 end;
 $$;
 
@@ -1227,12 +1244,21 @@ grant execute on function public.lookup_ticket_order(text, text) to anon;
 
 
 -- 10. verify_event_ticket_sale with cancelled decision and approval-time capacity check.
+drop function if exists public.verify_event_ticket_sale(uuid, text, text);
 create or replace function public.verify_event_ticket_sale(
   p_sale_id uuid,
   p_decision text,
   p_reason text default null
 )
-returns void language plpgsql security definer set search_path = '' as $$
+returns table (
+  sale_id uuid, decision text, public_reference text, buyer_email text,
+  buyer_name text, event_id uuid, event_title text, tier_name text,
+  quantity integer, amount_ngn bigint
+)
+language plpgsql
+security definer
+set search_path = ''
+as $function$
 declare
   v_actor_id uuid := (select auth.uid());
   v_actor_role text;
@@ -1367,8 +1393,16 @@ begin
     ),
     'Event ticket sale ' || p_decision
   );
+
+  return query
+    select s.id, p_decision, s.public_reference, s.buyer_email, s.buyer_name,
+      e.id, e.title, t.name, s.quantity, s.amount_ngn
+    from public.event_ticket_sales as s
+    join public.events as e on e.id = s.event_id
+    join public.event_ticket_tiers as t on t.id = s.tier_id
+    where s.id = p_sale_id;
 end;
-$$;
+$function$;
 
 revoke all on function public.verify_event_ticket_sale(uuid, text, text)
   from public, anon, authenticated, service_role;

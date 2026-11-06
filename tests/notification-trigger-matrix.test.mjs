@@ -213,6 +213,9 @@ const SUPPLEMENTAL_TRIGGER_TYPES = [
   "membership_request_received",
   "membership_invite",
   "partnership_enquiry_received",
+  "ticket_order_received",
+  "ticket_order_alert",
+  "ticket_order_reviewed",
 ];
 
 const SOURCES = { app: appSource, sql: sqlSource, callback: callbackSource, actions: actionsSource };
