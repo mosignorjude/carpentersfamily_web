@@ -151,13 +151,18 @@ export function NewMeetingModal({ isOpen, onClose }: NewMeetingModalProps) {
                   <option value="PM">PM</option>
                 </select>
               </div>
-              <span className={HINT_CLASS}>12-hour clock, West Africa Time.</span>
+              <span className={HINT_CLASS}>
+                12-hour clock, West Africa Time.
+              </span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={LABEL_CLASS} htmlFor="new-meeting-duration-days">
+              <label
+                className={LABEL_CLASS}
+                htmlFor="new-meeting-duration-days"
+              >
                 Runs For <span className="text-[#BA3C2A]">*</span>
               </label>
               <select

@@ -210,7 +210,10 @@ export default async function FinancesPage({
           "event_finance_category_retired",
         ])
         .order("occurred_at", { ascending: false })
-        .range(auditPage * AUDIT_PAGE_SIZE, (auditPage + 1) * AUDIT_PAGE_SIZE - 1)
+        .range(
+          auditPage * AUDIT_PAGE_SIZE,
+          (auditPage + 1) * AUDIT_PAGE_SIZE - 1,
+        )
     : null;
 
   const categories = (categoryResult.data ?? []) as FinanceCategory[];

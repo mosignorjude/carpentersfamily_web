@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  CalendarPlus,
-  Info,
-  Shield,
-  Sparkles,
-} from "lucide-react";
+import { CalendarPlus, Info, Shield, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { createEventAction } from "@/app/actions";
@@ -87,7 +82,9 @@ export function CreateEventForm() {
             className="w-full h-11 px-3.5 bg-white border border-[#E5DDD3] rounded-xl text-xs font-bold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
             id="create-event-type"
             name="event_type"
-            onChange={(e) => handleTypeChange(e.target.value as SupportedEventType)}
+            onChange={(e) =>
+              handleTypeChange(e.target.value as SupportedEventType)
+            }
             required
             value={eventType}
           >
@@ -181,7 +178,8 @@ export function CreateEventForm() {
             ))}
           </select>
           <span className={HINT_CLASS}>
-            The last day keeps the event live all day, even after its start has passed.
+            The last day keeps the event live all day, even after its start has
+            passed.
           </span>
         </div>
 
@@ -234,9 +232,11 @@ export function CreateEventForm() {
             <div className="p-3.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#5C4638] flex items-start gap-2.5">
               <Info className="w-4 h-4 text-[#174C37] shrink-0 mt-0.5" />
               <span>
-                Parties & Gala banquets automatically activate the complete financial management suite:{" "}
+                Parties & Gala banquets automatically activate the complete
+                financial management suite:{" "}
                 <strong className="text-[#3D291F]">
-                  Budget Allocations, Non-Dues Revenues, and Disbursement Tracking
+                  Budget Allocations, Non-Dues Revenues, and Disbursement
+                  Tracking
                 </strong>
                 .
               </span>

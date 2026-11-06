@@ -91,8 +91,9 @@ export function EventsPageView({
             </h1>
 
             <p className="text-xs sm:text-sm text-[#7A685D] mt-1.5 max-w-2xl leading-relaxed">
-              Official schedule, activity workspaces, and planning for General House
-              sessions, executive council projects, and annual club celebrations.
+              Official schedule, activity workspaces, and planning for General
+              House sessions, executive council projects, and annual club
+              celebrations.
             </p>
           </div>
 

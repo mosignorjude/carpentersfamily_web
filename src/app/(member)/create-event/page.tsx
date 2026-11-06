@@ -66,7 +66,8 @@ export default async function CreateEventPage() {
               New Event
             </h1>
             <p className="text-xs text-[#7A685D] font-medium mt-1">
-              Authorized for the Executive Council, Club Admin, and President · {userRoleTitle}
+              Authorized for the Executive Council, Club Admin, and President ·{" "}
+              {userRoleTitle}
             </p>
           </div>
         </div>

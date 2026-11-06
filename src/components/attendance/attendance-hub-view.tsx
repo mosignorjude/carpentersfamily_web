@@ -272,7 +272,10 @@ export function AttendanceHubView({
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
                 <span>
-                  {formatEventDateSpan(meeting.starts_at, meeting.duration_days)}
+                  {formatEventDateSpan(
+                    meeting.starts_at,
+                    meeting.duration_days,
+                  )}
                   , {formatEventTime(meeting.starts_at)} WAT
                 </span>
               </div>

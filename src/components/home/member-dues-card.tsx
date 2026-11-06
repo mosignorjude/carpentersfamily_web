@@ -16,8 +16,8 @@ import Link from "next/link";
 import { useState } from "react";
 import type { DuesMonthOption } from "@/app/(member)/dues/dues-forms";
 import {
-  PayDuesModal,
   type DuesPaymentSettings,
+  PayDuesModal,
 } from "@/components/dues/pay-dues-modal";
 import { formatNaira } from "@/lib/format";
 import type { HomeDashboardDues } from "@/lib/home-dashboard.server";
@@ -152,8 +152,7 @@ export function MemberDuesCard({
     };
   });
 
-  const monthlyRateNgn =
-    unpaidRows[0]?.amountNgn ?? rows[0]?.amountNgn ?? 5000;
+  const monthlyRateNgn = unpaidRows[0]?.amountNgn ?? rows[0]?.amountNgn ?? 5000;
 
   const monthsMap = new Map(rows.map((r) => [r.coveredMonth, r]));
 
@@ -291,7 +290,8 @@ export function MemberDuesCard({
               {formatNaira(unpaidTotalNgn)}
             </span>
             <span className="text-xs font-semibold text-[#7A685D]">
-              {unpaidMonthsCount} {unpaidMonthsCount === 1 ? "month" : "months"} due
+              {unpaidMonthsCount} {unpaidMonthsCount === 1 ? "month" : "months"}{" "}
+              due
             </span>
           </div>
           <div className="text-xs font-normal text-[#7A685D] mt-1">

@@ -53,7 +53,7 @@ describe("Finance Page Clean-Up & Audit Pagination (Stage 5)", () => {
       );
       assert.match(
         financesPageSource,
-        /\.range\(auditPage \* AUDIT_PAGE_SIZE, \(auditPage \+ 1\) \* AUDIT_PAGE_SIZE - 1\)/,
+        /\.range\(\s*auditPage \* AUDIT_PAGE_SIZE,\s*\(auditPage \+ 1\) \* AUDIT_PAGE_SIZE - 1,?\s*\)/,
       );
     });
 

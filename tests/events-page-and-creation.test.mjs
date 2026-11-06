@@ -27,7 +27,7 @@ describe("Events Page & /create-event Route (Stage 3)", () => {
     });
 
     it("changes 'general assemblies' to 'General House'", () => {
-      assert.match(eventsPageViewSource, /General House/);
+      assert.match(eventsPageViewSource, /General\s+House/);
       assert.doesNotMatch(eventsPageViewSource, /general assemblies/);
     });
 

@@ -35,7 +35,7 @@ describe("Home Portal — Dues Section and Hero Banner (Stage 2)", () => {
     it("displays Desktop wording with dynamic number of months due", () => {
       assert.match(
         memberDuesCardSource,
-        /\{unpaidMonthsCount\} \{unpaidMonthsCount === 1 \? "month" : "months"\} due/,
+        /\{unpaidMonthsCount\}\s+\{unpaidMonthsCount === 1 \? "month" : "months"\}\s*\{" "\}\s+due/,
       );
     });
 

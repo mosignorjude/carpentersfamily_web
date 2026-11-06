@@ -1854,7 +1854,9 @@ export async function createEventAction(formData: FormData) {
   revalidatePath("/events");
   revalidatePath("/meeting-hub");
   if (eventType === "meeting") {
-    redirect(`/meeting-hub?event=${encodeURIComponent(eventId)}&notice=created`);
+    redirect(
+      `/meeting-hub?event=${encodeURIComponent(eventId)}&notice=created`,
+    );
   }
   redirect(eventNoticeUrl("created"));
 }
