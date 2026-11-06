@@ -448,14 +448,16 @@ function TicketCheckoutInner({
                 STEP 1 OF 3: CHOOSE YOUR TICKET
             ================================================================ */}
             {activeStep === 1 && (
-              <div className="space-y-6">
+              <div className="space-y-5">
                 <div className="space-y-1">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-forest/10 text-forest text-[11px] font-bold tracking-wider uppercase">
-                    STEP 1 OF 3
-                  </span>
-                  <h3 className="font-serif font-bold text-2xl sm:text-3xl text-espresso">
-                    Choose Your Ticket
-                  </h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-serif font-bold text-xl sm:text-3xl text-espresso tracking-tight">
+                      Choose Your Ticket
+                    </h3>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-forest/10 text-forest text-[11px] font-bold tracking-wider uppercase shrink-0">
+                      1 OF 3
+                    </span>
+                  </div>
                   <p className="text-xs sm:text-sm text-body">
                     Select your ticket tier and the number of tickets you want
                     to buy.
@@ -586,27 +588,27 @@ function TicketCheckoutInner({
                 STEP 2 OF 3: ENTER YOUR DETAILS
             ================================================================ */}
             {activeStep === 2 && (
-              <div className="space-y-6">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-5">
+                <div className="flex items-center justify-between gap-2">
                   <button
-                    className="min-h-[48px] px-4 py-2 rounded-xl bg-white border border-linen text-forest text-xs sm:text-sm font-semibold hover:border-forest inline-flex items-center gap-2 transition-colors cursor-pointer shadow-2xs"
+                    className="min-h-[48px] px-3.5 py-1.5 rounded-xl bg-white border border-linen text-forest text-xs font-semibold hover:border-forest inline-flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                     onClick={() => setActiveStep(1)}
                     type="button"
                   >
                     <ArrowLeft
-                      className="w-4 h-4 text-forest"
+                      className="w-3.5 h-3.5 text-forest"
                       strokeWidth={2}
                     />
-                    <span>Back to Choose Your Ticket</span>
+                    <span>Back to Ticket</span>
                   </button>
 
-                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-forest/10 text-forest text-[11px] font-bold tracking-wider uppercase">
-                    STEP 2 OF 3 · ENTER YOUR DETAILS
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-forest/10 text-forest text-[11px] font-bold tracking-wider uppercase shrink-0">
+                    STEP 2 OF 3
                   </span>
                 </div>
 
                 <div className="space-y-1">
-                  <h3 className="font-serif font-bold text-2xl sm:text-3xl text-espresso">
+                  <h3 className="font-serif font-bold text-xl sm:text-3xl text-espresso tracking-tight">
                     Enter Your Details
                   </h3>
                   <p className="text-xs sm:text-sm text-body">
@@ -788,10 +790,10 @@ function TicketCheckoutInner({
                 STEP 3 OF 3: PAYMENT & RECEIPT
             ================================================================ */}
             {activeStep === 3 && (
-              <div className="space-y-6">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-5">
+                <div className="flex items-center justify-between gap-2">
                   <button
-                    className="min-h-[48px] px-4 py-2 rounded-xl bg-white border border-linen text-forest text-xs sm:text-sm font-semibold hover:border-forest inline-flex items-center gap-2 transition-colors cursor-pointer shadow-2xs"
+                    className="min-h-[48px] px-3.5 py-1.5 rounded-xl bg-white border border-linen text-forest text-xs font-semibold hover:border-forest inline-flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                     onClick={() => {
                       setActiveStep(2);
                       go({ step: 1 });
@@ -799,14 +801,14 @@ function TicketCheckoutInner({
                     type="button"
                   >
                     <ArrowLeft
-                      className="w-4 h-4 text-forest"
+                      className="w-3.5 h-3.5 text-forest"
                       strokeWidth={2}
                     />
-                    <span>Back to Enter Your Details</span>
+                    <span>Back to Details</span>
                   </button>
 
-                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-forest/10 text-forest text-[11px] font-bold tracking-wider uppercase">
-                    STEP 3 OF 3 · PAYMENT &amp; RECEIPT
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-forest/10 text-forest text-[11px] font-bold tracking-wider uppercase shrink-0">
+                    STEP 3 OF 3
                   </span>
                 </div>
 
@@ -1207,17 +1209,17 @@ function CheckoutStepIndicator({
   onSelectStep: (step: 1 | 2 | 3) => void;
 }) {
   const steps = [
-    { number: 1, label: "Step 1: Choose Your Ticket" },
-    { number: 2, label: "Step 2: Enter Your Details" },
-    { number: 3, label: "Step 3: Payment & Receipt" },
+    { number: 1, shortLabel: "Ticket", fullLabel: "Choose Ticket" },
+    { number: 2, shortLabel: "Details", fullLabel: "Enter Details" },
+    { number: 3, shortLabel: "Payment", fullLabel: "Payment" },
   ] as const;
 
   return (
     <nav
       aria-label="Ticket purchase steps"
-      className="p-2 sm:p-2.5 rounded-2xl bg-warm-canvas border border-linen"
+      className="p-1.5 sm:p-2 rounded-2xl bg-warm-canvas border border-linen"
     >
-      <ol className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <ol className="grid grid-cols-3 gap-1.5 sm:gap-2">
         {steps.map((s) => {
           const isActive = s.number === step;
           const isDone = s.number < step;
@@ -1228,7 +1230,7 @@ function CheckoutStepIndicator({
             <li key={s.number}>
               <button
                 aria-current={isActive ? "step" : undefined}
-                className={`w-full min-h-[48px] flex items-center gap-2.5 px-3 py-2 rounded-xl border text-xs font-semibold text-left transition-all ${
+                className={`w-full min-h-[48px] flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-xl border text-xs font-semibold text-left transition-all ${
                   isActive
                     ? "bg-white border-forest text-espresso ring-2 ring-forest/20 shadow-2xs"
                     : isDone
@@ -1240,26 +1242,24 @@ function CheckoutStepIndicator({
                 type="button"
               >
                 <span
-                  className={`w-6 h-6 rounded-full font-mono text-xs font-bold grid place-items-center shrink-0 ${
-                    isActive
+                  className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full font-mono text-[11px] sm:text-xs font-bold grid place-items-center shrink-0 ${
+                    isActive || isDone
                       ? "bg-forest text-white"
-                      : isDone
-                        ? "bg-forest text-white"
-                        : "bg-white border border-linen text-muted"
+                      : "bg-white border border-linen text-muted"
                   }`}
                 >
                   {isDone ? (
-                    <Check
-                      className="w-3.5 h-3.5 text-white"
-                      strokeWidth={2.5}
-                    />
+                    <Check className="w-3 h-3 text-white" strokeWidth={2.5} />
                   ) : s.number === 1 ? (
                     <Ticket className="w-3 h-3 text-white" />
                   ) : (
                     s.number
                   )}
                 </span>
-                <span className="truncate">{s.label}</span>
+                <span className="truncate text-[11px] sm:text-xs">
+                  <span className="sm:hidden">{s.shortLabel}</span>
+                  <span className="hidden sm:inline">{s.fullLabel}</span>
+                </span>
               </button>
             </li>
           );

@@ -84,11 +84,17 @@ export function TicketsStorefrontView({
           <div className="flex items-center gap-3 min-w-0">
             <Link
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-espresso transition-colors no-underline mr-1"
-              href="/"
-              title="Back to Landing Page"
+              href={isAuthenticatedMember ? "/portal" : "/"}
+              title={
+                isAuthenticatedMember
+                  ? "Back to Member Portal"
+                  : "Back to Landing Page"
+              }
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Home</span>
+              <span className="hidden sm:inline">
+                {isAuthenticatedMember ? "Portal" : "Home"}
+              </span>
             </Link>
             <Link
               className="flex items-center gap-3 min-w-0 no-underline text-espresso"
@@ -115,7 +121,7 @@ export function TicketsStorefrontView({
             </Link>
             <Link
               className="inline-flex items-center gap-1.5 min-h-[44px] whitespace-nowrap px-4 py-2 rounded-xl border border-linen bg-white hover:bg-cream text-xs font-bold text-forest transition-colors no-underline shadow-2xs"
-              href={isAuthenticatedMember ? "/events" : "/"}
+              href={isAuthenticatedMember ? "/portal" : "/"}
             >
               <span>
                 {isAuthenticatedMember ? "Member Portal" : "Member Sign In"}

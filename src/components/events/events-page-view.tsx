@@ -37,7 +37,7 @@ export function EventsPageView({
   roles,
   eventRolesByEvent,
   isManager,
-  userRoleTitle,
+  userRoleTitle: _userRoleTitle,
   userName: _userName,
   loadError,
 }: EventsPageViewProps) {

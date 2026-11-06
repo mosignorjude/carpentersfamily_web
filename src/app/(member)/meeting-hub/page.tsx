@@ -57,7 +57,7 @@ export default async function MeetingHubPage({
   else if (isGlobalExecutive) computedRole = "executive";
 
   // 2. Fetch all meetings strictly filtered by event_type = 'meeting'
-  const { data: eventsData, error: eventsError } = await supabase
+  const { data: eventsData } = await supabase
     .from("events")
     .select(
       "id, title, event_type, starts_at, duration_days, location, status, minutes_enabled, attendance_enabled, archived_at",

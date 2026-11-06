@@ -51,3 +51,15 @@ export interface TicketLookupState {
   error: string | null;
   pendingReference: string;
 }
+
+export interface OfficerTicketSummary {
+  totalGrossNgn: number;
+  totalPassesIssued: number;
+  totalCapacity: number;
+  pendingVerificationCount: number;
+}
+
+export interface PortalBoxOfficeEvent extends PublicTicketedEvent {
+  pendingOrdersCount?: number;
+  grossInflowNgn?: number;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarPlus, Info, Shield, Sparkles } from "lucide-react";
+import { Info, Shield, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { createEventAction } from "@/app/actions";
