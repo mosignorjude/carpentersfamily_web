@@ -14,9 +14,7 @@ export function LandingFooter() {
           href="/"
           className="flex items-center gap-3 group focus:outline-hidden"
         >
-          <span className="rounded-full bg-cream p-1.5 leading-none shrink-0">
-            <ClubLogo size="sm" className="shrink-0" />
-          </span>
+          <ClubLogo size="sm" className="shrink-0" />
           <span className="leading-tight">
             <span className="block font-serif font-bold text-cream text-base">
               Carpenters Family

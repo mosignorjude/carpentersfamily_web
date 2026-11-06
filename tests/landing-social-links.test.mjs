@@ -69,12 +69,18 @@ test("no landing surface ships a social anchor that goes nowhere", () => {
 });
 
 test("the dark mark is never dropped straight onto a dark surface", () => {
-  const chip = footer.match(
-    /<span className="([^"]*bg-(cream|white)[^"]*)"[^>]*>\s*<ClubLogo/,
+  // ClubLogo encapsulates its own circular white emblem (rounded-full bg-white),
+  // ensuring the brand mark is never dropped directly onto dark surfaces like bg-forest.
+  const logoContent = fs.readFileSync("src/components/club-logo.tsx", "utf8");
+  assert.match(
+    logoContent,
+    /rounded-full\s+bg-white/,
+    "ClubLogo must encapsulate a light circular chip behind the mark",
   );
-  assert.ok(
-    chip,
-    "the footer mark sits on bg-forest; it needs a light chip behind it to stay visible",
+  assert.match(
+    footer,
+    /<ClubLogo/,
+    "the footer mark sits on bg-forest; it must render ClubLogo with its encapsulated light emblem",
   );
 });
 

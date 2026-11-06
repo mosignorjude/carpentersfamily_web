@@ -46,6 +46,7 @@ yarn-error.log*
 /requirements-brief.md
 /DESIGN.md
 .superpowers/
+.impeccable/
 # Local scripts & user data exports
 scripts/*firebase_users*
 scripts/*.local.*

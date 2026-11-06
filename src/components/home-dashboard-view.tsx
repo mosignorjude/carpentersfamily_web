@@ -81,9 +81,11 @@ export default function HomeDashboardView({
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
             {/* Club Brand Emblem */}
-            <div className="hidden sm:flex shrink-0 p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] items-center justify-center shadow-2xs">
-              <ClubLogo size="md" variant="dark" />
-            </div>
+            <ClubLogo
+              className="hidden sm:inline-flex shrink-0"
+              size="md"
+              variant="dark"
+            />
 
             <div>
               <h1

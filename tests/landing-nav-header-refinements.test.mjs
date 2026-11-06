@@ -44,3 +44,12 @@ test("mobile drawer has logo, ends nav list with Box Office / Tickets, and keeps
   assert.doesNotMatch(nav, /<aside[\s\S]*?Request Membership/);
   assert.match(nav, /Partner With Us[\s\S]*?<LandingSocialLinks/);
 });
+
+test("club logo is rendered directly without double shape background wrappers in footer and home dashboard", () => {
+  const footer = fs.readFileSync("src/components/landing/landing-footer.tsx", "utf8");
+  assert.doesNotMatch(footer, /rounded-full\s+bg-cream[^>]*>\s*<ClubLogo/);
+
+  const dashboard = fs.readFileSync("src/components/home-dashboard-view.tsx", "utf8");
+  assert.doesNotMatch(dashboard, /rounded-xl\s+bg-\[#FAF6F0\][^>]*>\s*<ClubLogo/);
+});
+
