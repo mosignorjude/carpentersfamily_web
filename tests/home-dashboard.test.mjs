@@ -363,6 +363,26 @@ test("ticket sales and upcoming-event totals preserve returned counts", async ()
   ]);
 });
 
+test("tickets sold on the home screen count approved orders only", async () => {
+  const supabase = createSupabase({
+    tables: {
+      events: { data: [], error: null, count: 0 },
+      event_ticket_sales: { data: [{ quantity: 3 }], error: null, count: 3 },
+    },
+  });
+
+  await getHomeDashboardData(supabase, memberId, now);
+
+  const salesQuery = supabase.calls.find(
+    (call) => call.table === "event_ticket_sales",
+  );
+  assert.ok(salesQuery, "the home screen must query event_ticket_sales");
+  assert.deepEqual(
+    salesQuery.filters.find((filter) => filter.column === "verification_status"),
+    { method: "eq", column: "verification_status", value: "approved" },
+  );
+});
+
 test("announcements are bounded and private notifications are recipient-scoped", async () => {
   const supabase = createSupabase({
     tables: {

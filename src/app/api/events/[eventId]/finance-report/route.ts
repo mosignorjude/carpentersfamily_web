@@ -41,6 +41,7 @@ type SaleRow = {
   payment_method: string | null;
   created_at: string;
   refunded_at: string | null;
+  verification_status: "recorded" | "approved" | "rejected" | "cancelled";
 };
 
 type TierRow = { id: string; name: string };
@@ -170,7 +171,7 @@ export async function GET(
   let salesQuery = supabase
     .from("event_ticket_sales")
     .select(
-      "id,tier_id,buyer_name,quantity,unit_price_ngn,amount_ngn,payment_method,created_at,refunded_at",
+      "id,tier_id,buyer_name,quantity,unit_price_ngn,amount_ngn,payment_method,created_at,refunded_at,verification_status",
     )
     .eq("event_id", eventId)
     .order("created_at", { ascending: true })
@@ -268,7 +269,13 @@ export async function GET(
         "Ticket Sales",
         "",
         tierNames.get(sale.tier_id) ?? "Retained ticket tier",
-        sale.refunded_at ? "Sold; refund recorded" : "Paid",
+        sale.refunded_at
+          ? "Sold; refund recorded"
+          : sale.verification_status === "approved"
+            ? "Paid"
+            : sale.verification_status === "recorded"
+              ? "Paid — awaiting officer confirmation"
+              : `${sale.verification_status} — not counted`,
         saleAmount,
         sale.quantity,
         unitPrice,

@@ -466,6 +466,7 @@ async function countTicketsSold(supabase) {
       .from("event_ticket_sales")
       .select("quantity", { count: "exact" })
       .is("refunded_at", null)
+      .eq("verification_status", "approved")
       .order("id", { ascending: true })
       .range(0, TICKET_PAGE_SIZE - 1),
   );

@@ -84,6 +84,7 @@ export default async function EventsPage() {
             .select("event_id,quantity")
             .in("event_id", eventIds)
             .is("refunded_at", null)
+            .eq("verification_status", "approved")
             .limit(1000),
         ])
       : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }];
