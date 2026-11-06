@@ -446,7 +446,8 @@ async function main() {
     };
     writeJson(path.join(staging, "manifest.summary.json"), summary);
 
-    const tarPrefix = process.platform === "win32" ? ["--force-local"] : [];
+    const tarHelp = spawnSync("tar", ["--help"], { encoding: "utf8" });
+    const tarPrefix = (tarHelp.stdout || "").includes("--force-local") ? ["--force-local"] : [];
     const dbTar = path.join(buildDir, `${baseName}.db.tar.gz`);
     run("tar", [
       ...tarPrefix,
