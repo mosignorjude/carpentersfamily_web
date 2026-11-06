@@ -53,6 +53,10 @@ Authentication credentials and sessions; member names, email addresses, username
 | CSV formula injection and unsafe/expensive PDF inputs | Relevant to exports containing user text. | Neutralize formula-leading cells, escape PDF text, bound dates/rows/input size; test dangerous prefixes and large data. |
 | Secret exposure, vulnerable dependency, unsafe deployment | Relevant across CI and production. | Ignore local env files, keep server secrets server-only, lock dependencies, review advisories, audit production settings and generated bundles. |
 | Backup theft, accidental deletion, denial of service | Relevant to full-data export, uploads, auth, and public endpoints. | Restrict backup identities/destination, restore drills, request/upload bounds, and provider rate controls only where verified available. |
+| Anonymous order flooding | Public box office allows unauthenticated ticket orders with payment receipts. | 20 live orders per event, 5 per email overall, and 3 per email+event, enforced inside `submit_ticket_order` against `verification_status = 'recorded'` rows (approving or cancelling frees a slot). Honeypot field and 5-second form dwell time reject unattended scripts before the database is consulted. No third-party captcha: `frame-src 'none'` in CSP makes one impossible (deliberate constraint). |
+| Reference enumeration | Order references are short public strings (`CF-` + 8 chars). | `CF-` + 8 characters drawn from 32-symbol alphabet via `get_byte % 32` yields ~1.1×10¹² combinations; lookup strictly requires the matching buyer email. A guess yields nothing. |
+| Order-status scraping / PII leakage | Unauthenticated endpoint for checking order status could leak buyer contact data. | `lookup_ticket_order` requires matching reference **and** email, returning no rows on mismatch (cannot confirm existence). Returns no receipt, no phone number, and no other buyer's row. `buyer_email` and `buyer_phone` are excluded from per-column SELECT grants on `event_ticket_sales`. |
+| Receipt storage abuse | Public upload endpoint for payment receipts. | Validated by `validateFinanceReceiptUpload` before write (type, size, magic bytes), stored in R2 under hash-derived key, orphan objects deleted on failure/dedup. Guests never see stored files. |
 
 ## Step 4 implemented controls and verification
 
@@ -336,3 +340,5 @@ Authentication credentials and sessions; member names, email addresses, username
 ## Out of scope until architecture adds a relevant path
 
 There is no public API integration, payment processor, custom database password handling, or externally executable user content in the current implemented steps. Reassess these threats if such a capability is proposed. No absence of a current path is a claim that the completed product is safe.
+
+- **Anonymous order rate limiting:** Throttles are counted per email (3 per email+event, 5 overall, 20 live per event), and a determined actor with many addresses can still submit many orders; there is no IP-based limit and no rate limit at the edge. That is the accepted cost of running an anonymous ticket till without an external payment provider.

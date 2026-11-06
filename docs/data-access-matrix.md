@@ -322,7 +322,10 @@ trigger prevents disabling or removing the final active staff administrator.
 
 ## Explicitly denied operations
 
-- `anon` has no schema/table access or role RPC execution.
+- `anon` has no schema `USAGE`, no table privileges anywhere, and no role RPC execution. It holds
+  `EXECUTE` on exactly two `security definer` functions, `public.submit_ticket_order` and
+  `public.lookup_ticket_order`, which are the box office's only paths and which refuse any signed-in
+  actor with `42501`. Everything else about `anon` remains denied.
 - Authenticated client roles have only the explicit table grants listed above;
   all app-facing tables use forced RLS. Dues and membership tables are
   read-only to direct clients, and mutations go through checked procedures. No
@@ -341,6 +344,23 @@ trigger prevents disabling or removing the final active staff administrator.
   finance rows. Executives cannot correct dues payments, change dues rates, or
   correct/void club transactions. No application role can directly delete or
   rewrite financial history.
+
+## Public box office authorization — till model
+
+| Operation | Who | Path | Enforced by |
+| --- | --- | --- | --- |
+| Read ticketed events + treasury account | anon and active members | `get_public_ticketed_events()` | definer function; approved-only `tier_sales` CTE |
+| Submit a ticket order with a receipt | anon | `submit_ticket_order(...)` | definer function; event must be `scheduled`, ticketing on, tier active; throttles of 3 per email+event, 5 per email overall, 20 per event |
+| Read one order's status | anon | `lookup_ticket_order(reference, email)` | both secrets must match; no rows otherwise, so it cannot confirm a reference exists |
+| Record a sale at the box office | event lead / officer | `record_event_ticket_sale(...)` | existing `authenticated` grants, unchanged |
+| Approve / reject / cancel a sale | admin, president, executive, event lead (not their own sale) | `verify_event_ticket_sale(...)` | row lock on `private.administration_guard`; reason mandatory for reject and cancel |
+| See who bought a ticket | event lead / officer | `event_ticket_sales` row reads | `buyer_email` and `buyer_phone` are **not** in the per-column SELECT grant list, so no client read returns them |
+
+`source = 'online'` rows carry `public_reference`, `buyer_email`, `buyer_phone` and
+`verification_status = 'recorded'` until an officer decides. A `cancelled` decision sets neither
+`refunded_at` nor `refund_reason` and is excluded from every revenue sum. Sales count toward revenue
+and toward tier capacity only at `verification_status = 'approved'`; `event_financial_transactions`
+keeps its did-cash-move rule and is filtered on `payment_status`, not on review status.
 
 ## Verification coverage
 
