@@ -94,9 +94,7 @@ export function TicketsStorefrontView({
             className="flex items-center gap-3 min-w-0 no-underline text-espresso"
             href="/tickets"
           >
-            <div className="p-2 rounded-xl bg-white border border-linen shadow-2xs">
-              <ClubLogo size="sm" variant="dark" />
-            </div>
+            <ClubLogo size="sm" variant="dark" />
             <div className="min-w-0">
               <span className="text-sm font-extrabold tracking-tight block leading-tight text-espresso truncate sm:hidden">
                 {clubBrand.shortName}

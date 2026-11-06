@@ -51,13 +51,8 @@ export function LandingNav() {
               className="flex items-center gap-3 min-h-[44px] shrink-0 group focus:outline-hidden"
             >
               <ClubLogo size="sm" className="shrink-0" />
-              <span className="leading-tight">
-                <span className="block font-serif font-bold text-espresso text-base sm:text-lg tracking-tight">
-                  Carpenters Family
-                </span>
-                <span className="block text-[11px] text-umber">
-                  Asaba, Delta State
-                </span>
+              <span className="font-serif font-bold text-espresso text-base sm:text-lg tracking-tight">
+                Carpenters Family
               </span>
             </Link>
 

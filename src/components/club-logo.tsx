@@ -14,10 +14,10 @@ export function ClubLogo({
   variant = "dark",
 }: ClubLogoProps) {
   const sizeMap = {
-    sm: { width: 22, height: 40, imgClass: "w-[22px] h-[40px]" },
-    md: { width: 31, height: 56, imgClass: "w-[31px] h-[56px]" },
-    lg: { width: 44, height: 80, imgClass: "w-[44px] h-[80px]" },
-    xl: { width: 55, height: 100, imgClass: "w-[55px] h-[100px]" },
+    sm: { width: 18, height: 32, circleClass: "h-10 w-10 sm:h-11 sm:w-11" },
+    md: { width: 26, height: 46, circleClass: "h-14 w-14" },
+    lg: { width: 36, height: 64, circleClass: "h-20 w-20" },
+    xl: { width: 48, height: 86, circleClass: "h-24 w-24" },
   };
 
   const currentSize = sizeMap[size] ?? sizeMap.md;
@@ -27,14 +27,18 @@ export function ClubLogo({
 
   return (
     <div className={`inline-flex items-center gap-3 ${className}`}>
-      {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
-      <img
-        alt={clubBrand.logoAlt}
-        className={`${currentSize.imgClass} object-contain shrink-0`}
-        height={currentSize.height}
-        src={clubBrand.logoSrc}
-        width={currentSize.width}
-      />
+      <div
+        className={`rounded-full bg-white border border-[#E5DDD3] flex items-center justify-center shrink-0 shadow-2xs ${currentSize.circleClass}`}
+      >
+        {/* biome-ignore lint/performance/noImgElement: Next/Image adds an inline style rejected by the production CSP. */}
+        <img
+          alt={clubBrand.logoAlt}
+          className="object-contain shrink-0"
+          height={currentSize.height}
+          src={clubBrand.logoSrc}
+          width={currentSize.width}
+        />
+      </div>
       {showText && (
         <div className="flex flex-col">
           <span

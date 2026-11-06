@@ -3990,10 +3990,14 @@ textarea:focus-visible {
 }
 
 .app-brand-logo {
-  width: 1.375rem;
-  height: 2.5rem;
-  flex: 0 0 auto;
-  border-radius: 0.5rem;
+  box-sizing: border-box;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 2.75rem;
+  padding: 0.35rem;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 1px solid #E5DDD3;
   object-fit: contain;
 }
 
@@ -12442,9 +12446,14 @@ textarea:focus-visible {
 }
 
 .staff-brand-mark {
+  box-sizing: border-box;
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 0.75rem;
+  flex: 0 0 2.5rem;
+  padding: 0.35rem;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   object-fit: contain;
 }
 
