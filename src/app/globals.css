@@ -3997,7 +3997,7 @@ textarea:focus-visible {
   padding: 0.35rem;
   border-radius: 50%;
   background-color: #fff;
-  border: 1px solid #E5DDD3;
+  border: 1px solid #e5ddd3;
   object-fit: contain;
 }
 

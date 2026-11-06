@@ -47,7 +47,6 @@ function InstagramIcon({ className = "h-4 w-4" }: { className?: string }) {
 
 export function LandingSocialLinks({
   tone = "onLight",
-  showHandle = false,
   className = "",
 }: LandingSocialLinksProps) {
   return (
