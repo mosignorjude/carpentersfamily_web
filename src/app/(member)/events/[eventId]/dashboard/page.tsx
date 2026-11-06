@@ -226,7 +226,7 @@ export default async function EventDashboardPage({
     supabase
       .from("event_ticket_sales")
       .select(
-        "id, tier_id, quantity, amount_ngn, buyer_name, payment_method, created_at, refunded_at, refund_reason, seller_id, verification_status, verified_by, verified_at, rejection_reason",
+        "id, tier_id, quantity, amount_ngn, buyer_name, payment_method, created_at, refunded_at, refund_reason, seller_id, verification_status, verified_by, verified_at, rejection_reason, public_reference, source",
       )
       .eq("event_id", eventId)
       .order("created_at", { ascending: false }),
@@ -349,7 +349,9 @@ export default async function EventDashboardPage({
 
   // Ticket Tiers (strictly from real database tiers & unrefunded sales)
   const allSales = salesResult.data ?? [];
-  const activeSales = allSales.filter((s) => !s.refunded_at);
+  const activeSales = allSales.filter(
+    (s) => !s.refunded_at && s.verification_status === "approved",
+  );
   const tierNameById = new Map<string, string>();
   const ticketTiers: DashboardTicketTier[] = (tiersResult.data ?? []).map(
     (t) => {
@@ -717,11 +719,13 @@ export default async function EventDashboardPage({
       type: "revenue",
       category: "ticket_sales",
       categoryLabel: "Ticket Sales",
-      description: `${s.quantity}x ${tierName} Pass${s.quantity === 1 ? "" : "es"}`,
+      description: `${s.quantity}x ${tierName} Ticket${s.quantity === 1 ? "" : "s"}`,
       amount: s.amount_ngn,
       payerPayee: s.buyer_name || "Member Ticket Buyer",
       paymentMethod: paymentMethodLabels[s.payment_method] || s.payment_method,
-      paymentRef: s.id.slice(0, 8).toUpperCase(),
+      paymentRef:
+        (s as { public_reference?: string | null }).public_reference ||
+        s.id.slice(0, 8).toUpperCase(),
       paymentStatus: "paid",
       receipt: rc ?? null,
       receiptFileName: rc?.filename,
@@ -730,10 +734,12 @@ export default async function EventDashboardPage({
       authorizerRole: "Recorded",
       status: s.refunded_at ? "voided" : "posted",
       voidReason: s.refund_reason || undefined,
-      verificationStatus: s.refunded_at
-        ? "rejected"
-        : (s.verification_status as "recorded" | "approved" | "rejected") ||
-          "approved",
+      verificationStatus:
+        (s.verification_status as
+          | "recorded"
+          | "approved"
+          | "rejected"
+          | "cancelled") ?? "approved",
       verifiedBy: s.verified_by ?? undefined,
       verifiedAt: s.verified_at ?? undefined,
       rejectionReason: s.rejection_reason || s.refund_reason || undefined,

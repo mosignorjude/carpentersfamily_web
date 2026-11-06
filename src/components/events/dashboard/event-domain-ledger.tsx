@@ -42,7 +42,7 @@ export function EventDomainLedger({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<
-    "all" | "recorded" | "approved" | "rejected"
+    "all" | "recorded" | "approved" | "rejected" | "cancelled"
   >("all");
 
   const isOfficer =
@@ -94,6 +94,9 @@ export function EventDomainLedger({
   ).length;
   const rejectedCount = transactions.filter(
     (t) => resolveStatus(t) === "rejected",
+  ).length;
+  const cancelledCount = transactions.filter(
+    (t) => resolveStatus(t) === "cancelled",
   ).length;
 
   return (
@@ -189,6 +192,21 @@ export function EventDomainLedger({
             <span className="w-2 h-2 rounded-full bg-[#BA3C2A]" />
             Rejected ({rejectedCount})
           </button>
+          <button
+            className={`px-3.5 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] flex items-center gap-1.5 ${
+              statusFilter === "cancelled"
+                ? "bg-[#5C4638] text-white font-semibold"
+                : "text-[#5C4638] hover:bg-[#FAF6F0]"
+            }`}
+            onClick={() => {
+              setStatusFilter("cancelled");
+              setCurrentPage(1);
+            }}
+            type="button"
+          >
+            <span className="w-2 h-2 rounded-full bg-[#5C4638]" />
+            Cancelled ({cancelledCount})
+          </button>
         </div>
 
         <div className="text-xs text-[#7A685D] font-mono">
@@ -221,6 +239,8 @@ export function EventDomainLedger({
           pageTransactions.map((txn) => {
             const status = resolveStatus(txn);
             const isRejected = status === "rejected";
+            const isCancelled = status === "cancelled";
+            const isNotCounted = isRejected || isCancelled;
             const isPending = status === "recorded";
             const isApproved = status === "approved";
             const isExpense = domain === "expenses" || txn.type === "expense";
@@ -233,7 +253,7 @@ export function EventDomainLedger({
             return (
               <div
                 className={`p-4 space-y-3 ${
-                  isRejected ? "bg-[#FAF6F0]/40 opacity-80" : "bg-white"
+                  isNotCounted ? "bg-[#FAF6F0]/40 opacity-80" : "bg-white"
                 }`}
                 key={`mobile-${txn.id}`}
               >
@@ -261,19 +281,24 @@ export function EventDomainLedger({
                   <div className="text-right">
                     <span
                       className={`text-base font-bold font-mono tabular-nums ${
-                        isRejected
+                        isNotCounted
                           ? "line-through text-[#6B5D53]"
                           : isExpense
                             ? "text-[#BA3C2A]"
                             : "text-[#174C37]"
                       }`}
                     >
-                      {isRejected ? "" : isExpense ? "-" : "+"}
+                      {isNotCounted ? "" : isExpense ? "-" : "+"}
                       {formatNaira(txn.amount)}
                     </span>
                     {isRejected && (
                       <span className="block text-[10px] font-bold uppercase text-[#BA3C2A]">
                         Reversed
+                      </span>
+                    )}
+                    {isCancelled && (
+                      <span className="block text-[10px] font-bold uppercase text-[#5C4638]">
+                        Cancelled
                       </span>
                     )}
                   </div>
@@ -296,6 +321,11 @@ export function EventDomainLedger({
                       <strong>Reversed:</strong> {txn.rejectionReason}
                     </div>
                   )}
+                  {isCancelled && txn.rejectionReason && (
+                    <div className="mt-1.5 text-xs text-[#5C4638] bg-[#FAF6F0] p-2 rounded-lg border border-[#E5DDD3]">
+                      <strong>Cancelled:</strong> {txn.rejectionReason}
+                    </div>
+                  )}
                 </div>
 
                 {/* Footer: Voucher, Status, Actions */}
@@ -315,6 +345,11 @@ export function EventDomainLedger({
                     {isRejected && (
                       <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
                         Rejected
+                      </span>
+                    )}
+                    {isCancelled && (
+                      <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3]">
+                        Cancelled
                       </span>
                     )}
 
@@ -415,6 +450,8 @@ export function EventDomainLedger({
                 pageTransactions.map((txn) => {
                   const status = resolveStatus(txn);
                   const isRejected = status === "rejected";
+                  const isCancelled = status === "cancelled";
+                  const isNotCounted = isRejected || isCancelled;
                   const isPending = status === "recorded";
                   const isApproved = status === "approved";
                   const isExpense =
@@ -428,7 +465,7 @@ export function EventDomainLedger({
                   return (
                     <tr
                       className={`hover:bg-[#FAF6F0]/60 transition-colors ${
-                        isRejected ? "bg-[#FAF6F0]/30 opacity-75" : ""
+                        isNotCounted ? "bg-[#FAF6F0]/30 opacity-75" : ""
                       }`}
                       key={txn.id}
                     >
@@ -464,6 +501,11 @@ export function EventDomainLedger({
                             <strong>Reversed:</strong> {txn.rejectionReason}
                           </div>
                         )}
+                        {isCancelled && txn.rejectionReason && (
+                          <div className="mt-1 text-[10px] text-[#5C4638] bg-[#FAF6F0] p-1.5 rounded-md border border-[#E5DDD3]">
+                            <strong>Cancelled:</strong> {txn.rejectionReason}
+                          </div>
+                        )}
                       </td>
 
                       {/* Category */}
@@ -480,19 +522,24 @@ export function EventDomainLedger({
                       <td className="py-3 px-4 text-right whitespace-nowrap">
                         <span
                           className={`text-sm font-bold font-mono tabular-nums ${
-                            isRejected
+                            isNotCounted
                               ? "line-through text-[#7A685D]"
                               : isExpense
                                 ? "text-[#BA3C2A]"
                                 : "text-[#174C37]"
                           }`}
                         >
-                          {isRejected ? "" : isExpense ? "-" : "+"}
+                          {isNotCounted ? "" : isExpense ? "-" : "+"}
                           {formatNaira(txn.amount)}
                         </span>
                         {isRejected && (
                           <span className="block text-[10px] font-bold uppercase text-[#BA3C2A]">
                             Reversed
+                          </span>
+                        )}
+                        {isCancelled && (
+                          <span className="block text-[10px] font-bold uppercase text-[#5C4638]">
+                            Cancelled
                           </span>
                         )}
                       </td>
@@ -524,6 +571,11 @@ export function EventDomainLedger({
                         {isRejected && (
                           <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
                             Rejected
+                          </span>
+                        )}
+                        {isCancelled && (
+                          <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3]">
+                            Cancelled
                           </span>
                         )}
                       </td>

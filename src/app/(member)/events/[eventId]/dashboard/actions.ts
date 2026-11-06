@@ -14,7 +14,7 @@ export interface VerifyTransactionParams {
 export interface VerifyTicketSaleParams {
   eventId: string;
   saleId: string;
-  decision: "approved" | "rejected";
+  decision: "approved" | "rejected" | "cancelled";
   reason?: string;
 }
 
@@ -70,13 +70,13 @@ export async function verifyEventTicketSaleAction(
   }
 
   if (
-    params.decision === "rejected" &&
+    (params.decision === "rejected" || params.decision === "cancelled") &&
     (!params.reason || params.reason.trim().length < 5)
   ) {
     return {
       success: false,
       error:
-        "A mandatory explanation of at least 5 characters is required to reject/reverse a ticket sale.",
+        "A mandatory explanation of at least 5 characters is required to reject or cancel a ticket sale.",
     };
   }
 

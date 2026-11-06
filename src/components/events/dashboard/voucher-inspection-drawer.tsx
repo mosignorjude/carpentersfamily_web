@@ -2,6 +2,7 @@
 
 import {
   AlertTriangle,
+  Ban,
   CheckCircle2,
   Download,
   ExternalLink,
@@ -43,6 +44,8 @@ export function VoucherInspectionDrawer({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [showCancelInput, setShowCancelInput] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!isOpen || !transaction) return null;
@@ -52,6 +55,8 @@ export function VoucherInspectionDrawer({
       ? "rejected"
       : transaction.verificationStatus || "approved";
   const isRejected = status === "rejected";
+  const isCancelled = status === "cancelled";
+  const isNotCounted = isRejected || isCancelled;
   const isApproved = status === "approved";
   const isPending = status === "recorded";
   const isExpense = transaction.type === "expense";
@@ -129,6 +134,36 @@ export function VoucherInspectionDrawer({
     } else {
       setShowRejectInput(false);
       setRejectionReason("");
+      onClose();
+    }
+  }
+
+  async function handleCancel() {
+    if (!transaction || !isTicketSale) return;
+    const trimmed = cancellationReason.trim();
+    if (trimmed.length < 5) {
+      setErrorMessage(
+        "Please say why this order is being cancelled (at least 5 characters).",
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    const res = await verifyEventTicketSaleAction({
+      eventId,
+      saleId: transaction.id,
+      decision: "cancelled",
+      reason: trimmed,
+    });
+
+    setIsSubmitting(false);
+    if (!res.success) {
+      setErrorMessage(res.error || "Cancellation failed.");
+    } else {
+      setShowCancelInput(false);
+      setCancellationReason("");
       onClose();
     }
   }
@@ -213,14 +248,14 @@ export function VoucherInspectionDrawer({
                 </span>
                 <div
                   className={`text-2xl sm:text-3xl font-extrabold font-mono tabular-nums ${
-                    isRejected
+                    isNotCounted
                       ? "line-through text-[#7A685D]"
                       : isExpense
                         ? "text-[#BA3C2A]"
                         : "text-[#174C37]"
                   }`}
                 >
-                  {isRejected ? "" : isExpense ? "-" : "+"}
+                  {isNotCounted ? "" : isExpense ? "-" : "+"}
                   {formatNaira(transaction.amount)}
                 </div>
                 <div className="text-xs text-[#7A685D] pt-1">
@@ -290,14 +325,21 @@ export function VoucherInspectionDrawer({
                           Rejected / Reversed
                         </span>
                       )}
+                      {isCancelled && (
+                        <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3]">
+                          Cancelled — no payment verified
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {isRejected && transaction.rejectionReason && (
-                  <div className="p-3 rounded-xl bg-[#FDF0EE] border border-[#F5C7C0] text-xs text-[#BA3C2A] space-y-1">
+                {isNotCounted && transaction.rejectionReason && (
+                  <div className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#5C4638] space-y-1">
                     <strong className="block font-bold">
-                      Officer Rejection Explanation:
+                      {isCancelled
+                        ? "Officer's cancellation note:"
+                        : "Officer Rejection Explanation:"}
                     </strong>
                     <p className="italic">"{transaction.rejectionReason}"</p>
                   </div>
@@ -454,12 +496,63 @@ export function VoucherInspectionDrawer({
               </div>
             </div>
           )}
+
+          {/* Cancellation Input Section */}
+          {showCancelInput && (
+            <div className="p-4 rounded-2xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-3 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#5C4638] flex items-center gap-1.5">
+                  <Ban className="w-4 h-4" />
+                  Why is this order being cancelled? (e.g. Buyer said they did
+                  not transfer; order duplicated)
+                </span>
+                <button
+                  className="text-xs text-[#7A685D] hover:underline cursor-pointer"
+                  onClick={() => setShowCancelInput(false)}
+                  type="button"
+                >
+                  Cancel
+                </button>
+              </div>
+              <textarea
+                className="w-full text-xs p-3 bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#7A685D] focus:outline-hidden focus:ring-2 focus:ring-[#5C4638]"
+                onChange={(e) => setCancellationReason(e.target.value)}
+                placeholder="State why this order is being cancelled..."
+                rows={3}
+                value={cancellationReason}
+              />
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  className="px-3 py-1.5 text-xs text-[#5C4638] hover:bg-white rounded-lg transition-colors cursor-pointer"
+                  onClick={() => setShowCancelInput(false)}
+                  type="button"
+                >
+                  Back
+                </button>
+                <button
+                  className="px-4 py-2 bg-[#5C4638] text-white rounded-xl text-xs font-bold hover:bg-[#3D291F] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                  disabled={
+                    isSubmitting || cancellationReason.trim().length < 5
+                  }
+                  onClick={handleCancel}
+                  type="button"
+                >
+                  <Ban className="w-4 h-4" />
+                  <span>Cancel this order</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Drawer Footer Controls */}
         <div className="p-4 sm:p-5 border-t border-[#E5DDD3] bg-[#FAF6F0] flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-xs text-[#7A685D]">
-            {isRejected ? (
+            {isCancelled ? (
+              <span className="text-[#5C4638] font-medium">
+                This order was cancelled and never counted as revenue.
+              </span>
+            ) : isRejected ? (
               <span className="text-[#BA3C2A] font-medium">
                 This transaction has been permanently reversed. Re-approval is
                 forbidden.
@@ -488,13 +581,25 @@ export function VoucherInspectionDrawer({
             </button>
 
             {isOfficer &&
-              !isRejected &&
+              !isNotCounted &&
               (isExecutiveSelfReview ? (
                 <span className="text-xs font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-3 py-2 rounded-xl">
                   Awaiting Independent Officer Review
                 </span>
               ) : (
                 <>
+                  {isTicketSale && isPending && !showCancelInput && (
+                    <button
+                      className="px-4 py-2 bg-white text-[#5C4638] border border-[#E5DDD3] rounded-xl text-xs font-bold hover:bg-[#FAF6F0] transition-colors cursor-pointer flex items-center gap-1.5 min-h-[44px]"
+                      disabled={isSubmitting}
+                      onClick={() => setShowCancelInput(true)}
+                      type="button"
+                    >
+                      <Ban className="w-4 h-4" />
+                      <span>Cancel order</span>
+                    </button>
+                  )}
+
                   {!showRejectInput && (
                     <button
                       className="px-4 py-2 bg-white text-[#BA3C2A] border border-[#BA3C2A]/40 rounded-xl text-xs font-bold hover:bg-[#FDF0EE] transition-colors cursor-pointer flex items-center gap-1.5 min-h-[38px]"

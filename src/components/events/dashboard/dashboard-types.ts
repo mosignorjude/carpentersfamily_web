@@ -111,7 +111,7 @@ export interface DashboardTransaction {
   voidedBy?: string;
   voidedAt?: string;
   notes?: string;
-  verificationStatus?: "recorded" | "approved" | "rejected";
+  verificationStatus?: "recorded" | "approved" | "rejected" | "cancelled";
   verifiedBy?: string;
   verifiedAt?: string;
   rejectionReason?: string;
