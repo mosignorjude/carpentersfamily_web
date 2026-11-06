@@ -1823,14 +1823,19 @@ export async function createEventAction(formData: FormData) {
     redirect(eventNoticeUrl("invalid-request"));
   }
 
+  const effectiveMinutesEnabled =
+    eventType === "party" ? false : minutesEnabled;
+  const effectiveAttendanceEnabled =
+    eventType === "party" ? false : attendanceEnabled;
+
   const { data: eventId, error } = await actor.supabase.rpc("create_event", {
     p_title: title,
     p_event_type: eventType,
     p_starts_at: startsAt,
     p_location: location,
     p_description: description,
-    p_minutes_enabled: minutesEnabled,
-    p_attendance_enabled: attendanceEnabled,
+    p_minutes_enabled: effectiveMinutesEnabled,
+    p_attendance_enabled: effectiveAttendanceEnabled,
     p_budget_enabled: budgetEnabled,
     p_income_enabled: incomeEnabled,
     p_expenses_enabled: expensesEnabled,

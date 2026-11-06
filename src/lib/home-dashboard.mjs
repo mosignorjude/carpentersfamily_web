@@ -234,7 +234,9 @@ function mapEventRow(row, nowTimestamp) {
     incomeEnabled: row.income_enabled,
     expensesEnabled: row.expenses_enabled,
     ticketingEnabled: row.ticketing_enabled,
-    ...(row.attendance_enabled === true ? { attendanceEnabled: true } : {}),
+    ...(row.event_type !== "party" && row.attendance_enabled === true
+      ? { attendanceEnabled: true }
+      : {}),
   };
 }
 

@@ -168,7 +168,7 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
 
               {/* Attendance Self-Check & Details Action */}
               <div className="pt-2 flex items-center justify-between gap-3">
-                {evt.attendanceEnabled ? (
+                {evt.attendanceEnabled && evt.eventType !== "party" ? (
                   <Link
                     className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-colors min-h-[44px] min-w-[44px] no-underline ${
                       attendanceRecorded

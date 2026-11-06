@@ -77,8 +77,10 @@ export function EventCard({
 
   // Active feature labels list
   const activeFeatures: string[] = [];
-  if (event.minutes_enabled) activeFeatures.push("Meeting Minutes");
-  if (event.attendance_enabled) activeFeatures.push("Attendance Tracking");
+  if (event.event_type !== "party" && event.minutes_enabled)
+    activeFeatures.push("Meeting Minutes");
+  if (event.event_type !== "party" && event.attendance_enabled)
+    activeFeatures.push("Attendance Tracking");
   if (event.ticketing_enabled) activeFeatures.push("Ticketing Passes");
   if (event.budget_enabled) activeFeatures.push("Budget System");
   if (event.income_enabled) activeFeatures.push("Revenue Streams");
@@ -376,9 +378,10 @@ export function EventCard({
               <span>Open Event Finances</span>
               <ArrowRight className="w-4 h-4 text-[#D6A23A]" />
             </Link>
-          ) : event.event_type === "meeting" ||
-            event.minutes_enabled ||
-            event.attendance_enabled ? (
+          ) : event.event_type !== "party" &&
+            (event.event_type === "meeting" ||
+              event.minutes_enabled ||
+              event.attendance_enabled) ? (
             <Link
               className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[48px] no-underline"
               href={`/meeting-hub?event=${encodeURIComponent(event.id)}`}
@@ -389,23 +392,21 @@ export function EventCard({
             </Link>
           ) : null}
 
-          {/* Secondary Link (Meeting Hub when party or finances is primary) */}
-          {((event.event_type === "party" &&
-            (event.minutes_enabled || event.attendance_enabled)) ||
-            (event.event_type !== "party" &&
-              (event.budget_enabled ||
-                event.income_enabled ||
-                event.expenses_enabled ||
-                event.ticketing_enabled) &&
-              (event.minutes_enabled || event.attendance_enabled))) && (
-            <Link
-              className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-xl transition-colors min-h-[44px] no-underline"
-              href={`/meeting-hub?event=${encodeURIComponent(event.id)}`}
-            >
-              <FileText className="w-4 h-4" />
-              <span>Meeting Hub</span>
-            </Link>
-          )}
+          {/* Secondary Link (Meeting Hub when finances is primary on a non-party event) */}
+          {event.event_type !== "party" &&
+            (event.budget_enabled ||
+              event.income_enabled ||
+              event.expenses_enabled ||
+              event.ticketing_enabled) &&
+            (event.minutes_enabled || event.attendance_enabled) && (
+              <Link
+                className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-xl transition-colors min-h-[44px] no-underline"
+                href={`/meeting-hub?event=${encodeURIComponent(event.id)}`}
+              >
+                <FileText className="w-4 h-4" />
+                <span>Meeting Hub</span>
+              </Link>
+            )}
 
           {/* Management Actions Disclosure on Mobile */}
           {[
@@ -568,17 +569,18 @@ export function EventCard({
             )}
 
             {/* Meeting Hub */}
-            {(event.event_type === "meeting" ||
-              event.minutes_enabled ||
-              event.attendance_enabled) && (
-              <Link
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-xl transition-colors min-h-[44px] no-underline"
-                href={`/meeting-hub?event=${encodeURIComponent(event.id)}`}
-              >
-                <FileText className="w-4 h-4" />
-                <span>Meeting Hub</span>
-              </Link>
-            )}
+            {event.event_type !== "party" &&
+              (event.event_type === "meeting" ||
+                event.minutes_enabled ||
+                event.attendance_enabled) && (
+                <Link
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-xl transition-colors min-h-[44px] no-underline"
+                  href={`/meeting-hub?event=${encodeURIComponent(event.id)}`}
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Meeting Hub</span>
+                </Link>
+              )}
 
             {/* Meeting / Other: Event Finances */}
             {event.event_type !== "party" &&
