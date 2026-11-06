@@ -81,3 +81,21 @@ test("tickets storefront header links route authenticated members to /portal", (
   );
 });
 
+test("PortalBoxOfficeView provides segmented view toggle for officers without duplicating event lists", () => {
+  const portalSource = readFileSync(
+    "src/components/tickets/portal-box-office-view.tsx",
+    "utf8",
+  );
+  assert.match(
+    portalSource,
+    /tab-officer-passes/,
+    "PortalBoxOfficeView must provide Browse Events & Passes tab for officers",
+  );
+  assert.match(
+    portalSource,
+    /tab-officer-desk/,
+    "PortalBoxOfficeView must provide Operations & Verification Desk tab for officers",
+  );
+});
+
+

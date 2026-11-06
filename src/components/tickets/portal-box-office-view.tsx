@@ -7,10 +7,12 @@ import {
   ExternalLink,
   FileText,
   MapPin,
+  ShieldCheck,
   Sparkles,
   Ticket,
 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { formatEventTime } from "@/lib/event-times.mjs";
 import { formatNaira } from "@/lib/format";
 import { tierRemaining } from "@/lib/ticket-order-state.mjs";
@@ -36,6 +38,8 @@ export function PortalBoxOfficeView({
   bank,
   canManage = true,
 }: PortalBoxOfficeViewProps) {
+  const [officerTab, setOfficerTab] = useState<"passes" | "desk">("passes");
+
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-12">
       {/* Top Breadcrumb & Page Header */}
@@ -86,8 +90,45 @@ export function PortalBoxOfficeView({
         </div>
       </div>
 
-      {/* Officer Box Office Desk (for Officers) */}
+      {/* Officer Segmented View Navigation */}
       {isOfficer && summary && (
+        <div className="flex items-center gap-2 p-1 rounded-2xl bg-warm-canvas border border-linen max-w-fit shadow-2xs">
+          <button
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all min-h-[44px] cursor-pointer ${
+              officerTab === "passes"
+                ? "bg-white text-espresso shadow-2xs border border-linen/60"
+                : "text-muted hover:text-espresso border border-transparent"
+            }`}
+            id="tab-officer-passes"
+            onClick={() => setOfficerTab("passes")}
+            type="button"
+          >
+            <Ticket className="w-4 h-4 text-forest" />
+            <span>Browse Events & Passes</span>
+          </button>
+          <button
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all min-h-[44px] cursor-pointer ${
+              officerTab === "desk"
+                ? "bg-white text-espresso shadow-2xs border border-linen/60"
+                : "text-muted hover:text-espresso border border-transparent"
+            }`}
+            id="tab-officer-desk"
+            onClick={() => setOfficerTab("desk")}
+            type="button"
+          >
+            <ShieldCheck className="w-4 h-4 text-forest" />
+            <span>Operations & Verification Desk</span>
+            {summary.pendingVerificationCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-ochre/20 text-espresso text-[11px] font-mono font-bold">
+                {summary.pendingVerificationCount}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Officer Box Office Desk (rendered when active on Desk tab) */}
+      {isOfficer && summary && officerTab === "desk" && (
         <OfficerBoxOfficeDesk
           canManage={canManage}
           events={events}
@@ -95,8 +136,9 @@ export function PortalBoxOfficeView({
         />
       )}
 
-      {/* Active Ticketed Events Section (Visible to All Members) */}
-      <section aria-label="Available Events" className="space-y-5">
+      {/* Active Ticketed Events Section (rendered when on Passes tab or for regular members) */}
+      {(!isOfficer || !summary || officerTab === "passes") && (
+        <section aria-label="Available Events" className="space-y-5">
         <div className="flex items-center justify-between gap-3 pb-2 border-b border-linen">
           <div className="flex items-center gap-2">
             <Ticket className="w-4 h-4 text-forest" />
@@ -270,6 +312,7 @@ export function PortalBoxOfficeView({
           </div>
         )}
       </section>
+      )}
 
       {/* Official Payment Destination (Bank Details) */}
       {bank && (
