@@ -30,6 +30,11 @@ export function useModalHygiene({
   dialogRef,
 }: UseModalHygieneOptions) {
   const previousActiveElementRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   useEffect(() => {
     if (!isOpen) return;
@@ -44,7 +49,7 @@ export function useModalHygiene({
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    // 3. Move initial focus into the dialog
+    // 3. Move initial focus into the dialog ONLY if focus is not already inside
     const getTargetContainer = (): HTMLElement | null =>
       dialogRef?.current ||
       (document.querySelector(
@@ -54,17 +59,26 @@ export function useModalHygiene({
     const focusTimer = setTimeout(() => {
       const targetContainer = getTargetContainer();
       if (targetContainer) {
-        const focusableElements =
-          targetContainer.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
-        if (focusableElements.length > 0) {
-          const firstInteractive = Array.from(focusableElements).find(
-            (el) =>
-              !el.classList.contains("fixed") &&
-              !el.getAttribute("aria-label")?.toLowerCase().includes("overlay"),
-          );
-          (firstInteractive || focusableElements[0]).focus();
-        } else {
-          targetContainer.focus();
+        if (
+          !document.activeElement ||
+          !targetContainer.contains(document.activeElement)
+        ) {
+          const focusableElements =
+            targetContainer.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+          if (focusableElements.length > 0) {
+            const firstInteractive = Array.from(focusableElements).find(
+              (el) =>
+                !el.classList.contains("fixed") &&
+                !el
+                  .getAttribute("aria-label")
+                  ?.toLowerCase()
+                  .includes("overlay") &&
+                !el.getAttribute("aria-label")?.toLowerCase().includes("close"),
+            );
+            (firstInteractive || focusableElements[0]).focus();
+          } else {
+            targetContainer.focus();
+          }
         }
       }
     }, 50);
@@ -73,7 +87,7 @@ export function useModalHygiene({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.stopPropagation();
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -132,5 +146,5 @@ export function useModalHygiene({
         previousActiveElementRef.current.focus();
       }
     };
-  }, [isOpen, onClose, dialogRef]);
+  }, [isOpen, dialogRef]);
 }

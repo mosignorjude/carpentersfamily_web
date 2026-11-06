@@ -12,7 +12,13 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { submitTicketOrderAction } from "@/app/actions";
 import { formatNaira } from "@/lib/format";
 import {
@@ -118,7 +124,7 @@ function TicketCheckoutInner({
   const dialogRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function handleClose() {
+  const handleClose = useCallback(() => {
     if (typeof window !== "undefined") {
       const search = buildCheckoutQuery(window.location.search, null);
       window.history.replaceState(
@@ -128,7 +134,7 @@ function TicketCheckoutInner({
       );
     }
     onClose();
-  }
+  }, [onClose]);
 
   useModalHygiene({ isOpen: true, onClose: handleClose, dialogRef });
 
@@ -272,21 +278,23 @@ function TicketCheckoutInner({
     <div
       aria-labelledby="ticket-checkout-title"
       aria-modal="true"
-      className="fixed inset-0 z-[60] bg-espresso/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-y-auto"
+      className="fixed inset-0 z-[60] bg-espresso/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-hidden"
       role="dialog"
     >
       <button
         aria-label="Close checkout overlay"
         className="fixed inset-0 cursor-default bg-transparent border-0 min-h-[48px]"
         onClick={handleClose}
+        tabIndex={-1}
         type="button"
       />
 
       <div
-        className="relative z-10 w-full max-w-4xl bg-white rounded-t-3xl sm:rounded-3xl border border-linen shadow-2xl max-h-[94vh] flex flex-col overflow-hidden my-auto"
+        className="relative z-10 w-full max-w-4xl bg-white rounded-t-3xl sm:rounded-3xl border border-linen shadow-2xl max-h-[calc(100dvh-0.5rem)] sm:max-h-[90dvh] flex flex-col overflow-hidden my-0 sm:my-auto outline-hidden"
         ref={dialogRef}
+        tabIndex={-1}
       >
-        <div className="p-4 sm:p-5 border-b border-linen bg-warm-canvas flex items-center justify-between gap-3">
+        <div className="p-4 sm:p-5 border-b border-linen bg-warm-canvas flex items-center justify-between gap-3 shrink-0">
           <div className="min-w-0">
             <h2
               className="text-sm sm:text-base font-extrabold text-espresso truncate"
@@ -308,7 +316,7 @@ function TicketCheckoutInner({
           </button>
         </div>
 
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-5">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-5 overscroll-contain">
           <CheckoutStepIndicator step={step} />
 
           {state && (
@@ -459,7 +467,7 @@ function TicketCheckoutInner({
                     <select
                       className="w-full min-h-[48px] px-3.5 py-2.5 rounded-lg border border-linen bg-white text-espresso font-medium text-sm"
                       id={`passes-count-${event.id}`}
-                      key={`qty-${tier?.id}-${quantity}`}
+                      key={`qty-${tier?.id}`}
                       onChange={(e) =>
                         go({
                           quantity: clampQuantity(
@@ -492,6 +500,7 @@ function TicketCheckoutInner({
                         nameError ? `name-err-${event.id}` : undefined
                       }
                       aria-invalid={Boolean(nameError)}
+                      autoComplete="name"
                       className={`w-full min-h-[48px] px-3.5 py-2.5 rounded-lg border bg-white text-espresso text-sm placeholder:text-muted/60 ${
                         nameError ? "border-terra" : "border-linen"
                       }`}
@@ -535,6 +544,7 @@ function TicketCheckoutInner({
                         emailError ? `email-err-${event.id}` : undefined
                       }
                       aria-invalid={Boolean(emailError)}
+                      autoComplete="email"
                       className={`w-full min-h-[48px] px-3.5 py-2.5 rounded-lg border bg-white text-espresso text-sm placeholder:text-muted/60 ${
                         emailError ? "border-terra" : "border-linen"
                       }`}
@@ -577,6 +587,7 @@ function TicketCheckoutInner({
                         phoneError ? `phone-err-${event.id}` : undefined
                       }
                       aria-invalid={Boolean(phoneError)}
+                      autoComplete="tel"
                       className={`w-full min-h-[48px] px-3.5 py-2.5 rounded-lg border bg-white text-espresso text-sm placeholder:text-muted/60 ${
                         phoneError ? "border-terra" : "border-linen"
                       }`}
