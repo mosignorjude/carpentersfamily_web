@@ -89,6 +89,7 @@ export interface DashboardTransaction {
   type: TransactionType;
   category: string;
   categoryLabel: string;
+  channel?: "member" | "online";
   description: string;
   amount: number;
   payerPayee: string;

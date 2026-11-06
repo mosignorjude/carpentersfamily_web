@@ -710,6 +710,8 @@ export default async function EventDashboardPage({
     const sellerId = (s as { seller_id?: string }).seller_id;
     const sellerHandle = sellerId ? usernameByActorId.get(sellerId) : null;
     const actorDisplay = sellerHandle ? `@${sellerHandle}` : "@secretariat";
+    const isOnline = (s as { source?: string }).source === "online";
+    const channelLabel = isOnline ? "Online Sales" : "Member Sales";
 
     return {
       id: s.id,
@@ -718,7 +720,8 @@ export default async function EventDashboardPage({
         : new Date().toISOString().slice(0, 10),
       type: "revenue",
       category: "ticket_sales",
-      categoryLabel: "Ticket Sales",
+      categoryLabel: channelLabel,
+      channel: isOnline ? "online" : "member",
       description: `${s.quantity}x ${tierName} Ticket${s.quantity === 1 ? "" : "s"}`,
       amount: s.amount_ngn,
       payerPayee: s.buyer_name || "Member Ticket Buyer",
