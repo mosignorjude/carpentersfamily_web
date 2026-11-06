@@ -23,3 +23,24 @@ test("landing-nav header displays Carpenters Family without Asaba Delta subtext"
   assert.match(nav, /Carpenters Family/);
   assert.doesNotMatch(nav, /Asaba,\s*Delta\s*State/);
 });
+
+test("landing navigation list has Box Office / Tickets as the last item", () => {
+  const nav = fs.readFileSync("src/components/landing/landing-nav.tsx", "utf8");
+  assert.match(nav, /<ul[^>]*hidden lg:flex[\s\S]*?href="#membership"[\s\S]*?href="\/tickets"[\s\S]*?<\/ul>/);
+});
+
+test("header right removes standalone Box Office button", () => {
+  const nav = fs.readFileSync("src/components/landing/landing-nav.tsx", "utf8");
+  const rightSection = nav.slice(nav.indexOf("Right:"), nav.indexOf("<LandingSocialLinks"));
+  assert.doesNotMatch(rightSection, /Box Office/);
+});
+
+test("mobile drawer has logo, ends nav list with Box Office / Tickets, and keeps only Partner button with socials", () => {
+  const nav = fs.readFileSync("src/components/landing/landing-nav.tsx", "utf8");
+  assert.match(nav, /<aside[\s\S]*?<ClubLogo[\s\S]*?Carpenters Family/);
+  assert.match(nav, /<aside[\s\S]*?href="#membership"[\s\S]*?href="\/tickets"[\s\S]*?<\/ul>/);
+  assert.match(nav, /<aside[\s\S]*?modal=partnership[\s\S]*?Partner With Us/);
+  assert.doesNotMatch(nav, /<aside[\s\S]*?Member Portal Sign In/);
+  assert.doesNotMatch(nav, /<aside[\s\S]*?Request Membership/);
+  assert.match(nav, /Partner With Us[\s\S]*?<LandingSocialLinks/);
+});

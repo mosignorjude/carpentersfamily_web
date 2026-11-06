@@ -97,18 +97,19 @@ export function LandingNav() {
                   Membership
                 </a>
               </li>
+              <li>
+                <Link
+                  className="px-3 min-h-[44px] inline-flex items-center hover:text-forest transition-colors"
+                  href="/tickets"
+                >
+                  Box Office / Tickets
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Right: Box Office + Member Portal + Social Icons */}
+          {/* Right: Member Portal + Social Icons */}
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              href="/tickets"
-              className="text-xs font-bold text-forest border border-forest/30 bg-forest/5 hover:bg-forest hover:text-cream px-3.5 py-2 rounded-full transition-all min-h-[44px] inline-flex items-center justify-center"
-            >
-              Box Office
-            </Link>
-
             <Link
               href="/portal"
               className="text-xs font-bold text-espresso border border-linen bg-white hover:border-forest px-3.5 py-2 rounded-full transition-all min-h-[44px] inline-flex items-center justify-center shadow-xs"
@@ -174,9 +175,12 @@ export function LandingNav() {
         aria-label="Mobile Menu"
       >
         <div className="flex items-center justify-between pb-3 border-b border-linen">
-          <span className="font-serif font-bold text-lg text-espresso">
-            Carpenters Family
-          </span>
+          <div className="flex items-center gap-2.5">
+            <ClubLogo size="sm" className="shrink-0" />
+            <span className="font-serif font-bold text-lg text-espresso">
+              Carpenters Family
+            </span>
+          </div>
           <button
             type="button"
             className="h-11 w-11 grid place-items-center text-2xl text-espresso"
@@ -212,29 +216,17 @@ export function LandingNav() {
               Membership
             </a>
           </li>
+          <li>
+            <Link
+              className="block py-3 border-b border-linen"
+              href="/tickets"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Box Office / Tickets
+            </Link>
+          </li>
         </ul>
-        <div className="mt-6 grid gap-3 font-sans text-sm">
-          <Link
-            href="/tickets"
-            className="btn-pill border border-forest/30 bg-forest/5 text-forest text-center font-bold"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Box Office / Tickets
-          </Link>
-          <Link
-            href="/portal"
-            className="btn-pill border border-linen bg-white text-espresso text-center font-bold"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Member Portal Sign In
-          </Link>
-          <Link
-            href="/?modal=membership"
-            className="btn-pill bg-forest text-cream text-center font-bold"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Request Membership
-          </Link>
+        <div className="mt-6 flex flex-col gap-4 font-sans text-sm">
           <Link
             href="/?modal=partnership"
             className="btn-pill bg-ochre text-deep text-center font-bold"
@@ -242,6 +234,12 @@ export function LandingNav() {
           >
             Partner With Us
           </Link>
+          <div className="pt-2 flex flex-col items-center gap-2 border-t border-linen">
+            <span className="text-xs font-semibold text-umber uppercase tracking-wider">
+              Follow Us
+            </span>
+            <LandingSocialLinks tone="onLight" />
+          </div>
         </div>
       </aside>
     </>
