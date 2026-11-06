@@ -58,8 +58,13 @@ import { runReceiptEntry } from "@/lib/receipt-entry.mjs";
 import { getR2StorageAdapter } from "@/lib/receipt-storage";
 import { rpcErrorNotice } from "@/lib/rpc-error-notice";
 import { getSiteOrigin, isGoogleAuthConfigured } from "@/lib/supabase/config";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  createAnonClient,
+  createSupabaseServerClient,
+} from "@/lib/supabase/server";
 import { getSystemNotice, SYSTEM_NOTICES } from "@/lib/system-notices";
+import { parseTicketOrderForm } from "@/lib/ticket-order-intake.mjs";
+import { buildSubmitFailureUrl } from "@/lib/ticket-order-state.mjs";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const usernamePattern = /^[A-Za-z0-9_]{3,30}$/;
@@ -3992,4 +3997,130 @@ export async function submitPartnershipEnquiryAction(
 
   revalidatePath("/");
   redirect("/?notice=partnership-enquiry-submitted");
+}
+
+export async function submitTicketOrderAction(
+  prevStateOrFormData: IntakeRejection | null | FormData,
+  maybeFormData?: FormData,
+): Promise<IntakeRejection | null> {
+  const formData =
+    maybeFormData instanceof FormData
+      ? maybeFormData
+      : (prevStateOrFormData as FormData);
+
+  const parsed = parseTicketOrderForm(formData);
+  if (!parsed.ok) {
+    // notice=invalid-request: returned as rejection for dialog display.
+    // buildSubmitFailureUrl is kept for URL fallback compatibility.
+    void buildSubmitFailureUrl;
+    return intakeRejection(parsed.notice, formData);
+  }
+  const {
+    eventId,
+    tierId,
+    quantity,
+    buyerName,
+    buyerEmail,
+    buyerPhone,
+    idempotencyKey,
+    saleId,
+  } = parsed.values;
+
+  const file = formData.get("receipt");
+  if (!(file instanceof File) || file.size === 0) {
+    return intakeRejection("receipt-required", formData);
+  }
+
+  const anon = await createAnonClient();
+  if (!anon) {
+    return intakeRejection("configuration", formData);
+  }
+
+  // The buyer generates both ids: the object key is receipts/event_ticket/<saleId>/<receiptId>.<ext>,
+  // so the sale id must exist before the upload (plan deviation 1). Dedupe lives inside
+  // submit_ticket_order — find_finance_entry_id answers null without a member session.
+  // `runReceiptEntry` returns only { kind, id, deduplicated } (src/lib/receipt-entry.mjs:71) and drops
+  // unknown keys from what the commit callback resolves, so the RPC's row has to be captured in the
+  // action's own scope. Task 13's emails read the display fields off this same variable.
+  let submitted: {
+    public_reference: string | null;
+    event_id: string | null;
+    event_title: string | null;
+    tier_name: string | null;
+    quantity: number | null;
+    amount_ngn: number | null;
+  } = {
+    public_reference: null,
+    event_id: null,
+    event_title: null,
+    tier_name: null,
+    quantity: null,
+    amount_ngn: null,
+  };
+
+  const entryResult = await runReceiptEntry(
+    {
+      scope: "event_ticket",
+      targetId: parsed.values.saleId,
+      paymentMethod: "bank_transfer",
+      paymentStatus: "paid",
+      file,
+    },
+    {
+      storage: getR2StorageAdapter(),
+      validateReceipt: validateFinanceReceiptUpload,
+    },
+    async (receipt) => {
+      const { data, error } = await anon.rpc("submit_ticket_order", {
+        p_event_id: eventId,
+        p_tier_id: tierId,
+        p_quantity: Number.parseInt(quantity, 10),
+        p_buyer_name: buyerName,
+        p_buyer_email: buyerEmail,
+        p_buyer_phone: buyerPhone,
+        p_idempotency_key: idempotencyKey,
+        p_sale_id: saleId,
+        p_receipt_id: receipt?.receiptId ?? null,
+        p_receipt_filename: receipt?.originalFilename ?? null,
+        p_receipt_object_key: receipt?.objectKey ?? null,
+        p_receipt_content_type: receipt?.contentType ?? null,
+        p_receipt_size_bytes: receipt?.sizeBytes ?? null,
+        p_receipt_sha256: receipt?.sha256 ?? null,
+      });
+      if (error) return { kind: "error", error };
+      const row = Array.isArray(data) ? data[0] : data;
+      submitted = {
+        public_reference: row?.public_reference ?? null,
+        event_id: row?.event_id ?? eventId,
+        event_title: row?.event_title ?? null,
+        tier_name: row?.tier_name ?? null,
+        quantity: row?.quantity ?? Number.parseInt(quantity, 10),
+        amount_ngn: row?.amount_ngn ?? null,
+      };
+      return {
+        kind: "ok",
+        id: row?.sale_id ?? saleId,
+        deduplicated: Boolean(row?.deduplicated),
+      };
+    },
+  );
+
+  if (entryResult.kind === "error") {
+    const notice =
+      entryResult.notice === "operation-failed"
+        ? rpcErrorNotice(entryResult.error)
+        : entryResult.notice;
+    return intakeRejection(notice, formData);
+  }
+
+  const reference = submitted.public_reference;
+  if (!reference) {
+    // The RPC answered but has no reference: never send a buyer to a status page they cannot read.
+    return intakeRejection("operation-failed", formData);
+  }
+
+  revalidatePath("/tickets");
+  revalidatePath("/tickets/order");
+  // Task 13 adds the two notify calls here, between revalidatePath and redirect.
+  redirect(`/tickets/order?ref=${encodeURIComponent(reference)}`);
 }
