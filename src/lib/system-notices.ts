@@ -168,6 +168,23 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     title: "Storage Unavailable",
     message: "Receipt storage is not configured or is temporarily unavailable.",
   },
+  "receipt-required": {
+    type: "error",
+    title: "Receipt Needed",
+    message: "Attach the proof of transfer before submitting this order.",
+  },
+  "receipt-upload-failed": {
+    type: "error",
+    title: "Upload Failed",
+    message:
+      "The proof of transfer could not be saved. Check the file and try again.",
+  },
+  "receipt-storage-unavailable": {
+    type: "error",
+    title: "Storage Unavailable",
+    message:
+      "Receipt storage is not configured or is temporarily unavailable. Try again later.",
+  },
 
   // Dues Treasury
   "rate-saved": {
@@ -446,6 +463,31 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     title: "Revoke Club Admin First",
     message:
       "This member still holds the Club Admin role. Revoke it on the Governance page before deactivating the account, then try again.",
+  },
+
+  // Public box office (guest ticket till)
+  "pending-review-blocks-close": {
+    type: "error",
+    title: "Review Still Open",
+    message:
+      "Tickets and transactions still await review. Approve, reject or cancel them before closing this event.",
+  },
+  "ticket-order-limit-reached": {
+    type: "error",
+    title: "Too Many Pending Orders",
+    message:
+      "This email address already has several ticket orders awaiting confirmation. Try again after an officer reviews them, or contact the club.",
+  },
+  "box-office-closed": {
+    type: "error",
+    title: "Box Office Closed",
+    message: "This event is no longer accepting ticket orders.",
+  },
+  "box-office-at-capacity": {
+    type: "error",
+    title: "Box Office Busy",
+    message:
+      "Too many orders for this event are awaiting review. Please try again shortly.",
   },
   denied: {
     type: "error",
