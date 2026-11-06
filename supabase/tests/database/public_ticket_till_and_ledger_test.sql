@@ -149,6 +149,158 @@ select lives_ok($$
   )
 $$, 'a manual row with a null-source default still inserts');
 
+-- ── Approved-only arithmetic ────────────────────────────────────────────────────────────
+-- A staged online sale and an approved one, side by side, on a tier with capacity 20.
+select set_config('test.till_staged', (
+  insert into public.event_ticket_sales (
+    event_id, tier_id, quantity, unit_price_ngn, payment_method, idempotency_key,
+    source, buyer_email, buyer_phone, public_reference, verification_status
+  ) values (
+    current_setting('test.till_event')::uuid, current_setting('test.till_tier')::uuid,
+    3, 15000, 'bank_transfer', '7b7b7b7b-0000-0000-0000-0000000000c1', 'online',
+    'staged@example.test', '08031234567', 'CF-K7M2QX9F', 'recorded'
+  ) returning id)::text, true);
+
+select set_config('test.till_ok', (
+  insert into public.event_ticket_sales (
+    event_id, tier_id, quantity, unit_price_ngn, payment_method, idempotency_key,
+    source, buyer_email, buyer_phone, public_reference, verification_status
+  ) values (
+    current_setting('test.till_event')::uuid, current_setting('test.till_tier')::uuid,
+    2, 15000, 'bank_transfer', '7b7b7b7b-0000-0000-0000-0000000000c2', 'online',
+    'approved@example.test', '08031234568', 'CF-K7M2QX9G', 'approved'
+  ) returning id)::text, true);
+
+-- 6. The club balance and the per-event cash totals count the approved sale only.
+select is(
+  (select net from private.event_cash_totals(current_setting('test.till_event')::uuid)),
+  30000::numeric,
+  'event_cash_totals counts approved ticket sales only');
+select is(
+  (select net from private.event_cash_totals(null)),
+  30000::numeric,
+  'the club-wide balance sees the same approved-only event cash');
+
+-- 7. Every reporting aggregate agrees with it.
+select is((select ticket_income_ngn from private.event_finance_summary(
+  current_setting('test.till_event')::uuid)), 30000::numeric,
+  'event_finance_summary counts approved sales only');
+select is((select tickets_sold from private.event_finance_summary(
+  current_setting('test.till_event')::uuid)), 2::bigint,
+  'event_finance_summary counts approved quantity only');
+select is((select ticket_income_ngn from private.event_finance_budget_summary(
+  current_setting('test.till_event')::uuid)), 30000::numeric,
+  'event_finance_budget_summary counts approved sales only');
+select is((select sold_quantity from private.event_ticket_tier_status(
+  current_setting('test.till_event')::uuid)), 2::bigint,
+  'tier status sells only what an officer approved');
+select is((select sold_quantity from private.event_ticket_tier_status(null)), 0::bigint,
+  'tier status stays gated for a null event');
+
+select is((select ticket_income_ngn from private.event_finance_ticket_tier_summary(
+  current_setting('test.till_event')::uuid)), 30000::numeric,
+  'tier summary counts approved sales with no date range');
+select is((select ticket_income_ngn from private.event_finance_ticket_tier_summary(
+  current_setting('test.till_event')::uuid,
+  ((pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date - 1),
+  ((pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date + 1))),
+  30000::numeric, 'tier summary counts approved sales inside a date range');
+
+select is((select ticket_income_ngn from private.event_finance_report_summary(
+  current_setting('test.till_event')::uuid)), 30000::numeric,
+  'report summary counts approved sales with no date range');
+select is((select tickets_sold from private.event_finance_report_summary(
+  current_setting('test.till_event')::uuid)), 2::bigint,
+  'report summary counts approved quantity with no date range');
+
+-- 8. §4's branch asymmetry. A rejected row carries refunded_at as well as its status; if the
+--    ranged subtract branch could still see it, a sale created before the window and rejected
+--    inside it would subtract money that was never added.
+select set_config('test.till_rej', (
+  insert into public.event_ticket_sales (
+    event_id, tier_id, quantity, unit_price_ngn, payment_method, idempotency_key,
+    source, buyer_email, buyer_phone, public_reference, verification_status,
+    refunded_at, refunded_by, refund_reason
+  ) values (
+    current_setting('test.till_event')::uuid, current_setting('test.till_tier')::uuid,
+    4, 15000, 'bank_transfer', '7b7b7b7b-0000-0000-0000-0000000000c3', 'online',
+    'rejected@example.test', '08031234569', 'CF-K7M2QX9H', 'rejected',
+    pg_catalog.clock_timestamp(), '7a7a7a7a-0000-0000-0000-000000000001',
+    'No matching transfer'
+  ) returning id)::text, true);
+
+select set_config('test.till_cancel', (
+  insert into public.event_ticket_sales (
+    event_id, tier_id, quantity, unit_price_ngn, payment_method, idempotency_key,
+    source, buyer_email, buyer_phone, public_reference, verification_status
+  ) values (
+    current_setting('test.till_event')::uuid, current_setting('test.till_tier')::uuid,
+    5, 15000, 'bank_transfer', '7b7b7b7b-0000-0000-0000-0000000000c4', 'online',
+    'cancelled@example.test', '08031234570', 'CF-K7M2QX9J', 'cancelled'
+  ) returning id)::text, true);
+
+select is((select ticket_income_ngn from private.event_finance_report_summary(
+    current_setting('test.till_event')::uuid)), 30000::numeric,
+  'a rejected and a cancelled sale move the un-ranged total by nothing');
+select is((select ticket_income_ngn from private.event_finance_report_summary(
+    current_setting('test.till_event')::uuid,
+    ((pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date - 1),
+    ((pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date + 1))),
+  30000::numeric,
+  'the ranged subtract branch ignores a rejected row, so nothing is over-subtracted');
+select is((select net from private.event_cash_totals(current_setting('test.till_event')::uuid)),
+  30000::numeric, 'club balance ignores rejected and cancelled');
+
+-- 9. Deviation 17 pinned from the other side: an officer transaction that is staged but paid
+--    STILL moves event cash, because 20261102150000 defines event money as "did cash move".
+--    This assertion exists so nobody applies the sales rule to transactions by accident.
+select set_config('test.till_txn', summary.transaction_id::text, true)
+from public.record_event_financial_transaction(
+  p_event_id => current_setting('test.till_event')::uuid, p_kind => 'expense',
+  p_amount_ngn => 10000,
+  p_transaction_date => (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
+  p_description => null, p_payer_payee => 'Sound hire', p_source_note => 'Staged but paid',
+  p_payment_method => 'cash',
+  p_idempotency_key => '7b7b7b7b-0000-0000-0000-0000000000c5'::uuid
+) as summary;
+
+select is((select net from private.event_cash_totals(current_setting('test.till_event')::uuid)),
+  20000::numeric,
+  'a paid but unreviewed event transaction still counts as cash that moved');
+
+-- 10. §5 close gate. The event cannot close while a sale is staged.
+select throws_ok($$
+  select public.set_event_status(
+    current_setting('test.till_event')::uuid, 'completed', 'Wrapping up'
+  )
+$$, '22000', 'Ticket sales or transactions still await review on this event.',
+  'closing is refused while a ticket sale awaits review');
+
+-- Cancelling the staged rows, then the same close succeeds.
+update public.event_ticket_sales set verification_status = 'cancelled'
+where verification_status = 'recorded';
+
+select lives_ok($$
+  select public.set_event_status(
+    current_setting('test.till_event')::uuid, 'completed', 'Wrapping up'
+  )
+$$, 'closing works once nothing is staged');
+
+-- The same-status call is still a no-op, gate or no gate (20261003101500:1025).
+select lives_ok($$
+  select public.set_event_status(
+    current_setting('test.till_event')::uuid, 'completed', 'Again'
+  )
+$$, 're-submitting the current status stays a no-op');
+
+-- 11. The public tier list agrees: `sold` is approved quantity. get_public_ticketed_events()
+--     returns one jsonb; route it through a setting, as event_duration_12hour_test.sql does.
+select set_config('test.till_public', public.get_public_ticketed_events()::text, true);
+select is(
+  (select (current_setting('test.till_public')::jsonb #>> '{events,0,tiers,0,sold}')),
+  '2',
+  'the public storefront sells approved tickets only');
+
 select * from finish();
 
 reset role;

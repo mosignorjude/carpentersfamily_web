@@ -95,6 +95,9 @@ from public.record_event_ticket_sale(
 ) as cash;
 reset role;
 
+update public.event_ticket_sales set verification_status = 'approved'
+where id = current_setting('test.cbs_sale')::uuid;
+
 -- Event cash: income paid 700 + tickets 1000 = 1700 in;
 -- expense paid 200 + deposit 50 = 250 out; net 1450.
 select is(
