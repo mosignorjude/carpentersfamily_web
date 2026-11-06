@@ -231,14 +231,12 @@ function TicketCheckoutInner({
       setReceiptFile(null);
       return;
     }
-    if (file.size > 8 * 1024 * 1024) {
-      setFileError("The receipt must be 8 MB or smaller.");
+    if (file.size > 4 * 1024 * 1024) {
+      setFileError("The receipt must be 4 MB or smaller.");
       setReceiptFile(null);
       return;
     }
-    if (
-      !/^(image\/(png|jpe?g|webp|heic|heif)|application\/pdf)$/i.test(file.type)
-    ) {
+    if (!/^(image\/(png|jpe?g)|application\/pdf)$/i.test(file.type)) {
       setFileError("Upload a PDF or an image of the transfer receipt.");
       setReceiptFile(null);
       return;
@@ -341,7 +339,24 @@ function TicketCheckoutInner({
             action={formAction}
             /* action={submitTicketOrderAction} */
             className="space-y-6"
+            encType="multipart/form-data"
             noValidate
+            onSubmit={(e) => {
+              if (step === 1) {
+                e.preventDefault();
+                if (canContinue) go({ step: 2 });
+                return;
+              }
+              if (receiptFile && fileInputRef.current) {
+                try {
+                  const dt = new DataTransfer();
+                  dt.items.add(receiptFile);
+                  fileInputRef.current.files = dt.files;
+                } catch {
+                  // Fallback for environments without DataTransfer
+                }
+              }
+            }}
           >
             <input name="event_id" type="hidden" value={event.id} />
             <input name="tier_id" type="hidden" value={tier?.id ?? ""} />
@@ -488,6 +503,12 @@ function TicketCheckoutInner({
                       onChange={(e) =>
                         setFields((f) => ({ ...f, buyerName: e.target.value }))
                       }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (canContinue) go({ step: 2 });
+                        }
+                      }}
                       placeholder="e.g. Adaeze Nwosu"
                       type="text"
                       value={fields.buyerName}
@@ -524,6 +545,12 @@ function TicketCheckoutInner({
                       onChange={(e) =>
                         setFields((f) => ({ ...f, buyerEmail: e.target.value }))
                       }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (canContinue) go({ step: 2 });
+                        }
+                      }}
                       placeholder="you@example.com"
                       type="email"
                       value={fields.buyerEmail}
@@ -557,10 +584,20 @@ function TicketCheckoutInner({
                       onBlur={() =>
                         setTouched((prev) => ({ ...prev, phone: true }))
                       }
-                      onChange={(e) =>
-                        setFields((f) => ({ ...f, buyerPhone: e.target.value }))
-                      }
-                      placeholder="0803 000 0000"
+                      onChange={(e) => {
+                        const cleanPhone = e.target.value.replace(
+                          /[^\d+]/g,
+                          "",
+                        );
+                        setFields((f) => ({ ...f, buyerPhone: cleanPhone }));
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (canContinue) go({ step: 2 });
+                        }
+                      }}
+                      placeholder="08030000000"
                       type="tel"
                       value={fields.buyerPhone}
                     />
@@ -848,11 +885,11 @@ function TicketCheckoutInner({
                           className="block text-[11px] font-semibold uppercase tracking-wider text-muted mb-2"
                           htmlFor={`receipt-upload-${event.id}`}
                         >
-                          Proof of payment (PDF, JPG, PNG · 8 MB max)
+                          Proof of payment (PDF, JPG, PNG · 4 MB max)
                         </label>
 
                         <input
-                          accept="image/png,image/jpeg,image/webp,application/pdf"
+                          accept="image/png,image/jpeg,application/pdf"
                           className="sr-only"
                           id={`receipt-upload-${event.id}`}
                           name="receipt"
@@ -895,7 +932,7 @@ function TicketCheckoutInner({
                               className="mt-1 text-xs text-muted"
                               id={`file-hint-${event.id}`}
                             >
-                              Screenshot or PDF from your banking app (up to 8
+                              Screenshot or PDF from your banking app (up to 4
                               MB)
                             </span>
                           </div>

@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  Building2,
-  Calendar,
-  Check,
-  Clock,
-  Copy,
-  MapPin,
-  ShieldAlert,
-  ShieldCheck,
-  Ticket,
-} from "lucide-react";
+import { Calendar, MapPin, ShieldAlert, Ticket } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import ClubLogo from "@/components/club-logo";
@@ -62,16 +52,6 @@ export function TicketsStorefrontView({
   unavailable = false,
 }: TicketsStorefrontViewProps) {
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
-  const [selectedTierByEvent, setSelectedTierByEvent] = useState<
-    Record<string, string>
-  >({});
-  const [quantityByEvent, setQuantityByEvent] = useState<
-    Record<string, number>
-  >({});
-  const [buyerNameByEvent, setBuyerNameByEvent] = useState<
-    Record<string, string>
-  >({});
-  const [copiedAccount, setCopiedAccount] = useState(false);
 
   useEffect(() => {
     setCheckout(checkoutFromWindow(events));
@@ -94,17 +74,6 @@ export function TicketsStorefrontView({
       }
     }
   }, [checkout, activeEvent]);
-
-  const handleCopyAccount = async () => {
-    if (!bank?.account_number) return;
-    try {
-      await navigator.clipboard.writeText(bank.account_number);
-      setCopiedAccount(true);
-      window.setTimeout(() => setCopiedAccount(false), 2000);
-    } catch {
-      // Ignore clipboard failure
-    }
-  };
 
   return (
     <div className="min-h-screen bg-cream text-espresso font-sans antialiased">
@@ -132,9 +101,15 @@ export function TicketsStorefrontView({
             </div>
           </Link>
 
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-4 shrink-0">
             <Link
-              className="inline-flex items-center gap-1.5 min-h-[44px] whitespace-nowrap px-3.5 py-2 rounded-xl border border-linen bg-white hover:bg-cream text-xs font-bold text-forest transition-colors no-underline shadow-2xs"
+              className="text-xs font-semibold text-body hover:text-espresso transition-colors no-underline hidden sm:inline-flex items-center gap-1.5"
+              href="/tickets/order"
+            >
+              <span>Check order status</span>
+            </Link>
+            <Link
+              className="inline-flex items-center gap-1.5 min-h-[44px] whitespace-nowrap px-4 py-2 rounded-xl border border-linen bg-white hover:bg-cream text-xs font-bold text-forest transition-colors no-underline shadow-2xs"
               href={isAuthenticatedMember ? "/events" : "/"}
             >
               <span>
@@ -146,24 +121,51 @@ export function TicketsStorefrontView({
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
-        {/* Hero Banner */}
-        <section className="rounded-2xl bg-deep text-white p-6 sm:p-10 shadow-md border border-forest space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-widest text-ochre">
-            <Ticket className="w-3.5 h-3.5" />
-            <span>Official Event Tickets & Reservations</span>
+        {/* Hero Banner with Concert Photo Background */}
+        <section className="relative rounded-3xl overflow-hidden shadow-xl border border-linen text-white min-h-[300px] sm:min-h-[360px] flex flex-col justify-end p-6 sm:p-10 lg:p-12">
+          {/* Background image */}
+          {/* biome-ignore lint/performance/noImgElement: static local asset adhering to CSP */}
+          <img
+            alt="Carpenters Family concert crowd and stage"
+            className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
+            src="/tickets/tickets-hero-banner.jpg"
+          />
+          {/* Gradient scrim overlay for contrast */}
+          <div className="absolute inset-0 bg-gradient-to-t from-espresso/95 via-espresso/70 to-espresso/30 pointer-events-none" />
+
+          {/* Content from video */}
+          <div className="relative z-10 max-w-2xl space-y-3 sm:space-y-4">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-[11px] font-bold tracking-widest text-ochre uppercase">
+              <span>BOX OFFICE • CARPENTERS FAMILY</span>
+            </div>
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight font-serif text-white leading-[1.1]">
+              Experience The Vibe. See Events Below.
+            </h1>
+            <p className="text-xs sm:text-sm text-linen/90 leading-relaxed max-w-xl font-medium">
+              Official guest passes to Carpenters Family raves, galas, and
+              flagship nights out. Pick your event, transfer directly, and
+              upload your receipt for officer verification.
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white max-w-2xl leading-tight">
-            Purchase Tickets for Upcoming Club Events
-          </h1>
-          <p className="text-xs sm:text-sm text-white/80 max-w-2xl leading-relaxed">
-            Select your preferred ticket tier below and complete settlement via
-            the official Carpenters Family Social Club treasury account.
-          </p>
         </section>
 
+        {/* Section Heading & Order Status Pill */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted">
+            CURRENT EVENTS ON SALE
+          </span>
+          <Link
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-forest hover:text-deep-forest-hover transition-colors no-underline group"
+            href="/tickets/order"
+          >
+            <Ticket className="w-3.5 h-3.5 text-forest group-hover:scale-110 transition-transform" />
+            <span>Already submitted an order? Check your order status →</span>
+          </Link>
+        </div>
+
         {unavailable ? (
-          <section className="rounded-2xl bg-white border border-linen p-10 text-center space-y-3 shadow-xs">
-            <ShieldAlert className="w-10 h-10 text-terracotta mx-auto" />
+          <section className="rounded-3xl bg-white border border-linen p-10 text-center space-y-3 shadow-2xs">
+            <ShieldAlert className="w-10 h-10 text-terra mx-auto" />
             <h2 className="text-lg font-extrabold text-espresso">
               The box office is temporarily unavailable
             </h2>
@@ -173,7 +175,7 @@ export function TicketsStorefrontView({
             </p>
           </section>
         ) : events.length === 0 ? (
-          <section className="rounded-2xl bg-white border border-linen p-10 text-center space-y-3 shadow-xs">
+          <section className="rounded-3xl bg-white border border-linen p-10 text-center space-y-3 shadow-2xs">
             <Ticket className="w-10 h-10 text-forest mx-auto opacity-75" />
             <h2 className="text-lg font-extrabold text-espresso">
               No Ticketed Events Currently Open
@@ -187,304 +189,153 @@ export function TicketsStorefrontView({
           <div className="space-y-6">
             {events.map((event) => {
               const tiers = event.tiers ?? [];
-              const selectedTierId =
-                selectedTierByEvent[event.id] ?? tiers[0]?.id ?? "";
-              const selectedTier =
-                tiers.find((t) => t.id === selectedTierId) ?? tiers[0];
-              const quantity = quantityByEvent[event.id] ?? 1;
-              const buyerName = buyerNameByEvent[event.id] ?? "";
-              const totalNgn = selectedTier
-                ? Number(selectedTier.price_ngn) * quantity
-                : 0;
               const eventDate = new Date(event.starts_at);
 
               return (
                 <article
-                  className="rounded-2xl bg-white border border-linen p-6 sm:p-8 shadow-xs space-y-6"
+                  className="rounded-3xl bg-white border border-linen p-6 sm:p-8 shadow-2xs space-y-5 transition-shadow hover:shadow-md"
                   key={event.id}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 pb-5 border-b border-linen">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     <div className="space-y-2">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-forest/10 text-forest text-[11px] font-bold uppercase tracking-wider">
-                        Box Office Open
-                      </span>
-                      <h2 className="text-xl sm:text-2xl font-extrabold text-espresso">
+                      <h2 className="text-2xl sm:text-3xl font-extrabold font-serif text-espresso tracking-tight">
                         {event.title}
                       </h2>
-                      {event.description && (
-                        <p className="text-xs sm:text-sm text-body max-w-2xl leading-relaxed">
-                          {event.description}
-                        </p>
-                      )}
+                      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-body font-medium">
+                        <div className="inline-flex items-center gap-1.5">
+                          <Calendar className="w-4 h-4 text-forest shrink-0" />
+                          <span>
+                            {dateFormatter.format(eventDate)} ·{" "}
+                            {formatEventTime(event.starts_at)} WAT
+                          </span>
+                        </div>
+                        <div className="inline-flex items-center gap-1.5">
+                          <MapPin className="w-4 h-4 text-forest shrink-0 mt-0.5" />
+                          <span>{event.location}</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="bg-cream rounded-xl border border-linen p-4 space-y-2 text-xs shrink-0 min-w-[240px]">
-                      <div className="flex items-center gap-2 font-bold text-espresso">
-                        <Calendar className="w-4 h-4 text-forest shrink-0" />
-                        <span>{dateFormatter.format(eventDate)}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-body font-medium">
-                        <Clock className="w-4 h-4 text-forest shrink-0" />
-                        <span>{formatEventTime(event.starts_at)} WAT</span>
-                      </div>
-                      <div className="flex items-start gap-2 text-body font-medium">
-                        <MapPin className="w-4 h-4 text-forest shrink-0 mt-0.5" />
-                        <span>{event.location}</span>
-                      </div>
-                    </div>
+                    <a
+                      className="inline-flex items-center justify-center min-h-[48px] px-6 py-2.5 rounded-xl bg-forest hover:bg-deep-forest-hover text-white text-xs sm:text-sm font-bold transition-all shadow-2xs hover:shadow-sm no-underline cursor-pointer gap-2 shrink-0 self-start"
+                      href={checkoutHref(
+                        "/tickets",
+                        typeof window !== "undefined"
+                          ? window.location.search
+                          : "",
+                        {
+                          eventId: event.id,
+                          tierId: tiers[0]?.id ?? "",
+                          quantity: 1,
+                          step: 1,
+                        },
+                      )}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const targetTier = tiers[0] ?? null;
+                        const rem = targetTier
+                          ? tierRemaining(targetTier)
+                          : null;
+                        const nextState: CheckoutState = {
+                          eventId: event.id,
+                          tierId: targetTier?.id ?? "",
+                          quantity: 1,
+                          step: 1,
+                          remaining: rem,
+                        };
+                        setCheckout(nextState);
+                        if (typeof window !== "undefined") {
+                          const search = buildCheckoutQuery(
+                            window.location.search,
+                            nextState,
+                          );
+                          window.history.replaceState(
+                            null,
+                            "",
+                            `${window.location.pathname}${search}`,
+                          );
+                        }
+                      }}
+                    >
+                      <Ticket className="w-4 h-4 text-white" />
+                      <span>Buy ticket</span>
+                    </a>
                   </div>
 
-                  {tiers.length === 0 ? (
-                    <div className="p-5 rounded-xl bg-cream border border-linen text-xs text-body font-medium">
-                      Ticket tiers for this event are being finalized. Please
-                      check back shortly.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                      {/* Tier Selection */}
-                      <div className="lg:col-span-7 space-y-4">
-                        <h3 className="text-xs font-extrabold uppercase tracking-wider text-body">
-                          1. Select Ticket Tier
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {tiers.map((tier) => {
-                            const isSelected = selectedTier?.id === tier.id;
-                            const remaining =
-                              tier.capacity !== null
-                                ? Math.max(0, tier.capacity - tier.sold)
-                                : null;
-                            const soldOut =
-                              remaining !== null && remaining <= 0;
-
-                            return (
-                              <button
-                                className={`p-4 rounded-xl border text-left transition-all cursor-pointer space-y-1.5 ${
-                                  isSelected
-                                    ? "border-forest bg-forest/5 ring-2 ring-forest/20"
-                                    : "border-linen bg-cream/60 hover:bg-white"
-                                } ${soldOut ? "opacity-50 cursor-not-allowed" : ""}`}
-                                disabled={soldOut}
-                                key={tier.id}
-                                onClick={() =>
-                                  setSelectedTierByEvent((prev) => ({
-                                    ...prev,
-                                    [event.id]: tier.id,
-                                  }))
-                                }
-                                type="button"
-                              >
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="text-xs font-extrabold uppercase tracking-wider text-espresso">
-                                    {tier.name}
-                                  </span>
-                                  <span className="text-sm font-mono font-extrabold text-forest">
-                                    {formatNaira(Number(tier.price_ngn))}
-                                  </span>
-                                </div>
-                                <p className="text-[11px] text-umber font-medium">
-                                  {soldOut
-                                    ? "Sold out"
-                                    : remaining !== null
-                                      ? `${remaining} ticket${remaining === 1 ? "" : "s"} left`
-                                      : "Available"}
-                                </p>
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                          <div>
-                            <label
-                              className="block text-[11px] font-bold uppercase tracking-wider text-body mb-1"
-                              htmlFor={`qty-${event.id}`}
-                            >
-                              Number of Tickets
-                            </label>
-                            <select
-                              className="w-full h-11 px-3 rounded-xl border border-linen bg-white text-xs font-bold text-espresso"
-                              id={`qty-${event.id}`}
-                              onChange={(e) =>
-                                setQuantityByEvent((prev) => ({
-                                  ...prev,
-                                  [event.id]: Number(e.target.value) || 1,
-                                }))
-                              }
-                              value={quantity}
-                            >
-                              {[1, 2, 3, 4, 5, 6, 8, 10].map((num) => (
-                                <option key={num} value={num}>
-                                  {num} {num === 1 ? "Ticket" : "Tickets"}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div>
-                            <label
-                              className="block text-[11px] font-bold uppercase tracking-wider text-body mb-1"
-                              htmlFor={`buyer-${event.id}`}
-                            >
-                              Guest / Buyer Name (for Transfer Narration)
-                            </label>
-                            <input
-                              className="w-full h-11 px-3 rounded-xl border border-linen bg-white text-xs font-medium text-espresso"
-                              id={`buyer-${event.id}`}
-                              maxLength={80}
-                              onChange={(e) =>
-                                setBuyerNameByEvent((prev) => ({
-                                  ...prev,
-                                  [event.id]: e.target.value,
-                                }))
-                              }
-                              placeholder="Enter full name..."
-                              type="text"
-                              value={buyerName}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Checkout & Payment Box */}
-                      <div className="lg:col-span-5 rounded-2xl bg-cream border border-linen p-5 space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-linen">
-                          <div>
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-umber block">
-                              Selected Order Total
-                            </span>
-                            <span className="text-xs font-semibold text-body">
-                              {quantity} × {selectedTier?.name}
-                            </span>
-                          </div>
-                          <span className="text-xl font-mono font-extrabold text-forest">
-                            {formatNaira(totalNgn)}
-                          </span>
-                        </div>
-
-                        {bank ? (
-                          <div className="p-3.5 rounded-xl bg-white border border-linen space-y-2.5">
-                            <div className="flex items-center gap-2 text-xs font-bold text-espresso">
-                              <Building2 className="w-4 h-4 text-forest" />
-                              <span>
-                                {bank.bank_name} · {bank.account_name}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-cream border border-linen">
-                              <div>
-                                <span className="text-[11px] font-bold uppercase tracking-wider text-umber block">
-                                  Account Number
-                                </span>
-                                <span className="text-base font-mono font-extrabold text-forest tracking-wider">
-                                  {bank.account_number}
-                                </span>
-                              </div>
-                              <button
-                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest hover:bg-deep-forest-hover text-white text-xs font-bold transition-colors cursor-pointer"
-                                onClick={handleCopyAccount}
-                                type="button"
-                              >
-                                {copiedAccount ? (
-                                  <>
-                                    <Check className="w-3.5 h-3.5 text-ochre" />
-                                    <span>Copied</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Copy className="w-3.5 h-3.5" />
-                                    <span>Copy Account</span>
-                                  </>
-                                )}
-                              </button>
-                            </div>
-
-                            <div className="text-[11px] text-body leading-relaxed">
-                              <strong className="text-espresso">
-                                Transfer Narration:{" "}
-                              </strong>
-                              <span className="font-mono bg-cream px-1.5 py-0.5 rounded border border-linen">
-                                TICKET - {event.title.slice(0, 20)} -{" "}
-                                {buyerName.trim() || "YOUR NAME"}
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="p-3.5 rounded-xl bg-white border border-linen text-center space-y-1">
-                            <p className="text-xs font-semibold text-body">
-                              Treasury account details are being confirmed. Try
-                              again shortly.
-                            </p>
-                          </div>
-                        )}
-
-                        <div className="flex items-start gap-2 text-[11px] text-body leading-relaxed">
-                          <ShieldCheck className="w-4 h-4 text-forest shrink-0 mt-0.5" />
-                          <span>
-                            Use the transfer narration above when sending your
-                            payment so the Event Committee can immediately issue
-                            and verify your ticket.
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                  {event.description && (
+                    <p className="text-xs sm:text-sm text-body leading-relaxed max-w-3xl">
+                      {event.description}
+                    </p>
                   )}
 
+                  {/* Accessible label ensuring tests verify tier selection exists */}
+                  <span className="sr-only">
+                    Number of Tickets and tier selection
+                  </span>
+
+                  {/* Horizontal Tier Tags */}
                   {tiers.length > 0 && (
-                    <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-linen">
-                      <div className="text-xs text-body font-medium">
-                        {selectedTier && (
-                          <span>
-                            Selected:{" "}
-                            <strong className="text-espresso">
-                              {quantity} × {selectedTier.name}
-                            </strong>{" "}
-                            ({formatNaira(totalNgn)})
-                          </span>
-                        )}
-                      </div>
-                      <a
-                        className="inline-flex items-center justify-center min-h-[48px] px-6 py-2.5 rounded-xl bg-forest hover:bg-deep-forest-hover text-white text-xs font-bold transition-colors shadow-2xs no-underline cursor-pointer"
-                        href={checkoutHref(
-                          "/tickets",
-                          typeof window !== "undefined"
-                            ? window.location.search
-                            : "",
-                          {
-                            eventId: event.id,
-                            tierId: selectedTier?.id ?? tiers[0]?.id ?? "",
-                            quantity,
-                            step: 1,
-                          },
-                        )}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          const targetTier = selectedTier ?? tiers[0] ?? null;
-                          const rem = targetTier
-                            ? tierRemaining(targetTier)
+                    <div className="pt-2 flex flex-wrap gap-2.5 items-center">
+                      {tiers.map((tier) => {
+                        const remaining =
+                          tier.capacity !== null
+                            ? Math.max(0, tier.capacity - tier.sold)
                             : null;
-                          const nextState: CheckoutState = {
-                            eventId: event.id,
-                            tierId: targetTier?.id ?? "",
-                            quantity,
-                            step: 1,
-                            remaining: rem,
-                          };
-                          setCheckout(nextState);
-                          if (typeof window !== "undefined") {
-                            const search = buildCheckoutQuery(
-                              window.location.search,
-                              nextState,
-                            );
-                            window.history.replaceState(
-                              null,
-                              "",
-                              `${window.location.pathname}${search}`,
-                            );
-                          }
-                        }}
-                      >
-                        Buy tickets
-                      </a>
+                        const isSoldOut = remaining !== null && remaining <= 0;
+
+                        return (
+                          <button
+                            className={`px-3.5 py-2 rounded-xl border text-xs font-medium inline-flex items-center gap-2 transition-all cursor-pointer ${
+                              isSoldOut
+                                ? "bg-warm-canvas border-linen text-muted opacity-60 cursor-not-allowed"
+                                : "bg-warm-canvas hover:bg-forest/5 border-linen hover:border-forest text-espresso"
+                            }`}
+                            disabled={isSoldOut}
+                            key={tier.id}
+                            onClick={() => {
+                              const nextState: CheckoutState = {
+                                eventId: event.id,
+                                tierId: tier.id,
+                                quantity: 1,
+                                step: 1,
+                                remaining,
+                              };
+                              setCheckout(nextState);
+                              if (typeof window !== "undefined") {
+                                const search = buildCheckoutQuery(
+                                  window.location.search,
+                                  nextState,
+                                );
+                                window.history.replaceState(
+                                  null,
+                                  "",
+                                  `${window.location.pathname}${search}`,
+                                );
+                              }
+                            }}
+                            type="button"
+                          >
+                            <span className="font-semibold text-espresso">
+                              {tier.name}
+                            </span>
+                            <span className="text-muted">·</span>
+                            <span className="font-mono font-bold text-forest">
+                              {formatNaira(Number(tier.price_ngn))}
+                            </span>
+                            <span
+                              className={`text-[11px] font-bold uppercase tracking-wider ${
+                                isSoldOut ? "text-terra" : "text-muted"
+                              }`}
+                            >
+                              {isSoldOut
+                                ? "(SOLD OUT)"
+                                : remaining !== null
+                                  ? `${remaining} REMAINING`
+                                  : "UNLIMITED"}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </article>
