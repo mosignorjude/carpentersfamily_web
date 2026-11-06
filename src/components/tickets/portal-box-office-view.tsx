@@ -3,9 +3,6 @@
 import {
   ArrowRight,
   Calendar,
-  Check,
-  Copy,
-  CreditCard,
   ExternalLink,
   FileText,
   MapPin,
@@ -28,7 +25,7 @@ interface PortalBoxOfficeViewProps {
   events: PortalBoxOfficeEvent[];
   summary: OfficerTicketSummary | null;
   isOfficer: boolean;
-  bank: PublicBankInfo | null;
+  bank?: PublicBankInfo | null;
   canManage?: boolean;
 }
 
@@ -36,66 +33,41 @@ export function PortalBoxOfficeView({
   events,
   summary,
   isOfficer,
-  bank,
   canManage = true,
 }: PortalBoxOfficeViewProps) {
   const [officerTab, setOfficerTab] = useState<"passes" | "desk">("passes");
-  const [copiedAccount, setCopiedAccount] = useState(false);
-
-  const handleCopyAccount = () => {
-    if (!bank?.account_number) return;
-    navigator.clipboard.writeText(bank.account_number);
-    setCopiedAccount(true);
-    setTimeout(() => setCopiedAccount(false), 2000);
-  };
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-12">
-      {/* Top Breadcrumb & Page Header */}
-      <div className="space-y-4">
-        <nav
-          aria-label="Breadcrumb"
-          className="text-xs text-muted flex items-center gap-1.5"
-        >
+    <div className="space-y-8 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 pb-12">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-espresso tracking-tight">
+            Box Office & Passes
+          </h1>
+          <p className="text-xs sm:text-sm text-muted max-w-2xl">
+            Official tickets, pass allocations, and celebration admissions for
+            Carpenters Family events.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
           <Link
-            className="hover:text-espresso transition-colors no-underline"
-            href="/portal"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white border border-linen text-body text-xs font-semibold hover:bg-cream transition-colors shadow-2xs no-underline min-h-[44px]"
+            href="/tickets/order"
           >
-            Home
+            <FileText className="w-3.5 h-3.5 text-forest" />
+            <span>Check Ticket Status</span>
           </Link>
-          <span>/</span>
-          <span className="font-semibold text-espresso">Box office</span>
-        </nav>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-espresso tracking-tight">
-              Box Office & Passes
-            </h1>
-            <p className="text-xs sm:text-sm text-muted max-w-2xl">
-              Official tickets, pass allocations, and celebration admissions for
-              Carpenters Family events.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Link
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white border border-linen text-body text-xs font-semibold hover:bg-cream transition-colors shadow-2xs no-underline min-h-[44px]"
-              href="/tickets/order"
-            >
-              <FileText className="w-3.5 h-3.5 text-forest" />
-              <span>Check Ticket Status</span>
-            </Link>
-
-            <Link
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white border border-linen text-body text-xs font-semibold hover:bg-cream transition-colors shadow-2xs no-underline min-h-[44px]"
-              href="/tickets?view=public"
-              title="View Public Box Office Storefront"
-            >
-              <ExternalLink className="w-3.5 h-3.5 text-muted" />
-              <span>Public Storefront</span>
-            </Link>
-          </div>
+          <Link
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white border border-linen text-body text-xs font-semibold hover:bg-cream transition-colors shadow-2xs no-underline min-h-[44px]"
+            href="/tickets?view=public"
+            title="View Public Box Office Storefront"
+          >
+            <ExternalLink className="w-3.5 h-3.5 text-muted" />
+            <span>Public Storefront</span>
+          </Link>
         </div>
       </div>
 
@@ -316,66 +288,6 @@ export function PortalBoxOfficeView({
               })}
             </div>
           )}
-        </section>
-      )}
-
-      {/* Official Payment Destination (Bank Details) */}
-      {bank && (
-        <section
-          aria-label="Official Payment Details"
-          className="rounded-3xl bg-warm-canvas border border-linen p-6 space-y-3"
-        >
-          <div className="flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-forest" />
-            <h3 className="text-xs font-bold text-espresso uppercase tracking-wider">
-              Official Club Payment Account
-            </h3>
-          </div>
-          <p className="text-xs text-muted">
-            All box office guest payments and bank transfers must be directed
-            exclusively to this verified club account.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
-            <div className="rounded-xl bg-white border border-linen p-3">
-              <span className="text-muted block text-[11px]">Bank Name</span>
-              <span className="font-bold text-espresso">{bank.bank_name}</span>
-            </div>
-            <div className="rounded-xl bg-white border border-linen p-3">
-              <span className="text-muted block text-[11px]">Account Name</span>
-              <span className="font-bold text-espresso">
-                {bank.account_name}
-              </span>
-            </div>
-            <div className="rounded-xl bg-white border border-linen p-3 flex items-center justify-between gap-2">
-              <div>
-                <span className="text-muted block text-[11px]">
-                  Account Number
-                </span>
-                <span className="font-bold text-forest font-mono text-sm tracking-wider">
-                  {bank.account_number}
-                </span>
-              </div>
-              <button
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-warm-canvas border border-linen hover:border-forest/40 text-espresso text-[11px] font-semibold transition-colors min-h-[36px] cursor-pointer"
-                id="btn-copy-account"
-                onClick={handleCopyAccount}
-                title="Copy account number"
-                type="button"
-              >
-                {copiedAccount ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-forest" />
-                    <span>Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5 text-muted" />
-                    <span>Copy</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
         </section>
       )}
     </div>

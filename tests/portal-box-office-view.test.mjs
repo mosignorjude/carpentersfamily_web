@@ -22,12 +22,41 @@ test("OfficerBoxOfficeDesk renders core KPI metrics and governance controls", ()
 });
 
 test("PortalBoxOfficeView connects to Member Portal and renders ticket inventory", () => {
-  assert.match(PORTAL_SOURCE, /Box Office & Passes/);
-  assert.match(PORTAL_SOURCE, /href="\/portal"/);
-  assert.match(PORTAL_SOURCE, /href="\/tickets\/order"/);
-  assert.match(PORTAL_SOURCE, /href="\/tickets\?view=public"/);
-  assert.match(PORTAL_SOURCE, /OfficerBoxOfficeDesk/);
-  assert.match(PORTAL_SOURCE, /Admission Tiers & Pass Pricing/);
+  const portalSource = readFileSync(
+    "src/components/tickets/portal-box-office-view.tsx",
+    "utf8",
+  );
+  assert.match(portalSource, /Box Office & Passes/);
+  assert.match(portalSource, /href="\/tickets\/order"/);
+  assert.match(portalSource, /href="\/tickets\?view=public"/);
+  assert.match(portalSource, /OfficerBoxOfficeDesk/);
+  assert.match(portalSource, /Admission Tiers & Pass Pricing/);
+
+  // No breadcrumb
+  assert.doesNotMatch(
+    portalSource,
+    /aria-label="Breadcrumb"/,
+    "PortalBoxOfficeView must not render breadcrumb navigation",
+  );
+
+  // Standard responsive padding matching other pages
+  assert.match(
+    portalSource,
+    /max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8/,
+    "PortalBoxOfficeView must use standard responsive padding matching Finances and Dues",
+  );
+
+  // Bank section removed
+  assert.doesNotMatch(
+    portalSource,
+    /Official Club Payment Account/,
+    "PortalBoxOfficeView must not render Official Club Payment Account card",
+  );
+  assert.doesNotMatch(
+    portalSource,
+    /btn-copy-account/,
+    "PortalBoxOfficeView must not render bank copy button",
+  );
 });
 
 test("OfficerBoxOfficeDesk and PortalBoxOfficeView carry no inline hex palette", () => {
@@ -138,13 +167,6 @@ test("PortalBoxOfficeView and OfficerBoxOfficeDesk obey eyebrow restraint and br
   assert.ok(
     portalEyebrows.length <= 2,
     `PortalBoxOfficeView must have <= 2 uppercase tracking labels; found ${portalEyebrows.length}`,
-  );
-
-  // Bank account copy button exists
-  assert.match(
-    portalSource,
-    /btn-copy-account/,
-    "PortalBoxOfficeView must provide a 1-tap copy button for club bank account",
   );
 });
 
