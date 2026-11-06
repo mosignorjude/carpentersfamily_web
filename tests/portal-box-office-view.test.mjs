@@ -98,4 +98,55 @@ test("PortalBoxOfficeView provides segmented view toggle for officers without du
   );
 });
 
+test("PortalBoxOfficeView and OfficerBoxOfficeDesk obey eyebrow restraint and brand token palette", () => {
+  const deskSource = readFileSync(
+    "src/components/tickets/officer-box-office-desk.tsx",
+    "utf8",
+  );
+  const portalSource = readFileSync(
+    "src/components/tickets/portal-box-office-view.tsx",
+    "utf8",
+  );
+
+  // No generic Tailwind amber in OfficerBoxOfficeDesk
+  assert.doesNotMatch(
+    deskSource,
+    /bg-amber-100|bg-amber-50|bg-amber-200/,
+    "Use brand ochre tokens instead of generic Tailwind amber background",
+  );
+  assert.doesNotMatch(
+    deskSource,
+    /text-amber-900|text-amber-800/,
+    "Use brand espresso/ochre tokens instead of generic Tailwind amber text",
+  );
+
+  // Zero em-dashes across components
+  assert.doesNotMatch(
+    portalSource,
+    /—/,
+    "PortalBoxOfficeView must contain zero em-dashes",
+  );
+  assert.doesNotMatch(
+    deskSource,
+    /—/,
+    "OfficerBoxOfficeDesk must contain zero em-dashes",
+  );
+
+  // Eyebrow count check in PortalBoxOfficeView (max 2)
+  const portalEyebrows =
+    portalSource.match(/uppercase tracking-(?:wider|widest)/g) ?? [];
+  assert.ok(
+    portalEyebrows.length <= 2,
+    `PortalBoxOfficeView must have <= 2 uppercase tracking labels; found ${portalEyebrows.length}`,
+  );
+
+  // Bank account copy button exists
+  assert.match(
+    portalSource,
+    /btn-copy-account/,
+    "PortalBoxOfficeView must provide a 1-tap copy button for club bank account",
+  );
+});
+
+
 

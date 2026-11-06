@@ -133,7 +133,7 @@ export function OfficerBoxOfficeDesk({
         <div
           className={`rounded-2xl border p-4 sm:p-5 space-y-2 ${
             summary.pendingVerificationCount > 0
-              ? "bg-amber-50/70 border-amber-200"
+              ? "bg-ochre/10 border-ochre/30"
               : "bg-warm-canvas border-linen"
           }`}
         >
@@ -144,12 +144,12 @@ export function OfficerBoxOfficeDesk({
             <div
               className={`w-7 h-7 rounded-lg flex items-center justify-center ${
                 summary.pendingVerificationCount > 0
-                  ? "bg-amber-200 text-amber-900"
+                  ? "bg-ochre/20 text-espresso"
                   : "bg-forest/10 text-forest"
               }`}
             >
               {summary.pendingVerificationCount > 0 ? (
-                <Clock className="w-4 h-4" />
+                <Clock className="w-4 h-4 text-espresso" />
               ) : (
                 <CheckCircle2 className="w-4 h-4" />
               )}
@@ -158,7 +158,7 @@ export function OfficerBoxOfficeDesk({
           <p
             className={`text-2xl sm:text-3xl font-extrabold font-mono tabular-nums tracking-tight ${
               summary.pendingVerificationCount > 0
-                ? "text-amber-900"
+                ? "text-espresso"
                 : "text-forest"
             }`}
           >
@@ -224,8 +224,8 @@ export function OfficerBoxOfficeDesk({
                           {event.title}
                         </h4>
                         {pendingCount > 0 && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-[11px] font-bold">
-                            <AlertCircle className="w-3 h-3" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-ochre/15 border border-ochre/30 text-espresso text-[11px] font-bold">
+                            <AlertCircle className="w-3 h-3 text-espresso" />
                             <span>{pendingCount} Awaiting Review</span>
                           </span>
                         )}
@@ -287,7 +287,7 @@ export function OfficerBoxOfficeDesk({
                       </span>
                       <span
                         className={`font-bold ${
-                          pendingCount > 0 ? "text-amber-800" : "text-forest"
+                          pendingCount > 0 ? "text-ochre" : "text-forest"
                         }`}
                       >
                         {pendingCount > 0
