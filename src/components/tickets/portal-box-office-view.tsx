@@ -67,7 +67,7 @@ export function PortalBoxOfficeView({
 
           <div className="flex flex-wrap items-center gap-2.5">
             <Link
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-linen text-body text-xs font-semibold hover:bg-cream transition-colors shadow-2xs no-underline min-h-[40px]"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white border border-linen text-body text-xs font-semibold hover:bg-cream transition-colors shadow-2xs no-underline min-h-[44px]"
               href="/tickets/order"
             >
               <FileText className="w-3.5 h-3.5 text-forest" />
@@ -75,7 +75,7 @@ export function PortalBoxOfficeView({
             </Link>
 
             <Link
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-linen text-body text-xs font-semibold hover:bg-cream transition-colors shadow-2xs no-underline min-h-[40px]"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white border border-linen text-body text-xs font-semibold hover:bg-cream transition-colors shadow-2xs no-underline min-h-[44px]"
               href="/tickets?view=public"
               title="View Public Box Office Storefront"
             >
@@ -149,6 +149,8 @@ export function PortalBoxOfficeView({
                         <img
                           alt={`${event.title} flyer`}
                           className="w-full h-auto object-cover max-h-[300px] mx-auto block"
+                          decoding="async"
+                          loading="lazy"
                           src={flyerSrc}
                         />
                       </div>
@@ -251,7 +253,7 @@ export function PortalBoxOfficeView({
                         <div className="flex items-center gap-2 shrink-0">
                           {isOfficer && (
                             <Link
-                              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-forest text-white text-xs font-semibold hover:bg-forest/90 transition-colors shadow-2xs no-underline"
+                              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-forest text-white text-xs font-semibold hover:bg-forest/90 transition-colors shadow-2xs no-underline min-h-[44px]"
                               href={`/events/${event.id}/dashboard?tab=tickets`}
                             >
                               <span>Manage Event Tickets</span>

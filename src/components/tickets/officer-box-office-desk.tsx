@@ -110,9 +110,16 @@ export function OfficerBoxOfficeDesk({
             </span>
           </p>
           <div className="space-y-1">
-            <div className="w-full h-2 rounded-full bg-linen overflow-hidden">
+            <div
+              aria-label="Inventory allocated"
+              aria-valuemax={100}
+              aria-valuemin={0}
+              aria-valuenow={percentFilled}
+              className="w-full h-2 rounded-full bg-linen overflow-hidden"
+              role="progressbar"
+            >
               <div
-                className="h-full bg-forest transition-all duration-300"
+                className="h-full bg-forest transition-all duration-300 motion-reduce:transition-none"
                 style={{ width: `${percentFilled}%` }}
               />
             </div>
@@ -239,7 +246,7 @@ export function OfficerBoxOfficeDesk({
 
                     <div className="flex items-center gap-2 shrink-0">
                       <Link
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-forest text-white text-xs font-semibold hover:bg-forest/90 transition-colors shadow-2xs no-underline min-h-[38px]"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-forest text-white text-xs font-semibold hover:bg-forest/90 transition-colors shadow-2xs no-underline min-h-[44px]"
                         href={`/events/${event.id}/dashboard?tab=tickets`}
                       >
                         <span>Manage Tiers & Ledger</span>
