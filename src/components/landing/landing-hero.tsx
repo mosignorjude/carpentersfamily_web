@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export function LandingHero() {
   return (
     <section id="about" className="mx-auto max-w-6xl px-4 pt-6 pb-12">
@@ -31,18 +29,12 @@ export function LandingHero() {
             landmark shows, elevating lifestyle brands, and standing together
             for life.
           </p>
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href="/?modal=membership"
+          <div className="mt-7 flex items-center justify-center">
+            <a
+              href="#vision"
               className="btn bg-ochre text-deep hover:bg-cream text-xs sm:text-sm uppercase tracking-wider px-8 shadow-md font-bold transition-colors"
             >
-              Join the Family
-            </Link>
-            <a
-              href="#events"
-              className="btn border border-cream/40 bg-deep/30 text-cream hover:bg-cream/10 text-xs sm:text-sm uppercase tracking-wider px-8 font-bold transition-colors"
-            >
-              Explore Events
+              Explore the Family
             </a>
           </div>
           <p className="mt-4 font-serif italic text-sm text-cream">
