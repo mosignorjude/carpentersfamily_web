@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import {
-  type PublicBankInfo,
-  type PublicTicketedEvent,
-  TicketsStorefrontView,
-} from "@/components/tickets/tickets-storefront-view";
+import type {
+  PublicBankInfo,
+  PublicTicketedEvent,
+} from "@/components/tickets/ticket-types";
+import { TicketsStorefrontView } from "@/components/tickets/tickets-storefront-view";
 import { siteUrl } from "@/lib/site.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 

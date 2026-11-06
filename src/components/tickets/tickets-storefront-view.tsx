@@ -16,30 +16,13 @@ import ClubLogo from "@/components/club-logo";
 import { clubBrand } from "@/lib/brand";
 import { formatEventTime } from "@/lib/event-times.mjs";
 import { formatNaira } from "@/lib/format";
+import type {
+  PublicBankInfo,
+  PublicTicketedEvent,
+  PublicTicketTier,
+} from "./ticket-types";
 
-export interface PublicTicketTier {
-  id: string;
-  name: string;
-  price_ngn: number;
-  capacity: number | null;
-  sold: number;
-}
-
-export interface PublicTicketedEvent {
-  id: string;
-  title: string;
-  starts_at: string;
-  location: string;
-  description: string | null;
-  tiers: PublicTicketTier[];
-}
-
-export interface PublicBankInfo {
-  bank_name: string;
-  account_name: string;
-  account_number: string;
-  instructions: string | null;
-}
+export type { PublicBankInfo, PublicTicketedEvent, PublicTicketTier };
 
 interface TicketsStorefrontViewProps {
   events: PublicTicketedEvent[];
@@ -129,10 +112,10 @@ export function TicketsStorefrontView({
         <section className="rounded-2xl bg-deep text-white p-6 sm:p-10 shadow-md border border-forest space-y-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-widest text-ochre">
             <Ticket className="w-3.5 h-3.5" />
-            <span>Official Event Passes & Reservations</span>
+            <span>Official Event Tickets & Reservations</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white max-w-2xl leading-tight">
-            Purchase Event Tickets & Celebration Passes
+            Purchase Tickets for Upcoming Club Events
           </h1>
           <p className="text-xs sm:text-sm text-white/80 max-w-2xl leading-relaxed">
             Select your preferred ticket tier below and complete settlement via
@@ -253,7 +236,7 @@ export function TicketsStorefrontView({
                                   {soldOut
                                     ? "Sold out"
                                     : remaining !== null
-                                      ? `${remaining} pass${remaining === 1 ? "" : "es"} available`
+                                      ? `${remaining} ticket${remaining === 1 ? "" : "s"} left`
                                       : "Available"}
                                 </p>
                               </button>
@@ -267,7 +250,7 @@ export function TicketsStorefrontView({
                               className="block text-[11px] font-bold uppercase tracking-wider text-body mb-1"
                               htmlFor={`qty-${event.id}`}
                             >
-                              Number of Passes
+                              Number of Tickets
                             </label>
                             <select
                               className="w-full h-11 px-3 rounded-xl border border-linen bg-white text-xs font-bold text-espresso"
@@ -282,7 +265,7 @@ export function TicketsStorefrontView({
                             >
                               {[1, 2, 3, 4, 5, 6, 8, 10].map((num) => (
                                 <option key={num} value={num}>
-                                  {num} {num === 1 ? "Pass" : "Passes"}
+                                  {num} {num === 1 ? "Ticket" : "Tickets"}
                                 </option>
                               ))}
                             </select>
@@ -381,7 +364,7 @@ export function TicketsStorefrontView({
                           <span>
                             Use the transfer narration above when sending your
                             payment so the Event Committee can immediately issue
-                            and verify your pass.
+                            and verify your ticket.
                           </span>
                         </div>
                       </div>
