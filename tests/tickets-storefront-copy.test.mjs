@@ -48,3 +48,23 @@ test("the public ticket types live outside the client component", () => {
     assert.match(TYPES, new RegExp(`export interface ${name}`));
   }
 });
+
+test("the storefront never invents a bank account", () => {
+  assert.doesNotMatch(STOREFRONT, /1307798889/);
+  assert.doesNotMatch(STOREFRONT, /ProvidusUnity/);
+  assert.doesNotMatch(STOREFRONT, /The Carpenters Fam Soc Club Asb/);
+  assert.match(STOREFRONT, /unavailable/);
+});
+
+test("the order page awaits searchParams as a promise", () => {
+  const orderPage = readFileSync("src/app/tickets/order/page.tsx", "utf8");
+  assert.match(orderPage, /await searchParams/);
+  assert.doesNotMatch(orderPage, /searchParams\.get\(/);
+});
+
+test("the lookup keeps the email out of the URL", () => {
+  const actions = readFileSync("src/app/actions.ts", "utf8");
+  assert.match(actions, /export async function lookupTicketOrderAction/);
+  assert.doesNotMatch(actions, /buyer_email=\$\{/);
+  assert.doesNotMatch(actions, /redirect\(.*tickets\/order\?.*email/);
+});

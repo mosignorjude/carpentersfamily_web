@@ -489,6 +489,12 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     message:
       "Too many orders for this event are awaiting review. Please try again shortly.",
   },
+  "lookup-unavailable": {
+    type: "error",
+    title: "Order Lookup Unavailable",
+    message:
+      "We could not check that order just now. Please try again shortly.",
+  },
   denied: {
     type: "error",
     title: "Access Denied",

@@ -7,6 +7,7 @@ import {
   Clock,
   Copy,
   MapPin,
+  ShieldAlert,
   ShieldCheck,
   Ticket,
 } from "lucide-react";
@@ -43,6 +44,7 @@ interface TicketsStorefrontViewProps {
   events: PublicTicketedEvent[];
   bank: PublicBankInfo | null;
   isAuthenticatedMember?: boolean;
+  unavailable?: boolean;
 }
 
 const dateFormatter = new Intl.DateTimeFormat("en-NG", {
@@ -57,6 +59,7 @@ export function TicketsStorefrontView({
   events,
   bank,
   isAuthenticatedMember = false,
+  unavailable = false,
 }: TicketsStorefrontViewProps) {
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const [selectedTierByEvent, setSelectedTierByEvent] = useState<
@@ -92,13 +95,10 @@ export function TicketsStorefrontView({
     }
   }, [checkout, activeEvent]);
 
-  const accountNumber = bank?.account_number || "1307798889";
-  const bankName = bank?.bank_name || "ProvidusUnity";
-  const accountName = bank?.account_name || "The Carpenters Fam Soc Club Asb";
-
   const handleCopyAccount = async () => {
+    if (!bank?.account_number) return;
     try {
-      await navigator.clipboard.writeText(accountNumber);
+      await navigator.clipboard.writeText(bank.account_number);
       setCopiedAccount(true);
       window.setTimeout(() => setCopiedAccount(false), 2000);
     } catch {
@@ -161,7 +161,18 @@ export function TicketsStorefrontView({
           </p>
         </section>
 
-        {events.length === 0 ? (
+        {unavailable ? (
+          <section className="rounded-2xl bg-white border border-linen p-10 text-center space-y-3 shadow-xs">
+            <ShieldAlert className="w-10 h-10 text-terracotta mx-auto" />
+            <h2 className="text-lg font-extrabold text-espresso">
+              The box office is temporarily unavailable
+            </h2>
+            <p className="text-xs sm:text-sm text-body max-w-md mx-auto leading-relaxed">
+              Ticket listings could not be loaded. Please try again shortly — do
+              not transfer money for a ticket you cannot see listed here.
+            </p>
+          </section>
+        ) : events.length === 0 ? (
           <section className="rounded-2xl bg-white border border-linen p-10 text-center space-y-3 shadow-xs">
             <Ticket className="w-10 h-10 text-forest mx-auto opacity-75" />
             <h2 className="text-lg font-extrabold text-espresso">
@@ -350,52 +361,61 @@ export function TicketsStorefrontView({
                           </span>
                         </div>
 
-                        <div className="p-3.5 rounded-xl bg-white border border-linen space-y-2.5">
-                          <div className="flex items-center gap-2 text-xs font-bold text-espresso">
-                            <Building2 className="w-4 h-4 text-forest" />
-                            <span>
-                              {bankName} · {accountName}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-cream border border-linen">
-                            <div>
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-umber block">
-                                Account Number
-                              </span>
-                              <span className="text-base font-mono font-extrabold text-forest tracking-wider">
-                                {accountNumber}
+                        {bank ? (
+                          <div className="p-3.5 rounded-xl bg-white border border-linen space-y-2.5">
+                            <div className="flex items-center gap-2 text-xs font-bold text-espresso">
+                              <Building2 className="w-4 h-4 text-forest" />
+                              <span>
+                                {bank.bank_name} · {bank.account_name}
                               </span>
                             </div>
-                            <button
-                              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest hover:bg-deep-forest-hover text-white text-xs font-bold transition-colors cursor-pointer"
-                              onClick={handleCopyAccount}
-                              type="button"
-                            >
-                              {copiedAccount ? (
-                                <>
-                                  <Check className="w-3.5 h-3.5 text-ochre" />
-                                  <span>Copied</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="w-3.5 h-3.5" />
-                                  <span>Copy Account</span>
-                                </>
-                              )}
-                            </button>
-                          </div>
 
-                          <div className="text-[11px] text-body leading-relaxed">
-                            <strong className="text-espresso">
-                              Transfer Narration:{" "}
-                            </strong>
-                            <span className="font-mono bg-cream px-1.5 py-0.5 rounded border border-linen">
-                              TICKET - {event.title.slice(0, 20)} -{" "}
-                              {buyerName.trim() || "YOUR NAME"}
-                            </span>
+                            <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-cream border border-linen">
+                              <div>
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-umber block">
+                                  Account Number
+                                </span>
+                                <span className="text-base font-mono font-extrabold text-forest tracking-wider">
+                                  {bank.account_number}
+                                </span>
+                              </div>
+                              <button
+                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest hover:bg-deep-forest-hover text-white text-xs font-bold transition-colors cursor-pointer"
+                                onClick={handleCopyAccount}
+                                type="button"
+                              >
+                                {copiedAccount ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 text-ochre" />
+                                    <span>Copied</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5" />
+                                    <span>Copy Account</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+
+                            <div className="text-[11px] text-body leading-relaxed">
+                              <strong className="text-espresso">
+                                Transfer Narration:{" "}
+                              </strong>
+                              <span className="font-mono bg-cream px-1.5 py-0.5 rounded border border-linen">
+                                TICKET - {event.title.slice(0, 20)} -{" "}
+                                {buyerName.trim() || "YOUR NAME"}
+                              </span>
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          <div className="p-3.5 rounded-xl bg-white border border-linen text-center space-y-1">
+                            <p className="text-xs font-semibold text-body">
+                              Treasury account details are being confirmed. Try
+                              again shortly.
+                            </p>
+                          </div>
+                        )}
 
                         <div className="flex items-start gap-2 text-[11px] text-body leading-relaxed">
                           <ShieldCheck className="w-4 h-4 text-forest shrink-0 mt-0.5" />

@@ -4,6 +4,10 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import QRCode from "qrcode";
+import type {
+  TicketLookupState,
+  TicketOrderStatus,
+} from "@/components/tickets/ticket-types";
 import { parseClubRoleRequest } from "@/lib/club-role-request.mjs";
 import { canManageDues } from "@/lib/dues-governance.mjs";
 import {
@@ -4154,4 +4158,62 @@ export async function submitTicketOrderAction(
     ),
   ]);
   redirect(`/tickets/order?ref=${encodeURIComponent(reference)}`);
+}
+
+export async function lookupTicketOrderAction(
+  previous: TicketLookupState,
+  formData: FormData,
+): Promise<TicketLookupState> {
+  const reference = String(formData.get("reference") ?? "").trim();
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (!reference || !email) {
+    return {
+      ...previous,
+      notFound: false,
+      error: "invalid-request",
+      pendingReference: reference,
+    };
+  }
+
+  const supabase = await createAnonClient();
+  if (!supabase) {
+    return { ...previous, error: "configuration", pendingReference: reference };
+  }
+
+  const { data, error } = await supabase.rpc("lookup_ticket_order", {
+    p_reference: reference,
+    p_email: email,
+  });
+
+  if (error) {
+    // Never forward error.message: it is the database's sentence, not ours.
+    return {
+      ...previous,
+      error: "lookup-unavailable",
+      pendingReference: reference,
+    };
+  }
+
+  const row = Array.isArray(data) ? data[0] : undefined;
+  if (!row) {
+    // One answer for "no such reference" and "wrong email": the endpoint cannot confirm that a
+    // reference exists.
+    return {
+      ...previous,
+      status: null,
+      notFound: true,
+      error: null,
+      pendingReference: reference,
+    };
+  }
+
+  return {
+    status: row as TicketOrderStatus,
+    notFound: false,
+    error: null,
+    pendingReference: row.public_reference,
+  };
 }

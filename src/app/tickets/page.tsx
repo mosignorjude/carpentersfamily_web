@@ -46,30 +46,27 @@ export default async function TicketsStorefrontPage() {
   let events: PublicTicketedEvent[] = [];
   let bank: PublicBankInfo | null = null;
   let isAuthenticatedMember = false;
+  let unavailable = false;
 
   try {
     const supabase = await createSupabaseServerClient();
-    const [{ data: authData }, { data: rpcData }] = await Promise.all([
+    const [{ data: authData }, rpcResult] = await Promise.all([
       supabase.auth.getUser(),
       supabase.rpc("get_public_ticketed_events"),
     ]);
-
     isAuthenticatedMember = Boolean(authData?.user);
-
-    if (rpcData && typeof rpcData === "object") {
-      const payload = rpcData as {
+    if (rpcResult.error) {
+      unavailable = true;
+    } else {
+      const payload = (rpcResult.data ?? {}) as {
         bank?: PublicBankInfo | null;
         events?: PublicTicketedEvent[];
       };
-      if (payload.bank) {
-        bank = payload.bank;
-      }
-      if (Array.isArray(payload.events)) {
-        events = payload.events;
-      }
+      bank = payload.bank ?? null;
+      events = Array.isArray(payload.events) ? payload.events : [];
     }
   } catch {
-    // Render empty storefront state gracefully if Supabase is unreachable
+    unavailable = true;
   }
 
   return (
@@ -77,6 +74,7 @@ export default async function TicketsStorefrontPage() {
       bank={bank}
       events={events}
       isAuthenticatedMember={isAuthenticatedMember}
+      unavailable={unavailable}
     />
   );
 }
