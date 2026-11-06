@@ -32,14 +32,8 @@ export default async function TicketOrderStatusPage({
           >
             <ClubLogo size="sm" variant="dark" />
             <div className="min-w-0">
-              <span className="text-sm font-extrabold tracking-tight block leading-tight text-espresso truncate sm:hidden">
+              <span className="text-sm font-extrabold tracking-tight block leading-tight text-espresso truncate">
                 {clubBrand.shortName}
-              </span>
-              <span className="text-sm font-extrabold tracking-tight hidden sm:block leading-tight text-espresso">
-                {clubBrand.name}
-              </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-forest block truncate">
-                Official Event Box Office
               </span>
             </div>
           </Link>

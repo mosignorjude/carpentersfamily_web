@@ -96,11 +96,8 @@ export function TicketsStorefrontView({
             >
               <ClubLogo size="sm" variant="dark" />
               <div className="min-w-0">
-                <span className="text-sm font-extrabold tracking-tight block leading-tight text-espresso truncate sm:hidden">
+                <span className="text-sm font-extrabold tracking-tight block leading-tight text-espresso truncate">
                   {clubBrand.shortName}
-                </span>
-                <span className="text-sm font-extrabold tracking-tight hidden sm:block leading-tight text-espresso">
-                  {clubBrand.name}
                 </span>
                 <span className="hidden sm:inline sr-only">
                   carpentersfamily.com.ng/tickets
