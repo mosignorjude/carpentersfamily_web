@@ -133,11 +133,11 @@ test("notification href routes accurately to domain areas and section anchors", 
   );
   assert.equal(
     getNotificationHref({ category: "attendance_open", event_id: "evt-123" }),
-    "/attendance?event=evt-123&tab=session#attendance-session",
+    "/meeting-hub?event=evt-123&tab=session#attendance-session",
   );
   assert.equal(
     getNotificationHref({ category: "attendance_open", event_id: null }),
-    "/attendance",
+    "/meeting-hub",
   );
   assert.equal(
     getNotificationHref({ category: "announcement" }),
@@ -168,7 +168,7 @@ test("notification href routes accurately to domain areas and section anchors", 
       category: "attendance_open",
       event_id: "evt/123?bad=1",
     }),
-    "/attendance",
+    "/meeting-hub",
   );
   assert.equal(
     getNotificationHref({

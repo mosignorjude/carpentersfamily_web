@@ -15,7 +15,7 @@ import { getAttendancePageAccess } from "@/lib/attendance-page-access.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 // Action outcomes (?notice=) are presented by the global flash toast.
-export default async function AttendancePage({
+export default async function MeetingHubPage({
   searchParams,
 }: {
   searchParams: Promise<{ event?: string; tab?: string }>;
@@ -50,46 +50,29 @@ export default async function AttendancePage({
   const isGlobalAdmin =
     globalRoles.has("admin") || globalRoles.has("president");
   const isGlobalExecutive = globalRoles.has("executive");
+  const canCreateMeeting = isGlobalAdmin || isGlobalExecutive;
 
   let computedRole = "member";
   if (isGlobalAdmin) computedRole = "admin";
   else if (isGlobalExecutive) computedRole = "executive";
 
-  // 2. Fetch all events with attendance or minutes enabled
+  // 2. Fetch all meetings strictly filtered by event_type = 'meeting'
   const { data: eventsData, error: eventsError } = await supabase
     .from("events")
     .select(
       "id, title, event_type, starts_at, duration_days, location, status, minutes_enabled, attendance_enabled, archived_at",
     )
-    .or(
-      "event_type.eq.meeting,attendance_enabled.eq.true,minutes_enabled.eq.true",
-    )
+    .eq("event_type", "meeting")
     .order("starts_at", { ascending: false });
 
-  if (eventsError || !eventsData || eventsData.length === 0) {
-    return (
-      <div className="min-h-full p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
-        <section className="bg-white rounded-2xl border border-[#E5DDD3] p-8 text-center space-y-3">
-          <h1 className="text-xl font-bold text-[#3D291F]">
-            Minutes & Attendance
-          </h1>
-          <p className="text-xs text-[#7A685D]">
-            There are currently no events configured with attendance tracking or
-            meeting minutes.
-          </p>
-        </section>
-      </div>
-    );
-  }
-
-  const events = eventsData as EventRow[];
+  const events = (eventsData ?? []) as EventRow[];
 
   // 3. Determine selected event
-  let selectedEvent: EventRow = events[0];
-  if (query.event) {
+  let selectedEvent: EventRow | null = events[0] ?? null;
+  if (query.event && events.length > 0) {
     const match = events.find((e) => e.id === query.event);
     if (match) selectedEvent = match;
-  } else {
+  } else if (events.length > 0) {
     // Pick event with open session if any
     const { data: openSessions } = await supabase
       .from("event_attendance_sessions")
@@ -104,14 +87,17 @@ export default async function AttendancePage({
   }
 
   // 4. Fetch permissions for selected event
-  const { data: eventRolesData } = await supabase
-    .from("event_role_assignments")
-    .select("role")
-    .eq("event_id", selectedEvent.id)
-    .eq("member_id", memberId)
-    .is("revoked_at", null);
+  let eventRoles = new Set<string>();
+  if (selectedEvent) {
+    const { data: eventRolesData } = await supabase
+      .from("event_role_assignments")
+      .select("role")
+      .eq("event_id", selectedEvent.id)
+      .eq("member_id", memberId)
+      .is("revoked_at", null);
 
-  const eventRoles = new Set((eventRolesData ?? []).map((r) => r.role));
+    eventRoles = new Set((eventRolesData ?? []).map((r) => r.role));
+  }
   const { canControl, canWriteMinutes, canReviewAttendance, isOfficer } =
     getAttendancePageAccess({ roles: globalRoles, eventRoles });
 
@@ -123,14 +109,14 @@ export default async function AttendancePage({
     attendanceResult,
     historyResult,
   ] = await Promise.all([
-    selectedEvent.minutes_enabled
+    selectedEvent?.minutes_enabled
       ? supabase
           .from("event_minutes")
           .select("event_id, content, revision_number, updated_at")
           .eq("event_id", selectedEvent.id)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
-    selectedEvent.attendance_enabled
+    selectedEvent?.attendance_enabled
       ? supabase
           .from("event_attendance_sessions")
           .select(
@@ -146,7 +132,7 @@ export default async function AttendancePage({
           .eq("singleton_id", true)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
-    selectedEvent.attendance_enabled
+    selectedEvent?.attendance_enabled
       ? supabase
           .from("event_attendance")
           .select(
@@ -212,7 +198,7 @@ export default async function AttendancePage({
     const evt = row.events as { title?: string; starts_at?: string } | null;
     return {
       eventId: row.event_id,
-      title: evt?.title ?? "Club Event",
+      title: evt?.title ?? "Club Meeting",
       startsAt: evt?.starts_at ?? "",
       status: row.attendance_status,
       checkedInAt: row.checked_in_at,
@@ -226,6 +212,7 @@ export default async function AttendancePage({
         attendance={attendance}
         audits={audits}
         canControl={canControl}
+        canCreateMeeting={canCreateMeeting}
         canReviewAttendance={canReviewAttendance}
         canWriteMinutes={canWriteMinutes}
         currentUser={{

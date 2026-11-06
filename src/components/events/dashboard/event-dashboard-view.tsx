@@ -530,17 +530,17 @@ export function EventDashboardView({
             href="/events"
           >
             <ArrowLeft className="w-4 h-4 text-[#174C37] shrink-0" />
-            <span>Back to Events and planning</span>
+            <span>Back to Events & Activities</span>
           </Link>
 
           <div className="flex items-center gap-2">
             {(event.attendanceEnabled || event.minutesEnabled) && (
               <Link
                 className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] hover:border-[#174C37]/40 text-xs font-semibold text-[#174C37] transition-colors min-h-[44px]"
-                href={`/attendance?event=${encodeURIComponent(event.id)}`}
+                href={`/meeting-hub?event=${encodeURIComponent(event.id)}`}
               >
                 <FileText className="w-3.5 h-3.5 text-[#174C37]" />
-                <span>Minutes & Attendance</span>
+                <span>Meeting Hub</span>
               </Link>
             )}
             <span

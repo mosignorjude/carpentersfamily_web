@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { FinanceCategory, FinanceTransaction } from "./finance-forms";
 
 const PAGE_SIZE = 50;
+const AUDIT_PAGE_SIZE = 20;
 
 type FinanceAuditRow = {
   id: string;
@@ -188,7 +189,7 @@ export default async function FinancesPage({
       : Promise.resolve({ count: 0, error: null }),
   ]);
   const auditCount = auditCountResult.count ?? 0;
-  const auditPageCount = Math.max(1, Math.ceil(auditCount / PAGE_SIZE));
+  const auditPageCount = Math.max(1, Math.ceil(auditCount / AUDIT_PAGE_SIZE));
   const auditPage = Math.min(requestedAuditPage, auditPageCount - 1);
   const auditResult = isOfficer
     ? await supabase
@@ -209,7 +210,7 @@ export default async function FinancesPage({
           "event_finance_category_retired",
         ])
         .order("occurred_at", { ascending: false })
-        .range(auditPage * PAGE_SIZE, (auditPage + 1) * PAGE_SIZE - 1)
+        .range(auditPage * AUDIT_PAGE_SIZE, (auditPage + 1) * AUDIT_PAGE_SIZE - 1)
     : null;
 
   const categories = (categoryResult.data ?? []) as FinanceCategory[];
@@ -318,6 +319,7 @@ export default async function FinancesPage({
       page={page}
       pageCount={pageCount}
       pageSize={PAGE_SIZE}
+      auditPageSize={AUDIT_PAGE_SIZE}
       paymentSettings={paymentSettings}
       receiptUnavailable={receiptUnavailable}
       receiptsByTransaction={receiptsByTransaction}

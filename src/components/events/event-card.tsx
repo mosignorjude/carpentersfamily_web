@@ -381,15 +381,15 @@ export function EventCard({
             event.attendance_enabled ? (
             <Link
               className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[48px] no-underline"
-              href={`/attendance?event=${encodeURIComponent(event.id)}`}
+              href={`/meeting-hub?event=${encodeURIComponent(event.id)}`}
             >
               <FileText className="w-4 h-4 text-[#D6A23A]" />
-              <span>Minutes & Attendance</span>
+              <span>Meeting Hub</span>
               <ArrowRight className="w-4 h-4 text-[#D6A23A]" />
             </Link>
           ) : null}
 
-          {/* Secondary Link (Minutes & Attendance when party or finances is primary) */}
+          {/* Secondary Link (Meeting Hub when party or finances is primary) */}
           {((event.event_type === "party" &&
             (event.minutes_enabled || event.attendance_enabled)) ||
             (event.event_type !== "party" &&
@@ -400,10 +400,10 @@ export function EventCard({
               (event.minutes_enabled || event.attendance_enabled))) && (
             <Link
               className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-xl transition-colors min-h-[44px] no-underline"
-              href={`/attendance?event=${encodeURIComponent(event.id)}`}
+              href={`/meeting-hub?event=${encodeURIComponent(event.id)}`}
             >
               <FileText className="w-4 h-4" />
-              <span>Minutes & Attendance</span>
+              <span>Meeting Hub</span>
             </Link>
           )}
 
@@ -567,16 +567,16 @@ export function EventCard({
               </>
             )}
 
-            {/* Minutes & Attendance */}
+            {/* Meeting Hub */}
             {(event.event_type === "meeting" ||
               event.minutes_enabled ||
               event.attendance_enabled) && (
               <Link
                 className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-xl transition-colors min-h-[44px] no-underline"
-                href={`/attendance?event=${encodeURIComponent(event.id)}`}
+                href={`/meeting-hub?event=${encodeURIComponent(event.id)}`}
               >
                 <FileText className="w-4 h-4" />
-                <span>Minutes & Attendance</span>
+                <span>Meeting Hub</span>
               </Link>
             )}
 

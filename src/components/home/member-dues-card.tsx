@@ -11,10 +11,14 @@ import {
   CreditCard,
   DollarSign,
   FileText,
-  ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import type { DuesMonthOption } from "@/app/(member)/dues/dues-forms";
+import {
+  PayDuesModal,
+  type DuesPaymentSettings,
+} from "@/components/dues/pay-dues-modal";
 import { formatNaira } from "@/lib/format";
 import type { HomeDashboardDues } from "@/lib/home-dashboard.server";
 import { percentWidthClass } from "@/lib/percent-width-class";
@@ -57,6 +61,7 @@ interface MemberDuesCardProps {
   currentYear: string | null;
   currentMonth: string | null;
   memberName: string;
+  paymentSettings?: DuesPaymentSettings | null;
 }
 
 export function MemberDuesCard({
@@ -64,8 +69,10 @@ export function MemberDuesCard({
   currentYear,
   currentMonth,
   memberName,
+  paymentSettings,
 }: MemberDuesCardProps) {
   const [isScheduleExpanded, setIsScheduleExpanded] = useState(false);
+  const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [selectedPaidMonth, setSelectedPaidMonth] = useState<{
     name: string;
     amount: number;
@@ -111,6 +118,10 @@ export function MemberDuesCard({
 
   const rows = dues.rows ?? [];
   const paidRows = rows.filter((r) => r.status === "paid");
+  const unpaidRows = rows.filter((r) => r.status === "unpaid");
+  const unpaidTotalNgn = unpaidRows.reduce((sum, r) => sum + r.amountNgn, 0);
+  const unpaidMonthsCount = unpaidRows.length;
+
   const scheduledMonthsCount = rows.length;
   const paidMonthsCount = paidRows.length;
   const totalPaidAmount = paidRows.reduce((sum, r) => sum + r.amountNgn, 0);
@@ -121,21 +132,28 @@ export function MemberDuesCard({
       : Math.round((paidMonthsCount / scheduledMonthsCount) * 100),
   );
 
-  const currentMonthRow = rows.find((r) => r.coveredMonth === currentMonth);
-  const overdueRow = rows.find((r) => r.isOverdue && r.status === "unpaid");
-  const activeObligationRow =
-    overdueRow ??
-    (currentMonthRow && currentMonthRow.status === "unpaid"
-      ? currentMonthRow
-      : null);
+  const availableMonths: DuesMonthOption[] = unpaidRows.map((r) => {
+    let label = r.coveredMonth;
+    try {
+      const [y, m] = r.coveredMonth.split("-").map(Number);
+      const date = new Date(Date.UTC(y, m - 1, 1));
+      label = new Intl.DateTimeFormat("en-NG", {
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      }).format(date);
+    } catch {
+      label = r.coveredMonth;
+    }
+    return {
+      month: r.coveredMonth,
+      amount: r.amountNgn,
+      label,
+    };
+  });
 
-  const activeMonthIndex = activeObligationRow
-    ? Number.parseInt(activeObligationRow.coveredMonth.slice(5, 7), 10) - 1
-    : -1;
-  const activeMonthName =
-    activeMonthIndex >= 0 && activeMonthIndex < 12
-      ? monthNames[activeMonthIndex].shortName
-      : "";
+  const monthlyRateNgn =
+    unpaidRows[0]?.amountNgn ?? rows[0]?.amountNgn ?? 5000;
 
   const monthsMap = new Map(rows.map((r) => [r.coveredMonth, r]));
 
@@ -162,22 +180,13 @@ export function MemberDuesCard({
           </p>
         </div>
 
-        {/* Header Right Zone: Privacy badge and Open Ledger link */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <div className="flex items-center gap-2 text-xs text-[#174C37] bg-[#FAF6F0] px-3.5 py-1.5 rounded-lg border border-[#E5DDD3] shadow-2xs">
-            <ShieldCheck className="w-4 h-4 text-[#174C37]" />
-            <span className="font-medium">Private Member Ledger</span>
-            <span aria-hidden="true" className="text-[#B8ACA0]">
-              ·
-            </span>
-            <span className="text-[#7A685D]">Confidential</span>
-          </div>
-
+        {/* Header Right Zone: Open Ledger link (anchored text, no badge) */}
+        <div className="flex items-center shrink-0">
           <Link
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[44px] min-w-[44px] rounded-lg bg-white border border-[#E5DDD3] text-xs font-semibold text-[#174C37] hover:bg-[#FAF6F0] transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#174C37] hover:text-[#0C3325] hover:underline transition-colors py-1.5"
             href="/dues"
           >
-            <span>Full Ledger</span>
+            <span>Full ledger</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -203,36 +212,33 @@ export function MemberDuesCard({
           </span>
           <span
             className={`font-mono font-bold text-base block ${
-              activeObligationRow ? "text-[#BA3C2A]" : "text-[#174C37]"
+              unpaidTotalNgn > 0 ? "text-[#BA3C2A]" : "text-[#174C37]"
             }`}
           >
-            {activeObligationRow
-              ? formatNaira(activeObligationRow.amountNgn)
-              : "₦0"}
+            {formatNaira(unpaidTotalNgn)}
           </span>
           <span className="text-[10px] text-[#7A685D] block">
-            {activeObligationRow
-              ? activeObligationRow.isOverdue
-                ? "Overdue"
-                : "Current"
-              : "Cleared"}
+            {unpaidMonthsCount} mo owed
           </span>
         </div>
 
-        <div className="text-center space-y-0.5">
+        <div className="text-center flex flex-col justify-center items-center space-y-0.5">
           <span className="text-[10px] font-bold text-[#7A685D] uppercase tracking-wider block">
-            Status
+            Action
           </span>
-          <span className="font-bold text-xs text-[#174C37] block mt-1">
-            {activeObligationRow
-              ? "Action Req."
-              : scheduledMonthsCount > 0
-                ? "Good Standing"
-                : "Pending"}
-          </span>
-          <span className="text-[10px] text-[#7A685D] block">
-            {currentYear} Schedule
-          </span>
+          {unpaidTotalNgn > 0 ? (
+            <button
+              className="mt-1 px-2.5 py-1 text-[11px] font-bold text-white bg-[#174C37] hover:bg-[#0C3325] rounded-lg transition-colors shadow-2xs"
+              onClick={() => setIsPayModalOpen(true)}
+              type="button"
+            >
+              Pay now
+            </button>
+          ) : (
+            <span className="font-bold text-xs text-[#174C37] block mt-1">
+              Up to date
+            </span>
+          )}
         </div>
       </div>
 
@@ -271,70 +277,54 @@ export function MemberDuesCard({
           </p>
         </div>
 
-        {/* 2. Current Month Obligation */}
+        {/* 2. Due Now */}
         <div className="p-4 sm:p-5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1.5 shadow-2xs">
           <span className="text-[11px] font-medium text-[#7A685D] block">
-            Current Month Obligation
+            Due Now
           </span>
           <div className="flex items-baseline justify-between">
-            <span className="text-base font-bold text-[#3D291F]">
-              {activeObligationRow
-                ? "Payment Pending"
-                : scheduledMonthsCount > 0
-                  ? "All Cleared"
-                  : "No Dues Scheduled"}
+            <span
+              className={`text-lg font-bold font-mono tabular-nums tracking-tight ${
+                unpaidTotalNgn > 0 ? "text-[#BA3C2A]" : "text-[#174C37]"
+              }`}
+            >
+              {formatNaira(unpaidTotalNgn)}
             </span>
-            {activeObligationRow ? (
-              <span className="text-xs font-bold text-[#BA3C2A] tabular-nums font-mono">
-                {formatNaira(activeObligationRow.amountNgn)} Due
-              </span>
-            ) : null}
+            <span className="text-xs font-semibold text-[#7A685D]">
+              {unpaidMonthsCount} {unpaidMonthsCount === 1 ? "month" : "months"} due
+            </span>
           </div>
           <div className="text-xs font-normal text-[#7A685D] mt-1">
-            {activeObligationRow
-              ? activeObligationRow.isOverdue
-                ? "This contribution is past its due date."
-                : "Due by monthly cycle close."
-              : scheduledMonthsCount > 0
-                ? "Your contributions are up to date."
-                : "No dues months are scheduled for this year yet."}
+            {unpaidTotalNgn > 0
+              ? "Outstanding dues contributions on your membership account."
+              : "All scheduled dues contributions are fully settled."}
           </div>
         </div>
 
-        {/* 3. Account Status & Action */}
+        {/* 3. Action */}
         <div className="home-dues-account-status p-4 sm:p-5 rounded-xl bg-[#0C3325] text-white flex flex-col justify-between space-y-3 shadow-2xs">
           <div>
             <span className="text-[11px] font-semibold text-[#D6A23A] block">
-              Account Status
+              Action
             </span>
             <p className="text-base font-bold mt-1 text-white">
-              {activeObligationRow
-                ? "Action Recommended"
-                : scheduledMonthsCount > 0
-                  ? "Member in Good Standing"
-                  : "Dues Schedule Pending"}
+              {unpaidTotalNgn > 0 ? "Payment Due" : "Up to date"}
             </p>
           </div>
 
-          {activeObligationRow ? (
-            <Link
-              className="w-full py-2.5 px-3 text-xs font-bold text-[#3D291F] bg-[#D6A23A] hover:bg-[#e0ad45] rounded-[10px] transition-colors flex items-center justify-center gap-2 min-h-[44px] shadow-xs"
-              href="/dues"
+          {unpaidTotalNgn > 0 ? (
+            <button
+              className="w-full py-2.5 px-3 text-xs font-bold text-[#3D291F] bg-[#D6A23A] hover:bg-[#e0ad45] rounded-[10px] transition-colors flex items-center justify-center gap-2 min-h-[44px] shadow-xs cursor-pointer"
+              onClick={() => setIsPayModalOpen(true)}
+              type="button"
             >
               <CreditCard className="w-4 h-4 text-[#3D291F]" />
-              <span>
-                Settle {activeMonthName} Dues (
-                {formatNaira(activeObligationRow.amountNgn)})
-              </span>
-            </Link>
-          ) : scheduledMonthsCount > 0 ? (
+              <span>Pay now</span>
+            </button>
+          ) : (
             <div className="flex items-center gap-1.5 text-xs text-[#E5DDD3]">
               <CheckCircle2 className="w-4 h-4 text-[#D6A23A]" />
-              <span>All dues cleared for this year</span>
-            </div>
-          ) : (
-            <div className="text-xs text-[#E5DDD3]">
-              <span>No dues scheduled</span>
+              <span>Up to date</span>
             </div>
           )}
         </div>
@@ -589,6 +579,16 @@ export function MemberDuesCard({
           </div>
         </div>
       )}
+
+      <PayDuesModal
+        availableMonths={availableMonths}
+        isOpen={isPayModalOpen}
+        memberName={memberName}
+        monthlyRateNgn={monthlyRateNgn}
+        onClose={() => setIsPayModalOpen(false)}
+        paymentSettings={paymentSettings}
+        unpaidTotalNgn={unpaidTotalNgn}
+      />
     </section>
   );
 }

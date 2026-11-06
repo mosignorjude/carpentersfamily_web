@@ -350,6 +350,7 @@ export default async function PortalPage({
     notificationResult,
     eventsResult,
     announcementsResult,
+    paymentSettingsResult,
   ] = await Promise.all([
     supabase
       .from("member_role_assignments")
@@ -375,6 +376,11 @@ export default async function PortalPage({
       .select("id,title")
       .order("created_at", { ascending: false })
       .limit(20),
+    supabase
+      .from("club_payment_settings")
+      .select("bank_name, account_number, account_name, instructions")
+      .eq("id", "singleton")
+      .maybeSingle(),
   ]);
   const roles = assignmentResult.error
     ? []
@@ -395,6 +401,16 @@ export default async function PortalPage({
       title: a.title,
     })),
   };
+
+  const paymentSettingsData = paymentSettingsResult?.data;
+  const paymentSettings = paymentSettingsData
+    ? {
+        bankName: paymentSettingsData.bank_name,
+        accountNumber: paymentSettingsData.account_number,
+        accountName: paymentSettingsData.account_name,
+        instructions: paymentSettingsData.instructions ?? undefined,
+      }
+    : null;
 
   const userProfile = {
     fullName:
@@ -427,6 +443,7 @@ export default async function PortalPage({
         greeting={greeting}
         memberName={profile.full_name}
         notice={notice}
+        paymentSettings={paymentSettings}
         roles={roles}
         username={profile.username || userProfile.username}
       />

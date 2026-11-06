@@ -175,7 +175,7 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
                         ? "bg-[#174C37] !text-white shadow-xs hover:bg-[#103D2B]"
                         : "bg-[#FAF6F0] border-2 border-[#E5DDD3] text-[#3D291F] hover:bg-white hover:border-[#174C37]"
                     }`}
-                    href={`/attendance?event=${encodeURIComponent(evt.id)}`}
+                    href={`/meeting-hub?event=${encodeURIComponent(evt.id)}`}
                   >
                     {attendanceRecorded ? (
                       <CheckCircle2 className="h-4 w-4 text-white shrink-0" />

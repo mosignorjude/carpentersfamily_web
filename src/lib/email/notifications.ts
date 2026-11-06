@@ -1079,7 +1079,7 @@ export async function notifyEventAttendanceOpened(params: {
       subject: `Attendance Is Open — ${eventTitle}`,
       heading: `Attendance Is Now Open for ${eventTitle}`,
       ctaLabel: "Check In Now",
-      ctaPath: `/attendance?event=${encodeURIComponent(params.eventId)}`,
+      ctaPath: `/meeting-hub?event=${encodeURIComponent(params.eventId)}`,
       copy: {
         previewText: `Check in now for ${eventTitle}.`,
         intro:

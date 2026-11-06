@@ -3,6 +3,7 @@
 import { MapPin } from "lucide-react";
 import { useState } from "react";
 import ClubLogo from "@/components/club-logo";
+import type { DuesPaymentSettings } from "@/components/dues/pay-dues-modal";
 import AnnouncementDetailModal from "@/components/home/announcement-detail-modal";
 import MemberDuesCard from "@/components/home/member-dues-card";
 import NextUpEventsCard from "@/components/home/next-up-events-card";
@@ -23,6 +24,7 @@ type HomeDashboardViewProps = {
   greeting?: string;
   roles: string[];
   notice?: string;
+  paymentSettings?: DuesPaymentSettings | null;
 };
 
 export default function HomeDashboardView({
@@ -32,6 +34,7 @@ export default function HomeDashboardView({
   greeting,
   roles,
   notice: _notice,
+  paymentSettings,
 }: HomeDashboardViewProps) {
   const [selectedAnnouncement, setSelectedAnnouncement] =
     useState<HomeDashboardAnnouncement | null>(null);
@@ -76,7 +79,7 @@ export default function HomeDashboardView({
       {/* Welcoming Family-Oriented Member Header */}
       <section
         aria-labelledby="welcome-heading"
-        className="bg-white rounded-xl border border-[#E5DDD3] p-6 sm:p-7 shadow-xs relative overflow-hidden"
+        className="bg-[#174C37] rounded-xl border border-[#0C3325] p-6 sm:p-7 shadow-xs relative overflow-hidden text-white"
       >
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
@@ -84,18 +87,18 @@ export default function HomeDashboardView({
             <ClubLogo
               className="hidden sm:inline-flex shrink-0"
               size="md"
-              variant="dark"
+              variant="light"
             />
 
             <div>
               <h1
-                className="font-bold text-[#3D291F] tracking-tight"
+                className="font-bold text-white tracking-tight"
                 id="welcome-heading"
               >
                 {effectiveGreeting}, {greetingName}
               </h1>
 
-              <p className="home-dashboard-intro-copy mt-2 max-w-2xl text-xs leading-relaxed font-normal sm:text-sm">
+              <p className="home-dashboard-intro-copy mt-2 max-w-2xl text-xs leading-relaxed font-normal sm:text-sm text-[#E5DDD3]">
                 Welcome back. Here is an overview of what is happening in the
                 family today.
               </p>
@@ -103,15 +106,15 @@ export default function HomeDashboardView({
           </div>
 
           {/* Location Stamp Capsule */}
-          <div className="hidden sm:block bg-[#FAF6F0] p-4 sm:p-5 rounded-xl border border-[#E5DDD3] lg:text-right shrink-0 space-y-1 shadow-2xs">
-            <span className="text-xs font-semibold text-[#7A685D] block">
+          <div className="hidden sm:block bg-[#0C3325]/70 p-4 sm:p-5 rounded-xl border border-[#E5DDD3]/20 lg:text-right shrink-0 space-y-1 shadow-2xs">
+            <span className="text-xs font-semibold text-[#E5DDD3] block">
               Club Headquarters
             </span>
-            <div className="flex items-center gap-1.5 text-sm sm:text-base font-bold text-[#3D291F] tracking-tight justify-start lg:justify-end">
-              <MapPin className="w-4 h-4 text-[#174C37] shrink-0" />
+            <div className="flex items-center gap-1.5 text-sm sm:text-base font-bold text-white tracking-tight justify-start lg:justify-end">
+              <MapPin className="w-4 h-4 text-[#D6A23A] shrink-0" />
               <span>{clubBrand.location}</span>
             </div>
-            <span className="text-xs font-semibold text-[#7A685D] block">
+            <span className="text-xs font-semibold text-[#E5DDD3] block">
               Nigeria
             </span>
           </div>
@@ -124,6 +127,7 @@ export default function HomeDashboardView({
         currentYear={dashboard.currentYear}
         dues={dashboard.dues}
         memberName={memberName}
+        paymentSettings={paymentSettings}
       />
 
       {/* 2. 2-Column Split: Next Up Scheduled Events & Recent Announcements */}

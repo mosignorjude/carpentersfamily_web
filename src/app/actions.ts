@@ -375,7 +375,7 @@ function eventAttendanceNoticeUrl(
   const params = new URLSearchParams();
   if (eventId) params.set("event", eventId);
   params.set("notice", notice);
-  return `/attendance?${params.toString()}`;
+  return `/meeting-hub?${params.toString()}`;
 }
 
 function eventManagerAllowed(roles: Set<string>) {
@@ -1852,6 +1852,10 @@ export async function createEventAction(formData: FormData) {
   });
 
   revalidatePath("/events");
+  revalidatePath("/meeting-hub");
+  if (eventType === "meeting") {
+    redirect(`/meeting-hub?event=${encodeURIComponent(eventId)}&notice=created`);
+  }
   redirect(eventNoticeUrl("created"));
 }
 
@@ -3015,7 +3019,7 @@ export async function saveEventMinutesAction(formData: FormData) {
     );
   revalidatePath(`/events/${eventId}/attendance`);
   revalidatePath("/events");
-  revalidatePath("/attendance");
+  revalidatePath("/meeting-hub");
   redirect(eventAttendanceNoticeUrl(eventId, "minutes-saved", returnTo));
 }
 
@@ -3054,7 +3058,7 @@ export async function setAttendanceDefaultAction(formData: FormData) {
     );
   revalidatePath(`/events/${eventId}/attendance`);
   revalidatePath("/events");
-  revalidatePath("/attendance");
+  revalidatePath("/meeting-hub");
   redirect(eventAttendanceNoticeUrl(eventId, "cutoff-saved", returnTo));
 }
 
@@ -3092,7 +3096,7 @@ export async function openEventAttendanceAction(formData: FormData) {
   });
 
   revalidatePath(`/events/${eventId}/attendance`);
-  revalidatePath("/attendance");
+  revalidatePath("/meeting-hub");
   redirect(eventAttendanceNoticeUrl(eventId, "attendance-opened", returnTo));
 }
 
@@ -3120,7 +3124,7 @@ export async function closeEventAttendanceAction(formData: FormData) {
       eventAttendanceNoticeUrl(eventId, rpcErrorNotice(error), returnTo),
     );
   revalidatePath(`/events/${eventId}/attendance`);
-  revalidatePath("/attendance");
+  revalidatePath("/meeting-hub");
   redirect(eventAttendanceNoticeUrl(eventId, "attendance-closed", returnTo));
 }
 
@@ -3152,7 +3156,7 @@ export async function checkInEventAttendanceAction(formData: FormData) {
       eventAttendanceNoticeUrl(eventId, rpcErrorNotice(error), returnTo),
     );
   revalidatePath(`/events/${eventId}/attendance`);
-  revalidatePath("/attendance");
+  revalidatePath("/meeting-hub");
   redirect(eventAttendanceNoticeUrl(eventId, "checked-in", returnTo));
 }
 
@@ -3200,7 +3204,7 @@ export async function correctEventAttendanceAction(formData: FormData) {
       eventAttendanceNoticeUrl(eventId, rpcErrorNotice(error), returnTo),
     );
   revalidatePath(`/events/${eventId}/attendance`);
-  revalidatePath("/attendance");
+  revalidatePath("/meeting-hub");
   redirect(eventAttendanceNoticeUrl(eventId, "attendance-corrected", returnTo));
 }
 
@@ -3266,7 +3270,7 @@ export async function issueEventAttendanceQrAction(
   }
 
   const scanUrl = new URL(
-    `/attendance?event=${encodeURIComponent(eventId)}`,
+    `/meeting-hub?event=${encodeURIComponent(eventId)}`,
     siteOrigin,
   );
   scanUrl.hash = `checkin=${token}`;

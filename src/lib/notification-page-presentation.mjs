@@ -125,8 +125,8 @@ export function getNotificationHref(notification) {
 
     case "attendance_open":
       return validEventId
-        ? `/attendance?event=${encodeURIComponent(validEventId)}&tab=session#attendance-session`
-        : "/attendance";
+        ? `/meeting-hub?event=${encodeURIComponent(validEventId)}&tab=session#attendance-session`
+        : "/meeting-hub";
 
     case "dues_reminder":
       if (

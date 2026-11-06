@@ -102,11 +102,8 @@ export function TicketsStorefrontView({
                 <span className="text-sm font-extrabold tracking-tight hidden sm:block leading-tight text-espresso">
                   {clubBrand.name}
                 </span>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-forest block truncate">
-                  Official Event Box Office{" "}
-                  <span className="hidden sm:inline">
-                    · carpentersfamily.com.ng/tickets
-                  </span>
+                <span className="hidden sm:inline sr-only">
+                  carpentersfamily.com.ng/tickets
                 </span>
               </div>
             </Link>
@@ -160,18 +157,11 @@ export function TicketsStorefrontView({
           </div>
         </section>
 
-        {/* Section Heading & Order Status Pill */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+        {/* Section Heading */}
+        <div className="flex items-center justify-between gap-3 pt-2">
           <span className="text-xs font-bold uppercase tracking-wider text-muted">
             CURRENT EVENTS ON SALE
           </span>
-          <Link
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-forest hover:text-deep-forest-hover transition-colors no-underline group"
-            href="/tickets/order"
-          >
-            <Ticket className="w-3.5 h-3.5 text-forest group-hover:scale-110 transition-transform" />
-            <span>Already submitted an order? Check your ticket status →</span>
-          </Link>
         </div>
 
         {unavailable ? (
@@ -201,34 +191,138 @@ export function TicketsStorefrontView({
             {events.map((event) => {
               const tiers = event.tiers ?? [];
               const eventDate = new Date(event.starts_at);
+              const isRave =
+                event.title.toLowerCase().includes("rave") ||
+                event.description?.toLowerCase().includes("rave");
+              const flyerSrc = isRave
+                ? "/tickets/issele-uku-rave-flyer.jpeg"
+                : null;
+              const displayDescription =
+                event.description === "Issele-Uku Rave" || isRave
+                  ? "The official Carpenters Family annual rave in Issele-Uku featuring live music, top DJs, food, drinks, and unforgettable vibes."
+                  : (event.description ?? "");
 
               return (
                 <article
-                  className="rounded-3xl bg-white border border-linen p-6 sm:p-8 shadow-2xs space-y-5 transition-shadow hover:shadow-md"
+                  className="rounded-3xl bg-white border border-linen p-6 sm:p-8 shadow-2xs space-y-6 transition-shadow hover:shadow-md"
                   key={event.id}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    <div className="space-y-2">
-                      <h2 className="text-2xl sm:text-3xl font-extrabold font-serif text-espresso tracking-tight">
-                        {event.title}
-                      </h2>
-                      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-body font-medium">
-                        <div className="inline-flex items-center gap-1.5">
-                          <Calendar className="w-4 h-4 text-forest shrink-0" />
-                          <span>
-                            {dateFormatter.format(eventDate)} ·{" "}
-                            {formatEventTime(event.starts_at)} WAT
-                          </span>
-                        </div>
-                        <div className="inline-flex items-center gap-1.5">
-                          <MapPin className="w-4 h-4 text-forest shrink-0 mt-0.5" />
-                          <span>{event.location}</span>
+                  <div
+                    className={
+                      flyerSrc
+                        ? "grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-center"
+                        : "space-y-5"
+                    }
+                  >
+                    {flyerSrc && (
+                      <div className="w-full relative rounded-2xl overflow-hidden border border-sand-dark/40 shadow-sm bg-warm-canvas">
+                        {/* biome-ignore lint/performance/noImgElement: static local asset adhering to CSP */}
+                        <img
+                          alt={`${event.title} flyer`}
+                          className="w-full h-auto object-cover max-h-[420px] mx-auto block"
+                          src={flyerSrc}
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex flex-col justify-center space-y-4">
+                      <div className="space-y-2">
+                        <h2 className="text-2xl sm:text-3xl font-extrabold font-serif text-espresso tracking-tight">
+                          {event.title}
+                        </h2>
+                        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-body font-medium">
+                          <div className="inline-flex items-center gap-1.5">
+                            <Calendar className="w-4 h-4 text-forest shrink-0" />
+                            <span>
+                              {dateFormatter.format(eventDate)} ·{" "}
+                              {formatEventTime(event.starts_at)} WAT
+                            </span>
+                          </div>
+                          <div className="inline-flex items-center gap-1.5">
+                            <MapPin className="w-4 h-4 text-forest shrink-0 mt-0.5" />
+                            <span>{event.location}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
+                      {displayDescription && (
+                        <p className="text-xs sm:text-sm text-body leading-relaxed">
+                          {displayDescription}
+                        </p>
+                      )}
+
+                      {/* Accessible label ensuring tests verify tier selection exists */}
+                      <span className="sr-only">
+                        Number of Tickets and tier selection
+                      </span>
+
+                      {/* Horizontal Tier Tags */}
+                      {tiers.length > 0 && (
+                        <div className="pt-2 flex flex-wrap gap-2.5 items-center">
+                          {tiers.map((tier) => {
+                            const remaining =
+                              tier.capacity !== null
+                                ? Math.max(0, tier.capacity - tier.sold)
+                                : null;
+                            const isSoldOut =
+                              remaining !== null && remaining <= 0;
+
+                            return (
+                              <button
+                                className={`px-3.5 py-2 rounded-xl border text-xs font-medium inline-flex items-center gap-2 transition-all cursor-pointer ${
+                                  isSoldOut
+                                    ? "bg-warm-canvas border-linen text-muted opacity-60 cursor-not-allowed"
+                                    : "bg-warm-canvas hover:bg-forest/5 border-linen hover:border-forest text-espresso"
+                                }`}
+                                disabled={isSoldOut}
+                                key={tier.id}
+                                onClick={() => {
+                                  const nextState: CheckoutState = {
+                                    eventId: event.id,
+                                    tierId: tier.id,
+                                    quantity: 1,
+                                    step: 1,
+                                    remaining,
+                                  };
+                                  setCheckout(nextState);
+                                  if (typeof window !== "undefined") {
+                                    const search = buildCheckoutQuery(
+                                      window.location.search,
+                                      nextState,
+                                    );
+                                    window.history.replaceState(
+                                      null,
+                                      "",
+                                      `${window.location.pathname}${search}`,
+                                    );
+                                  }
+                                }}
+                                type="button"
+                              >
+                                <span className="font-semibold text-espresso">
+                                  {tier.name}
+                                </span>
+                                <span className="text-muted">·</span>
+                                <span className="font-mono font-bold text-forest">
+                                  {formatNaira(Number(tier.price_ngn))}
+                                </span>
+                                {isSoldOut && (
+                                  <span className="text-[11px] font-bold uppercase tracking-wider text-terra">
+                                    (SOLD OUT)
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Centered Actions at Bottom */}
+                  <div className="pt-4 border-t border-linen flex flex-col items-center justify-center gap-3 text-center">
                     <a
-                      className="inline-flex items-center justify-center min-h-[48px] px-6 py-2.5 rounded-xl bg-forest hover:bg-deep-forest-hover text-white text-xs sm:text-sm font-bold transition-all shadow-2xs hover:shadow-sm no-underline cursor-pointer gap-2 shrink-0 self-start"
+                      className="inline-flex items-center justify-center min-h-[48px] px-8 py-3 rounded-xl bg-forest hover:bg-deep-forest-hover text-white text-xs sm:text-sm font-bold transition-all shadow-2xs hover:shadow-sm no-underline cursor-pointer gap-2"
                       href={checkoutHref(
                         "/tickets",
                         typeof window !== "undefined"
@@ -271,84 +365,17 @@ export function TicketsStorefrontView({
                       <Ticket className="w-4 h-4 text-white" />
                       <span>Buy ticket</span>
                     </a>
+
+                    <Link
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-forest hover:text-deep-forest-hover transition-colors no-underline group min-h-[40px]"
+                      href="/tickets/order"
+                    >
+                      <Ticket className="w-3.5 h-3.5 text-forest group-hover:scale-110 transition-transform" />
+                      <span>
+                        Already purchased a Ticket? Check your ticket status →
+                      </span>
+                    </Link>
                   </div>
-
-                  {event.description && (
-                    <p className="text-xs sm:text-sm text-body leading-relaxed max-w-3xl">
-                      {event.description}
-                    </p>
-                  )}
-
-                  {/* Accessible label ensuring tests verify tier selection exists */}
-                  <span className="sr-only">
-                    Number of Tickets and tier selection
-                  </span>
-
-                  {/* Horizontal Tier Tags */}
-                  {tiers.length > 0 && (
-                    <div className="pt-2 flex flex-wrap gap-2.5 items-center">
-                      {tiers.map((tier) => {
-                        const remaining =
-                          tier.capacity !== null
-                            ? Math.max(0, tier.capacity - tier.sold)
-                            : null;
-                        const isSoldOut = remaining !== null && remaining <= 0;
-
-                        return (
-                          <button
-                            className={`px-3.5 py-2 rounded-xl border text-xs font-medium inline-flex items-center gap-2 transition-all cursor-pointer ${
-                              isSoldOut
-                                ? "bg-warm-canvas border-linen text-muted opacity-60 cursor-not-allowed"
-                                : "bg-warm-canvas hover:bg-forest/5 border-linen hover:border-forest text-espresso"
-                            }`}
-                            disabled={isSoldOut}
-                            key={tier.id}
-                            onClick={() => {
-                              const nextState: CheckoutState = {
-                                eventId: event.id,
-                                tierId: tier.id,
-                                quantity: 1,
-                                step: 1,
-                                remaining,
-                              };
-                              setCheckout(nextState);
-                              if (typeof window !== "undefined") {
-                                const search = buildCheckoutQuery(
-                                  window.location.search,
-                                  nextState,
-                                );
-                                window.history.replaceState(
-                                  null,
-                                  "",
-                                  `${window.location.pathname}${search}`,
-                                );
-                              }
-                            }}
-                            type="button"
-                          >
-                            <span className="font-semibold text-espresso">
-                              {tier.name}
-                            </span>
-                            <span className="text-muted">·</span>
-                            <span className="font-mono font-bold text-forest">
-                              {formatNaira(Number(tier.price_ngn))}
-                            </span>
-                            <span
-                              className={`text-[11px] font-bold uppercase tracking-wider ${
-                                isSoldOut ? "text-terra" : "text-muted"
-                              }`}
-                            >
-                              {isSoldOut
-                                ? "(SOLD OUT)"
-                                : remaining !== null
-                                  ? `${remaining} REMAINING`
-                                  : "UNLIMITED"}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
                 </article>
               );
             })}

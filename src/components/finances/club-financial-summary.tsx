@@ -42,9 +42,6 @@ export function ClubFinancialSummary({
         >
           Consolidated Club Balances & Revenue Summary
         </h3>
-        <span className="text-[11px] text-[#7A685D] font-mono">
-          All Figures in Nigerian Naira (₦) · Tabular Numerals
-        </span>
       </div>
 
       {isUnavailable ? (

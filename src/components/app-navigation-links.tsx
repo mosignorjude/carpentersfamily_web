@@ -12,7 +12,7 @@ const navigationIcons: Record<string, ClubIconName> = {
   "/polls": "poll",
   "/dues": "wallet",
   "/events": "calendar",
-  "/attendance": "check-circle",
+  "/meeting-hub": "check-circle",
   "/finances": "chart",
 };
 

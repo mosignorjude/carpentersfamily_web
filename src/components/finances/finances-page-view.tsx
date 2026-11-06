@@ -77,6 +77,7 @@ interface FinancesPageViewProps {
   auditPageCount: number;
   auditCount: number;
   pageSize: number;
+  auditPageSize?: number;
 }
 
 export function FinancesPageView({
@@ -107,6 +108,7 @@ export function FinancesPageView({
   auditPageCount,
   auditCount,
   pageSize,
+  auditPageSize = 20,
 }: FinancesPageViewProps) {
   const [isRecordIncomeOpen, setIsRecordIncomeOpen] = useState(false);
   const [isRecordExpenseOpen, setIsRecordExpenseOpen] = useState(false);
@@ -173,43 +175,10 @@ export function FinancesPageView({
                 disbursements.
               </span>
             </p>
-
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-2 border-t border-[#E5DDD3] text-xs font-medium text-[#4F3E35]">
-              <div>
-                Access:{" "}
-                <strong className="text-[#3D291F] font-bold">
-                  General Meeting Ledger
-                </strong>
-              </div>
-              <span aria-hidden="true" className="text-[#B8ACA0]">
-                ·
-              </span>
-              <div className="text-[#174C37] font-bold">
-                {isOfficer
-                  ? "Officer Management Desk Active"
-                  : "Member Verification Active"}
-              </div>
-              <span aria-hidden="true" className="sm:hidden text-[#B8ACA0]">
-                ·
-              </span>
-              <div className="sm:hidden text-[#7A685D] flex items-center gap-1">
-                <Shield className="w-3.5 h-3.5 text-[#174C37]" />
-                <span>Dues privacy enforced</span>
-              </div>
-            </div>
           </div>
 
           {/* Quick Action Station */}
           <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0 self-stretch sm:self-auto">
-            <div className="bg-[#FAF6F0] p-3 rounded-xl border border-[#E5DDD3] text-right">
-              <span className="text-[10px] text-[#7A685D] block uppercase font-bold tracking-wider">
-                Ledger Status
-              </span>
-              <span className="text-xs font-bold text-[#174C37] block">
-                Audited &amp; Reconciled
-              </span>
-            </div>
-
             <button
               className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors cursor-pointer min-h-[42px] shadow-2xs"
               onClick={() => setIsDownloadReportOpen(true)}
@@ -396,7 +365,7 @@ export function FinancesPageView({
             auditPage={auditPage}
             auditPageCount={auditPageCount}
             auditRows={auditRows}
-            pageSize={pageSize}
+            pageSize={auditPageSize}
           />
         </div>
       )}
@@ -420,7 +389,12 @@ export function FinancesPageView({
               Hide ▴
             </span>
           </summary>
-          <div className="mt-2.5 pt-2.5 border-t border-[#E5DDD3] space-y-1 animate-in fade-in duration-150 text-[#5C4638] leading-relaxed">
+          <div className="mt-2.5 pt-2.5 border-t border-[#E5DDD3] space-y-2 animate-in fade-in duration-150 text-[#5C4638] leading-relaxed">
+            <p className="font-medium text-[#3D291F]">
+              Financial records are restricted to registered members in good
+              standing. All transactions are logged and audited by the Executive
+              Committee.
+            </p>
             <p>
               Members can review recorded club income and expenses, including
               payer or payee details. Individual member dues records and

@@ -47,7 +47,7 @@ describe("event clock surfaces", () => {
       /select\(\s*"id, title, event_type, starts_at, duration_days,/,
     );
     assert.match(
-      source("../src/app/(member)/attendance/page.tsx"),
+      source("../src/app/(member)/meeting-hub/page.tsx"),
       /"id, title, event_type, starts_at, duration_days, location, status, minutes_enabled, attendance_enabled, archived_at",/,
     );
   });

@@ -282,11 +282,11 @@ export function TicketStatusView({
             We&apos;ve logged your order
           </h1>
           <p className="text-sm sm:text-base text-body leading-relaxed">
-            Your order is now{" "}
+            We are{" "}
             <strong className="font-semibold text-espresso">
-              pending review
+              verifying your transfer
             </strong>{" "}
-            by the Carpenters Family committee.
+            — Check your Ticket Status shortly
           </p>
         </div>
 
@@ -395,10 +395,9 @@ export function TicketStatusView({
               </span>
               <div className="text-xs sm:text-sm text-body leading-relaxed">
                 <strong className="text-espresso font-semibold block sm:inline">
-                  An officer checks it against the bank statement:{" "}
+                  Verification:{" "}
                 </strong>
-                A club officer verifies your uploaded receipt against our actual
-                bank statement.
+                We verify your uploaded receipt against our records.
               </div>
             </li>
 

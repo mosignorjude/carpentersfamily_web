@@ -14,7 +14,7 @@ export function getNavigationItems(roles) {
     { href: "/portal", label: "Home" },
     { href: "/events", label: "Events" },
     { href: "/tickets", label: "Box office" },
-    { href: "/attendance", label: "Minutes & attendance" },
+    { href: "/meeting-hub", label: "Meeting Hub" },
     { href: "/dues", label: "Dues" },
     { href: "/finances", label: "Finances" },
     { href: "/announcements", label: "Announcements" },

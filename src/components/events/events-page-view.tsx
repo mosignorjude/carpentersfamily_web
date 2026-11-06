@@ -4,15 +4,15 @@ import {
   Archive,
   Calendar,
   CalendarCheck,
+  CalendarPlus,
   ChevronDown,
   History,
-  Search,
 } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { FormAlertBanner } from "@/components/ui";
 import { useSuccessNotice } from "@/components/ui/use-success-notice";
 import { groupEventRows } from "@/lib/event-presentation.mjs";
-import { CreateEventDisclosure } from "./create-event-disclosure";
 import { EventCard } from "./event-card";
 import { EventEditModal } from "./event-edit-modal";
 import {
@@ -43,7 +43,6 @@ export function EventsPageView({
 }: EventsPageViewProps) {
   // Filters
   const [selectedType, setSelectedType] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const [isArchiveExpanded, setIsArchiveExpanded] = useState<boolean>(false);
 
   // Modal states
@@ -72,98 +71,64 @@ export function EventsPageView({
       if (selectedType !== "all" && evt.event_type !== selectedType) {
         return false;
       }
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        return (
-          evt.title.toLowerCase().includes(q) ||
-          evt.location.toLowerCase().includes(q) ||
-          evt.description?.toLowerCase().includes(q)
-        );
-      }
       return true;
     };
 
     const filtered = events.filter(filterFn);
 
     return groupEventRows(filtered, Date.now());
-  }, [events, selectedType, searchQuery]);
+  }, [events, selectedType]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-150">
       {loadError && <FormAlertBanner message={loadError} variant="error" />}
-      {/* 1. Header & Local Time Convention */}
+      {/* 1. Header & Actions */}
       <section className="bg-white rounded-2xl border border-[#E5DDD3] p-6 sm:p-8 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#3D291F] tracking-tight">
-              Events and planning
+              Events & Activities
             </h1>
 
             <p className="text-xs sm:text-sm text-[#7A685D] mt-1.5 max-w-2xl leading-relaxed">
-              Official schedule, meeting minutes, attendance rosters, and
-              planning workspaces for general assemblies, executive council
-              sessions, and annual club celebrations.
+              Official schedule, activity workspaces, and planning for General House
+              sessions, executive council projects, and annual club celebrations.
             </p>
           </div>
 
-          {/* Official Calendar Capsule */}
-          <div className="bg-[#FAF6F0] p-4 rounded-xl border border-[#E5DDD3] lg:text-right shrink-0 space-y-1">
-            <span className="text-[11px] font-bold text-[#7A685D] uppercase tracking-wider block">
-              Official Calendar
-            </span>
-            <span className="text-xs sm:text-sm font-bold text-[#3D291F] block">
-              Scheduled Meetings &amp; Events
-            </span>
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#174C37] justify-start lg:justify-end">
-              <Calendar className="w-3.5 h-3.5 text-[#174C37]" />
-              <span>Carpenters Family Portal</span>
+          {isManager && (
+            <div className="shrink-0">
+              <Link
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#174C37] hover:bg-[#0C3325] text-white text-xs font-bold transition-colors shadow-xs min-h-[44px]"
+                href="/create-event"
+              >
+                <CalendarPlus className="w-4 h-4 text-[#D6A23A]" />
+                <span>New Event</span>
+              </Link>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
-      {/* Create Event Disclosure (Executive & Admin Only) */}
-      <CreateEventDisclosure
-        canCreate={isManager}
-        userRoleTitle={userRoleTitle}
-      />
-
-      {/* Search & Segmented Type Filters */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Segmented Type Filters */}
-        <div className="flex items-center gap-1 p-1 bg-white rounded-xl border border-[#E5DDD3] overflow-x-auto shadow-xs">
-          {[
-            { id: "all", label: "All Types" },
-            { id: "meeting", label: "Meetings" },
-            { id: "party", label: "Parties & Banquets" },
-            { id: "other", label: "Other Events" },
-          ].map((typeItem) => (
-            <button
-              aria-pressed={selectedType === typeItem.id}
-              key={typeItem.id}
-              className={`cf-btn cf-btn--compact cf-btn--tab whitespace-nowrap cursor-pointer ${
-                selectedType === typeItem.id ? "cf-btn--tab-active" : ""
-              }`}
-              onClick={() => setSelectedType(typeItem.id)}
-              type="button"
-            >
-              {typeItem.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Search Input */}
-        <div className="relative min-w-[260px]">
-          <Search className="w-4 h-4 text-[#7A685D] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            aria-label="Search event title or venue"
-            className="w-full h-10 pl-9 pr-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder:text-[#7A685D] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] shadow-xs"
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search event title, venue..."
-            type="text"
-            value={searchQuery}
-          />
-        </div>
+      {/* Segmented Type Filters */}
+      <div className="flex items-center gap-1 p-1 bg-white rounded-xl border border-[#E5DDD3] overflow-x-auto shadow-xs w-fit">
+        {[
+          { id: "all", label: "All Types" },
+          { id: "party", label: "Parties & Banquets" },
+          { id: "other", label: "Other Events" },
+        ].map((typeItem) => (
+          <button
+            aria-pressed={selectedType === typeItem.id}
+            key={typeItem.id}
+            className={`cf-btn cf-btn--compact cf-btn--tab whitespace-nowrap cursor-pointer ${
+              selectedType === typeItem.id ? "cf-btn--tab-active" : ""
+            }`}
+            onClick={() => setSelectedType(typeItem.id)}
+            type="button"
+          >
+            {typeItem.label}
+          </button>
+        ))}
       </div>
 
       {/* ========================================================
