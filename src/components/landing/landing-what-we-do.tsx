@@ -2,7 +2,10 @@ import Link from "next/link";
 
 export function LandingWhatWeDo() {
   return (
-    <section id="what-we-do" className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
+    <section
+      id="what-we-do"
+      className="mx-auto max-w-6xl px-4 py-12 sm:py-16 scroll-mt-20"
+    >
       <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
         {/* Left Column: Overlapping Photo Collage with Inset Card */}
         <div className="lg:col-span-6 relative pb-12 sm:pb-16 pr-6 sm:pr-12">

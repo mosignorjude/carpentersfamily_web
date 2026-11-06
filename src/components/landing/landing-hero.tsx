@@ -1,4 +1,19 @@
+"use client";
+
 export function LandingHero() {
+  const handleExploreClick = () => {
+    const target = document.getElementById("what-we-do");
+    if (target) {
+      const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      target.scrollIntoView({
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    }
+  };
+
   return (
     <section id="about" className="mx-auto max-w-6xl px-4 pt-6 pb-12">
       <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-linen min-h-[430px] sm:min-h-[490px] flex items-center justify-center text-center px-6 py-16">
@@ -30,12 +45,13 @@ export function LandingHero() {
             for life.
           </p>
           <div className="mt-7 flex items-center justify-center">
-            <a
-              href="#vision"
+            <button
+              type="button"
+              onClick={handleExploreClick}
               className="btn bg-ochre text-deep hover:bg-cream text-xs sm:text-sm uppercase tracking-wider px-8 shadow-md font-bold transition-colors"
             >
               Explore the Family
-            </a>
+            </button>
           </div>
           <p className="mt-4 font-serif italic text-sm text-cream">
             “One Family, Endless Vibes.”
