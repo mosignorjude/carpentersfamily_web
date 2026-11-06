@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, MapPin, ShieldAlert, Ticket } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, ShieldAlert, Ticket } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import ClubLogo from "@/components/club-logo";
@@ -20,6 +20,7 @@ import type {
   PublicTicketedEvent,
   PublicTicketTier,
 } from "./ticket-types";
+import { WhatsAppSupportButton } from "./whatsapp-support-button";
 
 export type { PublicBankInfo, PublicTicketedEvent, PublicTicketTier };
 
@@ -80,33 +81,43 @@ export function TicketsStorefrontView({
       {/* Top Bar */}
       <header className="sticky top-0 z-30 bg-cream/95 backdrop-blur-md border-b border-linen">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <Link
-            className="flex items-center gap-3 min-w-0 no-underline text-espresso"
-            href="/tickets"
-          >
-            <ClubLogo size="sm" variant="dark" />
-            <div className="min-w-0">
-              <span className="text-sm font-extrabold tracking-tight block leading-tight text-espresso truncate sm:hidden">
-                {clubBrand.shortName}
-              </span>
-              <span className="text-sm font-extrabold tracking-tight hidden sm:block leading-tight text-espresso">
-                {clubBrand.name}
-              </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-forest block truncate">
-                Official Event Box Office{" "}
-                <span className="hidden sm:inline">
-                  · carpentersfamily.com.ng/tickets
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-espresso transition-colors no-underline mr-1"
+              href="/"
+              title="Back to Landing Page"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Home</span>
+            </Link>
+            <Link
+              className="flex items-center gap-3 min-w-0 no-underline text-espresso"
+              href="/tickets"
+            >
+              <ClubLogo size="sm" variant="dark" />
+              <div className="min-w-0">
+                <span className="text-sm font-extrabold tracking-tight block leading-tight text-espresso truncate sm:hidden">
+                  {clubBrand.shortName}
                 </span>
-              </span>
-            </div>
-          </Link>
+                <span className="text-sm font-extrabold tracking-tight hidden sm:block leading-tight text-espresso">
+                  {clubBrand.name}
+                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-forest block truncate">
+                  Official Event Box Office{" "}
+                  <span className="hidden sm:inline">
+                    · carpentersfamily.com.ng/tickets
+                  </span>
+                </span>
+              </div>
+            </Link>
+          </div>
 
           <div className="flex items-center gap-4 shrink-0">
             <Link
               className="text-xs font-semibold text-body hover:text-espresso transition-colors no-underline hidden sm:inline-flex items-center gap-1.5"
               href="/tickets/order"
             >
-              <span>Check order status</span>
+              <span>Check ticket status</span>
             </Link>
             <Link
               className="inline-flex items-center gap-1.5 min-h-[44px] whitespace-nowrap px-4 py-2 rounded-xl border border-linen bg-white hover:bg-cream text-xs font-bold text-forest transition-colors no-underline shadow-2xs"
@@ -159,7 +170,7 @@ export function TicketsStorefrontView({
             href="/tickets/order"
           >
             <Ticket className="w-3.5 h-3.5 text-forest group-hover:scale-110 transition-transform" />
-            <span>Already submitted an order? Check your order status →</span>
+            <span>Already submitted an order? Check your ticket status →</span>
           </Link>
         </div>
 
@@ -374,6 +385,8 @@ export function TicketsStorefrontView({
           }}
         />
       )}
+
+      <WhatsAppSupportButton />
     </div>
   );
 }

@@ -7,8 +7,8 @@ import {
   Copy,
   FileText,
   Loader2,
-  RefreshCw,
   Shield,
+  Ticket,
   Upload,
   X,
 } from "lucide-react";
@@ -111,7 +111,6 @@ function TicketCheckoutInner({
   const [idempotencyKey] = useState(() => generateUuid());
   const [saleId] = useState(() => generateUuid());
   const [renderedAt] = useState(() => new Date().toISOString());
-  const [restored, setRestored] = useState(false);
   const [copiedAccount, setCopiedAccount] = useState(false);
   const [copiedNarration, setCopiedNarration] = useState(false);
   const [touched, setTouched] = useState({
@@ -153,7 +152,6 @@ function TicketCheckoutInner({
           buyerPhone:
             typeof draft.buyerPhone === "string" ? draft.buyerPhone : "",
         });
-        setRestored(true);
       }
     } catch {
       // Storage unavailable or unparseable
@@ -198,7 +196,14 @@ function TicketCheckoutInner({
   const canSubmit =
     canContinue && Boolean(receiptFile) && !fileError && !isPending;
 
-  const step: 1 | 2 = checkout.step === 2 && canContinue ? 2 : 1;
+  // Active step in 3-step checkout workflow:
+  // Step 1: Choose Your Ticket
+  // Step 2: Enter Your Details
+  // Step 3: Payment & Receipt
+  const [activeStep, setActiveStep] = useState<1 | 2 | 3>(() => {
+    if (checkout.step === 2 && canContinue) return 3;
+    return 1;
+  });
 
   function go(next: Partial<CheckoutState>) {
     const updatedTier = next.tierId
@@ -257,9 +262,19 @@ function TicketCheckoutInner({
     }
   }
 
-  const narrationText = `TICKET - ${event.title.slice(0, 20)} - ${
-    fields.buyerName.trim() || "YOUR NAME"
-  }`;
+  // Shorter transfer narration per requirement: TICKETS-SLKRAVE-[name]
+  const buyerSuffix = fields.buyerName.trim()
+    ? fields.buyerName.trim().toUpperCase()
+    : "NAME";
+  const eventSlug =
+    event.title.toUpperCase().includes("ISSELE") ||
+    event.title.toUpperCase().includes("RAVE")
+      ? "SLKRAVE"
+      : event.title
+          .replace(/[^A-Za-z0-9]/g, "")
+          .slice(0, 8)
+          .toUpperCase() || "EVENT";
+  const narrationText = `TICKETS-${eventSlug}-${buyerSuffix}`;
 
   const nameError =
     touched.name && !fields.buyerName.trim()
@@ -278,7 +293,7 @@ function TicketCheckoutInner({
     <div
       aria-labelledby="ticket-checkout-title"
       aria-modal="true"
-      className="fixed inset-0 z-[60] bg-espresso/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-hidden"
+      className="fixed inset-0 z-[60] bg-espresso/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden"
       role="dialog"
     >
       <button
@@ -290,25 +305,29 @@ function TicketCheckoutInner({
       />
 
       <div
-        className="relative z-10 w-full max-w-4xl bg-white rounded-t-3xl sm:rounded-3xl border border-linen shadow-2xl max-h-[calc(100dvh-0.5rem)] sm:max-h-[90dvh] flex flex-col overflow-hidden my-0 sm:my-auto outline-hidden"
+        className="relative z-10 w-full max-w-4xl bg-white rounded-t-3xl sm:rounded-3xl border border-linen shadow-2xl max-h-[calc(100dvh-0.5rem)] sm:max-h-[92dvh] flex flex-col overflow-hidden my-0 sm:my-auto outline-hidden"
         ref={dialogRef}
         tabIndex={-1}
       >
-        <div className="p-4 sm:p-5 border-b border-linen bg-warm-canvas flex items-center justify-between gap-3 shrink-0">
-          <div className="min-w-0">
+        {/* Modal Header */}
+        <div className="p-4 sm:p-6 border-b border-linen bg-warm-canvas/60 flex items-start justify-between gap-4 shrink-0">
+          <div className="min-w-0 space-y-1">
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-forest/10 text-forest text-[11px] font-bold tracking-widest uppercase">
+              BOX OFFICE CHECKOUT
+            </span>
             <h2
-              className="text-sm sm:text-base font-extrabold text-espresso truncate"
+              className="text-xl sm:text-2xl font-serif font-bold text-espresso truncate leading-tight"
               id="ticket-checkout-title"
             >
               {event.title}
             </h2>
-            <p className="text-[11px] text-body">
+            <p className="text-xs sm:text-sm text-body truncate">
               {formatEventLine(event.starts_at)} · {event.location}
             </p>
           </div>
           <button
             aria-label="Close checkout"
-            className="w-12 h-12 min-h-[48px] min-w-[48px] shrink-0 rounded-full bg-white border border-linen hover:bg-warm-canvas flex items-center justify-center text-muted hover:text-espresso transition-colors cursor-pointer"
+            className="w-11 h-11 min-h-[48px] min-w-[48px] shrink-0 rounded-2xl bg-white border border-linen hover:bg-warm-canvas flex items-center justify-center text-espresso transition-colors cursor-pointer shadow-2xs"
             onClick={handleClose}
             type="button"
           >
@@ -316,8 +335,25 @@ function TicketCheckoutInner({
           </button>
         </div>
 
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-5 overscroll-contain">
-          <CheckoutStepIndicator step={step} />
+        {/* Modal Scrollable Body */}
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-6 overscroll-contain">
+          {/* 3-Step Navigation Tabs Bar */}
+          <CheckoutStepIndicator
+            canContinue={canContinue}
+            onSelectStep={(s) => {
+              if (s === 1) {
+                setActiveStep(1);
+                go({ step: 1 });
+              } else if (s === 2 && tier !== null) {
+                setActiveStep(2);
+                go({ step: 1 });
+              } else if (s === 3 && canContinue) {
+                setActiveStep(3);
+                go({ step: 2 });
+              }
+            }}
+            step={activeStep}
+          />
 
           {state && (
             <div
@@ -329,20 +365,6 @@ function TicketCheckoutInner({
             </div>
           )}
 
-          {restored && step === 2 && !receiptFile && (
-            <div className="flex items-start gap-2 p-3.5 rounded-xl bg-warm-canvas border border-ochre/40">
-              <RefreshCw className="w-4 h-4 text-forest shrink-0 mt-0.5" />
-              <p className="text-[11px] sm:text-xs text-body leading-relaxed">
-                <span className="font-bold text-espresso">
-                  Your details are still here.
-                </span>{" "}
-                The event, tier, quantity and your details have been restored,
-                but the transfer receipt upload did not survive the refresh.
-                Please attach it again before submitting.
-              </p>
-            </div>
-          )}
-
           <form
             action={formAction}
             /* action={submitTicketOrderAction} */
@@ -350,11 +372,45 @@ function TicketCheckoutInner({
             encType="multipart/form-data"
             noValidate
             onSubmit={(e) => {
-              if (step === 1) {
+              if (activeStep === 1) {
                 e.preventDefault();
-                if (canContinue) go({ step: 2 });
+                setActiveStep(2);
                 return;
               }
+              if (activeStep === 2) {
+                e.preventDefault();
+                setTouched({
+                  name: true,
+                  email: true,
+                  phone: true,
+                  file: false,
+                });
+                if (canContinue) {
+                  setActiveStep(3);
+                  go({ step: 2 });
+                }
+                return;
+              }
+              // Save last submitted order data to sessionStorage for order submitted screen
+              try {
+                window.sessionStorage.setItem(
+                  "cf-last-submitted-order",
+                  JSON.stringify({
+                    eventId: event.id,
+                    eventName: event.title,
+                    tierName: tier?.name ?? "Ticket",
+                    quantity,
+                    total,
+                    buyerName: fields.buyerName,
+                    buyerEmail: fields.buyerEmail,
+                    bankName: bank?.bank_name ?? "",
+                    accountNumber: bank?.account_number ?? "",
+                  }),
+                );
+              } catch {
+                // Ignore storage write refusal
+              }
+
               if (receiptFile && fileInputRef.current) {
                 try {
                   const dt = new DataTransfer();
@@ -388,15 +444,31 @@ function TicketCheckoutInner({
               type="text"
             />
 
-            {step === 1 ? (
+            {/* ===============================================================
+                STEP 1 OF 3: CHOOSE YOUR TICKET
+            ================================================================ */}
+            {activeStep === 1 && (
               <div className="space-y-6">
+                <div className="space-y-1">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-forest/10 text-forest text-[11px] font-bold tracking-wider uppercase">
+                    STEP 1 OF 3
+                  </span>
+                  <h3 className="font-serif font-bold text-2xl sm:text-3xl text-espresso">
+                    Choose Your Ticket
+                  </h3>
+                  <p className="text-xs sm:text-sm text-body">
+                    Select your ticket tier and the number of tickets you want
+                    to buy.
+                  </p>
+                </div>
+
                 <div>
-                  <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted mb-2">
-                    Select Ticket Tier
+                  <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted mb-2.5">
+                    SELECT TICKET TIER
                   </span>
                   <div
                     aria-label={`Ticket tiers for ${event.title}`}
-                    className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-3.5"
                     role="radiogroup"
                   >
                     {tiers.map((t) => {
@@ -408,12 +480,12 @@ function TicketCheckoutInner({
                         // biome-ignore lint/a11y/useSemanticElements: custom radio button tile
                         <button
                           aria-checked={isSelected}
-                          className={`p-4 rounded-xl border text-left flex flex-col justify-between transition-colors min-h-[48px] cursor-pointer ${
+                          className={`p-4 rounded-2xl border text-left flex flex-col justify-between transition-all min-h-[48px] cursor-pointer ${
                             isSoldOut
                               ? "border-linen bg-warm-canvas opacity-50 cursor-not-allowed"
                               : isSelected
-                                ? "border-forest bg-forest/5 ring-2 ring-forest/20"
-                                : "border-linen bg-white hover:border-forest"
+                                ? "border-forest bg-forest/5 ring-2 ring-forest/20 shadow-xs"
+                                : "border-linen bg-white hover:border-forest shadow-2xs"
                           }`}
                           disabled={isSoldOut}
                           key={t.id}
@@ -421,33 +493,29 @@ function TicketCheckoutInner({
                           role="radio"
                           type="button"
                         >
-                          <div className="flex items-start justify-between gap-2 w-full">
-                            <span className="font-semibold text-sm text-espresso">
+                          <div className="flex items-start justify-between gap-3 w-full">
+                            <span className="font-bold text-sm sm:text-base text-espresso">
                               {t.name}
                             </span>
                             <span
-                              className={`w-4 h-4 rounded-full border grid place-items-center shrink-0 mt-0.5 ${
+                              className={`w-5 h-5 rounded-full border grid place-items-center shrink-0 mt-0.5 ${
                                 isSelected
                                   ? "border-forest bg-forest text-white"
                                   : "border-linen bg-white"
                               }`}
                             >
                               {isSelected && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                <span className="w-2 h-2 rounded-full bg-white" />
                               )}
                             </span>
                           </div>
 
-                          <div className="mt-3 flex items-baseline justify-between gap-2 w-full">
-                            <span className="font-mono font-bold text-base text-forest">
+                          <div className="mt-4 flex items-baseline justify-between gap-2 w-full pt-2 border-t border-linen/60">
+                            <span className="font-mono font-bold text-base sm:text-lg text-forest">
                               {formatNaira(Number(t.price_ngn))}
                             </span>
-                            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                              {isSoldOut
-                                ? "Sold out"
-                                : rem !== null
-                                  ? `${rem} left`
-                                  : "Available"}
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
+                              {isSoldOut ? "SOLD OUT" : "AVAILABLE"}
                             </span>
                           </div>
                         </button>
@@ -456,44 +524,104 @@ function TicketCheckoutInner({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-                  <div className="sm:col-span-4">
-                    <label
-                      className="block text-[11px] font-semibold uppercase tracking-wider text-muted mb-1.5"
-                      htmlFor={`passes-count-${event.id}`}
-                    >
-                      Number of Tickets
-                    </label>
-                    <select
-                      className="w-full min-h-[48px] px-3.5 py-2.5 rounded-lg border border-linen bg-white text-espresso font-medium text-sm"
-                      id={`passes-count-${event.id}`}
-                      key={`qty-${tier?.id}`}
-                      onChange={(e) =>
-                        go({
-                          quantity: clampQuantity(
-                            Number(e.target.value),
-                            maxQty,
-                          ),
-                        })
-                      }
-                      value={quantity}
-                    >
-                      {Array.from({ length: maxQty }, (_, i) => i + 1).map(
-                        (num) => (
-                          <option key={num} value={num}>
-                            {num} {num === 1 ? "ticket" : "tickets"}
-                          </option>
-                        ),
-                      )}
-                    </select>
+                <div className="space-y-1.5">
+                  <label
+                    className="block text-[11px] font-semibold uppercase tracking-wider text-muted"
+                    htmlFor={`ticket-count-${event.id}`}
+                  >
+                    NUMBER OF TICKETS
+                  </label>
+                  <select
+                    className="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-linen bg-white text-espresso font-medium text-sm focus:border-forest outline-hidden"
+                    id={`ticket-count-${event.id}`}
+                    key={`qty-${tier?.id}`}
+                    onChange={(e) =>
+                      go({
+                        quantity: clampQuantity(Number(e.target.value), maxQty),
+                      })
+                    }
+                    value={quantity}
+                  >
+                    {Array.from({ length: maxQty }, (_, i) => i + 1).map(
+                      (num) => (
+                        <option key={num} value={num}>
+                          {num} {num === 1 ? "ticket" : "tickets"}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </div>
+
+                {/* Step 1 Selection Summary & Continue Button */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-warm-canvas border border-linen flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted">
+                      SELECTION SUMMARY
+                    </span>
+                    <p className="mt-1 text-sm sm:text-base font-semibold text-espresso">
+                      {quantity} × {tier?.name ?? "Ticket"} —{" "}
+                      <span className="font-mono font-bold text-lg sm:text-xl text-forest">
+                        {formatNaira(total)}
+                      </span>
+                    </p>
                   </div>
 
-                  <div className="sm:col-span-8">
+                  <button
+                    className="min-h-[48px] px-6 py-3 rounded-xl bg-forest hover:bg-deep-forest-hover text-white font-semibold text-sm inline-flex items-center justify-center gap-2 shrink-0 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
+                    disabled={!tier}
+                    onClick={() => setActiveStep(2)}
+                    type="button"
+                  >
+                    <span>Continue</span>
+                    <ArrowRight
+                      className="w-4 h-4 text-ochre"
+                      strokeWidth={2}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ===============================================================
+                STEP 2 OF 3: ENTER YOUR DETAILS
+            ================================================================ */}
+            {activeStep === 2 && (
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <button
+                    className="min-h-[48px] px-4 py-2 rounded-xl bg-white border border-linen text-forest text-xs sm:text-sm font-semibold hover:border-forest inline-flex items-center gap-2 transition-colors cursor-pointer shadow-2xs"
+                    onClick={() => setActiveStep(1)}
+                    type="button"
+                  >
+                    <ArrowLeft
+                      className="w-4 h-4 text-forest"
+                      strokeWidth={2}
+                    />
+                    <span>Back to Choose Your Ticket</span>
+                  </button>
+
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-forest/10 text-forest text-[11px] font-bold tracking-wider uppercase">
+                    STEP 2 OF 3 · ENTER YOUR DETAILS
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="font-serif font-bold text-2xl sm:text-3xl text-espresso">
+                    Enter Your Details
+                  </h3>
+                  <p className="text-xs sm:text-sm text-body">
+                    Provide your name, email address, and phone number so we can
+                    log your order and email your confirmation.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
                     <label
                       className="block text-[11px] font-semibold uppercase tracking-wider text-muted mb-1.5"
                       htmlFor={`buyer-name-${event.id}`}
                     >
-                      Guest / Buyer Name
+                      GUEST / BUYER NAME
                     </label>
                     <input
                       aria-describedby={
@@ -501,7 +629,7 @@ function TicketCheckoutInner({
                       }
                       aria-invalid={Boolean(nameError)}
                       autoComplete="name"
-                      className={`w-full min-h-[48px] px-3.5 py-2.5 rounded-lg border bg-white text-espresso text-sm placeholder:text-muted/60 ${
+                      className={`w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border bg-white text-espresso text-sm placeholder:text-muted/60 focus:border-forest outline-hidden ${
                         nameError ? "border-terra" : "border-linen"
                       }`}
                       id={`buyer-name-${event.id}`}
@@ -512,13 +640,7 @@ function TicketCheckoutInner({
                       onChange={(e) =>
                         setFields((f) => ({ ...f, buyerName: e.target.value }))
                       }
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          if (canContinue) go({ step: 2 });
-                        }
-                      }}
-                      placeholder="e.g. Adaeze Nwosu"
+                      placeholder="e.g. First and last name"
                       type="text"
                       value={fields.buyerName}
                     />
@@ -532,101 +654,95 @@ function TicketCheckoutInner({
                     )}
                   </div>
 
-                  <div className="sm:col-span-6">
-                    <label
-                      className="block text-[11px] font-semibold uppercase tracking-wider text-muted mb-1.5"
-                      htmlFor={`buyer-email-${event.id}`}
-                    >
-                      Email Address
-                    </label>
-                    <input
-                      aria-describedby={
-                        emailError ? `email-err-${event.id}` : undefined
-                      }
-                      aria-invalid={Boolean(emailError)}
-                      autoComplete="email"
-                      className={`w-full min-h-[48px] px-3.5 py-2.5 rounded-lg border bg-white text-espresso text-sm placeholder:text-muted/60 ${
-                        emailError ? "border-terra" : "border-linen"
-                      }`}
-                      id={`buyer-email-${event.id}`}
-                      onBlur={() =>
-                        setTouched((prev) => ({ ...prev, email: true }))
-                      }
-                      onChange={(e) =>
-                        setFields((f) => ({ ...f, buyerEmail: e.target.value }))
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          if (canContinue) go({ step: 2 });
-                        }
-                      }}
-                      placeholder="you@example.com"
-                      type="email"
-                      value={fields.buyerEmail}
-                    />
-                    {emailError && (
-                      <p
-                        className="mt-1.5 text-xs font-medium text-terra"
-                        id={`email-err-${event.id}`}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        className="block text-[11px] font-semibold uppercase tracking-wider text-muted mb-1.5"
+                        htmlFor={`buyer-email-${event.id}`}
                       >
-                        {emailError}
-                      </p>
-                    )}
-                  </div>
+                        EMAIL ADDRESS
+                      </label>
+                      <input
+                        aria-describedby={
+                          emailError ? `email-err-${event.id}` : undefined
+                        }
+                        aria-invalid={Boolean(emailError)}
+                        autoComplete="email"
+                        className={`w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border bg-white text-espresso text-sm placeholder:text-muted/60 focus:border-forest outline-hidden ${
+                          emailError ? "border-terra" : "border-linen"
+                        }`}
+                        id={`buyer-email-${event.id}`}
+                        onBlur={() =>
+                          setTouched((prev) => ({ ...prev, email: true }))
+                        }
+                        onChange={(e) =>
+                          setFields((f) => ({
+                            ...f,
+                            buyerEmail: e.target.value,
+                          }))
+                        }
+                        placeholder="you@example.com"
+                        type="email"
+                        value={fields.buyerEmail}
+                      />
+                      {emailError && (
+                        <p
+                          className="mt-1.5 text-xs font-medium text-terra"
+                          id={`email-err-${event.id}`}
+                        >
+                          {emailError}
+                        </p>
+                      )}
+                    </div>
 
-                  <div className="sm:col-span-6">
-                    <label
-                      className="block text-[11px] font-semibold uppercase tracking-wider text-muted mb-1.5"
-                      htmlFor={`buyer-phone-${event.id}`}
-                    >
-                      Phone Number
-                    </label>
-                    <input
-                      aria-describedby={
-                        phoneError ? `phone-err-${event.id}` : undefined
-                      }
-                      aria-invalid={Boolean(phoneError)}
-                      autoComplete="tel"
-                      className={`w-full min-h-[48px] px-3.5 py-2.5 rounded-lg border bg-white text-espresso text-sm placeholder:text-muted/60 ${
-                        phoneError ? "border-terra" : "border-linen"
-                      }`}
-                      id={`buyer-phone-${event.id}`}
-                      onBlur={() =>
-                        setTouched((prev) => ({ ...prev, phone: true }))
-                      }
-                      onChange={(e) => {
-                        const cleanPhone = e.target.value.replace(
-                          /[^\d+]/g,
-                          "",
-                        );
-                        setFields((f) => ({ ...f, buyerPhone: cleanPhone }));
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          if (canContinue) go({ step: 2 });
-                        }
-                      }}
-                      placeholder="08030000000"
-                      type="tel"
-                      value={fields.buyerPhone}
-                    />
-                    {phoneError && (
-                      <p
-                        className="mt-1.5 text-xs font-medium text-terra"
-                        id={`phone-err-${event.id}`}
+                    <div>
+                      <label
+                        className="block text-[11px] font-semibold uppercase tracking-wider text-muted mb-1.5"
+                        htmlFor={`buyer-phone-${event.id}`}
                       >
-                        {phoneError}
-                      </p>
-                    )}
+                        PHONE NUMBER
+                      </label>
+                      <input
+                        aria-describedby={
+                          phoneError ? `phone-err-${event.id}` : undefined
+                        }
+                        aria-invalid={Boolean(phoneError)}
+                        autoComplete="tel"
+                        className={`w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border bg-white text-espresso text-sm placeholder:text-muted/60 focus:border-forest outline-hidden ${
+                          phoneError ? "border-terra" : "border-linen"
+                        }`}
+                        id={`buyer-phone-${event.id}`}
+                        onBlur={() =>
+                          setTouched((prev) => ({ ...prev, phone: true }))
+                        }
+                        onChange={(e) => {
+                          const cleanPhone = e.target.value.replace(
+                            /[^\d+]/g,
+                            "",
+                          );
+                          setFields((f) => ({ ...f, buyerPhone: cleanPhone }));
+                        }}
+                        placeholder="0803 456 7890"
+                        type="tel"
+                        value={fields.buyerPhone}
+                      />
+                      {phoneError && (
+                        <p
+                          className="mt-1.5 text-xs font-medium text-terra"
+                          id={`phone-err-${event.id}`}
+                        >
+                          {phoneError}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-4 sm:p-5 rounded-xl bg-warm-canvas border border-linen flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {/* Step 2 Selection Summary & Continue Button */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-warm-canvas border border-linen flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted">
-                      Selection Summary
+                      SELECTION SUMMARY
                     </span>
                     <p className="mt-1 text-sm sm:text-base font-semibold text-espresso">
                       {quantity} × {tier?.name ?? "Ticket"} —{" "}
@@ -634,19 +750,15 @@ function TicketCheckoutInner({
                         {formatNaira(total)}
                       </span>
                     </p>
-                    {missing.length > 0 && (
-                      <p aria-live="polite" className="mt-1 text-xs text-muted">
-                        To continue to checkout, please enter:{" "}
-                        <span className="font-medium text-espresso">
-                          {missing.join(", ")}
-                        </span>
-                        .
+                    {missing.length > 0 && touched.name && (
+                      <p aria-live="polite" className="mt-1 text-xs text-terra">
+                        Please provide your {missing.join(", ")} to proceed.
                       </p>
                     )}
                   </div>
 
                   <button
-                    className="min-h-[48px] px-6 py-3 rounded-xl bg-forest hover:bg-deep-forest-hover text-white font-semibold text-xs sm:text-sm inline-flex items-center justify-center gap-2 shrink-0 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="min-h-[48px] px-6 py-3 rounded-xl bg-forest hover:bg-deep-forest-hover text-white font-semibold text-sm inline-flex items-center justify-center gap-2 shrink-0 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
                     disabled={!canContinue}
                     onClick={() => {
                       setTouched({
@@ -655,11 +767,14 @@ function TicketCheckoutInner({
                         phone: true,
                         file: false,
                       });
-                      if (canContinue) go({ step: 2 });
+                      if (canContinue) {
+                        setActiveStep(3);
+                        go({ step: 2 });
+                      }
                     }}
                     type="button"
                   >
-                    <span>Continue to payment</span>
+                    <span>Continue to Payment</span>
                     <ArrowRight
                       className="w-4 h-4 text-ochre"
                       strokeWidth={2}
@@ -667,49 +782,75 @@ function TicketCheckoutInner({
                   </button>
                 </div>
               </div>
-            ) : (
+            )}
+
+            {/* ===============================================================
+                STEP 3 OF 3: PAYMENT & RECEIPT
+            ================================================================ */}
+            {activeStep === 3 && (
               <div className="space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <button
-                    className="min-h-[48px] px-3.5 py-2 rounded-xl bg-white border border-linen text-forest text-xs sm:text-sm font-semibold hover:border-forest inline-flex items-center gap-2 transition-colors cursor-pointer"
-                    onClick={() => go({ step: 1 })}
+                    className="min-h-[48px] px-4 py-2 rounded-xl bg-white border border-linen text-forest text-xs sm:text-sm font-semibold hover:border-forest inline-flex items-center gap-2 transition-colors cursor-pointer shadow-2xs"
+                    onClick={() => {
+                      setActiveStep(2);
+                      go({ step: 1 });
+                    }}
                     type="button"
                   >
                     <ArrowLeft
                       className="w-4 h-4 text-forest"
                       strokeWidth={2}
                     />
-                    <span>Back to tickets</span>
+                    <span>Back to Enter Your Details</span>
                   </button>
 
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-forest/10 text-forest text-[11px] font-semibold uppercase tracking-wider">
-                    Step 2 of 2 · Payment &amp; Receipt
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-forest/10 text-forest text-[11px] font-bold tracking-wider uppercase">
+                    STEP 3 OF 3 · PAYMENT &amp; RECEIPT
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                  {/* Left Column: Order Summary & Payment Step A */}
                   <div className="lg:col-span-6 space-y-4">
-                    <div className="bg-warm-canvas rounded-xl border border-linen p-5 space-y-4">
+                    {/* Order Summary Card */}
+                    <div className="bg-warm-canvas rounded-2xl border border-linen p-5 space-y-4">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                          Order Summary
+                          ORDER SUMMARY
                         </span>
-                        <button
-                          className="min-h-[48px] text-xs font-semibold text-forest hover:underline cursor-pointer"
-                          onClick={() => go({ step: 1 })}
-                          type="button"
-                        >
-                          Edit details
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            className="min-h-[48px] text-xs font-semibold text-forest hover:underline cursor-pointer"
+                            onClick={() => {
+                              setActiveStep(1);
+                              go({ step: 1 });
+                            }}
+                            type="button"
+                          >
+                            Change ticket
+                          </button>
+                          <span className="text-muted text-xs">·</span>
+                          <button
+                            className="min-h-[48px] text-xs font-semibold text-forest hover:underline cursor-pointer"
+                            onClick={() => {
+                              setActiveStep(2);
+                              go({ step: 1 });
+                            }}
+                            type="button"
+                          >
+                            Edit details
+                          </button>
+                        </div>
                       </div>
 
                       <div>
-                        <p className="font-bold text-base text-espresso">
+                        <p className="font-serif font-bold text-lg text-espresso">
                           {event.title}
                         </p>
-                        <p className="mt-1 text-sm font-medium text-espresso">
+                        <p className="mt-1 text-sm font-semibold text-espresso">
                           {quantity} × {tier?.name} —{" "}
-                          <span className="font-mono text-forest font-semibold">
+                          <span className="font-mono text-forest font-bold">
                             {formatNaira(total)}
                           </span>
                         </p>
@@ -718,7 +859,7 @@ function TicketCheckoutInner({
                       <dl className="pt-3 border-t border-linen grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
                         <div>
                           <dt className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                            Buyer
+                            BUYER
                           </dt>
                           <dd className="mt-0.5 font-medium text-espresso truncate">
                             {fields.buyerName}
@@ -726,7 +867,7 @@ function TicketCheckoutInner({
                         </div>
                         <div>
                           <dt className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                            Email
+                            EMAIL
                           </dt>
                           <dd className="mt-0.5 font-medium text-espresso truncate">
                             {fields.buyerEmail}
@@ -734,7 +875,7 @@ function TicketCheckoutInner({
                         </div>
                         <div>
                           <dt className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                            Phone
+                            PHONE
                           </dt>
                           <dd className="mt-0.5 font-mono font-medium text-espresso">
                             {fields.buyerPhone}
@@ -756,28 +897,46 @@ function TicketCheckoutInner({
                       </div>
                     </div>
 
-                    <div className="bg-warm-canvas rounded-xl border border-linen p-5 space-y-4">
+                    {/* Payment Step A Card */}
+                    <div className="bg-warm-canvas rounded-2xl border border-linen p-5 space-y-4">
                       <div>
                         <span className="block text-[11px] font-semibold uppercase tracking-wider text-ochre">
-                          Payment Step A
+                          PAYMENT STEP A
                         </span>
-                        <h4 className="mt-1 font-bold text-base text-espresso">
+                        <h4 className="mt-1 font-serif font-bold text-base sm:text-lg text-espresso">
                           Transfer the exact total from your banking app
                         </h4>
                       </div>
 
+                      {/* Clear Distinction of Bank and Account Name per Requirement */}
                       {bank ? (
                         <>
-                          <p className="text-xs font-semibold text-espresso">
-                            {bank.bank_name} · {bank.account_name}
-                          </p>
+                          <div className="p-3.5 rounded-xl bg-white border border-linen space-y-2">
+                            <div className="flex items-center justify-between text-xs sm:text-sm">
+                              <span className="font-bold text-muted uppercase tracking-wider text-[11px]">
+                                Bank:
+                              </span>
+                              <span className="font-extrabold text-espresso">
+                                {bank.bank_name}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs sm:text-sm pt-2 border-t border-linen">
+                              <span className="font-bold text-muted uppercase tracking-wider text-[11px]">
+                                Acct Name:
+                              </span>
+                              <span className="font-extrabold text-espresso">
+                                {bank.account_name}
+                              </span>
+                            </div>
+                          </div>
 
-                          <div className="p-3 rounded-lg bg-white border border-linen flex items-center justify-between gap-2">
+                          {/* Account Number Box with Copy Action */}
+                          <div className="p-3 rounded-xl bg-white border border-linen flex items-center justify-between gap-2">
                             <span className="font-mono font-bold text-lg text-forest tracking-wider">
                               {bank.account_number}
                             </span>
                             <button
-                              className="min-h-[48px] px-3 py-1.5 rounded-lg bg-warm-canvas border border-linen text-forest text-xs font-semibold hover:border-forest inline-flex items-center gap-1.5 shrink-0 cursor-pointer"
+                              className="min-h-[48px] px-3.5 py-1.5 rounded-lg bg-warm-canvas border border-linen text-forest text-xs font-semibold hover:border-forest inline-flex items-center gap-1.5 shrink-0 cursor-pointer transition-colors"
                               onClick={async () => {
                                 try {
                                   await navigator.clipboard.writeText(
@@ -802,29 +961,24 @@ function TicketCheckoutInner({
                               ) : (
                                 <>
                                   <Copy className="w-4 h-4 text-forest" />
-                                  <span>Copy Account</span>
+                                  <span>Copy account number</span>
                                 </>
                               )}
                             </button>
                           </div>
-
-                          {bank.instructions && (
-                            <p className="text-xs text-body leading-relaxed">
-                              {bank.instructions}
-                            </p>
-                          )}
                         </>
                       ) : (
-                        <p className="text-xs text-muted leading-relaxed">
-                          Treasury account details are being confirmed — try
-                          again shortly.
-                        </p>
+                        <div className="p-4 rounded-xl bg-white border border-terra/30 text-xs text-terra">
+                          Bank transfer details are temporarily unavailable.
+                          Please refresh or try again shortly.
+                        </div>
                       )}
 
+                      {/* Shorter Copiable Transfer Narration */}
                       <div>
-                        <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
                           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                            Transfer Narration
+                            TRANSFER NARRATION
                           </span>
                           <button
                             className="min-h-[48px] text-xs font-semibold text-forest hover:underline inline-flex items-center gap-1 cursor-pointer"
@@ -857,34 +1011,35 @@ function TicketCheckoutInner({
                             )}
                           </button>
                         </div>
-                        <div className="px-3 py-2.5 rounded-lg bg-white border border-linen font-mono text-xs text-espresso break-all">
+                        <div className="px-3 py-2.5 rounded-xl bg-white border border-linen font-mono text-xs font-semibold text-espresso break-all">
                           {narrationText}
                         </div>
                       </div>
 
-                      <div className="p-3 rounded-lg bg-white border border-linen flex items-start gap-2.5">
+                      <div className="p-3 rounded-xl bg-white border border-linen flex items-start gap-2.5">
                         <Shield
                           className="w-4 h-4 text-ochre shrink-0 mt-0.5"
                           strokeWidth={2}
                         />
                         <p className="text-xs text-body leading-relaxed">
-                          Use this exact transfer narration so the committee can
+                          Use this exact transfer narration so our committee can
                           match your payment against the bank statement.
                         </p>
                       </div>
                     </div>
                   </div>
 
+                  {/* Right Column: Payment Step B (Upload Transfer Receipt) */}
                   <div className="lg:col-span-6 space-y-4">
-                    <div className="bg-white rounded-xl border border-linen p-5 space-y-4">
+                    <div className="bg-white rounded-2xl border border-linen p-5 sm:p-6 space-y-5 shadow-xs">
                       <div>
                         <span className="block text-[11px] font-semibold uppercase tracking-wider text-ochre">
-                          Payment Step B
+                          PAYMENT STEP B
                         </span>
-                        <h4 className="mt-1 font-bold text-base text-espresso">
+                        <h4 className="mt-1 font-serif font-bold text-base sm:text-lg text-espresso">
                           Upload your transfer receipt
                         </h4>
-                        <p className="mt-1 text-xs text-body">
+                        <p className="mt-1 text-xs text-body leading-relaxed">
                           Attach the transfer screenshot or PDF receipt from
                           your banking app so our officer can verify and confirm
                           your order.
@@ -896,7 +1051,7 @@ function TicketCheckoutInner({
                           className="block text-[11px] font-semibold uppercase tracking-wider text-muted mb-2"
                           htmlFor={`receipt-upload-${event.id}`}
                         >
-                          Proof of payment (PDF, JPG, PNG · 4 MB max)
+                          PROOF OF PAYMENT (PDF, JPG, PNG · 4 MB MAX)
                         </label>
 
                         <input
@@ -915,7 +1070,7 @@ function TicketCheckoutInner({
                           // biome-ignore lint/a11y/useSemanticElements: file dropzone container
                           <div
                             aria-describedby={`file-hint-${event.id}`}
-                            className={`min-h-[132px] p-6 rounded-xl border-2 border-dashed bg-warm-canvas flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
+                            className={`min-h-[140px] p-6 rounded-2xl border-2 border-dashed bg-warm-canvas flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
                               fileError
                                 ? "border-terra"
                                 : "border-linen hover:border-forest"
@@ -968,7 +1123,7 @@ function TicketCheckoutInner({
                               </div>
                             </div>
                             <button
-                              className="min-h-[48px] px-3 py-1.5 rounded-lg bg-white border border-linen text-terra text-xs font-semibold hover:border-terra inline-flex items-center gap-1.5 shrink-0 cursor-pointer"
+                              className="min-h-[48px] px-3.5 py-1.5 rounded-lg bg-white border border-linen text-terra text-xs font-semibold hover:border-terra inline-flex items-center gap-1.5 shrink-0 cursor-pointer transition-colors"
                               onClick={() => {
                                 setReceiptFile(null);
                                 setFileError(null);
@@ -994,9 +1149,9 @@ function TicketCheckoutInner({
                         )}
                       </div>
 
-                      <div className="pt-3 border-t border-linen">
+                      <div className="pt-2">
                         <button
-                          className={`w-full min-h-[48px] px-5 py-3 rounded-xl font-semibold text-xs sm:text-sm inline-flex items-center justify-center gap-2 transition-colors ${
+                          className={`w-full min-h-[48px] px-5 py-3.5 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2 transition-colors shadow-2xs ${
                             canSubmit
                               ? "bg-forest hover:bg-deep-forest-hover text-white cursor-pointer"
                               : "bg-linen text-muted cursor-not-allowed"
@@ -1017,17 +1172,17 @@ function TicketCheckoutInner({
                         {!receiptFile && !fileError && !isPending && (
                           <p
                             aria-live="polite"
-                            className="mt-2 text-xs text-muted leading-relaxed"
+                            className="mt-2 text-xs text-muted text-center"
                           >
                             Upload your transfer receipt (PDF, JPG, or PNG) to
-                            submit your order.
+                            submit.
                           </p>
                         )}
 
-                        <p className="mt-3 text-xs text-body leading-relaxed">
-                          Submitting an order logs your request for review. Your
-                          tickets are confirmed once an officer verifies your
-                          transfer.
+                        {/* Exact Footnote Text per Requirement */}
+                        <p className="mt-3.5 text-xs text-body text-center leading-relaxed">
+                          Submitting logs your purchase for a quick review. Your
+                          seats are not held until your transfer is verified.
                         </p>
                       </div>
                     </div>
@@ -1042,44 +1197,70 @@ function TicketCheckoutInner({
   );
 }
 
-function CheckoutStepIndicator({ step }: { step: 1 | 2 }) {
-  const labels = ["Choose your tickets", "Payment & receipt"];
+function CheckoutStepIndicator({
+  step,
+  canContinue,
+  onSelectStep,
+}: {
+  step: 1 | 2 | 3;
+  canContinue: boolean;
+  onSelectStep: (step: 1 | 2 | 3) => void;
+}) {
+  const steps = [
+    { number: 1, label: "Step 1: Choose Your Ticket" },
+    { number: 2, label: "Step 2: Enter Your Details" },
+    { number: 3, label: "Step 3: Payment & Receipt" },
+  ] as const;
+
   return (
     <nav
-      aria-label="Ticket order steps"
-      className="p-3 rounded-xl bg-warm-canvas border border-linen"
+      aria-label="Ticket purchase steps"
+      className="p-2 sm:p-2.5 rounded-2xl bg-warm-canvas border border-linen"
     >
-      <ol className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {labels.map((label, index) => {
-          const number = (index + 1) as 1 | 2;
-          const isActive = number === step;
-          const isDone = number < step;
+      <ol className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        {steps.map((s) => {
+          const isActive = s.number === step;
+          const isDone = s.number < step;
+          const isClickable =
+            s.number === 1 || s.number === 2 || (s.number === 3 && canContinue);
+
           return (
-            <li
-              aria-current={isActive ? "step" : undefined}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border text-xs font-semibold ${
-                isActive
-                  ? "bg-white border-forest text-espresso ring-2 ring-forest/20"
-                  : "bg-white/60 border-linen text-muted"
-              }`}
-              key={label}
-            >
-              <span
-                className={`w-6 h-6 rounded-full font-mono text-xs font-bold grid place-items-center shrink-0 ${
-                  isActive || isDone
-                    ? "bg-forest text-white"
-                    : "bg-white border border-linen text-muted"
-                }`}
+            <li key={s.number}>
+              <button
+                aria-current={isActive ? "step" : undefined}
+                className={`w-full min-h-[48px] flex items-center gap-2.5 px-3 py-2 rounded-xl border text-xs font-semibold text-left transition-all ${
+                  isActive
+                    ? "bg-white border-forest text-espresso ring-2 ring-forest/20 shadow-2xs"
+                    : isDone
+                      ? "bg-forest/10 border-forest/20 text-forest hover:bg-forest/15 cursor-pointer"
+                      : "bg-white/60 border-linen text-muted"
+                } ${isClickable ? "cursor-pointer" : "cursor-default"}`}
+                disabled={!isClickable}
+                onClick={() => onSelectStep(s.number)}
+                type="button"
               >
-                {isDone ? (
-                  <Check className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-                ) : (
-                  number
-                )}
-              </span>
-              <span>
-                {number}. {label}
-              </span>
+                <span
+                  className={`w-6 h-6 rounded-full font-mono text-xs font-bold grid place-items-center shrink-0 ${
+                    isActive
+                      ? "bg-forest text-white"
+                      : isDone
+                        ? "bg-forest text-white"
+                        : "bg-white border border-linen text-muted"
+                  }`}
+                >
+                  {isDone ? (
+                    <Check
+                      className="w-3.5 h-3.5 text-white"
+                      strokeWidth={2.5}
+                    />
+                  ) : s.number === 1 ? (
+                    <Ticket className="w-3 h-3 text-white" />
+                  ) : (
+                    s.number
+                  )}
+                </span>
+                <span className="truncate">{s.label}</span>
+              </button>
             </li>
           );
         })}
