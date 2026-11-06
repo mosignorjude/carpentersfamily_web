@@ -47,6 +47,10 @@ yarn-error.log*
 /DESIGN.md
 .superpowers/
 .impeccable/
+# Python
+__pycache__/
+*.py[cod]
+
 # Local scripts & user data exports
 scripts/*firebase_users*
 scripts/*.local.*
@@ -59,6 +63,7 @@ AUDIT-REPORT-*.md
 /.agents/skills/*
 !/.agents/skills/ui-ux-pro-max/
 !/.agents/skills/ui-ux-pro-max/**
+/.agents/skills/ui-ux-pro-max/**/__pycache__/
 /.agents/skills/ui-ux-pro-max/scripts/tests/
 
 # Design explorations and source-only brand references; the app-served logo
