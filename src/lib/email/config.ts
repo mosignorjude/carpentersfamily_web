@@ -12,6 +12,17 @@ export interface EmailConfig {
   siteUrl: string;
 }
 
+export function normalizeSiteUrl(rawUrl: string): string {
+  let trimmed = rawUrl.trim();
+  if (!trimmed) return "http://127.0.0.1:3000";
+  if (!/^https?:\/\//i.test(trimmed)) {
+    const isLocal =
+      trimmed.startsWith("127.0.0.1") || trimmed.startsWith("localhost");
+    trimmed = `${isLocal ? "http://" : "https://"}${trimmed}`;
+  }
+  return trimmed.replace(/\/+$/, "");
+}
+
 function readCleanEnv(value: string | undefined, fallback: string): string {
   const trimmed = value?.trim();
   return trimmed && trimmed.length > 0 ? trimmed : fallback;
@@ -33,9 +44,8 @@ export function getEmailConfig(): EmailConfig {
       process.env.RESEND_FORWARD_TO_EMAIL,
       DEFAULT_FORWARD_TO_EMAIL,
     ),
-    siteUrl: readCleanEnv(
-      process.env.NEXT_PUBLIC_SITE_URL,
-      "http://127.0.0.1:3000",
+    siteUrl: normalizeSiteUrl(
+      readCleanEnv(process.env.NEXT_PUBLIC_SITE_URL, "http://127.0.0.1:3000"),
     ),
   };
 }

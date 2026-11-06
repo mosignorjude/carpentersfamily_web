@@ -6,6 +6,7 @@ import {
   DEFAULT_REPLY_TO_EMAIL,
   extractEmailAddress,
   isContactRecipient,
+  normalizeSiteUrl,
 } from "../src/lib/email/config.ts";
 
 test("email templates omit the logo and keep the text brand header", () => {
@@ -13,7 +14,10 @@ test("email templates omit the logo and keep the text brand header", () => {
     "src/lib/email/templates/base-layout.tsx",
     "utf8",
   );
-  const testEmailSource = fs.readFileSync("scripts/send-test-email.mjs", "utf8");
+  const testEmailSource = fs.readFileSync(
+    "scripts/send-test-email.mjs",
+    "utf8",
+  );
 
   assert.doesNotMatch(layoutSource, /<Img|<img|email-avatar|logoImage/i);
   assert.match(layoutSource, /clubBrand\.name/);
@@ -22,7 +26,9 @@ test("email templates omit the logo and keep the text brand header", () => {
 
 test("email address extraction and contact recipient validation", () => {
   assert.equal(
-    extractEmailAddress("Carpenters Family <info@mail.carpentersfamily.com.ng>"),
+    extractEmailAddress(
+      "Carpenters Family <info@mail.carpentersfamily.com.ng>",
+    ),
     "info@mail.carpentersfamily.com.ng",
   );
   assert.equal(
@@ -48,4 +54,32 @@ test("formats payment method and omits reference in dues email details", () => {
   const keys = details.map((d) => d.label);
   assert.equal(keys.includes("Payment Channel"), true);
   assert.equal(keys.includes("Payment Reference"), false);
+});
+
+test("normalizeSiteUrl sanitizes protocol and trailing slashes for canonical origin", () => {
+  assert.equal(
+    normalizeSiteUrl("https://carpentersfamily.com.ng"),
+    "https://carpentersfamily.com.ng",
+  );
+  assert.equal(
+    normalizeSiteUrl("https://carpentersfamily.com.ng/"),
+    "https://carpentersfamily.com.ng",
+  );
+  assert.equal(
+    normalizeSiteUrl("https://carpentersfamily.com.ng///"),
+    "https://carpentersfamily.com.ng",
+  );
+  assert.equal(
+    normalizeSiteUrl("carpentersfamily.com.ng"),
+    "https://carpentersfamily.com.ng",
+  );
+  assert.equal(
+    normalizeSiteUrl("http://127.0.0.1:3000/"),
+    "http://127.0.0.1:3000",
+  );
+});
+
+test("normalizeSiteUrl falls back to the local origin when unset", () => {
+  assert.equal(normalizeSiteUrl(""), "http://127.0.0.1:3000");
+  assert.equal(normalizeSiteUrl("   "), "http://127.0.0.1:3000");
 });
