@@ -44,6 +44,9 @@ export function EventDomainLedger({
   const [statusFilter, setStatusFilter] = useState<
     "all" | "recorded" | "approved" | "rejected" | "cancelled"
   >("all");
+  const [channelFilter, setChannelFilter] = useState<
+    "all" | "member" | "online"
+  >("all");
 
   const isOfficer =
     userRole === "admin" ||
@@ -57,11 +60,20 @@ export function EventDomainLedger({
   const resolveStatus = (txn: DashboardTransaction) =>
     txn.status === "voided" ? "rejected" : txn.verificationStatus || "approved";
 
-  // Filter transactions by status and search query
+  // Filter transactions by status, channel, and search query
   const filtered = transactions.filter((txn) => {
     const status = resolveStatus(txn);
     if (statusFilter !== "all" && status !== statusFilter) {
       return false;
+    }
+
+    if (domain === "tickets" && channelFilter !== "all") {
+      const txnChannel =
+        txn.channel ||
+        (txn.categoryLabel === "Online Sales" ? "online" : "member");
+      if (txnChannel !== channelFilter) {
+        return false;
+      }
     }
 
     if (searchQuery.trim()) {
@@ -99,6 +111,19 @@ export function EventDomainLedger({
     (t) => resolveStatus(t) === "cancelled",
   ).length;
 
+  const memberChannelCount = transactions.filter(
+    (t) =>
+      (t.channel ||
+        (t.categoryLabel === "Online Sales" ? "online" : "member")) ===
+      "member",
+  ).length;
+  const onlineChannelCount = transactions.filter(
+    (t) =>
+      (t.channel ||
+        (t.categoryLabel === "Online Sales" ? "online" : "member")) ===
+      "online",
+  ).length;
+
   return (
     <div className="bg-white rounded-2xl border border-[#E5DDD3] overflow-hidden shadow-xs mt-6">
       {/* Ledger Header Bar */}
@@ -129,6 +154,57 @@ export function EventDomainLedger({
           />
         </div>
       </div>
+
+      {/* Sales Channel Filter Bar (Tickets domain only) */}
+      {domain === "tickets" && (
+        <div className="px-4 py-2 border-b border-[#E5DDD3] bg-[#FAF6F0]/80 flex items-center gap-2 overflow-x-auto text-xs">
+          <span className="text-[11px] font-bold text-[#7A685D] uppercase tracking-wider mr-1 shrink-0">
+            Channel:
+          </span>
+          <button
+            className={`px-3 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] ${
+              channelFilter === "all"
+                ? "bg-[#174C37] text-white font-semibold shadow-2xs"
+                : "bg-white text-[#5C4638] border border-[#E5DDD3] hover:bg-[#FAF6F0]"
+            }`}
+            onClick={() => {
+              setChannelFilter("all");
+              setCurrentPage(1);
+            }}
+            type="button"
+          >
+            All Channels ({transactions.length})
+          </button>
+          <button
+            className={`px-3 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] ${
+              channelFilter === "member"
+                ? "bg-[#174C37] text-white font-semibold shadow-2xs"
+                : "bg-white text-[#5C4638] border border-[#E5DDD3] hover:bg-[#FAF6F0]"
+            }`}
+            onClick={() => {
+              setChannelFilter("member");
+              setCurrentPage(1);
+            }}
+            type="button"
+          >
+            Member Sales ({memberChannelCount})
+          </button>
+          <button
+            className={`px-3 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] ${
+              channelFilter === "online"
+                ? "bg-[#174C37] text-white font-semibold shadow-2xs"
+                : "bg-white text-[#5C4638] border border-[#E5DDD3] hover:bg-[#FAF6F0]"
+            }`}
+            onClick={() => {
+              setChannelFilter("online");
+              setCurrentPage(1);
+            }}
+            type="button"
+          >
+            Online Sales ({onlineChannelCount})
+          </button>
+        </div>
+      )}
 
       {/* Filter Pills Bar */}
       <div className="px-4 py-2.5 border-b border-[#E5DDD3] bg-[#FDFBF8] flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -268,7 +344,14 @@ export function EventDomainLedger({
                         #{txn.paymentRef || txn.id.slice(0, 8).toUpperCase()}
                       </span>
                       {txn.categoryLabel && (
-                        <span className="text-[11px] font-semibold text-[#6B5D53] bg-[#FAF6F0] px-2 py-0.5 rounded-md">
+                        <span
+                          className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                            domain === "tickets" &&
+                            txn.categoryLabel === "Online Sales"
+                              ? "text-[#174C37] bg-[#E9F4EE] border border-[#174C37]/20"
+                              : "text-[#6B5D53] bg-[#FAF6F0]"
+                          }`}
+                        >
                           {txn.categoryLabel}
                         </span>
                       )}
@@ -421,7 +504,9 @@ export function EventDomainLedger({
               <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
                 <th className="py-3 px-4">Ref & Date</th>
                 <th className="py-3 px-4">Description & Counterparty</th>
-                <th className="py-3 px-4">Category</th>
+                <th className="py-3 px-4">
+                  {domain === "tickets" ? "Channel" : "Category"}
+                </th>
                 <th className="py-3 px-4 text-right">Amount (NGN)</th>
                 <th className="py-3 px-4 text-center">Voucher Evidence</th>
                 <th className="py-3 px-4 text-center">Review Status</th>
@@ -508,9 +593,16 @@ export function EventDomainLedger({
                         )}
                       </td>
 
-                      {/* Category */}
+                      {/* Category / Channel */}
                       <td className="py-3 px-4 whitespace-nowrap">
-                        <span className="font-medium text-[#3D291F] block">
+                        <span
+                          className={`font-semibold text-xs block ${
+                            domain === "tickets" &&
+                            txn.categoryLabel === "Online Sales"
+                              ? "text-[#174C37]"
+                              : "text-[#3D291F]"
+                          }`}
+                        >
                           {txn.categoryLabel || "General"}
                         </span>
                         <span className="text-[11px] text-[#7A685D]">
