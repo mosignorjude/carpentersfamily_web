@@ -101,3 +101,34 @@ export function parseTicketOrderForm(formData, options = {}) {
     },
   };
 }
+
+/** Mirrors event_ticket_sales_buyer_email_check. */
+export const BUYER_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function isBuyerEmailValid(value) {
+  const normalized = String(value ?? "")
+    .trim()
+    .toLowerCase();
+  return (
+    normalized.length >= 3 &&
+    normalized.length <= 320 &&
+    BUYER_EMAIL_PATTERN.test(normalized)
+  );
+}
+
+/** Mirrors event_ticket_sales_buyer_phone_check: ^\+?[0-9]{10,15}$ */
+export function isBuyerPhoneValid(value) {
+  return /^\+?[0-9]{10,15}$/.test(String(value ?? "").trim());
+}
+
+/**
+ * The names the "Continue to checkout" button lists when it is still disabled. Kept in this module
+ * so the buyer's wording and the server's rejection say the same thing.
+ */
+export function stepOneMissingFields({ name, email, phone }) {
+  const missing = [];
+  if (!String(name ?? "").trim()) missing.push("your name");
+  if (!isBuyerEmailValid(email)) missing.push("a valid email address");
+  if (!isBuyerPhoneValid(phone)) missing.push("your phone number");
+  return missing;
+}

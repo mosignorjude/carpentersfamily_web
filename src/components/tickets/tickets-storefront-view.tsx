@@ -11,11 +11,19 @@ import {
   Ticket,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ClubLogo from "@/components/club-logo";
 import { clubBrand } from "@/lib/brand";
 import { formatEventTime } from "@/lib/event-times.mjs";
 import { formatNaira } from "@/lib/format";
+import {
+  buildCheckoutQuery,
+  type CheckoutState,
+  checkoutHref,
+  parseCheckoutState,
+  tierRemaining,
+} from "@/lib/ticket-order-state.mjs";
+import { TicketCheckoutOverlay } from "./ticket-checkout-overlay";
 import type {
   PublicBankInfo,
   PublicTicketedEvent,
@@ -23,6 +31,13 @@ import type {
 } from "./ticket-types";
 
 export type { PublicBankInfo, PublicTicketedEvent, PublicTicketTier };
+
+export function checkoutFromWindow(
+  events: PublicTicketedEvent[],
+  search: string = typeof window !== "undefined" ? window.location.search : "",
+): CheckoutState | null {
+  return parseCheckoutState(search, events);
+}
 
 interface TicketsStorefrontViewProps {
   events: PublicTicketedEvent[];
@@ -43,6 +58,7 @@ export function TicketsStorefrontView({
   bank,
   isAuthenticatedMember = false,
 }: TicketsStorefrontViewProps) {
+  const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const [selectedTierByEvent, setSelectedTierByEvent] = useState<
     Record<string, string>
   >({});
@@ -53,6 +69,28 @@ export function TicketsStorefrontView({
     Record<string, string>
   >({});
   const [copiedAccount, setCopiedAccount] = useState(false);
+
+  useEffect(() => {
+    setCheckout(checkoutFromWindow(events));
+  }, [events]);
+
+  const activeEvent = checkout
+    ? (events.find((e) => e.id === checkout.eventId) ?? null)
+    : null;
+
+  useEffect(() => {
+    if (checkout && !activeEvent) {
+      setCheckout(null);
+      if (typeof window !== "undefined") {
+        const search = buildCheckoutQuery(window.location.search, null);
+        window.history.replaceState(
+          null,
+          "",
+          `${window.location.pathname}${search}`,
+        );
+      }
+    }
+  }, [checkout, activeEvent]);
 
   const accountNumber = bank?.account_number || "1307798889";
   const bankName = bank?.bank_name || "ProvidusUnity";
@@ -370,12 +408,101 @@ export function TicketsStorefrontView({
                       </div>
                     </div>
                   )}
+
+                  {tiers.length > 0 && (
+                    <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-linen">
+                      <div className="text-xs text-body font-medium">
+                        {selectedTier && (
+                          <span>
+                            Selected:{" "}
+                            <strong className="text-espresso">
+                              {quantity} × {selectedTier.name}
+                            </strong>{" "}
+                            ({formatNaira(totalNgn)})
+                          </span>
+                        )}
+                      </div>
+                      <a
+                        className="inline-flex items-center justify-center min-h-[48px] px-6 py-2.5 rounded-xl bg-forest hover:bg-deep-forest-hover text-white text-xs font-bold transition-colors shadow-2xs no-underline cursor-pointer"
+                        href={checkoutHref(
+                          "/tickets",
+                          typeof window !== "undefined"
+                            ? window.location.search
+                            : "",
+                          {
+                            eventId: event.id,
+                            tierId: selectedTier?.id ?? tiers[0]?.id ?? "",
+                            quantity,
+                            step: 1,
+                          },
+                        )}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const targetTier = selectedTier ?? tiers[0] ?? null;
+                          const rem = targetTier
+                            ? tierRemaining(targetTier)
+                            : null;
+                          const nextState: CheckoutState = {
+                            eventId: event.id,
+                            tierId: targetTier?.id ?? "",
+                            quantity,
+                            step: 1,
+                            remaining: rem,
+                          };
+                          setCheckout(nextState);
+                          if (typeof window !== "undefined") {
+                            const search = buildCheckoutQuery(
+                              window.location.search,
+                              nextState,
+                            );
+                            window.history.replaceState(
+                              null,
+                              "",
+                              `${window.location.pathname}${search}`,
+                            );
+                          }
+                        }}
+                      >
+                        Buy tickets
+                      </a>
+                    </div>
+                  )}
                 </article>
               );
             })}
           </div>
         )}
       </main>
+
+      {activeEvent && checkout && (
+        <TicketCheckoutOverlay
+          bank={bank}
+          checkout={checkout}
+          event={activeEvent}
+          onCheckoutChange={(next) => {
+            setCheckout(next);
+            if (typeof window !== "undefined") {
+              const search = buildCheckoutQuery(window.location.search, next);
+              window.history.replaceState(
+                null,
+                "",
+                `${window.location.pathname}${search}`,
+              );
+            }
+          }}
+          onClose={() => {
+            setCheckout(null);
+            if (typeof window !== "undefined") {
+              const search = buildCheckoutQuery(window.location.search, null);
+              window.history.replaceState(
+                null,
+                "",
+                `${window.location.pathname}${search}`,
+              );
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

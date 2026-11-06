@@ -141,3 +141,40 @@ test("parsed values are plain strings, never a File or a FormData entry", () => 
   for (const value of Object.values(parsed.values))
     assert.equal(typeof value, "string");
 });
+
+test("the client's email test accepts exactly what the column accepts", async () => {
+  const { isBuyerEmailValid } = await import("../src/lib/ticket-order-intake.mjs");
+  assert.equal(isBuyerEmailValid("chidi@example.com"), true);
+  assert.equal(isBuyerEmailValid("  Chidi@Example.COM  "), true);
+  assert.equal(isBuyerEmailValid("not-an-email"), false);
+  assert.equal(isBuyerEmailValid("two@at@signs.example.com"), false);
+  assert.equal(isBuyerEmailValid("a@b"), false);
+  assert.equal(isBuyerEmailValid(""), false);
+});
+
+test("the client's phone test mirrors the +?[0-9]{10,15} column check", async () => {
+  const { isBuyerPhoneValid } = await import("../src/lib/ticket-order-intake.mjs");
+  assert.equal(isBuyerPhoneValid("08031234571"), true);
+  assert.equal(isBuyerPhoneValid("+2348031234571"), true);
+  assert.equal(isBuyerPhoneValid("0803 123 4571"), false);
+  assert.equal(isBuyerPhoneValid("+234-803-123-4571"), false);
+  assert.equal(isBuyerPhoneValid("123456789"), false);
+  assert.equal(isBuyerPhoneValid("1234567890123456"), false);
+});
+
+test("step one reports every field that is missing", async () => {
+  const { stepOneMissingFields } = await import("../src/lib/ticket-order-intake.mjs");
+  assert.deepEqual(stepOneMissingFields({ name: "", email: "", phone: "" }), [
+    "your name",
+    "a valid email address",
+    "your phone number",
+  ]);
+  assert.deepEqual(
+    stepOneMissingFields({
+      name: "Chidi Okafor",
+      email: "chidi@example.com",
+      phone: "08031234571",
+    }),
+    [],
+  );
+});
