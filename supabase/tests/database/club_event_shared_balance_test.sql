@@ -28,7 +28,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000841', true);
 
 select set_config('test.cbs_event', public.create_event(
-  'Shared Balance Test Event', 'party', pg_catalog.clock_timestamp() + interval '2 days',
+  'Shared Balance Test Event', 'party', pg_catalog.clock_timestamp() - interval '2 days',
   'Club Hall', null, false, false, true, true, true, true
 )::text, true);
 select set_config('test.cbs_tier', public.create_event_ticket_tier(
@@ -95,8 +95,12 @@ from public.record_event_ticket_sale(
 ) as cash;
 reset role;
 
-update public.event_ticket_sales set verification_status = 'approved'
-where id = current_setting('test.cbs_sale')::uuid;
+select lives_ok(
+  $$select public.verify_event_ticket_sale(
+    current_setting('test.cbs_sale')::uuid, 'approved', null
+  )$$,
+  'the primary Admin approves the ticket sale through the audited verification RPC'
+);
 
 -- Event cash: income paid 700 + tickets 1000 = 1700 in;
 -- expense paid 200 + deposit 50 = 250 out; net 1450.
@@ -182,6 +186,29 @@ select is(
 select is(
   (select balance from public.club_finance_summary()), 650::numeric,
   'the club balance follows the refund');
+-- Event completion requires every recorded transaction to be reviewed. These
+-- approvals do not change the cash-based balance assertions above.
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000841', true);
+select lives_ok(
+  $$select public.verify_event_financial_transaction(
+    current_setting('test.cbs_income_paid')::uuid, 'approved', null
+  )$$,
+  'Admin reviews the paid income before event completion');
+select lives_ok(
+  $$select public.verify_event_financial_transaction(
+    current_setting('test.cbs_income_pending')::uuid, 'approved', null
+  )$$,
+  'Admin reviews the pending income before event completion');
+select lives_ok(
+  $$select public.verify_event_financial_transaction(
+    current_setting('test.cbs_expense_deposit')::uuid, 'approved', null
+  )$$,
+  'Admin reviews the deposit expense before event completion');
+select lives_ok(
+  $$select public.verify_event_financial_transaction(
+    current_setting('test.cbs_expense_pending')::uuid, 'approved', null
+  )$$,
+  'Admin reviews the pending expense before event completion');
 reset role;
 
 -- Closing posts the same money that is already in the balance.

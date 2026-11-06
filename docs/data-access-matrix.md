@@ -322,10 +322,12 @@ trigger prevents disabling or removing the final active staff administrator.
 
 ## Explicitly denied operations
 
-- `anon` has no schema `USAGE`, no table privileges anywhere, and no role RPC execution. It holds
-  `EXECUTE` on exactly two `security definer` functions, `public.submit_ticket_order` and
-  `public.lookup_ticket_order`, which are the box office's only paths and which refuse any signed-in
-  actor with `42501`. Everything else about `anon` remains denied.
+- `anon` has no table privileges and no role RPC execution. For the box office it can execute
+  `public.lookup_ticket_order`; it cannot directly execute `public.submit_ticket_order`, which is
+  granted to `service_role` and called by the public Server Action after receipt validation. That
+  action uses a separate server client and does not carry the browser Auth identity into the RPC,
+  so the database treats the submission as a guest even if the browser is signed in. This creates
+  the accepted guest-order self-review risk documented below.
 - Authenticated client roles have only the explicit table grants listed above;
   all app-facing tables use forced RLS. Dues and membership tables are
   read-only to direct clients, and mutations go through checked procedures. No
@@ -350,10 +352,10 @@ trigger prevents disabling or removing the final active staff administrator.
 | Operation | Who | Path | Enforced by |
 | --- | --- | --- | --- |
 | Read ticketed events + treasury account | anon and active members | `get_public_ticketed_events()` | definer function; approved-only `tier_sales` CTE |
-| Submit a ticket order with a receipt | anon | `submit_ticket_order(...)` | definer function; event must be `scheduled`, ticketing on, tier active; throttles of 3 per email+event, 5 per email overall, 20 per event |
+| Submit a ticket order with a receipt | Public visitor through the Server Action | `submit_ticket_order(...)` via `service_role` | Server validates the form and receipt; definer function requires a scheduled, ticket-enabled event and active tier; throttles of 3 per email+event, 5 per email overall, 20 per event. Browser Auth identity is not passed to the RPC. |
 | Read one order's status | anon | `lookup_ticket_order(reference, email)` | both secrets must match; no rows otherwise, so it cannot confirm a reference exists |
 | Record a sale at the box office | event lead / officer | `record_event_ticket_sale(...)` | existing `authenticated` grants, unchanged |
-| Approve / reject / cancel a sale | admin, president, executive, event lead (not their own sale) | `verify_event_ticket_sale(...)` | row lock on `private.administration_guard`; reason mandatory for reject and cancel |
+| Approve / reject / cancel a sale | Admin/Backup Admin, President/Executive, or assigned event Lead | `verify_event_ticket_sale(...)` | row lock on `private.administration_guard`; reason mandatory for reject and cancel; one eligible officer may approve an online guest order |
 | See who bought a ticket | event lead / officer | `event_ticket_sales` row reads | `buyer_email` and `buyer_phone` are **not** in the per-column SELECT grant list, so no client read returns them |
 
 `source = 'online'` rows carry `public_reference`, `buyer_email`, `buyer_phone` and
@@ -361,6 +363,15 @@ trigger prevents disabling or removing the final active staff administrator.
 `refunded_at` nor `refund_reason` and is excluded from every revenue sum. Sales count toward revenue
 and toward tier capacity only at `verification_status = 'approved'`; `event_financial_transactions`
 keeps its did-cash-move rule and is filtered on `payment_status`, not on review status.
+
+**Accepted High risk — guest-order self-review (user accepted 2026-11-06):** unlike an officer-recorded
+sale, an online guest order has no `seller_id`, and the submit action does not pass the caller's
+Auth identity to the server-only RPC. An Executive or assigned event Lead can submit through the
+public action and later approve the unattributed order; an authenticated browser session does not
+prevent the action from treating it as a guest order. One eligible officer approval is sufficient,
+and there is no second-review requirement. The user accepts this trade-off to allow multiple
+officers to approve guest orders. This limitation means online-order approval does not enforce
+segregation of duties against an officer who also submits the order.
 
 ## Verification coverage
 

@@ -87,8 +87,9 @@ test("the JS surfaces that sum sales filter to approved", () => {
   assert.match(home, /\.eq\("verification_status", "approved"\)/);
 });
 
-test("anon gets exactly the two definer entry points and no table", () => {
-  assert.match(MIGRATION, /grant execute on function public\.submit_ticket_order[^;]* to anon;/);
+test("only the server service role can submit orders; anon only gets buyer lookup", () => {
+  assert.match(MIGRATION, /grant execute on function public\.submit_ticket_order[^;]* to service_role;/);
+  assert.doesNotMatch(MIGRATION, /grant execute on function public\.submit_ticket_order[^;]* to anon;/);
   assert.match(MIGRATION, /grant execute on function public\.lookup_ticket_order[^;]* to anon;/);
   assert.doesNotMatch(MIGRATION, /grant (select|insert|update|delete)[^;]* to anon;/);
   assert.doesNotMatch(MIGRATION, /grant usage on schema public to anon/);

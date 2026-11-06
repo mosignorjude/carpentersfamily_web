@@ -33,11 +33,33 @@ select set_config('test.till_tier', public.create_event_ticket_tier(
 reset role;
 
 -- 1. The four new columns exist, and the manual default keeps every old row manual.
+
+select ok(
+  has_function_privilege('service_role',
+    'public.submit_ticket_order(uuid,uuid,integer,text,text,text,uuid,uuid,uuid,text,text,text,integer,text)',
+    'EXECUTE')
+  and not has_function_privilege('anon',
+    'public.submit_ticket_order(uuid,uuid,integer,text,text,text,uuid,uuid,uuid,text,text,text,integer,text)',
+    'EXECUTE')
+  and not has_function_privilege('authenticated',
+    'public.submit_ticket_order(uuid,uuid,integer,text,text,text,uuid,uuid,uuid,text,text,text,integer,text)',
+    'EXECUTE')
+  and has_function_privilege('anon', 'public.lookup_ticket_order(text,text)', 'EXECUTE'),
+  'only the server service role can submit orders; anon retains buyer lookup'
+);
 select has_column('public', 'event_ticket_sales', 'source', 'source column exists');
 select has_column('public', 'event_ticket_sales', 'buyer_email', 'buyer_email column exists');
 select has_column('public', 'event_ticket_sales', 'buyer_phone', 'buyer_phone column exists');
 select has_column('public', 'event_ticket_sales', 'public_reference', 'public_reference column exists');
-
+select ok(
+  has_column_privilege('authenticated', 'public.event_ticket_sales', 'source', 'SELECT')
+  and has_column_privilege('authenticated', 'public.event_ticket_sales', 'public_reference', 'SELECT')
+  and not has_column_privilege('authenticated', 'public.event_ticket_sales', 'buyer_email', 'SELECT')
+  and not has_column_privilege('authenticated', 'public.event_ticket_sales', 'buyer_phone', 'SELECT')
+  and not has_column_privilege('anon', 'public.event_ticket_sales', 'buyer_email', 'SELECT')
+  and not has_column_privilege('anon', 'public.event_ticket_sales', 'buyer_phone', 'SELECT'),
+  'ticket buyer email and phone are not granted to members or anonymous callers'
+);
 select is(
   (select pg_catalog.count(*) from public.event_ticket_sales),
   0::bigint,
@@ -348,8 +370,19 @@ alter table public.event_ticket_tiers enable trigger event_ticket_tiers_write_gu
 
 select set_config('request.jwt.claim.sub', '', true);
 set local role anon;
+select throws_ok($$
+  select public.submit_ticket_order(
+    p_event_id => null::uuid, p_tier_id => null::uuid, p_quantity => null::integer,
+    p_buyer_name => null::text, p_buyer_email => null::text, p_buyer_phone => null::text,
+    p_idempotency_key => null::uuid, p_sale_id => null::uuid, p_receipt_id => null::uuid,
+    p_receipt_filename => null::text, p_receipt_object_key => null::text,
+    p_receipt_content_type => null::text, p_receipt_size_bytes => null::integer,
+    p_receipt_sha256 => null::text)
+$$, '42501', null, 'anon cannot call the order submission RPC');
+reset role;
+set local role service_role;
 
--- 12. A well-formed order is accepted and returns both secrets the buyer needs.
+-- 12. A well-formed order is accepted by the server role after the server action uploads receipt.
 select set_config('test.till_guest', o->>'public_reference', true)
 from public.submit_ticket_order(
   p_event_id => current_setting('test.till_event')::uuid,
@@ -384,9 +417,7 @@ select is(
     where s.id = '7b7b7b7b-0000-0000-0000-0000000000d2'),
   NULL::uuid, 'an online order has no seller');
 
-set local role anon;
-
--- 13. The same key returns the same reference instead of a second order.
+set local role service_role;
 select is(
   (select o->>'public_reference' from public.submit_ticket_order(
     p_event_id => current_setting('test.till_event')::uuid,
@@ -407,9 +438,7 @@ reset role;
 select is((select pg_catalog.count(*) from public.event_ticket_sales as s
   where s.buyer_email = 'chidi@example.test'), 1::bigint,
   'the replay created no second row');
-set local role anon;
-
--- 14. Validation refusals.
+set local role service_role;
 select throws_ok($$
   select public.submit_ticket_order(
     p_event_id => current_setting('test.till_event')::uuid,
@@ -436,28 +465,72 @@ select throws_ok($$
     p_receipt_sha256 => null)
 $$, '22023', null, 'an invalid email is refused');
 
--- 15. The per-email throttle: three live orders per address per event.
+-- 15. The server-only RPC requires receipt metadata after the action validates and uploads it.
+select throws_ok($$
+  select public.submit_ticket_order(
+    p_event_id => current_setting('test.till_event')::uuid,
+    p_tier_id => current_setting('test.till_tier')::uuid, p_quantity => 1,
+    p_buyer_name => 'No Receipt', p_buyer_email => 'no-receipt@example.test',
+    p_buyer_phone => '08031234575',
+    p_idempotency_key => '7b7b7b7b-0000-0000-0000-0000000000e5',
+    p_sale_id => '7b7b7b7b-0000-0000-0000-0000000000e6',
+    p_receipt_id => null, p_receipt_filename => null, p_receipt_object_key => null,
+    p_receipt_content_type => null, p_receipt_size_bytes => null, p_receipt_sha256 => null)
+$$, '22023', 'Receipt metadata required for bank transfer ticket sales.',
+  'server submission rejects an order without receipt metadata');
+
+select throws_ok($$
+  select public.submit_ticket_order(
+    p_event_id => current_setting('test.till_event')::uuid,
+    p_tier_id => current_setting('test.till_tier')::uuid, p_quantity => 1,
+    p_buyer_name => 'Partial Receipt', p_buyer_email => 'partial-receipt@example.test',
+    p_buyer_phone => '08031234576',
+    p_idempotency_key => '7b7b7b7b-0000-0000-0000-0000000000e7',
+    p_sale_id => '7b7b7b7b-0000-0000-0000-0000000000e8',
+    p_receipt_id => '7b7b7b7b-0000-0000-0000-0000000000e9',
+    p_receipt_filename => null, p_receipt_object_key => null,
+    p_receipt_content_type => null, p_receipt_size_bytes => null, p_receipt_sha256 => null)
+$$, '22023', 'Receipt metadata required for bank transfer ticket sales.',
+  'server submission rejects partial receipt metadata');
+
+reset role;
+select is(
+  (select pg_catalog.count(*) from public.event_ticket_sales
+    where id in (
+      '7b7b7b7b-0000-0000-0000-0000000000e6',
+      '7b7b7b7b-0000-0000-0000-0000000000e8'
+    )),
+  0::bigint, 'receipt validation failures create no sale rows');
+set local role service_role;
 select throws_ok($test$
   do $block$
-  declare i int;
+  declare
+    i int;
+    v_sale_id uuid;
+    v_receipt_id uuid;
   begin
     for i in 1..4 loop
+      v_sale_id := ('7b7b7b7b-0000-0000-0000-' || pg_catalog.lpad((i + 100)::text, 12, '0'))::uuid;
+      v_receipt_id := ('7b7b7b7b-0000-0000-0000-' || pg_catalog.lpad((i + 200)::text, 12, '0'))::uuid;
       perform public.submit_ticket_order(
         p_event_id => current_setting('test.till_event')::uuid,
         p_tier_id => current_setting('test.till_tier')::uuid, p_quantity => 1,
         p_buyer_name => 'Flood Buyer',
         p_buyer_email => 'flood@example.test', p_buyer_phone => '08031234574',
-        p_idempotency_key => ('7b7b7b7b-0000-0000-0000-0000000001f' || i)::uuid,
-        p_sale_id => ('7b7b7b7b-0000-0000-0000-0000000002f' || i)::uuid,
-        p_receipt_id => null, p_receipt_filename => null, p_receipt_object_key => null,
-        p_receipt_content_type => null, p_receipt_size_bytes => null,
-        p_receipt_sha256 => null);
+        p_idempotency_key => ('7b7b7b7b-0000-0000-0000-' || pg_catalog.lpad((i + 300)::text, 12, '0'))::uuid,
+        p_sale_id => v_sale_id, p_receipt_id => v_receipt_id,
+        p_receipt_filename => 'flood-slip.pdf',
+        p_receipt_object_key => 'receipts/event_ticket/' || v_sale_id::text || '/'
+          || v_receipt_id::text || '.pdf',
+        p_receipt_content_type => 'application/pdf', p_receipt_size_bytes => 2048,
+        p_receipt_sha256 => pg_catalog.repeat('b', 64));
     end loop;
   end $block$;
 $test$, '22000', 'This email address has too many pending ticket orders for this event.',
   'the fourth live order from one address on one event is refused');
 
--- 16. Lookup needs both halves, and a case-insensitive reference.
+reset role;
+set local role anon;
 select is((select pg_catalog.count(*) from public.lookup_ticket_order(
     (select lower(current_setting('test.till_guest'))), 'chidi@example.test'))::integer,
   1, 'the lookup normalizes reference case, so a retyped lowercase k still finds the order');

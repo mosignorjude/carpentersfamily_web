@@ -38,12 +38,24 @@ insert into auth.users (
   raw_app_meta_data, raw_user_meta_data, email_confirmed_at
 ) values
   ('00000000-0000-0000-0000-000000000901', 'authenticated', 'authenticated', 'report-member@example.test', '', '{}'::jsonb, '{"full_name":"Report Member","username":"report_member"}'::jsonb, now()),
-  ('00000000-0000-0000-0000-000000000902', 'authenticated', 'authenticated', 'report-inactive@example.test', '', '{}'::jsonb, '{"full_name":"Inactive Report Member","username":"inactive_report"}'::jsonb, now());
+  ('00000000-0000-0000-0000-000000000902', 'authenticated', 'authenticated', 'report-inactive@example.test', '', '{}'::jsonb, '{"full_name":"Inactive Report Member","username":"inactive_report"}'::jsonb, now()),
+  ('00000000-0000-0000-0000-000000000903', 'authenticated', 'authenticated', 'report-admin@example.test', '', '{}'::jsonb, '{"full_name":"Report Fixture Admin","username":"report_fixture_admin"}'::jsonb, now());
 
 update public.member_profiles set status = 'active'
 where id = '00000000-0000-0000-0000-000000000901';
 update public.member_profiles set status = 'deactivated'
 where id = '00000000-0000-0000-0000-000000000902';
+update public.member_profiles set status = 'active'
+where id = '00000000-0000-0000-0000-000000000903';
+
+-- Bootstrap the fixture Admin before exercising role changes as an authenticated
+-- user. The role under test is assigned by this separate Admin, not by its target.
+insert into public.member_role_assignments (
+  member_id, role, assigned_by, grant_reason
+) values (
+  '00000000-0000-0000-0000-000000000903', 'admin',
+  '00000000-0000-0000-0000-000000000903', 'Report fixture administrator'
+);
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000901', true);
@@ -86,11 +98,13 @@ select ok(
   'active member report excludes another active member dues row'
 );
 reset role;
-insert into public.member_role_assignments (
-  member_id, role, assigned_by, grant_reason
-) values (
-  '00000000-0000-0000-0000-000000000901', 'executive',
-  '00000000-0000-0000-0000-000000000901', 'Report access boundary test'
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000903', true);
+select lives_ok(
+  $$select public.grant_club_role(
+    '00000000-0000-0000-0000-000000000901', 'executive', 'Report access boundary test'
+  )$$,
+  'the separate fixture Admin grants Executive status through the audited role RPC'
 );
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000901', true);

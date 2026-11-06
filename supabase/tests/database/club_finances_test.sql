@@ -24,17 +24,17 @@ select ok(
   'active members receive intended ledger columns only and clients cannot write directly'
 );
 select ok(
-  not has_function_privilege('anon', 'public.record_club_financial_transaction(text,bigint,date,text,uuid,text,text,uuid)', 'EXECUTE')
+  not has_function_privilege('anon', 'public.record_club_financial_transaction(text,bigint,date,text,uuid,text,text,uuid,text,uuid,uuid,text,text,text,integer,text)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.correct_club_financial_transaction(uuid,bigint,date,text,uuid,text,text,text)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.club_finance_summary()', 'EXECUTE'),
   'anonymous callers cannot use finance procedures'
 );
 select ok(
-  not (select p.prosecdef from pg_catalog.pg_proc p
-    where p.oid = 'public.record_club_financial_transaction(text,bigint,date,text,uuid,text,text,uuid)'::regprocedure)
+  (select p.prosecdef and p.proconfig @> array['search_path=""'] from pg_catalog.pg_proc p
+    where p.oid = 'public.record_club_financial_transaction(text,bigint,date,text,uuid,text,text,uuid,text,uuid,uuid,text,text,text,integer,text)'::regprocedure)
   and not (select p.prosecdef from pg_catalog.pg_proc p
     where p.oid = 'public.club_finance_summary()'::regprocedure),
-  'public finance wrappers are SECURITY INVOKER'
+  'sensitive finance writes are SECURITY DEFINER with a fixed path while the summary is invoker'
 );
 
 insert into auth.users (
@@ -74,7 +74,7 @@ select throws_ok(
 select throws_ok(
   $$select public.record_club_financial_transaction(
     'income', 1000, (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
-    null, null, 'Someone', 'Unauthorized', '10000000-0000-0000-0000-000000000001')$$,
+    null, null, 'Someone', 'Unauthorized', '10000000-0000-0000-0000-000000000001', 'cash')$$,
   '42501', 'Only an Executive, Admin, or Backup Admin may record club finances.',
   'ordinary member cannot record income'
 );
@@ -103,21 +103,21 @@ select set_config(
 );
 select set_config(
   'test.finance_expense_id',
-  public.record_club_financial_transaction(
+  (select transaction_id::text from public.record_club_financial_transaction(
     'expense', 12500, (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
     'Community hall rental', current_setting('test.finance_category_id')::uuid,
     'Greenfield Community Hall', null,
-    '20000000-0000-0000-0000-000000000001'
-  )::text,
+    '20000000-0000-0000-0000-000000000001', 'cash'
+  )),
   true
 );
 select is(
-  public.record_club_financial_transaction(
+  (select transaction_id from public.record_club_financial_transaction(
     'expense', 12500, (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
     'Community hall rental', current_setting('test.finance_category_id')::uuid,
     'Greenfield Community Hall', null,
-    '20000000-0000-0000-0000-000000000001'
-  ),
+    '20000000-0000-0000-0000-000000000001', 'cash'
+  )),
   current_setting('test.finance_expense_id')::uuid,
   'retry with identical idempotency key returns the same transaction'
 );
@@ -126,30 +126,30 @@ select throws_ok(
     'expense', 12501, (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
     'Community hall rental', current_setting('test.finance_category_id')::uuid,
     'Greenfield Community Hall', null,
-    '20000000-0000-0000-0000-000000000001')$$,
+    '20000000-0000-0000-0000-000000000001', 'cash')$$,
   '23505', 'This submission key was already used for different financial data.',
   'same idempotency key cannot create a different transaction'
 );
 select set_config(
   'test.finance_income_id',
-  public.record_club_financial_transaction(
+  (select transaction_id::text from public.record_club_financial_transaction(
     'income', 4000, (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
     null, null, 'A. Member', 'Donation for club supplies',
-    '20000000-0000-0000-0000-000000000002'
-  )::text,
+    '20000000-0000-0000-0000-000000000002', 'cash'
+  )),
   true
 );
 select throws_ok(
   $$select public.record_club_financial_transaction(
     'income', 0, (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
-    null, null, null, 'Invalid amount', '20000000-0000-0000-0000-000000000003')$$,
+    null, null, null, 'Invalid amount', '20000000-0000-0000-0000-000000000003', 'cash')$$,
   '23514', 'The financial transaction values are invalid.',
   'database rejects zero amount even for an authorized Executive'
 );
 select throws_ok(
   $$select public.record_club_financial_transaction(
     'income', 10, (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
-    null, null, null, E'Unsafe\tvalue', '20000000-0000-0000-0000-000000000005')$$,
+    null, null, null, E'Unsafe\tvalue', '20000000-0000-0000-0000-000000000005', 'cash')$$,
   '23514', 'Non-dues income requires a source note and cannot have an expense category.',
   'database rejects control characters in user-provided finance text'
 );
@@ -158,7 +158,7 @@ select throws_ok(
     current_setting('test.finance_expense_id')::uuid, 1,
     (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
     'Changed', current_setting('test.finance_category_id')::uuid, 'Changed', null, 'No')$$,
-  '42501', 'Only an active Admin or Backup Admin may correct club financial records.',
+  '42501', 'Only an active Admin or Backup Admin may correct a transaction.',
   'Executive cannot correct or rewrite historical financial values'
 );
 select throws_ok(
@@ -214,7 +214,7 @@ select throws_ok(
   $$select public.record_club_financial_transaction(
     'income', 1,
     (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date - 1,
-    null, null, null, 'Old income', '20000000-0000-0000-0000-000000000004')$$,
+    null, null, null, 'Old income', '20000000-0000-0000-0000-000000000004', 'cash')$$,
   '42501', 'Only Admin or Backup Admin may enter historical transactions.',
   'Executive cannot backdate a transaction'
 );
@@ -224,11 +224,11 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000301', true);
 select set_config(
   'test.finance_historical_id',
-  public.record_club_financial_transaction(
+  (select transaction_id::text from public.record_club_financial_transaction(
     'expense', 2000, pg_catalog.make_date(extract(year from (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date)::integer, 1, 1),
     'Historic stationery', current_setting('test.finance_category_id')::uuid,
-    'Office Supply Store', null, '30000000-0000-0000-0000-000000000001'
-  )::text,
+    'Office Supply Store', null, '30000000-0000-0000-0000-000000000001', 'cash'
+  )),
   true
 );
 select lives_ok(
@@ -265,7 +265,7 @@ select throws_ok(
   $$select public.record_club_financial_transaction(
     'expense', 100, (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
     'Retired category misuse', current_setting('test.finance_category_id')::uuid,
-    'A payee', null, '30000000-0000-0000-0000-000000000002')$$,
+    'A payee', null, '30000000-0000-0000-0000-000000000002', 'cash')$$,
   '23503', 'The selected category is unavailable.',
   'retired category cannot be assigned to a new expense'
 );
@@ -276,6 +276,37 @@ select lives_ok(
     'Community hall rental', current_setting('test.finance_category_id')::uuid,
     'Greenfield Community Hall', null, 'Correct amount after reviewing receipt')$$,
   'an existing expense may be corrected without erasing its retired category snapshot'
+);
+select is(
+  (select category_name_snapshot from public.club_financial_transactions
+   where id = current_setting('test.finance_expense_id')::uuid),
+  'Hall hire', 'correcting a retired-category expense preserves its original category snapshot'
+);
+select is(
+  (select after_data ->> 'category_name' from public.audit_log
+   where entity_id = current_setting('test.finance_expense_id')::uuid
+     and action = 'club_finance_corrected'),
+  'Hall hire', 'the correction audit preserves the retired category snapshot'
+);
+select set_config(
+  'test.finance_other_retired_category_id',
+  public.create_finance_category('Former catering', 'Retired correction boundary')::text,
+  true
+);
+select lives_ok(
+  $$select public.retire_finance_category(
+    current_setting('test.finance_other_retired_category_id')::uuid,
+    'No longer used')$$,
+  'a separate category can be retired for correction boundary coverage'
+);
+select throws_ok(
+  $$select public.correct_club_financial_transaction(
+    current_setting('test.finance_expense_id')::uuid, 13100,
+    (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
+    'Community hall rental', current_setting('test.finance_other_retired_category_id')::uuid,
+    'Greenfield Community Hall', null, 'Do not reclassify to a different retired category')$$,
+  '23503', 'The selected category is unavailable.',
+  'correction cannot reassign an expense to a different retired category'
 );
 select lives_ok(
   $$select public.void_club_financial_transaction(
@@ -293,7 +324,7 @@ select is(
   (select count(*) from public.audit_log where action in (
     'club_finance_recorded', 'club_finance_corrected', 'club_finance_voided',
     'finance_category_created', 'finance_category_retired')),
-  8::bigint, 'financial creation, correction, void, and category changes append audit rows'
+  10::bigint, 'financial creation, correction, void, and category changes append audit rows'
 );
 reset role;
 
@@ -312,7 +343,7 @@ select lives_ok(
     'income', 750,
     pg_catalog.make_date(extract(year from (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date)::integer, 1, 1),
     null, null, 'Community supporter', 'Backfilled club donation',
-    '40000000-0000-0000-0000-000000000001')$$,
+    '40000000-0000-0000-0000-000000000001', 'cash')$$,
   'Backup Admin has the same current-year historical entry permission as Admin'
 );
 reset role;

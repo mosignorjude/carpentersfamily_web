@@ -1,5 +1,5 @@
 begin;
-select plan(12);
+select plan(13);
 
 insert into auth.users (
   id, aud, role, email, encrypted_password,
@@ -18,6 +18,17 @@ where id = '00000000-0000-0000-0000-000000000401';
 select hasnt_table('public', 'club_financial_receipts', 'club_financial_receipts is dropped');
 select hasnt_table('public', 'event_financial_receipts', 'event_financial_receipts is dropped');
 select hasnt_function('public', 'reserve_club_financial_receipt', 'reserve_club_financial_receipt is dropped');
+select ok(
+  to_regprocedure('public.reserve_event_finance_receipt(uuid,uuid,text,text,integer)') is null
+  and to_regprocedure('public.finalize_event_finance_receipt(uuid,text)') is null
+  and to_regprocedure('public.fail_event_finance_receipt_upload(uuid)') is null
+  and to_regprocedure('public.get_event_finance_receipt_download(uuid)') is null
+  and to_regprocedure('private.reserve_event_finance_receipt(uuid,uuid,text,text,integer)') is null
+  and to_regprocedure('private.finalize_event_finance_receipt(uuid,text)') is null
+  and to_regprocedure('private.fail_event_finance_receipt_upload(uuid)') is null
+  and to_regprocedure('private.get_event_finance_receipt_download(uuid)') is null,
+  'obsolete event receipt RPCs targeting the dropped table are removed'
+);
 
 -- 2. New table exists with required columns
 select has_table('public', 'finance_receipts', 'finance_receipts table exists');

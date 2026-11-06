@@ -35,11 +35,10 @@ export async function createSupabaseServerClient() {
 }
 
 /**
- * An anon-keyed server client, for the calls an anonymous visitor is allowed to make. It carries
- * no cookies and no session: `submit_ticket_order` and `lookup_ticket_order` raise 42501 for any
- * signed-in actor, so reusing createSupabaseServerClient here would break the till for every
- * logged-in buyer. Returns null when the public config is unusable, which is the same shape
- * createSupabaseBrowserClient (client.ts:6) uses — callers must not treat it as a thrown error.
+ * An anon-keyed client for buyer status lookup. Ticket submission uses the server-only admin
+ * client after the server action validates and uploads the receipt; the anon role cannot execute
+ * submit_ticket_order. This client carries no cookies or session and returns null when public
+ * configuration is unavailable.
  */
 export async function createAnonClient() {
   const config = getSupabasePublicConfig();

@@ -63,6 +63,7 @@ import {
 import { runReceiptEntry } from "@/lib/receipt-entry.mjs";
 import { getR2StorageAdapter } from "@/lib/receipt-storage";
 import { rpcErrorNotice } from "@/lib/rpc-error-notice";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getSiteOrigin, isGoogleAuthConfigured } from "@/lib/supabase/config";
 import {
   createAnonClient,
@@ -4037,14 +4038,13 @@ export async function submitTicketOrderAction(
     return intakeRejection("receipt-required", formData);
   }
 
-  const anon = await createAnonClient();
-  if (!anon) {
+  const serviceClient = createSupabaseAdminClient();
+  if (!serviceClient) {
     return intakeRejection("configuration", formData);
   }
-
   // The buyer generates both ids: the object key is receipts/event_ticket/<saleId>/<receiptId>.<ext>,
   // so the sale id must exist before the upload (plan deviation 1). Dedupe lives inside
-  // submit_ticket_order — find_finance_entry_id answers null without a member session.
+  // submit_ticket_order is server-role-only; this action validates and uploads the receipt before calling it.
   // `runReceiptEntry` returns only { kind, id, deduplicated } (src/lib/receipt-entry.mjs:71) and drops
   // unknown keys from what the commit callback resolves, so the RPC's row has to be captured in the
   // action's own scope. Task 13's emails read the display fields off this same variable.
@@ -4077,7 +4077,7 @@ export async function submitTicketOrderAction(
       validateReceipt: validateFinanceReceiptUpload,
     },
     async (receipt) => {
-      const { data, error } = await anon.rpc("submit_ticket_order", {
+      const { data, error } = await serviceClient.rpc("submit_ticket_order", {
         p_event_id: eventId,
         p_tier_id: tierId,
         p_quantity: Number.parseInt(quantity, 10),

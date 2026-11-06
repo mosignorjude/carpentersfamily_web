@@ -16,12 +16,13 @@ select ok(
 
 select ok(
   has_table_privilege('authenticated', 'public.notifications', 'SELECT')
-  and not has_table_privilege('authenticated', 'public.notifications', 'INSERT,UPDATE,DELETE')
+  and not has_table_privilege('authenticated', 'public.notifications', 'INSERT,UPDATE')
+  and has_table_privilege('authenticated', 'public.notifications', 'DELETE')
   and has_table_privilege('authenticated', 'public.notification_preferences', 'SELECT')
   and not has_table_privilege('authenticated', 'public.notification_preferences', 'INSERT,UPDATE,DELETE')
   and not has_table_privilege('anon', 'public.notifications', 'SELECT,INSERT,UPDATE,DELETE')
   and not has_table_privilege('service_role', 'public.notifications', 'SELECT,INSERT,UPDATE,DELETE'),
-  'clients can read only their RLS-filtered data; notification writes are RPC-only'
+  'clients can read RLS-filtered data, delete only their own rows, and cannot insert or edit notification content'
 );
 
 select ok(
@@ -101,8 +102,8 @@ select is(
   (select count(*)::integer from public.notifications
    where recipient_id = '00000000-0000-0000-0000-000000002101'
      and category = 'announcement'),
-  0,
-  'the announcement actor is not sent a duplicate notification'
+  1,
+  'the announcement actor receives one actor-feed notification'
 );
 select is(
   (select count(*)::integer from public.notifications
@@ -436,7 +437,10 @@ select is(
 select is(
   (select count(*)::integer from public.notifications
    where recipient_id = '00000000-0000-0000-0000-000000002109'
-     and category = 'dues_reminder'),
+     and category = 'dues_reminder'
+     and dedupe_key = 'dues:' || pg_catalog.to_char(pg_catalog.date_trunc(
+       'month', pg_catalog.clock_timestamp() at time zone 'Africa/Lagos'
+     )::date, 'YYYY-MM')),
   0,
   'a member whose current-month dues are paid is not reminded'
 );

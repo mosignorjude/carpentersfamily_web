@@ -114,7 +114,8 @@ create index if not exists event_ticket_sales_tier_approved_idx
 -- 5. Grants. Event finance tables grant SELECT per column, so an ungranted new column silently
 --    empties a whole dashboard read rather than erroring (20261003102501:234-241). anon and
 --    service_role get nothing here, as elsewhere in this migration.
-grant select (source, buyer_email, buyer_phone, public_reference)
+revoke select (buyer_email, buyer_phone) on public.event_ticket_sales from authenticated;
+grant select (source, public_reference)
   on public.event_ticket_sales to authenticated;
 
 -- 6. A guest's proof of payment has no uploader. finance_receipts.uploaded_by is `not null`
@@ -985,7 +986,7 @@ begin
 end;
 $function$;
 
--- 9b. The only path an anonymous session can take to create a ticket sale.
+-- 9b. Only the server action may submit an online order after receipt upload validation.
 create or replace function public.submit_ticket_order(
   p_event_id uuid,
   p_tier_id uuid,
@@ -1084,30 +1085,26 @@ begin
       message = 'This submission key was already used for different ticket order data.';
   end if;
 
-  if p_receipt_filename is not null
-     or p_receipt_object_key is not null
-     or p_receipt_content_type is not null
-     or p_receipt_size_bytes is not null
-     or p_receipt_sha256 is not null then
-    if p_receipt_id is null or p_receipt_object_key is null
-       or p_receipt_filename is null or p_receipt_content_type is null
-       or p_receipt_size_bytes is null or p_receipt_sha256 is null then
-      raise exception using errcode = '22023',
-        message = 'Receipt metadata required for bank transfer ticket sales.';
-    end if;
-    -- The key must be exactly what runReceiptEntry already wrote (receipt-rules.mjs:40). An
-    -- arbitrary key here would point the row at someone else's object.
-    if p_receipt_object_key <> ('receipts/event_ticket/' || v_sid::text || '/'
-        || p_receipt_id::text || '.' || case p_receipt_content_type
-          when 'application/pdf' then 'pdf'
-          when 'image/jpeg' then 'jpg'
-          when 'image/png' then 'png'
-          else 'bin' end) then
-      raise exception using errcode = '22023', message = 'Object key mismatch.';
-    end if;
-    if v_tier.price_ngn <= 0 then
-      raise exception using errcode = '22023', message = 'The ticket order values are invalid.';
-    end if;
+  -- The public order path is always a bank transfer. Require all receipt metadata even when
+  -- the server action submits to this RPC only after validating and uploading the receipt.
+  if p_receipt_id is null or p_receipt_object_key is null
+     or p_receipt_filename is null or p_receipt_content_type is null
+     or p_receipt_size_bytes is null or p_receipt_sha256 is null then
+    raise exception using errcode = '22023',
+      message = 'Receipt metadata required for bank transfer ticket sales.';
+  end if;
+  -- The key must be exactly what runReceiptEntry already wrote (receipt-rules.mjs:40). An
+  -- arbitrary key here would point the row at someone else's object.
+  if p_receipt_object_key <> ('receipts/event_ticket/' || v_sid::text || '/'
+      || p_receipt_id::text || '.' || case p_receipt_content_type
+        when 'application/pdf' then 'pdf'
+        when 'image/jpeg' then 'jpg'
+        when 'image/png' then 'png'
+        else 'bin' end) then
+    raise exception using errcode = '22023', message = 'Object key mismatch.';
+  end if;
+  if v_tier.price_ngn <= 0 then
+    raise exception using errcode = '22023', message = 'The ticket order values are invalid.';
   end if;
 
   -- Throttles. Email- and event-scoped because the database cannot see an IP address; the server
@@ -1211,8 +1208,7 @@ $$;
 revoke all on function public.submit_ticket_order(uuid, uuid, integer, text, text, text, uuid, uuid, uuid, text, text, text, integer, text)
   from public, anon, authenticated, service_role;
 grant execute on function public.submit_ticket_order(uuid, uuid, integer, text, text, text, uuid, uuid, uuid, text, text, text, integer, text)
-  to anon;
-
+  to service_role;
 -- 9c. The buyer's status read.
 create or replace function public.lookup_ticket_order(p_reference text, p_email text)
 returns table (

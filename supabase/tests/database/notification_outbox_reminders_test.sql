@@ -153,16 +153,38 @@ values (
   '00000000-0000-0000-0000-000000003101', 'Outbox reminder test administrator'
 );
 
--- Member A is unpaid from February through October. Member B paid October in
--- the current month. The admin membership period is closed before October so
--- the admin does not add noise to dues assertions.
+-- Member A is unpaid from February through October. Member B joined in October
+-- and paid that month. The admin's short October membership period is closed
+-- before November and settled, so it adds no reminder noise.
 update public.dues_membership_periods
 set starts_month = '2026-02-01'
 where member_id = '00000000-0000-0000-0000-000000003102';
 
 update public.dues_membership_periods
-set ends_before_month = '2026-10-01'
+set starts_month = '2026-10-01', ends_before_month = '2026-11-01'
 where member_id = '00000000-0000-0000-0000-000000003101';
+
+update public.dues_membership_periods
+set starts_month = '2026-10-01'
+where member_id = '00000000-0000-0000-0000-000000003103';
+
+with payment as (
+  insert into public.dues_payments (member_id, amount_ngn, payment_date, recorded_by)
+  values (
+    '00000000-0000-0000-0000-000000003101',
+    5000,
+    '2026-10-01',
+    '00000000-0000-0000-0000-000000003101'
+  )
+  returning id
+)
+insert into public.dues_month_dispositions (
+  member_id, covered_month, amount_ngn, disposition, payment_id, recorded_by
+)
+select
+  '00000000-0000-0000-0000-000000003101', '2026-10-01', 5000, 'paid', id,
+  '00000000-0000-0000-0000-000000003101'
+from payment;
 
 with payment as (
   insert into public.dues_payments (member_id, amount_ngn, payment_date, recorded_by)

@@ -74,10 +74,11 @@ function queryJson(sql) {
   } catch (error) {
     fail(`Could not parse the database query output as JSON: ${error.message}`);
   }
-  if (!Array.isArray(parsed) || parsed.length !== 1) {
+  const rows = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.rows) ? parsed.rows : null);
+  if (!rows || rows.length !== 1) {
     fail("The database query did not return exactly one row.");
   }
-  return parsed[0];
+  return rows[0];
 }
 
 function sha256(buffer) {

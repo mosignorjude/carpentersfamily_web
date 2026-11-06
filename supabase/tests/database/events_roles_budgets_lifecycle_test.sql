@@ -111,6 +111,21 @@ insert into public.member_role_assignments (
   ('00000000-0000-0000-0000-000000000703', 'executive', '00000000-0000-0000-0000-000000000701', 'Event test Executive');
 
 set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000701', true);
+select set_config(
+  'test.budget_category_venue',
+  public.create_event_finance_category(
+    'budget_allocation', 'Test Venue', 'Budget lifecycle test fixture'
+  )::text,
+  true
+);
+select set_config(
+  'test.budget_category_refreshments',
+  public.create_event_finance_category(
+    'budget_allocation', 'Test Refreshments', 'Budget lifecycle test fixture'
+  )::text,
+  true
+);
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000703', true);
 select throws_ok(
   $$select public.create_event(
@@ -124,7 +139,7 @@ select throws_ok(
 select set_config(
   'test.event_one_id',
   public.create_event(
-    'Members Meeting', 'meeting', '2026-10-10 18:00:00+01',
+    'Members Meeting', 'meeting', pg_catalog.clock_timestamp() - interval '2 days',
     'Club Hall', 'Quarterly club meeting', true, true, true, true, true, false
   )::text,
   true
@@ -204,7 +219,10 @@ select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000708
 select lives_ok(
   $$select public.set_event_budget(
     current_setting('test.event_one_id')::uuid, 10000,
-    '[{"name":"Venue","amount_ngn":6000},{"name":"Refreshments","amount_ngn":4000}]'::jsonb,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object('category_id', current_setting('test.budget_category_venue'), 'percentage', 60),
+      pg_catalog.jsonb_build_object('category_id', current_setting('test.budget_category_refreshments'), 'percentage', 40)
+    ),
     'Initial approved budget'
   )$$,
   'the event lead can create a budget whose allocation sum is exact'
@@ -218,34 +236,46 @@ select is(
 select throws_ok(
   $$select public.set_event_budget(
     current_setting('test.event_one_id')::uuid, 10000,
-    '[{"name":"Venue","amount_ngn":6000},{"name":"Refreshments","amount_ngn":3999}]'::jsonb,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object('category_id', current_setting('test.budget_category_venue'), 'percentage', 60),
+      pg_catalog.jsonb_build_object('category_id', current_setting('test.budget_category_refreshments'), 'percentage', 41)
+    ),
     'Incorrect allocation total'
   )$$,
-  '23514', 'Budget allocations must add up exactly to the budget total.',
-  'mismatched allocations are rejected atomically'
+  '23514', 'Allocation percentages and rounded amounts cannot exceed the budget total.',
+  'allocation percentages above 100 are rejected atomically'
 );
 select throws_ok(
   $$select public.set_event_budget(
     current_setting('test.event_one_id')::uuid, 10000,
-    '[{"name":"Venue","amount_ngn":5000},{"name":"venue","amount_ngn":5000}]'::jsonb,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object('category_id', current_setting('test.budget_category_venue'), 'percentage', 50),
+      pg_catalog.jsonb_build_object('category_id', current_setting('test.budget_category_venue'), 'percentage', 50)
+    ),
     'Duplicate names'
   )$$,
-  '23514', 'Budget allocations must be unique, positive, and within the allowed amount.',
-  'case-insensitive duplicate allocation names are rejected'
+  '23514', 'Allocation categories must be unique and percentages must be between 0 and 100.',
+  'duplicate category allocations are rejected'
 );
 select throws_ok(
   $$select public.set_event_budget(
     current_setting('test.event_one_id')::uuid, 10000,
-    '[{"name":"Venue","amount_ngn":5000,"unexpected":"ignored"},{"name":"Rest","amount_ngn":5000}]'::jsonb,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object('category_id', current_setting('test.budget_category_venue'), 'percentage', 50, 'unexpected', 'ignored'),
+      pg_catalog.jsonb_build_object('category_id', current_setting('test.budget_category_refreshments'), 'percentage', 50)
+    ),
     'Unknown allocation field'
   )$$,
-  '23514', 'Each budget allocation must contain only a name and whole-Naira amount.',
+  '23514', 'Each allocation must contain only a catalog category and percentage.',
   'unexpected allocation fields are rejected'
 );
 select lives_ok(
   $$select public.set_event_budget(
     current_setting('test.event_one_id')::uuid, 10000,
-    '[{"name":"Venue","amount_ngn":6500},{"name":"Refreshments","amount_ngn":3500}]'::jsonb,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object('category_id', current_setting('test.budget_category_venue'), 'percentage', 65),
+      pg_catalog.jsonb_build_object('category_id', current_setting('test.budget_category_refreshments'), 'percentage', 35)
+    ),
     'Adjusted venue quote'
   )$$,
   'budget updates replace allocations atomically and require a reason'
@@ -299,7 +329,9 @@ select throws_ok(
 select throws_ok(
   $$select public.set_event_budget(
     current_setting('test.event_one_id')::uuid, 10000,
-    '[{"name":"Venue","amount_ngn":10000}]'::jsonb,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object('category_id', current_setting('test.budget_category_venue'), 'percentage', 100)
+    ),
     'Unauthorized budget'
   )$$,
   '42501', 'Budget changes require an Executive, Admin, Backup Admin, or this event''s lead or assistant.',
@@ -308,7 +340,9 @@ select throws_ok(
 select throws_ok(
   $$select public.set_event_budget(
     current_setting('test.event_two_id')::uuid, 10000,
-    '[{"name":"Venue","amount_ngn":10000}]'::jsonb,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object('category_id', current_setting('test.budget_category_venue'), 'percentage', 100)
+    ),
     'Wrong event budget'
   )$$,
   '42501', 'Budget changes require an Executive, Admin, Backup Admin, or this event''s lead or assistant.',
@@ -395,7 +429,9 @@ select throws_ok(
 select throws_ok(
   $$select public.set_event_budget(
     current_setting('test.oldest_past_event_id')::uuid, 10000,
-    '[{"name":"Venue","amount_ngn":10000}]'::jsonb, 'Late budget edit'
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object('category_id', current_setting('test.budget_category_venue'), 'percentage', 100)
+    ), 'Late budget edit'
   )$$,
   '42501', 'Older past events are retained for reporting and are read-only.',
   'an old past event cannot receive a new budget through a direct RPC'
@@ -441,7 +477,8 @@ select lives_ok(
 select throws_ok(
   $$select public.update_event_details(
     current_setting('test.event_one_id')::uuid, 'Changed after completion',
-    '2026-10-10 18:00:00+01', 'Club Hall', 'Locked', 'Attempt to edit', 1
+    (select starts_at from public.events where id = current_setting('test.event_one_id')::uuid),
+    'Club Hall', 'Locked', 'Attempt to edit', 1
   )$$,
   '42501', 'Only scheduled, unarchived events can be edited.',
   'completed event details are locked'

@@ -237,8 +237,8 @@ set local role anon;
 select throws_ok(
   $$select * from public.unconfirmed_member_email_ids()$$,
   '42501',
-  'permission denied for schema public',
-  'the anon role is refused by the schema grant, before the gate is reached'
+  'permission denied for function unconfirmed_member_email_ids',
+  'the anon role is refused by the RPC execute grant'
 );
 
 reset role;

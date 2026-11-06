@@ -39,7 +39,7 @@ select ok(
 );
 
 select ok(
-  not has_function_privilege('anon', 'public.record_dues_payment(uuid,bigint,date,date[])', 'EXECUTE')
+  not has_function_privilege('anon', 'public.record_dues_payment(uuid,bigint,date,date[],text,uuid,uuid,text,text,text,integer,text)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.write_off_dues_months(uuid,date[],text)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.correct_dues_payment(uuid,uuid,bigint,date,date[],text)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.set_dues_rate(date,bigint,text)', 'EXECUTE'),
@@ -47,13 +47,13 @@ select ok(
 );
 
 select ok(
-  not (select p.prosecdef
+  (select p.prosecdef and p.proconfig @> array['search_path=""']
        from pg_catalog.pg_proc as p
-       where p.oid = 'public.record_dues_payment(uuid,bigint,date,date[])'::regprocedure)
+        where p.oid = 'public.record_dues_payment(uuid,bigint,date,date[],text,uuid,uuid,text,text,text,integer,text)'::regprocedure)
   and not (select p.prosecdef
            from pg_catalog.pg_proc as p
            where p.oid = 'public.correct_dues_payment(uuid,uuid,bigint,date,date[],text)'::regprocedure),
-  'public dues RPC wrappers are SECURITY INVOKER'
+  'the payment RPC uses a locked-down SECURITY DEFINER boundary and corrections remain SECURITY INVOKER'
 );
 
 select ok(
@@ -161,6 +161,34 @@ select throws_ok(
 select is(public.club_dues_income_total(), 0::bigint, 'active member can query only the all-club aggregate total');
 reset role;
 
+-- Authorized officers can see the dues rows needed to administer the club.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000201', true);
+select ok(
+  exists (
+    select 1 from public.dues_month_status
+    where member_id = '00000000-0000-0000-0000-000000000205'
+  ),
+  'Admin can review another member dues history'
+);
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000202', true);
+select ok(
+  exists (
+    select 1 from public.dues_month_status
+    where member_id = '00000000-0000-0000-0000-000000000204'
+  ),
+  'Backup Admin can review another member dues history'
+);
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000203', true);
+select ok(
+  exists (
+    select 1 from public.dues_month_status
+    where member_id = '00000000-0000-0000-0000-000000000205'
+  ),
+  'Executive can review another member dues history'
+);
+reset role;
+
 -- Executive can record exact dues and make reasoned old-month write-offs.
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000203', true);
@@ -222,7 +250,7 @@ select throws_ok(
       array[(date_trunc('month', pg_catalog.clock_timestamp() at time zone 'Africa/Lagos') + interval '2 months')::date]
     )$$,
   '22023',
-  'A member, positive amount, valid non-future payment date, and 1 to 1,200 covered months are required.',
+  'A member, positive amount, valid non-future payment date, valid method (bank_transfer or cash), and 1 to 1,200 covered months are required.',
   'future payment dates are rejected'
 );
 select throws_ok(

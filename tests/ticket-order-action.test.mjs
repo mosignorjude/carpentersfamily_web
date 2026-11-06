@@ -10,7 +10,20 @@ test("the guest order action exists", () => {
 });
 
 const action = source.slice(start, source.indexOf("\nexport ", start + 1));
+const adminClientSource = readFileSync("src/lib/supabase/admin.ts", "utf8");
 
+test("ticket submission uses a server-only credential source", () => {
+  assert.match(adminClientSource, /import ["'']server-only["'']/);
+  assert.match(adminClientSource, /SUPABASE_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(action, /createSupabaseAdminClient\(\)/);
+});
+
+test("missing server credentials fail closed before receipt upload", () => {
+  const configCheck = action.indexOf("if (!serviceClient)");
+  const receiptUpload = action.indexOf("runReceiptEntry(");
+  assert.ok(configCheck !== -1 && configCheck < receiptUpload);
+  assert.match(action, /intakeRejection\("configuration", formData\)/);
+});
 test("it is not gated on a session", () => {
   assert.doesNotMatch(action, /createSupabaseServerClient|clientOrRedirect|getActiveEventActor/);
   assert.doesNotMatch(action, /is_active_club_member|auth\.getUser/);
@@ -34,7 +47,7 @@ test("it passes the generated sale id as the receipt target", () => {
   assert.match(action, /values\.saleId/);
 });
 
-test("it calls the anon RPC with every named parameter", () => {
+test("it calls the server-only RPC with every named parameter", () => {
   for (const name of [
     "p_event_id", "p_tier_id", "p_quantity", "p_buyer_name", "p_buyer_email",
     "p_buyer_phone", "p_idempotency_key", "p_sale_id", "p_receipt_id",
@@ -43,6 +56,8 @@ test("it calls the anon RPC with every named parameter", () => {
   ]) {
     assert.match(action, new RegExp(`${name}:`), `${name} is not passed`);
   }
+  assert.match(action, /createSupabaseAdminClient\(\)/);
+  assert.doesNotMatch(action, /createAnonClient/);
   assert.match(action, /rpc\(\s*"submit_ticket_order"/);
 });
 
