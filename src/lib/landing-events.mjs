@@ -63,6 +63,7 @@ export function selectLandingEvents(events) {
     return {
       id: text(event?.id) ?? "",
       title: text(event?.title) ?? "Untitled event",
+      startsAt: instant ? instant.toISOString() : null,
       whenLabel: instant ? dateFormatter.format(instant) : "",
       timeLabel: instant ? formatEventTime(event.starts_at) : "",
       location: text(event?.location),

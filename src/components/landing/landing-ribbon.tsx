@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LandingCountdownBadge } from "@/components/landing/landing-countdown-badge";
 import type { PublicTicketedEvent } from "@/components/tickets/tickets-storefront-view";
 import { selectNextEvent } from "@/lib/landing-events.mjs";
 
@@ -8,7 +9,6 @@ interface LandingRibbonProps {
 
 export function LandingRibbon({ ticketedEvents }: LandingRibbonProps) {
   const next = selectNextEvent(ticketedEvents);
-  const season = next?.whenLabel.slice(-4);
 
   return (
     <div className="bg-deep text-cream text-xs sm:text-sm border-b border-forest/40">
@@ -25,11 +25,7 @@ export function LandingRibbon({ ticketedEvents }: LandingRibbonProps) {
             Ticketed events open for sale as soon as the family confirms a date
           </span>
         )}
-        {season && (
-          <span className="rounded-full bg-ochre/20 text-ochre px-3 py-0.5 font-bold text-xs">
-            {season} Season
-          </span>
-        )}
+        <LandingCountdownBadge startsAt={next?.startsAt} />
         <Link
           href="/tickets"
           className="underline underline-offset-4 min-h-[44px] inline-flex items-center hover:text-ochre font-medium transition-colors"
