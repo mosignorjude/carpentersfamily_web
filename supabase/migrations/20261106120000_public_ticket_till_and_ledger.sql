@@ -844,3 +844,383 @@ begin
   );
 end;
 $function$;
+
+
+-- 9. The guest write path and status lookup.
+
+-- 9a. Update guard_event_ticket_sale_write with the online branch.
+create or replace function private.guard_event_ticket_sale_write()
+returns trigger language plpgsql security definer set search_path = '' as $function$
+declare
+  v_actor_id uuid := (select auth.uid());
+  v_event public.events%rowtype;
+  v_tier public.event_ticket_tiers%rowtype;
+  v_sold bigint;
+  v_exclude_sale_id uuid;
+begin
+  if tg_op = 'DELETE' then
+    raise exception using errcode = '42501', message = 'Ticket-sale history is retained and cannot be deleted.';
+  end if;
+
+  -- An online row is created by no one. It is accepted on shape alone, and only by no one: an
+  -- officer who wants to sell a ticket has record_event_ticket_sale, which attributes them.
+  if new.source = 'online' and tg_op = 'INSERT' then
+    if not exists (
+      select 1 from public.events as e
+      where e.id = new.event_id and e.status = 'scheduled'
+        and e.archived_at is null and e.ticketing_enabled
+    ) then
+      raise exception using errcode = '42501',
+        message = 'This event is no longer accepting ticket orders.';
+    end if;
+    if v_actor_id is not null then
+      raise exception using errcode = '42501',
+        message = 'Online ticket orders cannot be recorded by a signed-in member.';
+    end if;
+    if new.verification_status <> 'recorded' then
+      raise exception using errcode = '42501',
+        message = 'Online ticket orders must enter the review queue as recorded.';
+    end if;
+    if new.refunded_at is not null then
+      raise exception using errcode = '42501',
+        message = 'Online ticket orders cannot carry a refund.';
+    end if;
+    if not (select pg_catalog.count(*) = 1
+      from public.event_ticket_tiers as t
+      where t.id = new.tier_id and t.event_id = new.event_id and t.retired_at is null) then
+      raise exception using errcode = '42501',
+        message = 'Ticket sales require a scheduled event with ticketing enabled.';
+    end if;
+    if new.unit_price_ngn <> (select t.price_ngn from public.event_ticket_tiers as t
+      where t.id = new.tier_id) then
+      raise exception using errcode = '42501',
+        message = 'Ticket price must match the tier.';
+    end if;
+    return new;
+  end if;
+
+  if v_actor_id is null or not (select private.is_active_club_member()) then
+    raise exception using errcode = '42501', message = 'Active membership is required.';
+  end if;
+
+  if pg_catalog.current_setting('app.event_verification_active', true) = 'on' then
+    if new.id is distinct from old.id or new.event_id is distinct from old.event_id
+      or new.tier_id is distinct from old.tier_id or new.seller_id is distinct from old.seller_id
+      or new.unit_price_ngn is distinct from old.unit_price_ngn
+      or new.idempotency_key is distinct from old.idempotency_key
+      or new.created_at is distinct from old.created_at or new.updated_at <= old.updated_at then
+      raise exception using errcode = '42501', message = 'Ticket-sale price and ownership history cannot be rewritten.';
+    end if;
+    return new;
+  end if;
+
+  if tg_op = 'INSERT' then
+    if new.seller_id is distinct from v_actor_id then
+      raise exception using errcode = '42501', message = 'A ticket sale must be attributed to the signed-in seller.';
+    end if;
+  elsif not (select private.can_correct_event_finances())
+      and old.seller_id is distinct from v_actor_id then
+    raise exception using errcode = '42501', message = 'Only the seller or Admin/Backup Admin may change this ticket sale.';
+  end if;
+
+  select e.* into v_event from public.events as e where e.id = new.event_id for update;
+  if not found or v_event.status <> 'scheduled' or v_event.archived_at is not null
+    or not v_event.ticketing_enabled then
+    raise exception using errcode = '42501', message = 'Ticket sales require a scheduled event with ticketing enabled.';
+  end if;
+  select t.* into v_tier from public.event_ticket_tiers as t
+    where t.event_id = new.event_id and t.id = new.tier_id for update;
+  if not found or (tg_op = 'INSERT' and v_tier.retired_at is not null) then
+    raise exception using errcode = '23503', message = 'The ticket tier is unavailable.';
+  end if;
+
+  if tg_op = 'INSERT' then
+    if new.created_at is null or new.updated_at is null or new.created_at <> new.updated_at then
+      raise exception using errcode = '42501', message = 'Ticket sale timestamps must match at creation.';
+    end if;
+    if new.unit_price_ngn <> v_tier.price_ngn then
+      raise exception using errcode = '23514', message = 'Ticket unit price must match tier price.';
+    end if;
+    if new.refunded_at is not null or new.refunded_by is not null or new.refund_reason is not null then
+      raise exception using errcode = '42501', message = 'A new ticket sale cannot be refunded at creation.';
+    end if;
+  else
+    if new.id is distinct from old.id or new.event_id is distinct from old.event_id
+      or new.tier_id is distinct from old.tier_id or new.seller_id is distinct from old.seller_id
+      or new.unit_price_ngn is distinct from old.unit_price_ngn
+      or new.idempotency_key is distinct from old.idempotency_key
+      or new.created_at is distinct from old.created_at or new.updated_at <= old.updated_at then
+      raise exception using errcode = '42501', message = 'Ticket-sale price and ownership history cannot be rewritten.';
+    end if;
+    v_exclude_sale_id := old.id;
+    if old.refunded_at is null and new.refunded_at is not null then
+      if not (
+        (select private.has_club_role('admin'))
+        or (select private.has_club_role('backup_admin'))
+      ) then
+        raise exception using errcode = '42501', message = 'Only Admin or Backup Admin may refund a ticket sale.';
+      end if;
+      if new.refunded_by is distinct from v_actor_id or new.refund_reason is null
+        or pg_catalog.char_length(pg_catalog.btrim(new.refund_reason)) not between 1 and 500
+        or new.quantity is distinct from old.quantity
+        or new.buyer_name is distinct from old.buyer_name
+        or new.payment_method is distinct from old.payment_method then
+        raise exception using errcode = '42501', message = 'Only Admin or Backup Admin may refund a ticket sale.';
+      end if;
+    elsif new.refunded_by is distinct from old.refunded_by
+        or new.refund_reason is distinct from old.refund_reason then
+      raise exception using errcode = '42501', message = 'Ticket refund history cannot be rewritten.';
+    end if;
+  end if;
+
+  select coalesce(pg_catalog.sum(s.quantity), 0) into v_sold
+    from public.event_ticket_sales as s
+    where s.tier_id = new.tier_id and s.refunded_at is null
+      and s.verification_status = 'approved'
+      and s.id is distinct from v_exclude_sale_id;
+  if new.refunded_at is null and v_sold + new.quantity > v_tier.capacity then
+    raise exception using errcode = '23514', message = 'Ticket tier capacity has been reached.';
+  end if;
+  return new;
+end;
+$function$;
+
+-- 9b. The only path an anonymous session can take to create a ticket sale.
+create or replace function public.submit_ticket_order(
+  p_event_id uuid,
+  p_tier_id uuid,
+  p_quantity integer,
+  p_buyer_name text,
+  p_buyer_email text,
+  p_buyer_phone text,
+  p_idempotency_key uuid,
+  p_sale_id uuid,
+  p_receipt_id uuid,
+  p_receipt_filename text,
+  p_receipt_object_key text,
+  p_receipt_content_type text,
+  p_receipt_size_bytes integer,
+  p_receipt_sha256 text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_actor_id uuid := (select auth.uid());
+  v_sid uuid := coalesce(p_sale_id, pg_catalog.gen_random_uuid());
+  v_tier public.event_ticket_tiers%rowtype;
+  v_email text := pg_catalog.lower(pg_catalog.btrim(coalesce(p_buyer_email, '')));
+  v_phone text := pg_catalog.btrim(coalesce(p_buyer_phone, ''));
+  v_name text := pg_catalog.btrim(coalesce(p_buyer_name, ''));
+  v_existing public.event_ticket_sales%rowtype;
+  v_live_per_email bigint;
+  v_live_per_email_event bigint;
+  v_live_per_event bigint;
+  v_reference text;
+  v_bytes bytea;
+  v_chars text;
+  v_index integer;
+  v_attempt integer := 0;
+  v_now timestamptz := pg_catalog.clock_timestamp();
+begin
+  -- An officer has their own path. Unattributed sales must not be mintable from a session.
+  if v_actor_id is not null then
+    raise exception using errcode = '42501',
+      message = 'Online ticket orders cannot be recorded by a signed-in member.';
+  end if;
+
+  if p_event_id is null or p_tier_id is null or p_idempotency_key is null
+     or p_quantity is null or p_quantity not between 1 and 10 then
+    raise exception using errcode = '23514',
+      message = 'The ticket order values are invalid.';
+  end if;
+
+  if v_name = '' or pg_catalog.char_length(v_name) > 160 or v_name ~ '[[:cntrl:]]' then
+    raise exception using errcode = '23514',
+      message = 'The ticket order values are invalid.';
+  end if;
+
+  if not (select private.is_valid_email(v_email)) then
+    raise exception using errcode = '22023', message = 'The buyer email address is invalid.';
+  end if;
+
+  if v_phone !~ '^\+?[0-9]{10,15}$' then
+    raise exception using errcode = '22023', message = 'The buyer phone number is invalid.';
+  end if;
+
+  select * into v_tier from public.event_ticket_tiers
+  where id = p_tier_id and event_id = p_event_id and retired_at is null;
+  if not found then
+    raise exception using errcode = '23503', message = 'Ticket tier not found.';
+  end if;
+
+  -- One event row per order, and it serialises the throttle counts below.
+  perform 1 from public.events where id = p_event_id for update;
+
+  select * into v_existing
+  from public.event_ticket_sales as s
+  where s.idempotency_key = p_idempotency_key and s.seller_id is null;
+  if found then
+    if v_existing.event_id = p_event_id and v_existing.tier_id = p_tier_id
+       and v_existing.quantity = p_quantity then
+      return pg_catalog.jsonb_build_object(
+        'sale_id', v_existing.id,
+        'public_reference', v_existing.public_reference,
+        'deduplicated', true);
+    end if;
+    raise exception using errcode = '23505',
+      message = 'This submission key was already used for different ticket order data.';
+  end if;
+
+  if p_receipt_filename is not null
+     or p_receipt_object_key is not null
+     or p_receipt_content_type is not null
+     or p_receipt_size_bytes is not null
+     or p_receipt_sha256 is not null then
+    if p_receipt_id is null or p_receipt_object_key is null
+       or p_receipt_filename is null or p_receipt_content_type is null
+       or p_receipt_size_bytes is null or p_receipt_sha256 is null then
+      raise exception using errcode = '22023',
+        message = 'Receipt metadata required for bank transfer ticket sales.';
+    end if;
+    -- The key must be exactly what runReceiptEntry already wrote (receipt-rules.mjs:40). An
+    -- arbitrary key here would point the row at someone else's object.
+    if p_receipt_object_key <> ('receipts/event_ticket/' || v_sid::text || '/'
+        || p_receipt_id::text || '.' || case p_receipt_content_type
+          when 'application/pdf' then 'pdf'
+          when 'image/jpeg' then 'jpg'
+          when 'image/png' then 'png'
+          else 'bin' end) then
+      raise exception using errcode = '22023', message = 'Object key mismatch.';
+    end if;
+    if v_tier.price_ngn <= 0 then
+      raise exception using errcode = '22023', message = 'The ticket order values are invalid.';
+    end if;
+  end if;
+
+  -- Throttles. Email- and event-scoped because the database cannot see an IP address; the server
+  -- action adds the cheap front-of-house defences on top.
+  select
+    (select pg_catalog.count(*) from public.event_ticket_sales as s
+      where s.buyer_email = v_email and s.event_id = p_event_id
+        and s.verification_status = 'recorded'),
+    (select pg_catalog.count(*) from public.event_ticket_sales as s
+      where s.buyer_email = v_email and s.verification_status = 'recorded'),
+    (select pg_catalog.count(*) from public.event_ticket_sales as s
+      where s.event_id = p_event_id and s.source = 'online'
+        and s.verification_status = 'recorded')
+  into v_live_per_email_event, v_live_per_email, v_live_per_event;
+
+  if v_live_per_email >= 5 then
+    raise exception using errcode = '22000',
+      message = 'This email address has too many pending ticket orders.';
+  end if;
+  if v_live_per_email_event >= 3 then
+    raise exception using errcode = '22000',
+      message = 'This email address has too many pending ticket orders for this event.';
+  end if;
+  if v_live_per_event >= 20 then
+    raise exception using errcode = '22000',
+      message = 'The box office has reached its limit of pending orders for this event.';
+  end if;
+
+  -- CF- + 8 characters from a 32-symbol alphabet, so 2^40 combinations. get_byte returns 0..255
+  -- and 256 is a multiple of 32, so the modulo is unbiased. No I/O/0/1: a reference retyped from an
+  -- email cannot be misread.
+  <<reference_loop>>
+  loop
+    v_bytes := extensions.gen_random_bytes(8);
+    v_chars := '';
+    for v_index in 0..7 loop
+      v_chars := v_chars || pg_catalog.substr(
+        '23456789ABCDEFGHJKLMNPQRSTUVWXYZ',
+        (pg_catalog.get_byte(v_bytes, v_index) % 32) + 1, 1);
+    end loop;
+    v_reference := 'CF-' || v_chars;
+    exit reference_loop when not exists (select 1 from public.event_ticket_sales
+      where public_reference = v_reference);
+    v_attempt := v_attempt + 1;
+    if v_attempt > 10 then
+      raise exception using errcode = '22000',
+        message = 'The ticket order could not be completed. Please try again.';
+    end if;
+  end loop;
+
+  begin
+    insert into public.event_ticket_sales (
+      id, event_id, tier_id, seller_id, buyer_name, quantity, unit_price_ngn,
+      payment_method, idempotency_key, created_at, updated_at,
+      source, buyer_email, buyer_phone, public_reference, verification_status
+    ) values (
+      v_sid, p_event_id, p_tier_id, null, v_name, p_quantity, v_tier.price_ngn,
+      'bank_transfer', p_idempotency_key, v_now, v_now,
+      'online', v_email, v_phone, v_reference, 'recorded'
+    );
+  exception when unique_violation then
+    -- Two concurrent double-clicks: one row wins, and the loser shows the buyer the winner's
+    -- reference rather than an error (plan deviation 8).
+    if pg_catalog.sqlstate = '23505' then
+      select * into v_existing
+      from public.event_ticket_sales as s
+      where s.idempotency_key = p_idempotency_key and s.seller_id is null;
+      if found then
+        return pg_catalog.jsonb_build_object(
+          'sale_id', v_existing.id,
+          'public_reference', v_existing.public_reference,
+          'deduplicated', true);
+      end if;
+    end if;
+    raise;
+  end;
+
+  if p_receipt_id is not null then
+    insert into public.finance_receipts (
+      id, scope, event_ticket_sale_id, object_key, original_filename,
+      content_type, size_bytes, sha256, uploaded_by
+    ) values (
+      p_receipt_id, 'event_ticket', v_sid, p_receipt_object_key, p_receipt_filename,
+      p_receipt_content_type, p_receipt_size_bytes, p_receipt_sha256, null
+    );
+  end if;
+
+  -- No audit row: audit_log.actor_id is `not null` and a stranger has no profile (deviation 19).
+  return pg_catalog.jsonb_build_object(
+    'sale_id', v_sid, 'public_reference', v_reference, 'deduplicated', false);
+end;
+$$;
+
+revoke all on function public.submit_ticket_order(uuid, uuid, integer, text, text, text, uuid, uuid, uuid, text, text, text, integer, text)
+  from public, anon, authenticated, service_role;
+grant execute on function public.submit_ticket_order(uuid, uuid, integer, text, text, text, uuid, uuid, uuid, text, text, text, integer, text)
+  to anon;
+
+-- 9c. The buyer's status read.
+create or replace function public.lookup_ticket_order(p_reference text, p_email text)
+returns table (
+  public_reference text, event_title text, event_starts_at timestamptz,
+  tier_name text, quantity integer, amount_ngn bigint,
+  payment_method text, verification_status text, created_at timestamptz,
+  outcome_reason text
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select s.public_reference, e.title, e.starts_at, t.name, s.quantity, s.amount_ngn,
+    s.payment_method, s.verification_status, s.created_at,
+    case when s.verification_status in ('rejected', 'cancelled')
+      then coalesce(s.rejection_reason, s.refund_reason) end
+  from public.event_ticket_sales as s
+  join public.events as e on e.id = s.event_id
+  join public.event_ticket_tiers as t on t.id = s.tier_id
+  where s.source = 'online'
+    and s.public_reference = pg_catalog.upper(pg_catalog.btrim(coalesce(p_reference, '')))
+    and s.buyer_email = pg_catalog.lower(pg_catalog.btrim(coalesce(p_email, '')));
+$function$;
+
+revoke all on function public.lookup_ticket_order(text, text)
+  from public, anon, authenticated, service_role;
+grant execute on function public.lookup_ticket_order(text, text) to anon;
