@@ -189,11 +189,11 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
               </div>
 
               {/* Row 3: Action Buttons on Left; View Details on Right (NO extra border-t) */}
-              <div className="pt-1 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
+              <div className="pt-1 flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
                   {showAttendance ? (
                     <Link
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg text-xs font-semibold transition-colors ${
                         attendanceRecorded
                           ? "bg-[#174C37] text-white shadow-2xs"
                           : "bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F] hover:bg-white hover:border-[#174C37]"
@@ -211,7 +211,7 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
 
                   {canTransact ? (
                     <Link
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#174C37] text-white hover:bg-[#103D2B] transition-colors shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg text-xs font-semibold bg-[#174C37] text-white hover:bg-[#103D2B] transition-colors shadow-2xs"
                       href={`/events/${evt.id}/dashboard?action=record-transaction`}
                     >
                       <DollarSign className="w-3 h-3 text-[#D6A23A]" />
@@ -221,7 +221,7 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
                 </div>
 
                 <Link
-                  className="text-xs font-semibold text-[#3D291F] hover:text-[#174C37] hover:underline flex items-center gap-0.5 shrink-0"
+                  className="text-xs font-semibold text-[#3D291F] hover:text-[#174C37] hover:underline inline-flex items-center gap-0.5 min-h-[44px] shrink-0"
                   href={detailsHref}
                 >
                   <span>View Details</span>

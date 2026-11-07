@@ -183,7 +183,7 @@ export function MemberDuesCard({
         </div>
 
         <Link
-          className="text-xs font-semibold text-[#174C37] hover:text-[#0C3325] hover:underline transition-colors flex items-center gap-1"
+          className="text-xs font-semibold text-[#174C37] hover:text-[#0C3325] hover:underline transition-colors inline-flex items-center gap-1 min-h-[44px]"
           href="/dues"
         >
           <span>Full ledger</span>
@@ -225,17 +225,17 @@ export function MemberDuesCard({
         </div>
 
         {/* Column 3: Compact Pay Now Action */}
-        <div className="shrink-0">
+        <div className="shrink-0 flex items-center">
           {unpaidTotalNgn > 0 ? (
             <button
-              className="px-3.5 py-2 rounded-lg bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-semibold shrink-0 transition-colors shadow-2xs cursor-pointer"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3.5 py-2 rounded-lg bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-semibold shrink-0 transition-colors shadow-2xs cursor-pointer"
               onClick={() => setIsPayModalOpen(true)}
               type="button"
             >
               Pay now
             </button>
           ) : (
-            <span className="text-xs font-bold text-[#174C37] px-2 py-1 bg-[#174C37]/10 rounded-lg">
+            <span className="text-xs font-bold text-[#174C37] px-2.5 py-1.5 bg-[#174C37]/10 rounded-lg inline-flex items-center min-h-[44px]">
               Up to date
             </span>
           )}
@@ -328,7 +328,7 @@ export function MemberDuesCard({
               if (isPaid && receipt) {
                 return (
                   <button
-                    className="p-2 rounded-lg border border-[#E5DDD3] bg-white hover:border-[#174C37] hover:bg-[#FAF6F0] transition-colors cursor-pointer text-left shadow-2xs"
+                    className="p-2 rounded-lg border border-[#E5DDD3] bg-white hover:border-[#174C37] hover:bg-[#FAF6F0] transition-colors cursor-pointer text-left shadow-2xs min-h-[44px] flex flex-col justify-between"
                     key={m.shortName}
                     onClick={() => {
                       setSelectedPaidMonth({
@@ -346,7 +346,7 @@ export function MemberDuesCard({
 
               return (
                 <div
-                  className={`p-2 rounded-lg border text-left shadow-2xs ${
+                  className={`p-2 rounded-lg border text-left shadow-2xs min-h-[44px] flex flex-col justify-between ${
                     isDue || isOverdue
                       ? "bg-[#FAF0EE] border-[#BA3C2A]/40"
                       : "bg-white border-[#E5DDD3]"
