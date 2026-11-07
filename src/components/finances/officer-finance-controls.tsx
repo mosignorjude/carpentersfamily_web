@@ -12,7 +12,7 @@ interface OfficerFinanceControlsProps {
 
 export function OfficerFinanceControls({
   isOfficer,
-  canCorrect,
+  canCorrect: _canCorrect,
   onOpenRecordIncome,
   onOpenRecordExpense,
   onOpenCategoryManagement,

@@ -50,7 +50,7 @@ export function CheckinCard({
   sessionOpen,
   isMutable,
   ownAttendance,
-  canReviewAttendance,
+  canReviewAttendance: _canReviewAttendance,
   returnTo,
 }: CheckinCardProps) {
   const currentStatus = ownAttendance

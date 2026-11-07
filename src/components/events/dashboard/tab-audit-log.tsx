@@ -102,7 +102,6 @@ export function TabAuditLog({
 
         {/* Filter Controls */}
         <div className="space-y-3">
-
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
             {/* Segmented Filter Buttons */}
             <div className="flex items-center gap-1.5 p-1 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] max-w-full overflow-x-auto min-w-0">

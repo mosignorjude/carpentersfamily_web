@@ -270,7 +270,6 @@ export default function AppHeader({
 
         {/* Right Side: Mobile Search, and Notification Bell */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-
           {/* Mobile Search Toggle Button */}
           <button
             aria-expanded={isMobileSearchOpen}

@@ -220,8 +220,7 @@ export function EventLifecycleModal({
               className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
               htmlFor="event-lifecycle-reason"
             >
-              Reason for Change{" "}
-              <span className="text-[#BA3C2A]">*</span>
+              Reason for Change <span className="text-[#BA3C2A]">*</span>
             </label>
             <textarea
               id="event-lifecycle-reason"
