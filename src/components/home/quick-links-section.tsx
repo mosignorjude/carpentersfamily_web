@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  ArrowRight,
+  ArrowUpRight,
   Calendar,
   CheckSquare,
   DollarSign,
@@ -28,7 +28,6 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
       description: "Payment schedule, receipts, and balance.",
       href: "/dues",
       icon: DollarSign,
-      actionLabel: "View Dues",
     },
     ...(isOfficer
       ? [
@@ -38,7 +37,6 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
             description: "Club balance, income, and expense records.",
             href: "/finances",
             icon: Wallet,
-            actionLabel: "View Finances",
           },
         ]
       : []),
@@ -48,7 +46,6 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
       description: "Upcoming shows, project budgets, and planning.",
       href: "/events",
       icon: Calendar,
-      actionLabel: "View Events",
     },
     {
       id: "announcements",
@@ -56,7 +53,6 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
       description: "Club notices, welfare updates, and circulars.",
       href: "/announcements",
       icon: Megaphone,
-      actionLabel: "Read Notices",
     },
     {
       id: "polls",
@@ -64,7 +60,6 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
       description: "Anonymous club polls and member voting.",
       href: "/polls",
       icon: CheckSquare,
-      actionLabel: "Vote in Polls",
     },
     ...(isOfficer
       ? [
@@ -75,55 +70,53 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
               "Approve members, assign roles, and manage the roster.",
             href: "/officers/members",
             icon: Users,
-            actionLabel: "Manage Members",
           },
         ]
       : []),
   ];
 
   return (
-    <section aria-labelledby="quick-links-heading" className="space-y-4">
-      <div className="flex items-center justify-between pb-2 border-b border-[#E5DDD3]">
+    <section aria-labelledby="quick-links-heading" className="space-y-2.5">
+      <div className="flex items-center justify-between pb-1.5 border-b border-[#E5DDD3]">
         <h2
-          className="text-base font-bold text-[#3D291F]"
+          className="font-serif font-bold text-base text-[#3D291F]"
           id="quick-links-heading"
         >
           Quick Links
         </h2>
-        <span className="text-xs text-[#7A685D]">
-          Jump straight to key club sections
+        <span className="text-[11px] text-[#7A685D]">
+          Direct shortcuts to key portal sections
         </span>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+      {/* Compact 2x3 Bento Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
         {links.map((link) => {
           const Icon = link.icon;
 
           return (
             <Link
-              className="p-3 sm:p-4 rounded-xl border border-[#E5DDD3] bg-white hover:border-[#174C37]/40 hover:bg-[#FAF6F0]/50 text-left flex flex-col justify-between transition-all min-h-[96px] sm:min-h-[120px] shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+              className="p-3 rounded-xl bg-white border border-[#E5DDD3] hover:border-[#174C37] text-left flex flex-col justify-between gap-2.5 transition-all shadow-2xs group focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
               href={link.href}
               key={link.id}
             >
-              <div>
-                <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-[#FAF6F0] text-[#174C37] border border-[#E5DDD3]">
-                    <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  </div>
-
-                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7A685D]" />
+              {/* Top Row: Icon + ArrowUpRight */}
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] text-[#174C37] grid place-items-center shrink-0">
+                  <Icon className="w-4 h-4 text-[#174C37]" />
                 </div>
 
-                <h3 className="text-xs sm:text-sm font-bold text-[#3D291F] leading-snug">
-                  {link.title}
-                </h3>
-                <p className="text-[11px] text-[#7A685D] mt-1 leading-relaxed line-clamp-2">
-                  {link.description}
-                </p>
+                <ArrowUpRight className="w-4 h-4 text-[#7A685D] group-hover:text-[#174C37] transition-colors" />
               </div>
 
-              <div className="mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-[#E5DDD3]/60 text-[11px] sm:text-xs font-semibold text-[#174C37]">
-                {link.actionLabel}
+              {/* Bottom Block: Title + 1-Line Description */}
+              <div>
+                <h3 className="font-bold text-xs text-[#3D291F] group-hover:text-[#174C37] leading-snug transition-colors">
+                  {link.title}
+                </h3>
+                <p className="text-[11px] text-[#7A685D] mt-0.5 line-clamp-1 leading-tight">
+                  {link.description}
+                </p>
               </div>
             </Link>
           );

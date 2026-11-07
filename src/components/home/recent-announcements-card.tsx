@@ -13,6 +13,14 @@ function formatAnnouncementDate(timestamp: string) {
   }).format(new Date(timestamp));
 }
 
+function cleanAnnouncementMessage(message: string): string {
+  if (!message) return "";
+  return message
+    .replace(/^(?:🏳\uFE0F|🏳)*\s*OFFICIAL ANNOUNCEMENT:\s*/iu, "")
+    .replace(/^OFFICIAL ANNOUNCEMENT:\s*/i, "")
+    .trim();
+}
+
 interface RecentAnnouncementsCardProps {
   announcements: {
     unavailable: boolean;
@@ -29,18 +37,18 @@ export function RecentAnnouncementsCard({
     return (
       <section
         aria-labelledby="announcements-heading"
-        className="bg-white rounded-xl border border-[#E5DDD3] p-6 shadow-xs"
+        className="rounded-2xl bg-white border border-[#E5DDD3] p-5 shadow-xs"
       >
         <div className="flex items-center gap-2 mb-3">
           <Megaphone className="w-5 h-5 text-[#3D291F]" />
           <h2
-            className="text-lg font-bold text-[#3D291F]"
+            className="text-base font-bold text-[#3D291F]"
             id="announcements-heading"
           >
             Recent Announcements
           </h2>
         </div>
-        <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
+        <div className="p-6 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
           <Megaphone className="w-6 h-6 text-[#7A685D] mx-auto" />
           <h3 className="text-sm font-bold text-[#3D291F]">
             Announcements Unavailable
@@ -60,18 +68,18 @@ export function RecentAnnouncementsCard({
     return (
       <section
         aria-labelledby="announcements-heading"
-        className="bg-white rounded-xl border border-[#E5DDD3] p-6 shadow-xs"
+        className="rounded-2xl bg-white border border-[#E5DDD3] p-5 shadow-xs"
       >
         <div className="flex items-center gap-2 mb-3">
           <Megaphone className="w-5 h-5 text-[#174C37]" />
           <h2
-            className="text-lg font-bold text-[#3D291F]"
+            className="text-base font-bold text-[#3D291F]"
             id="announcements-heading"
           >
             Recent Announcements
           </h2>
         </div>
-        <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
+        <div className="p-6 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
           <Megaphone className="w-6 h-6 text-[#174C37] mx-auto" />
           <h3 className="text-sm font-bold text-[#3D291F]">
             No Announcements Published
@@ -87,14 +95,14 @@ export function RecentAnnouncementsCard({
   return (
     <section
       aria-labelledby="announcements-heading"
-      className="bg-white rounded-xl border border-[#E5DDD3] p-6 sm:p-7 shadow-xs space-y-5"
+      className="rounded-2xl bg-white border border-[#E5DDD3] shadow-xs overflow-hidden"
     >
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD3]">
+      <div className="px-4 py-3 border-b border-[#E5DDD3] flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Megaphone className="w-5 h-5 text-[#174C37]" />
+          <Megaphone className="w-4 h-4 text-[#174C37]" />
           <h2
-            className="text-lg font-bold text-[#3D291F]"
+            className="font-serif font-bold text-base text-[#3D291F]"
             id="announcements-heading"
           >
             Recent Announcements
@@ -102,67 +110,63 @@ export function RecentAnnouncementsCard({
         </div>
 
         <Link
-          className="inline-flex min-h-[44px] items-center gap-1 px-2 -mr-2 text-xs text-[#174C37] font-bold hover:underline"
+          className="text-xs font-semibold text-[#174C37] hover:underline flex items-center gap-1"
           href="/announcements"
         >
           <span>View All</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <span aria-hidden="true">›</span>
         </Link>
       </div>
 
-      {/* Announcements List */}
-      <div className="space-y-4">
-        {rows.slice(0, 3).map((ann) => (
-          <div
-            className="p-5 rounded-xl border border-[#E5DDD3] bg-white hover:border-[#174C37]/50 transition-colors shadow-2xs space-y-2"
-            key={ann.id}
-          >
-            {/* Metadata row */}
-            <div className="flex items-center justify-between text-xs gap-2 mb-1">
-              <div className="flex items-center gap-2 truncate">
-                {ann.priority === "urgent" || ann.priority === "important" ? (
-                  <>
-                    <span
-                      className={`text-[11px] font-bold uppercase tracking-wider ${
-                        ann.priority === "urgent"
-                          ? "text-[#BA3C2A]"
-                          : "bg-[#D6A23A]/20 text-[#3D291F] px-2 py-0.5 rounded-md"
-                      }`}
-                    >
-                      {ann.priority === "urgent" ? "Urgent" : "Important"}
+      {/* Unified Tappable Rows */}
+      <div className="divide-y divide-[#E5DDD3]/80">
+        {rows.slice(0, 3).map((ann) => {
+          const isUrgent = ann.priority === "urgent";
+          const isImportant = ann.priority === "important";
+          const cleanedText = cleanAnnouncementMessage(ann.message);
+          const previewText = announcementPreview(cleanedText, 140);
+
+          return (
+            <button
+              className="w-full text-left px-4 py-3 flex items-start justify-between gap-2.5 cursor-pointer hover:bg-[#FAF6F0]/60 transition-colors group"
+              key={ann.id}
+              onClick={() => onOpenAnnouncement(ann)}
+              type="button"
+            >
+              {/* Left Column */}
+              <div className="min-w-0 flex-1">
+                {/* Top Meta Line: Optional URGENT/IMPORTANT badge + timestamp */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {isUrgent ? (
+                    <span className="px-1.5 py-0.5 rounded bg-[#BA3C2A]/10 text-[#BA3C2A] text-[9px] font-bold uppercase tracking-[0.12em]">
+                      URGENT
                     </span>
-                    <span aria-hidden="true" className="text-[#B8ACA0]">
-                      ·
+                  ) : isImportant ? (
+                    <span className="px-1.5 py-0.5 rounded bg-[#D6A23A]/15 text-[#8A641A] text-[9px] font-bold uppercase tracking-[0.12em]">
+                      IMPORTANT
                     </span>
-                  </>
-                ) : null}
-                <span className="font-mono text-xs font-semibold text-[#7A685D] shrink-0">
-                  {formatAnnouncementDate(ann.createdAt)}
-                </span>
+                  ) : null}
+                  <span className="font-mono text-[11px] text-[#7A685D]">
+                    {formatAnnouncementDate(ann.createdAt)}
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h3 className="mt-1 text-[13px] font-bold text-[#3D291F] group-hover:text-[#174C37] leading-snug transition-colors">
+                  {ann.title}
+                </h3>
+
+                {/* Snippet with stripped prefix */}
+                <p className="mt-0.5 text-xs text-[#5C4638] line-clamp-2 leading-relaxed">
+                  {previewText}
+                </p>
               </div>
-            </div>
 
-            {/* Title & Excerpt */}
-            <h3 className="text-sm font-bold text-[#3D291F] leading-snug">
-              {ann.title}
-            </h3>
-            <p className="text-xs font-normal text-[#5C4638] mt-1 leading-relaxed line-clamp-2">
-              {announcementPreview(ann.message, 140)}
-            </p>
-
-            {/* Read More button */}
-            <div className="mt-3 pt-2.5 border-t border-[#E5DDD3] flex items-center justify-end text-xs">
-              <button
-                className="text-xs font-semibold text-[#174C37] hover:underline inline-flex items-center gap-1 min-h-[44px] min-w-[44px] px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors hover:bg-[#FAF6F0]"
-                onClick={() => onOpenAnnouncement(ann)}
-                type="button"
-              >
-                <span>Read More</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        ))}
+              {/* Right Column: Subtle Chevron */}
+              <ChevronRight className="w-4 h-4 text-[#7A685D] group-hover:text-[#174C37] shrink-0 mt-3 transition-colors" />
+            </button>
+          );
+        })}
       </div>
     </section>
   );

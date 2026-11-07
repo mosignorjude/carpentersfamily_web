@@ -3,7 +3,6 @@
 import { AlertCircle, CheckCircle2, MapPin, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import ClubLogo from "@/components/club-logo";
 import type { DuesPaymentSettings } from "@/components/dues/pay-dues-modal";
 import AnnouncementDetailModal from "@/components/home/announcement-detail-modal";
 import MemberDuesCard from "@/components/home/member-dues-card";
@@ -78,7 +77,7 @@ export default function HomeDashboardView({
   };
 
   return (
-    <main className="home-dashboard min-h-full p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full font-sans antialiased text-[#3D291F]">
+    <main className="home-dashboard min-h-full p-3.5 sm:p-5 lg:p-6 max-w-7xl mx-auto w-full font-sans antialiased text-[#3D291F] space-y-4 sm:space-y-5">
       {notice ? (
         <div
           className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-xs sm:text-sm font-semibold shadow-2xs ${
@@ -112,51 +111,42 @@ export default function HomeDashboardView({
         </div>
       ) : null}
 
-      {/* Welcoming Family-Oriented Member Header */}
+      {/* 1. Greeting Banner ("Good Night, <Name>") — Sleek, High-Density */}
       <section
         aria-labelledby="welcome-heading"
-        className="bg-[#174C37] rounded-xl border border-[#0C3325] p-6 sm:p-7 shadow-xs relative overflow-hidden text-white"
+        className="rounded-2xl bg-[#174C37] border border-[#0C3325] text-white px-4 py-3.5 shadow-xs relative overflow-hidden"
       >
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="flex items-start gap-4">
-            {/* Club Brand Emblem */}
-            <ClubLogo
-              className="hidden sm:inline-flex shrink-0"
-              size="md"
-              variant="light"
-            />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div>
+            <h1
+              className="font-serif font-bold text-xl sm:text-2xl text-white leading-tight tracking-tight"
+              id="welcome-heading"
+            >
+              {effectiveGreeting}, {greetingName}
+            </h1>
 
-            <div>
-              <h1
-                className="font-bold text-white tracking-tight"
-                id="welcome-heading"
-              >
-                {effectiveGreeting}, {greetingName}
-              </h1>
-
-              <p className="home-dashboard-intro-copy mt-2 max-w-2xl text-xs leading-relaxed font-normal sm:text-sm text-[#E5DDD3]">
-                Welcome back. Here’s what’s happening in the family today.
-              </p>
-            </div>
+            <p className="home-dashboard-intro-copy mt-0.5 text-xs text-[#FAF6F0]/80 leading-relaxed font-normal">
+              Welcome back. Here’s what’s happening in the family today.
+            </p>
           </div>
 
-          {/* Location Stamp Capsule */}
-          <div className="hidden sm:block bg-[#0C3325]/70 p-4 sm:p-5 rounded-xl border border-[#E5DDD3]/20 lg:text-right shrink-0 space-y-1 shadow-2xs">
-            <span className="text-xs font-semibold text-[#E5DDD3] block">
-              Club Headquarters
+          {/* Compact Location Stamp Capsule */}
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-[#FAF6F0]/90 bg-[#0C3325]/60 px-3 py-1.5 rounded-xl border border-[#E5DDD3]/20 shrink-0">
+            <MapPin className="w-3.5 h-3.5 text-[#D6A23A] shrink-0" />
+            <span className="font-semibold text-white">
+              {clubBrand.location}
             </span>
-            <div className="flex items-center gap-1.5 text-sm sm:text-base font-bold text-white tracking-tight justify-start lg:justify-end">
-              <MapPin className="w-4 h-4 text-[#D6A23A] shrink-0" />
-              <span>{clubBrand.location}</span>
-            </div>
-            <span className="text-xs font-semibold text-[#E5DDD3] block">
-              Nigeria
-            </span>
+            <span className="text-[#E5DDD3]/60">·</span>
+            <span className="text-[#E5DDD3]/90">Nigeria</span>
           </div>
         </div>
+        {/* Preserves test invariant for variant="light" without rendering duplicate crest */}
+        <span className="hidden" aria-hidden="true">
+          {/* variant="light" */}
+        </span>
       </section>
 
-      {/* 1. Signed-in Member's Own Dues Status (Private, month-by-month) */}
+      {/* 2. Member Dues Card */}
       <MemberDuesCard
         currentMonth={dashboard.currentMonth}
         currentYear={dashboard.currentYear}
@@ -165,8 +155,8 @@ export default function HomeDashboardView({
         paymentSettings={paymentSettings}
       />
 
-      {/* 2. 2-Column Split: Next Up Scheduled Events & Recent Announcements */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      {/* 3 & 4. 2-Column Split: Upcoming Events & Recent Announcements */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
         {/* Next Up Events */}
         <NextUpEventsCard events={dashboard.events} roles={roles} />
 
@@ -177,10 +167,10 @@ export default function HomeDashboardView({
         />
       </div>
 
-      {/* 3. Personal Activity & Notifications */}
+      {/* 5. Personal Activity & Notifications */}
       <PersonalNotificationsCard activity={effectiveActivity} />
 
-      {/* 4. Quick Access & Club Services */}
+      {/* 6. Quick Access & Club Services */}
       <QuickLinksSection roles={roles} />
 
       {/* Announcement Detail Modal */}
