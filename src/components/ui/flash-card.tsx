@@ -73,7 +73,7 @@ export function dispatchActionStatusToast(payload: {
 }) {
   dispatchFlashCard({
     type: "loading",
-    title: payload.title ?? "Processing Action",
+    title: payload.title ?? "Saving…",
     message: payload.message,
     durationMs: payload.durationMs ?? 15000,
   });
@@ -139,7 +139,7 @@ const typeStyles: Record<
     titleColor: "text-[#174C37]",
     progressColor: "bg-[#D6A23A]",
     Icon: Loader2,
-    defaultTitle: "Processing Action",
+    defaultTitle: "Saving…",
   },
 };
 

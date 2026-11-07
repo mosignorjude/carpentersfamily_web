@@ -49,7 +49,7 @@ export function TransactionDetailModal({
                 className="text-base font-bold text-[#3D291F]"
                 id="voucher-title"
               >
-                Digital Financial Voucher
+                Transaction Details
               </h3>
               <p className="text-xs text-[#7A685D] font-mono">
                 Reference: {transaction.id}
@@ -82,10 +82,10 @@ export function TransactionDetailModal({
             <div>
               <span className="text-[11px] uppercase font-bold tracking-wider block">
                 {isVoided
-                  ? "Retained History (Voided Record)"
+                  ? "Voided Record"
                   : isRevenue
-                    ? "Verified Revenue Receipt"
-                    : "Authorized Expense Voucher"}
+                    ? "Revenue Receipt"
+                    : "Expense Voucher"}
               </span>
               <p className="text-xl font-bold font-mono tabular-nums mt-0.5">
                 {isRevenue ? "+" : "-"}
@@ -135,7 +135,7 @@ export function TransactionDetailModal({
 
             <div>
               <span className="text-[#7A685D] block text-[10px] uppercase font-bold">
-                Counterparty / Payer / Payee
+                Party
               </span>
               <span className="text-[#3D291F] font-semibold mt-0.5 block">
                 {transaction.payerPayee}
@@ -144,7 +144,7 @@ export function TransactionDetailModal({
 
             <div>
               <span className="text-[#7A685D] block text-[10px] uppercase font-bold">
-                Payment Channel
+                Payment Method
               </span>
               <span className="text-[#3D291F] font-semibold mt-0.5 block">
                 {transaction.paymentMethod}
@@ -165,7 +165,7 @@ export function TransactionDetailModal({
 
             <div>
               <span className="text-[#7A685D] block text-[10px] uppercase font-bold">
-                Recorded / Authorized by
+                Recorded By
               </span>
               <span className="font-mono text-[#3D291F] font-semibold mt-0.5 block">
                 {transaction.authorizedBy}
@@ -181,7 +181,7 @@ export function TransactionDetailModal({
           {/* Description */}
           <div className="space-y-1">
             <span className="text-[#7A685D] text-[10px] uppercase font-bold block">
-              Official Description / Justification
+              Description
             </span>
             <p className="p-3 rounded-xl border border-[#E5DDD3] bg-white text-xs text-[#3D291F] leading-relaxed">
               {transaction.description}
@@ -192,7 +192,7 @@ export function TransactionDetailModal({
           {transaction.notes && (
             <div className="space-y-1">
               <span className="text-[#7A685D] text-[10px] uppercase font-bold block">
-                Internal Audit Committee Notes
+                Notes
               </span>
               <p className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#5C4638] leading-relaxed">
                 {transaction.notes}

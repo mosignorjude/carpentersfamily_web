@@ -64,13 +64,13 @@ describe("EventBudgetCeilingModal", () => {
     const source = readFileSync(modalPath, "utf8");
     assert.match(
       source,
-      /Set Event Budget Total/,
-      "Must include Set Event Budget Total heading for initial ceiling",
+      /Set Event Budget/,
+      "Must include Set Event Budget heading for initial ceiling",
     );
     assert.match(
       source,
-      /Edit Event Budget Total/,
-      "Must include Edit Event Budget Total heading for existing ceiling",
+      /Edit Event Budget/,
+      "Must include Edit Event Budget heading for existing ceiling",
     );
   });
 

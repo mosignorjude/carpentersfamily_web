@@ -83,7 +83,7 @@ export function TabAuditLog({
               </h3>
             </div>
             <p className="text-xs text-[#6B5D53] mt-1">
-              Verifiable record of receipts, disbursements, and audits.
+              Complete record of all event transactions and voided entries.
             </p>
           </div>
 
@@ -108,7 +108,7 @@ export function TabAuditLog({
                 Governance:
               </span>
               <span className="text-[11px] sm:text-xs text-[#6B5D53]">
-                Admin & Exec record · Admin voids · Immutable audit trail
+                Admins, Executives, and Event Leads can record · Admins can void
               </span>
             </div>
             <span className="text-[10px] sm:text-[11px] font-mono text-[#6B5D53] shrink-0">
@@ -198,9 +198,9 @@ export function TabAuditLog({
         {transactions.length === 0 ? (
           <EmptyStateCard
             className="my-4"
-            description="No historical audits recorded for this event yet."
+            description="No transactions have been recorded for this event yet."
             icon={FileText}
-            title="No Historical Audits"
+            title="No Transactions Yet"
           />
         ) : (
           <>
@@ -293,7 +293,7 @@ export function TabAuditLog({
                           </span>
                         </div>
                         <div className="text-[11px] text-[#6B5D53] mt-1">
-                          Recorded/Auth by:{" "}
+                          Recorded By:{" "}
                           <span className="font-medium text-[#3D291F]">
                             {txn.authorizedBy || "System"}
                           </span>
@@ -382,7 +382,7 @@ export function TabAuditLog({
                       <th className="py-3 px-3.5">Description &amp; Party</th>
                       <th className="py-3 px-3.5">Category</th>
                       <th className="py-3 px-3.5 text-right">Amount</th>
-                      <th className="py-3 px-3.5">Recorded/Auth by</th>
+                      <th className="py-3 px-3.5">Recorded By</th>
                       <th className="py-3 px-3.5 text-center">Receipt</th>
                       <th className="py-3 px-3.5 text-right">Action</th>
                     </tr>
@@ -574,10 +574,10 @@ export function TabAuditLog({
             </div>
             <div>
               <h4 className="text-base font-bold text-[#3D291F]">
-                Officer Audit Trail
+                Audit Trail
               </h4>
               <p className="text-xs text-[#7A685D]">
-                Immutable log of officer operations.
+                Permanent log of officer actions on this event.
               </p>
             </div>
           </div>
@@ -589,7 +589,7 @@ export function TabAuditLog({
 
         {activityLogs.length === 0 ? (
           <p className="text-xs text-[#7A685D] py-6 text-center">
-            No officer audit events logged for this event yet.
+            No audit activity recorded yet.
           </p>
         ) : (
           <div className="divide-y divide-[#E5DDD3]">

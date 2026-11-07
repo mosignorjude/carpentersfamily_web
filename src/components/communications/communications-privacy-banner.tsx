@@ -18,8 +18,8 @@ export function CommunicationsPrivacyBanner({
           </div>
           <span className="font-bold text-[#3D291F] truncate">
             {isPolls
-              ? "Privacy & Electoral Governance Policy"
-              : "Private Read Status Policy"}
+              ? "Anonymous Voting & Privacy Policy"
+              : "Private Read Status"}
           </span>
         </div>
         <span className="text-[11px] font-semibold text-[#174C37] group-open:hidden shrink-0">

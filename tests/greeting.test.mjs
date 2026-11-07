@@ -76,7 +76,7 @@ test("HomeDashboardView: renders greeting and updated family overview copy", () 
   );
   assert.match(
     viewSource,
-    /Welcome back\.\s+Here is an overview of what is happening in the\s+family today\./,
+    /Welcome back\.\s+Here’s what’s happening in the family today\./,
     "HomeDashboardView must render the updated family overview subtitle copy",
   );
 

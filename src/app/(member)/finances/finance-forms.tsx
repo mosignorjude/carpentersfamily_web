@@ -119,7 +119,7 @@ export function ClubIncomeForm({
             error={fieldErrors.amount_ngn}
             errorId="income-error-amount"
             htmlFor="income-amount"
-            label="Amount in whole Naira (₦) *"
+            label="Amount (₦) *"
           >
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#7A685D]">
@@ -201,7 +201,7 @@ export function ClubIncomeForm({
           autoComplete="off"
           error={fieldErrors.source_note}
           id="income-source-note"
-          label="Source Note / Income Description *"
+          label="Description / Source *"
           maxLength={500}
           name="source_note"
           onChange={() => clearFieldError("source_note")}
@@ -213,7 +213,7 @@ export function ClubIncomeForm({
         <CfTextField
           autoComplete="off"
           id="income-payer"
-          label="Payer / Donor Entity (Optional)"
+          label="Payer / Donor (Optional)"
           maxLength={160}
           name="payer_payee"
           placeholder="e.g. Chief O. Emeka Foundation"
@@ -326,7 +326,7 @@ export function ClubExpenseForm({
             error={fieldErrors.amount_ngn}
             errorId="expense-error-amount"
             htmlFor="expense-amount"
-            label="Disbursement Amount in whole Naira (₦) *"
+            label="Amount (₦) *"
           >
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#7A685D]">
@@ -355,7 +355,7 @@ export function ClubExpenseForm({
           <CfTextField
             defaultValue={today}
             id="expense-date"
-            label="Disbursement Date *"
+            label="Date *"
             max={today}
             min={canBackdate ? yearStart : today}
             name="transaction_date"
@@ -441,7 +441,7 @@ export function ClubExpenseForm({
           autoComplete="off"
           error={fieldErrors.description}
           id="expense-description"
-          label="Disbursement Description / Justification *"
+          label="Description / Reason *"
           maxLength={500}
           name="description"
           onChange={() => clearFieldError("description")}
@@ -460,7 +460,7 @@ export function ClubExpenseForm({
           </button>
         )}
         <FormSubmitButton loadingText="Recording..." variant="danger">
-          Record Expense Disbursement
+          Record Expense
         </FormSubmitButton>
       </div>
     </form>

@@ -37,7 +37,7 @@ export function LandingFooter() {
               href="/tickets"
               className="hover:text-ochre transition-colors"
             >
-              Box Office
+              Tickets
             </Link>
           </li>
           <li>
@@ -45,7 +45,7 @@ export function LandingFooter() {
               href="/?modal=constitution"
               className="hover:text-ochre transition-colors"
             >
-              Constitution Summary
+              Constitution
             </Link>
           </li>
           <li>

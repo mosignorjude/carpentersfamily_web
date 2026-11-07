@@ -51,11 +51,11 @@ export function OfficerDuesControlsCard({
               className="text-base sm:text-lg font-extrabold text-[#3D291F]"
               id="officer-actions-heading"
             >
-              Officer Treasury Controls
+              Officer Dues Controls
             </h2>
           </div>
           <p className="text-xs text-[#54433A] font-medium mt-1">
-            Authoritative ledger mutation desk for{" "}
+            Record payments or write off unpaid months for{" "}
             <strong className="text-[#3D291F] font-bold">{memberName}</strong>
           </p>
         </div>

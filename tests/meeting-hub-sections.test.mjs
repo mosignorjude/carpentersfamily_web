@@ -58,7 +58,7 @@ describe("Meeting Hub Standalone Migration (Stage 4)", () => {
       assert.match(meetingHubViewSource, /<h1[^>]*>[\s\S]*?Meeting Hub[\s\S]*?<\/h1>/);
       assert.match(
         meetingHubViewSource,
-        /Official meeting minutes transcribed by the Secretariat,[\s\S]*?live[\s\S]*?meeting check-in sessions,[\s\S]*?and permanent club attendance records\./,
+        /Live meeting check-in, official minutes, and attendance\s+records\./,
       );
     });
   });

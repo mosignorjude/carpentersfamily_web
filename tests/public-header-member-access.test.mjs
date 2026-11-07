@@ -69,7 +69,7 @@ test("the member button on /tickets is never mobile-hidden", () => {
   assert.match(header, /Member Portal|Member Sign In/);
 });
 
-test("the public surfaces say Tickets / Reservations, never RSVP", () => {
-  assert.match(ribbon, /Tickets \/ Reservations/);
+test("the public surfaces say Tickets & Reservations, never RSVP", () => {
+  assert.match(ribbon, /Tickets &(?:amp;)? Reservations/);
   assert.ok(!/RSVP/i.test(ribbon), "RSVP is retired copy");
 });

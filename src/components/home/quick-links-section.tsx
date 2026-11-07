@@ -24,9 +24,8 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
   const links = [
     {
       id: "dues",
-      title: "My Dues & Contributions",
-      description:
-        "Review monthly dues, inspect contributions, and view statements.",
+      title: "Member Dues",
+      description: "Payment schedule, receipts, and balance.",
       href: "/dues",
       icon: DollarSign,
       actionLabel: "View Dues",
@@ -36,8 +35,7 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
           {
             id: "club_finances",
             title: "Club Finances",
-            description:
-              "Review shared club income, institutional account balances, and disbursements.",
+            description: "Club balance, income, and expense records.",
             href: "/finances",
             icon: Wallet,
             actionLabel: "View Finances",
@@ -46,27 +44,24 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
       : []),
     {
       id: "events",
-      title: "Events & Minutes",
-      description:
-        "Official schedule of general meetings, annual banquets, and session records.",
+      title: "Events",
+      description: "Upcoming shows, project budgets, and planning.",
       href: "/events",
       icon: Calendar,
-      actionLabel: "View Calendar",
+      actionLabel: "View Events",
     },
     {
       id: "announcements",
       title: "Announcements",
-      description:
-        "Executive notices, official circulars, and event planning communications.",
+      description: "Club notices, welfare updates, and circulars.",
       href: "/announcements",
       icon: Megaphone,
       actionLabel: "Read Notices",
     },
     {
       id: "polls",
-      title: "Member Polls",
-      description:
-        "Anonymous club polls, consultations, and member referendums.",
+      title: "Polls",
+      description: "Anonymous club polls and member voting.",
       href: "/polls",
       icon: CheckSquare,
       actionLabel: "Vote in Polls",
@@ -75,12 +70,12 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
       ? [
           {
             id: "member_admin",
-            title: "Member Administration",
+            title: "Member Admin",
             description:
-              "Officer review of pending memberships, account status, and role grants.",
+              "Approve members, assign roles, and manage the roster.",
             href: "/officers/members",
             icon: Users,
-            actionLabel: "Open Administration",
+            actionLabel: "Manage Members",
           },
         ]
       : []),
@@ -93,9 +88,11 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
           className="text-base font-bold text-[#3D291F]"
           id="quick-links-heading"
         >
-          Quick Access & Club Services
+          Quick Links
         </h3>
-        <span className="text-xs text-[#7A685D]">Carpenters Family Portal</span>
+        <span className="text-xs text-[#7A685D]">
+          Jump straight to key club sections
+        </span>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">

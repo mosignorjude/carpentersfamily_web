@@ -146,7 +146,7 @@ describe("PreLaunchDuesReconciliationCard component requirements", () => {
     const source = readFileSync(reconciliationCardPath, "utf8");
     assert.match(
       source,
-      /Pre-Launch Dues Reconciliation Workspace \(Feb[–-]Sep 2026\)/,
+      /Pre-Launch Dues(?:\s+Reconciliation)? \(Feb[–-]Sep 2026\)/,
       "Must have the exact governance title",
     );
     assert.match(

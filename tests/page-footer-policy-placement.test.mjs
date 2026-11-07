@@ -152,7 +152,7 @@ describe("Page Footer Policy & Governance Relocation", () => {
   it("renders Financial Governance Rules as a collapsible footer disclosure in TabTeamRoles", () => {
     assert.match(
       teamRolesTab,
-      /<details[\s\S]*?Financial Governance Rules[\s\S]*?All transactions above ₦500,000[\s\S]*?<\/details>/,
+      /<details[\s\S]*?Financial Governance Rules[\s\S]*?All ledger entries are permanent[\s\S]*?<\/details>/,
       "TabTeamRoles must render financial governance rules inside a collapsible disclosure"
     );
   });

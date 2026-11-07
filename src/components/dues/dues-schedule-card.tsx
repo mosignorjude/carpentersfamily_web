@@ -129,13 +129,12 @@ export function DuesScheduleCard({
               className="text-base sm:text-lg font-extrabold text-[#3D291F]"
               id="dues-schedule-heading"
             >
-              Statutory Dues Schedule
+              Monthly Dues Schedule
             </h2>
           </div>
           <p className="text-xs text-[#54433A] font-medium mt-1">
-            Eligible contribution breakdown for{" "}
-            <strong className="text-[#3D291F] font-bold">{memberName}</strong> ·
-            Calendar year
+            Monthly breakdown for{" "}
+            <strong className="text-[#3D291F] font-bold">{memberName}</strong>
           </p>
         </div>
 
@@ -211,16 +210,16 @@ export function DuesScheduleCard({
             <thead>
               <tr className="border-b border-[#E5DDD3] bg-white text-[#54433A] uppercase font-bold text-[11px] tracking-wider">
                 <th className="py-3 px-5" scope="col">
-                  Covered Month
+                  Month
                 </th>
                 <th className="py-3 px-5" scope="col">
-                  Statutory Amount
+                  Amount
                 </th>
                 <th className="py-3 px-5" scope="col">
                   Due Date
                 </th>
                 <th className="py-3 px-5" scope="col">
-                  Ledger Status
+                  Status
                 </th>
                 <th className="py-3 px-5 text-right" scope="col">
                   Action
@@ -242,7 +241,7 @@ export function DuesScheduleCard({
                         {row.covered_month.slice(0, 7) ===
                           currentMonth.slice(0, 7) && (
                           <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-[#FAF6F0] text-[#174C37] border border-[#E5DDD3]">
-                            Current Cycle
+                            Current
                           </span>
                         )}
                       </div>
@@ -260,11 +259,11 @@ export function DuesScheduleCard({
                       {isPaid ? (
                         <span className="text-xs font-bold text-[#174C37] inline-flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5 text-[#174C37]" />
-                          <span>Receipt Cleared</span>
+                          <span>Paid</span>
                         </span>
                       ) : isWrittenOff ? (
                         <span className="text-xs font-semibold text-[#7A685D] inline-flex items-center gap-1">
-                          <span>Waived / Written Off</span>
+                          <span>Written Off</span>
                         </span>
                       ) : (
                         <button
@@ -273,7 +272,7 @@ export function DuesScheduleCard({
                           type="button"
                         >
                           <CreditCard className="w-3 h-3 text-[#174C37]" />
-                          <span>Settle Now</span>
+                          <span>Pay Now</span>
                         </button>
                       )}
                     </td>

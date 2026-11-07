@@ -99,7 +99,7 @@ export function AttendancePageView({
           <div>
             <div className="flex items-center gap-2 text-xs text-[#7A685D] mb-1.5">
               <span className="font-extrabold text-[#174C37] uppercase tracking-wider text-[11px]">
-                Minutes & Attendance Workspace
+                Minutes & Attendance
               </span>
               <span aria-hidden="true" className="text-[#E5DDD3]">
                 ·

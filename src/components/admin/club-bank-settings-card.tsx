@@ -49,10 +49,10 @@ export function ClubBankSettingsCard({
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
-                Club Settlement Bank Account
+                Club Bank Account
               </h3>
               <p className="text-xs text-[#7A685D] font-medium">
-                Official depository for member dues and club transfers
+                Official bank account for member dues and club transfers
               </p>
             </div>
           </div>
@@ -133,11 +133,10 @@ export function ClubBankSettingsCard({
           </div>
           <div>
             <h3 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
-              Club Settlement Bank Details
+              Club Bank Account
             </h3>
             <p className="text-xs text-[#7A685D] font-medium">
-              Manage the official receiving account for member dues and
-              donations
+              Official bank account for member dues and club transfers
             </p>
           </div>
         </div>

@@ -911,7 +911,7 @@ test("action status toast: Member Administration and Event Dashboard modals stay
     );
   }
   assert.ok(
-    recordTxnModalSource.includes("Posting Ticket Sale…") &&
+    recordTxnModalSource.includes("Recording Ticket Sale…") &&
       voidTxnModalSource.includes("Voiding Record…"),
     "RecordTransactionModal and VoidTransactionModal must display pending spinner states while server action is in flight",
   );

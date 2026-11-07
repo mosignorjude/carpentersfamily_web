@@ -162,7 +162,7 @@ function OrderStatusCard({
           className="inline-flex items-center gap-2 text-xs font-bold text-forest hover:text-deep-forest-hover transition-colors no-underline"
           href="/tickets"
         >
-          ← Back to the box office
+          ← Back to Tickets
         </Link>
       </div>
     </article>
@@ -437,7 +437,7 @@ export function TicketStatusView({
             className="min-h-[48px] px-6 py-3 rounded-xl bg-white border border-linen text-forest text-xs sm:text-sm font-semibold hover:border-forest inline-flex items-center justify-center gap-2 transition-colors no-underline shadow-2xs text-center"
             href="/tickets"
           >
-            <span>← Back to the box office</span>
+            <span>← Back to Tickets</span>
           </Link>
         </div>
       </section>
@@ -539,7 +539,7 @@ export function TicketStatusView({
             className="min-h-[48px] px-6 py-3 rounded-xl bg-white border border-linen text-body text-xs sm:text-sm font-semibold hover:text-espresso hover:border-forest inline-flex items-center justify-center gap-2 transition-colors no-underline text-center"
             href="/tickets"
           >
-            <span>← Back to tickets</span>
+            <span>← Back to Tickets</span>
           </Link>
         </div>
       </form>

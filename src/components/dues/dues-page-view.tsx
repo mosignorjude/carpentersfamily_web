@@ -173,13 +173,12 @@ export function DuesPageView({
               id="dues-hero-heading"
             >
               {member.id === targetMemberId && !isOfficer
-                ? "My Dues & Contributions"
+                ? "Member Dues"
                 : `Member Dues: ${member.full_name}`}
             </h1>
 
             <p className="hidden sm:block text-xs sm:text-sm text-[#443A33] max-w-2xl leading-relaxed font-normal">
-              Statutory monthly contributions supporting club governance, member
-              welfare, benevolent grants, and official events.
+              Monthly contributions supporting club welfare, grants, and events.
             </p>
 
             {/* Member Trust Metadata */}
@@ -226,7 +225,7 @@ export function DuesPageView({
                 type="button"
               >
                 <CreditCard className="w-4 h-4 text-[#D6A23A]" />
-                <span>Settle Dues / Payment Info</span>
+                <span>Pay Dues</span>
               </button>
             )}
 
@@ -382,7 +381,7 @@ export function DuesPageView({
                 id="officer-picker-heading"
               >
                 <Users className="w-4 h-4 text-[#174C37]" />
-                <span>Review Individual Member Ledger</span>
+                <span>View Member Dues</span>
               </label>
               <select
                 className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] font-bold focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden cursor-pointer"
@@ -402,7 +401,7 @@ export function DuesPageView({
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[44px] sm:min-h-[40px]"
               type="submit"
             >
-              Load Ledger
+              View Member
             </button>
           </form>
 

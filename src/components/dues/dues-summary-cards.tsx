@@ -50,7 +50,7 @@ export function DuesSummaryCards({
       <div className="bg-white rounded-xl border border-[#E5DDD3] p-3 sm:p-5 shadow-2xs space-y-2 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-[#54433A] uppercase tracking-wider">
-            <span>Settled to Date</span>
+            <span>Paid to Date</span>
             <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#174C37]/10 flex items-center justify-center text-[#174C37]">
               <CalendarCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
@@ -73,7 +73,7 @@ export function DuesSummaryCards({
           </div>
           <p className="text-[10px] sm:text-[11px] font-medium text-[#54433A] mt-1.5 sm:mt-2 flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
-            <span className="truncate">Audited &amp; verified in ledger</span>
+            <span className="truncate">Verified in ledger</span>
           </p>
         </div>
       </div>
@@ -128,9 +128,7 @@ export function DuesSummaryCards({
         </div>
 
         <p className="text-[10px] sm:text-[11px] font-medium text-[#54433A] mt-1.5 sm:mt-2 leading-relaxed truncate">
-          {hasOutstanding
-            ? "Settlement required."
-            : "All contributions up to date."}
+          {hasOutstanding ? "Unpaid balance due." : "All dues up to date."}
         </p>
       </div>
 
@@ -138,7 +136,7 @@ export function DuesSummaryCards({
       <div className="bg-white rounded-xl border border-[#E5DDD3] p-3 sm:p-5 shadow-2xs space-y-2 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-[#54433A] uppercase tracking-wider">
-            <span>Dues Rate</span>
+            <span>Monthly Rate</span>
             <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#D6A23A]/15 flex items-center justify-center text-[#3D291F]">
               <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D6A23A]" />
             </div>
@@ -162,7 +160,7 @@ export function DuesSummaryCards({
               </strong>
             </span>
           ) : (
-            <span>Established by resolution</span>
+            <span>Current club rate</span>
           )}
         </p>
       </div>

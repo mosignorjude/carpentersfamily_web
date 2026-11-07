@@ -10,18 +10,18 @@ const source = readFileSync(
 describe("VoucherInspectionDrawer Component", () => {
   it("renders split-view layout with transaction metadata and voucher document preview", () => {
     assert.match(source, /grid\s+grid-cols-1\s+lg:grid-cols-2/);
-    assert.match(source, /Claimed Transaction Details/i);
-    assert.match(source, /Receipt Voucher Evidence/i);
+    assert.match(source, /Transaction Details/i);
+    assert.match(source, /Receipt/i);
   });
 
   it("requires mandatory rejection reason before submitting rejection", () => {
     assert.match(source, /rejectionReason/i);
     assert.match(source, /(rejectionReason|reason)\.trim\(\)/);
-    assert.match(source, /Reject\s*\/\s*Reverse/i);
+    assert.match(source, /Reject/i);
   });
 
   it("enforces segregation of duties for executive users", () => {
     assert.match(source, /isExecutiveSelfReview/i);
-    assert.match(source, /Awaiting Independent Officer Review/i);
+    assert.match(source, /Needs Another Officer's Review/i);
   });
 });

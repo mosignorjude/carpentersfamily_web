@@ -43,12 +43,12 @@ export const EventStaffingSection: React.FC<EventStaffingSectionProps> = ({
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-[#174C37]" />
             <h2 className="text-lg font-bold text-[#3D291F]">
-              Event roles & staffing
+              Event Roles &amp; Staffing
             </h2>
           </div>
           <p className="text-xs text-[#7A685D] mt-0.5">
-            Staff scheduled club events with active members. Event roles are
-            distinct from club leadership roles.
+            Assign active members to event roles. Event roles are separate from
+            club leadership roles.
           </p>
         </div>
 
@@ -126,7 +126,7 @@ export const EventStaffingSection: React.FC<EventStaffingSectionProps> = ({
                   href={`/events/${currentSelectedEvent.id}/dashboard`}
                   className="cf-btn cf-btn--primary"
                 >
-                  <span>Open Event Dashboard</span>
+                  <span>Event Dashboard</span>
                   <ExternalLink className="w-3.5 h-3.5 text-[#D6A23A]" />
                 </Link>
               </div>
@@ -138,15 +138,12 @@ export const EventStaffingSection: React.FC<EventStaffingSectionProps> = ({
             <div className="p-3 bg-white rounded-lg border border-[#E5DDD3] text-xs text-[#7A685D] flex items-start gap-2">
               <Lock className="w-4 h-4 text-[#D6A23A] shrink-0 mt-0.5" />
               <div>
-                <strong className="text-[#3D291F]">
-                  Staffing Modifications Locked:
-                </strong>{" "}
+                <strong className="text-[#3D291F]">Staffing Locked:</strong>{" "}
                 This event is{" "}
                 <span className="lowercase font-semibold">
                   {currentSelectedEvent.status}
                 </span>
-                . Role changes are retained for constitutional record and cannot
-                be altered unless formally reopened by an Admin.
+                . Role assignments are locked unless reopened by an Admin.
               </div>
             </div>
           )}
@@ -155,7 +152,7 @@ export const EventStaffingSection: React.FC<EventStaffingSectionProps> = ({
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-bold text-[#3D291F] uppercase tracking-wider">
-                Current Staffing Assignments ({currentEventAssignments.length})
+                Assigned Team ({currentEventAssignments.length})
               </h4>
 
               {/* Add Staff Button (Only if event is Scheduled) */}
@@ -166,7 +163,7 @@ export const EventStaffingSection: React.FC<EventStaffingSectionProps> = ({
                   className="cf-btn cf-btn--primary cf-btn--compact"
                 >
                   <UserCog className="w-3.5 h-3.5 text-[#D6A23A]" />
-                  <span>Assign Member to Event</span>
+                  <span>Assign Member</span>
                 </button>
               )}
             </div>

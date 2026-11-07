@@ -69,11 +69,11 @@ export function CreatePollDisclosure({
             <Plus className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-[#3D291F]">Create a poll</h2>
+            <h2 className="text-sm font-bold text-[#3D291F]">Create Poll</h2>
             <p className="text-xs text-[#7A685D]">
               {globalPublisher
-                ? "Authorized to open club-wide or event consultations"
-                : "Authorized to open consultations for assigned active events"}
+                ? "Open an anonymous vote for all members or an event"
+                : "Open an anonymous vote for your assigned event"}
             </p>
           </div>
         </div>
@@ -123,7 +123,7 @@ export function CreatePollDisclosure({
                 htmlFor="poll-question"
                 className="block text-xs font-bold text-[#3D291F] mb-1"
               >
-                Poll Question (Plain text)
+                Poll Question
               </label>
               <textarea
                 id="poll-question"
@@ -155,7 +155,7 @@ export function CreatePollDisclosure({
                   className="w-full p-2.5 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
                 >
                   <option value="multiple_choice">Multiple Choice</option>
-                  <option value="yes_no">Yes / No Consultation</option>
+                  <option value="yes_no">Yes / No</option>
                 </select>
               </div>
 
@@ -211,10 +211,10 @@ export function CreatePollDisclosure({
               <div className="space-y-2.5 pt-2 border-t border-[#E5DDD3]">
                 <div className="flex items-center justify-between">
                   <span className="block text-xs font-bold text-[#3D291F]">
-                    Poll Choices (Minimum 2, Maximum 8)
+                    Choices (2–8 options)
                   </span>
                   <span className="text-[11px] text-[#7A685D]">
-                    {choices.length} options defined
+                    {choices.length} options
                   </span>
                 </div>
 

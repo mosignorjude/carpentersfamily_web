@@ -40,7 +40,7 @@ export function ClubFinancialSummary({
           className="text-xs font-bold text-[#7A685D] uppercase tracking-wider"
           id="summary-heading"
         >
-          Consolidated Club Balances & Revenue Summary
+          Financial Summary
         </h3>
       </div>
 
@@ -65,7 +65,7 @@ export function ClubFinancialSummary({
             <div>
               <div className="flex items-center justify-between text-xs text-[#7A685D] mb-1.5">
                 <span className="font-bold uppercase tracking-wider text-[10px]">
-                  All-Time Current Balance
+                  Current Balance
                 </span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#174C37] shadow-xs" />
               </div>
@@ -75,7 +75,7 @@ export function ClubFinancialSummary({
             </div>
             <div className="pt-3 mt-3 border-t border-[#FAF6F0] text-[11px] text-[#5C4638] flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
-              <span>Net surplus held in verified reserve</span>
+              <span>Verified club balance</span>
             </div>
           </div>
 
@@ -84,7 +84,7 @@ export function ClubFinancialSummary({
             <div>
               <div className="flex items-center justify-between text-xs text-[#7A685D] mb-1.5">
                 <span className="font-bold uppercase tracking-wider text-[10px]">
-                  Dues Income (Collective)
+                  Dues Income
                 </span>
                 <Coins className="w-4 h-4 text-[#174C37]" />
               </div>
@@ -93,7 +93,7 @@ export function ClubFinancialSummary({
               </div>
             </div>
             <div className="pt-3 mt-3 border-t border-[#FAF6F0] text-[11px] text-[#7A685D]">
-              <span>Consolidated statutory member levies</span>
+              <span>Total member dues collected</span>
             </div>
           </div>
 
@@ -120,7 +120,7 @@ export function ClubFinancialSummary({
             <div>
               <div className="flex items-center justify-between text-xs text-[#7A685D] mb-1.5">
                 <span className="font-bold uppercase tracking-wider text-[10px]">
-                  Institutional Expenses
+                  Club Expenses
                 </span>
                 <TrendingDown className="w-4 h-4 text-[#BA3C2A]" />
               </div>
@@ -129,7 +129,7 @@ export function ClubFinancialSummary({
               </div>
             </div>
             <div className="pt-3 mt-3 border-t border-[#FAF6F0] text-[11px] text-[#7A685D]">
-              <span>Authorized operational disbursements</span>
+              <span>Approved club expenses</span>
             </div>
           </div>
 

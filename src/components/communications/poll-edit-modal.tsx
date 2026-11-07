@@ -34,7 +34,7 @@ export function PollEditModal({ poll, isOpen, onClose }: PollEditModalProps) {
                 id={`edit-poll-${poll.id}`}
                 className="text-base font-bold text-[#3D291F]"
               >
-                Edit Poll Parameters
+                Edit Poll
               </h3>
               <p className="text-xs text-[#7A685D]">
                 Revision #{poll.revisionNumber + 1} will be preserved in the
@@ -190,7 +190,7 @@ export function PollEditModal({ poll, isOpen, onClose }: PollEditModalProps) {
               htmlFor={`edit-reason-${poll.id}`}
               className="block text-xs font-bold text-[#3D291F] mb-1"
             >
-              Reason for this Revision (Mandatory Governance Audit)
+              Reason for Edit (Recorded in Audit Log)
             </label>
             <input
               id={`edit-reason-${poll.id}`}
@@ -216,7 +216,7 @@ export function PollEditModal({ poll, isOpen, onClose }: PollEditModalProps) {
               pendingLabel="Saving Poll…"
               statusToastMessage="Updating poll parameters and audit trail."
             >
-              Save Poll Edit
+              Save Changes
             </FormSubmitButton>
           </div>
         </form>

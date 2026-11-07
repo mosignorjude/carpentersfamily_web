@@ -471,7 +471,7 @@ export function EventDashboardView({
     },
     {
       id: "budget",
-      label: "Budget & Allocations",
+      label: "Budget",
       subtitle: "Departmental limits & statutory caps",
       icon: BarChart3,
     },
@@ -489,7 +489,7 @@ export function EventDashboardView({
     },
     {
       id: "team_roles",
-      label: "Team & Roles",
+      label: "Team",
       subtitle: "Committee desks & authorized officers",
       icon: Users,
     },
@@ -530,7 +530,7 @@ export function EventDashboardView({
             href="/events"
           >
             <ArrowLeft className="w-4 h-4 text-[#174C37] shrink-0" />
-            <span>Back to Events & Activities</span>
+            <span>Back to Events</span>
           </Link>
 
           <div className="flex items-center gap-2">
@@ -655,7 +655,7 @@ export function EventDashboardView({
         {/* Quick Action Section (Mobile View: 1 or 2-Button Grid) */}
         <div className="sm:hidden pt-1">
           <h2 className="text-[15px] font-semibold text-[#231F1D] mb-2.5">
-            Quick Action
+            Quick Actions
           </h2>
           <div
             className={
@@ -801,7 +801,7 @@ export function EventDashboardView({
               >
                 <Wallet className="w-[22px] h-[22px] text-[#174C37]" />
                 <span className="text-[12.5px] leading-none tracking-[-0.01em]">
-                  Expense
+                  Expenses
                 </span>
               </div>
               <span
@@ -843,7 +843,7 @@ export function EventDashboardView({
               />
             </button>
 
-            {/* Tab 5: more ⌄ */}
+            {/* Tab 5: More ⌄ */}
             <div
               className="relative flex flex-col items-center"
               ref={moreMenuRef}
@@ -867,7 +867,7 @@ export function EventDashboardView({
                       : "bg-transparent text-[#231F1D] font-medium hover:bg-stone-100/70"
                   }`}
                 >
-                  <span className="text-[13px] leading-none">more</span>
+                  <span className="text-[13px] leading-none">More</span>
                   <ChevronDown
                     className={`w-3.5 h-3.5 transition-transform duration-200 mt-0.5 ${
                       isMoreOpen ? "rotate-180" : ""
@@ -889,7 +889,7 @@ export function EventDashboardView({
                   role="menu"
                 >
                   <div className="px-3.5 py-2 text-[11px] font-bold uppercase tracking-wider text-[#7A685D] border-b border-[#E5DDD3]">
-                    More Event Sections (4)
+                    More Sections
                   </div>
                   {moreTabs.map((tab) => {
                     const isTabActive = activeTab === tab.id;

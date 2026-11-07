@@ -305,9 +305,8 @@ export default async function HomePage({
               </span>
             </h2>
             <p className="mt-4 text-sm sm:text-base text-cream/90 leading-relaxed max-w-xl mx-auto">
-              Know a member in the club to request an introduction, or looking
-              to book our DJs, hype team, and brand promotion crew for your next
-              big event?
+              Looking to request a membership introduction, or book our DJs,
+              hype team, and brand crew for your next event?
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link

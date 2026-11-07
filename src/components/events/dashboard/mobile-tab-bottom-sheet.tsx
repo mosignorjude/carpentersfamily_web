@@ -138,10 +138,10 @@ export function MobileTabBottomSheet({
                   className="font-serif font-bold text-base text-[#2A2521]"
                   id={titleId}
                 >
-                  Event Dashboard Sections
+                  Event Sections
                 </h3>
                 <p className="text-xs text-[#7A685D]" id={descriptionId}>
-                  Select a section to switch your active view
+                  Choose a section to view.
                 </p>
               </div>
 

@@ -127,7 +127,7 @@ export function OfficerDuesApprovalsCard({
               className="text-lg font-extrabold text-[#3D291F] tracking-tight"
               id="dues-approvals-heading"
             >
-              Officer Dues Approvals Queue
+              Pending Dues Approvals
             </h2>
             <span
               className={`px-2.5 py-0.5 rounded-full text-xs font-black ${
@@ -140,8 +140,7 @@ export function OfficerDuesApprovalsCard({
             </span>
           </div>
           <p className="text-xs text-[#54433A]">
-            Review, verify payment references against club statements, and
-            authorize settlement into the immutable dues ledger.
+            Verify member payment receipts and approve dues payments.
           </p>
         </div>
 
@@ -284,7 +283,7 @@ export function OfficerDuesApprovalsCard({
                           type="button"
                         >
                           <XCircle className="w-4 h-4 text-[#BA3C2A]" />
-                          <span>Reject Submission</span>
+                          <span>Reject</span>
                         </button>
 
                         <form
@@ -302,7 +301,7 @@ export function OfficerDuesApprovalsCard({
                             leftIcon={CheckCircle2}
                             loadingText="Settling..."
                           >
-                            Approve &amp; Settle Dues
+                            Approve Payment
                           </FormSubmitButton>
                         </form>
                       </>

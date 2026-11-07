@@ -26,6 +26,6 @@ describe("EventDomainLedger UI Component", () => {
 
   it("restricts self-verification for executives by checking createdBy against currentUserId", () => {
     assert.match(source, /txn\.createdBy\s*===\s*currentUserId/);
-    assert.match(source, /Awaiting Independent Officer Review/i);
+    assert.match(source, /Needs Another Officer's Review/i);
   });
 });

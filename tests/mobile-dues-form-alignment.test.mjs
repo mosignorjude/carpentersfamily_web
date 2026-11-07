@@ -114,28 +114,28 @@ describe("Mobile Dues Form Alignment & Width Unification", () => {
     // DuesWriteOffForm submit button
     assert.match(
       duesForms,
-      /className="[^"]*w-full\s+sm:w-auto[^"]*min-h-\[44px\][^"]*"[\s\S]*?type="submit"[\s\S]*?Confirm Statutory Write-Off/,
+      /className="[^"]*w-full\s+sm:w-auto[^"]*min-h-\[44px\][^"]*"[\s\S]*?type="submit"[\s\S]*?Write Off Selected Months/,
       "DuesWriteOffForm submit button must be w-full on mobile with 44px min-height",
     );
 
     // DuesPaymentCorrectionForm submit button
     assert.match(
       duesForms,
-      /className="[^"]*w-full\s+sm:w-auto[^"]*min-h-\[44px\][^"]*"[\s\S]*?type="submit"[\s\S]*?Save Payment Correction/,
+      /className="[^"]*w-full\s+sm:w-auto[^"]*min-h-\[44px\][^"]*"[\s\S]*?type="submit"[\s\S]*?Save Correction/,
       "DuesPaymentCorrectionForm submit button must be w-full on mobile with 44px min-height",
     );
 
     // DuesRateForm submit button
     assert.match(
       duesForms,
-      /className="[^"]*w-full\s+sm:w-auto[^"]*min-h-\[44px\][^"]*"[\s\S]*?type="submit"[\s\S]*?Schedule Dues Rate/,
+      /className="[^"]*w-full\s+sm:w-auto[^"]*min-h-\[44px\][^"]*"[\s\S]*?type="submit"[\s\S]*?Save Rate/,
       "DuesRateForm submit button must be w-full on mobile with 44px min-height",
     );
 
     // Member Switcher submit button in dues-page-view.tsx
     assert.match(
       duesPageView,
-      /className="[^"]*w-full\s+sm:w-auto[^"]*min-h-\[44px\][^"]*"[\s\S]*?type="submit"[\s\S]*?Load Ledger/,
+      /className="[^"]*w-full\s+sm:w-auto[^"]*min-h-\[44px\][^"]*"[\s\S]*?type="submit"[\s\S]*?View Member/,
       "Member Switcher submit button must be w-full on mobile with 44px min-height",
     );
   });
@@ -151,7 +151,7 @@ describe("Mobile Dues Form Alignment & Width Unification", () => {
     // Both Reject and Approve buttons must have w-full sm:w-auto and min-h-[44px]
     assert.match(
       approvalsCard,
-      /Reject Submission[\s\S]*?w-full sm:w-auto|w-full sm:w-auto[\s\S]*?Reject Submission/,
+      /Reject[\s\S]*?w-full sm:w-auto|w-full sm:w-auto[\s\S]*?Reject/,
       "Reject button must have w-full sm:w-auto",
     );
     assert.match(

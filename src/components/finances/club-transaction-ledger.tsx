@@ -113,10 +113,10 @@ export function ClubTransactionLedger({
                 className="text-base sm:text-lg font-extrabold text-[#3D291F]"
                 id="ledger-heading"
               >
-                Institutional Financial Ledger
+                Club Transaction Ledger
               </h2>
               <p className="text-xs text-[#54433A] font-medium">
-                Consolidated club disbursements and non-dues income inflows
+                Recorded club expenses and non-dues income
               </p>
             </div>
           </div>
@@ -142,7 +142,7 @@ export function ClubTransactionLedger({
               onClick={() => setFilterType("all")}
               type="button"
             >
-              All Records
+              All
             </button>
             <button
               className={`px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer min-h-[38px] ${
@@ -153,7 +153,7 @@ export function ClubTransactionLedger({
               onClick={() => setFilterType("income")}
               type="button"
             >
-              Inflows
+              Income
             </button>
             <button
               className={`px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer min-h-[38px] ${
@@ -164,7 +164,7 @@ export function ClubTransactionLedger({
               onClick={() => setFilterType("expense")}
               type="button"
             >
-              Disbursements
+              Expenses
             </button>
             <button
               className={`px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer min-h-[38px] ${
@@ -175,7 +175,7 @@ export function ClubTransactionLedger({
               onClick={() => setFilterType("voided")}
               type="button"
             >
-              Voided History
+              Voided
             </button>
           </div>
 
@@ -248,7 +248,7 @@ export function ClubTransactionLedger({
                               ? "Opening Balance"
                               : transaction.kind === "income"
                                 ? "Non-Dues Income"
-                                : "Disbursement"}
+                                : "Expense"}
                         </span>
                         {transaction.category_name_snapshot && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#FAF6F0] text-[#3D291F] border border-[#E5DDD3]">
@@ -371,8 +371,8 @@ export function ClubTransactionLedger({
               <thead>
                 <tr className="border-b border-[#E5DDD3] bg-[#FAF6F0]/60 text-[11px] font-bold text-[#54433A] uppercase tracking-wider">
                   <th className="py-3 px-4 sm:px-6">Date</th>
-                  <th className="py-3 px-4">Transaction / Justification</th>
-                  <th className="py-3 px-4">Cost Center</th>
+                  <th className="py-3 px-4">Description</th>
+                  <th className="py-3 px-4">Category</th>
                   <th className="py-3 px-4">Payer / Payee</th>
                   <th className="py-3 px-4 text-right">Amount (₦)</th>
                   <th className="py-3 px-4 text-center">Receipts</th>
@@ -424,7 +424,7 @@ export function ClubTransactionLedger({
                                 ? "Opening Balance"
                                 : transaction.kind === "income"
                                   ? "Non-Dues Income"
-                                  : "Disbursement"}
+                                  : "Expense"}
                           </span>
                           {isVoided && (
                             <span className="text-[10px] text-[#BA3C2A] font-semibold italic truncate">

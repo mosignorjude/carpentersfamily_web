@@ -49,7 +49,7 @@ function SignupUnavailable({ children }: { children: string }) {
 
 function SignupInvitationRequired({
   title = "Invitation Required",
-  message = "Membership in Carpenters Family Social Club is strictly by invitation and vetted merit. Prospective members must first submit an application for review by the Executive Committee.",
+  message = "Membership in Carpenters Family is by invitation. Prospective members must first submit an application for review.",
 }: {
   title?: string;
   message?: string;
@@ -155,7 +155,7 @@ export default async function SignupPage({
         title={isExpired ? "Invitation Expired" : "Invitation Required"}
         message={
           isExpired
-            ? "This invitation link has expired. Please submit a new membership request to obtain a fresh invitation."
+            ? "This invitation link has expired. Please submit a new membership request for a fresh link."
             : "This invitation link is invalid or has already been used. Please request an invitation to join."
         }
       />

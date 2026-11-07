@@ -40,7 +40,6 @@ interface TabOverviewProps {
 }
 
 export function TabOverview({
-  event,
   ticketTiers,
   costCenters,
   transactions,
@@ -100,17 +99,13 @@ export function TabOverview({
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 sm:border-b border-[#E5DDD3]">
         <div>
           <span className="text-[12px] sm:text-xs font-bold sm:font-semibold text-[#2B4C3B] sm:text-[#174C37] uppercase tracking-[0.08em] sm:tracking-wider">
-            Event Overview & Budget Allocation
+            Financial Overview
           </span>
           <h2 className="mt-1 text-[22px] sm:text-3xl leading-snug font-bold text-[#231F1D] sm:text-[#3D291F] tracking-[-0.015em] sm:tracking-tight">
-            <span className="sm:hidden">Financial Overview &amp; Budget</span>
-            <span className="hidden sm:inline">
-              {event.title} — Event Finance
-            </span>
+            Event Finance Overview
           </h2>
           <p className="mt-1.5 text-[14.5px] sm:text-sm leading-[1.5] text-[#68736C] sm:text-[#7A685D]">
-            Financial reconciliation, ticket inventory, and operational cost
-            accounting for Carpenters Family Social Club.
+            Live summary of ticket sales, revenue, expenses, and budget.
           </p>
         </div>
 
@@ -118,7 +113,7 @@ export function TabOverview({
         <div className="mt-2 sm:mt-0 rounded-[18px] sm:rounded-2xl border border-[#E5DDD3] bg-white p-4 sm:p-3.5 sm:text-right shadow-[0_1px_2px_rgba(0,0,0,0.02)] shrink-0">
           <div className="flex items-center justify-between sm:justify-end gap-3">
             <span className="text-[13.5px] sm:text-xs text-[#68736C] sm:text-[#7A685D] block">
-              Approved Club Budget Ceiling
+              Approved Budget
             </span>
             {canManageCategories && onOpenBudgetCeilingModal && (
               <button
@@ -136,7 +131,7 @@ export function TabOverview({
           </span>
           <div className="flex items-center gap-2 text-[13.5px] sm:text-xs text-[#3B4A41] sm:text-[#174C37] font-medium justify-start sm:justify-end mt-2.5 sm:mt-0.5">
             <CheckCircle2 className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-[#174C37] shrink-0" />
-            <span>Fully Funded & Authorized by Trustees</span>
+            <span>Approved club budget ceiling</span>
           </div>
         </div>
       </div>
@@ -145,10 +140,6 @@ export function TabOverview({
       <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-4">
         {/* 1. Ticket Sales (Prominently Featured) */}
         <div className="bg-white rounded-2xl border border-[#174C37] p-3.5 sm:p-5 shadow-xs relative overflow-hidden">
-          <div className="absolute top-0 right-0 bg-[#174C37] text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-bl-lg">
-            Core Driver
-          </div>
-
           <div className="flex items-center justify-between">
             <span className="text-[11px] sm:text-xs font-semibold text-[#174C37] uppercase tracking-wide truncate max-w-[110px] sm:max-w-none">
               Ticket Sales
@@ -171,7 +162,7 @@ export function TabOverview({
           </div>
 
           <div className="hidden sm:flex mt-4 pt-3 border-t border-[#E5DDD3] items-center justify-between text-xs">
-            <span className="text-[#6B5D53]">Share of Gross Revenue</span>
+            <span className="text-[#6B5D53]">Share of Revenue</span>
             <span className="font-semibold text-[#174C37] tabular-nums font-mono">
               {formatPercent(ticketPercentageOfRevenue)}
             </span>
@@ -182,7 +173,7 @@ export function TabOverview({
         <div className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] sm:text-xs font-semibold text-[#6B5D53] uppercase tracking-wide truncate max-w-[110px] sm:max-w-none">
-              Realized Revenue
+              Total Revenue
             </span>
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#174C37] shrink-0">
               <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -198,16 +189,14 @@ export function TabOverview({
               <span className="truncate">
                 {budgetCeiling > 0
                   ? `${formatPercent(revenueAgainstBudget)} of target`
-                  : "Inflows reconciled"}
+                  : "Approved revenue"}
               </span>
             </div>
           </div>
 
           <div className="hidden sm:flex mt-4 pt-3 border-t border-[#E5DDD3] items-center justify-between text-xs">
-            <span className="text-[#6B5D53]">Active Inflow Streams</span>
-            <span className="font-semibold text-[#3D291F]">
-              100% Reconciled
-            </span>
+            <span className="text-[#6B5D53]">Status</span>
+            <span className="font-semibold text-[#3D291F]">Verified</span>
           </div>
         </div>
 
@@ -231,13 +220,13 @@ export function TabOverview({
                 {formatPercent(budgetUtilization)}
               </span>
               <span className="truncate">
-                {budgetCeiling > 0 ? "of ceiling" : "disbursed"}
+                {budgetCeiling > 0 ? "of budget" : "spent"}
               </span>
             </div>
           </div>
 
           <div className="hidden sm:flex mt-4 pt-3 border-t border-[#E5DDD3] items-center justify-between text-xs">
-            <span className="text-[#6B5D53]">Committed POs</span>
+            <span className="text-[#6B5D53]">Pending Commitments</span>
             <span className="font-semibold text-[#3D291F] tabular-nums font-mono">
               {formatNaira(committedExpenses)}
             </span>
@@ -270,7 +259,7 @@ export function TabOverview({
           </div>
 
           <div className="hidden sm:flex mt-4 pt-3 border-t border-[#174C37] items-center justify-between text-xs text-[#E5DDD3]">
-            <span>Uncommitted Buffer</span>
+            <span>Remaining Budget</span>
             <span className="font-semibold text-white tabular-nums font-mono">
               {formatNaira(remainingBudget)}
             </span>
@@ -283,18 +272,17 @@ export function TabOverview({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
           <div>
             <h3 className="text-sm font-semibold text-[#3D291F]">
-              {formatNaira(budgetCeiling)} Budget Burn & Financial Health Index
+              Budget Usage ({formatNaira(budgetCeiling)})
             </h3>
             <p className="text-xs text-[#7A685D]">
-              Direct tracking of total disbursements and pending commitments
-              against the approved club authorization ceiling.
+              Spent and pending expenses against the approved event budget.
             </p>
           </div>
           <div className="text-xs font-medium text-[#174C37] sm:text-right">
             <span className="tabular-nums font-mono font-bold">
               {formatNaira(remainingBudget)}
             </span>{" "}
-            Reserve Available (
+            remaining (
             {budgetCeiling > 0
               ? formatPercent((remainingBudget / safeBudget) * 100)
               : "0.0%"}
@@ -306,28 +294,26 @@ export function TabOverview({
         <div className="w-full bg-[#FAF6F0] rounded-full h-3 overflow-hidden flex border border-[#E5DDD3]">
           <div
             className={`bg-[#174C37] h-full transition-all duration-500 ${percentWidthClass(expensePercent)}`}
-            title={`Disbursed: ${formatNaira(totalExpenses)}`}
+            title={`Spent: ${formatNaira(totalExpenses)}`}
           />
           <div
             className={`bg-[#D6A23A] h-full transition-all duration-500 ${percentWidthClass(committedPercent)}`}
-            title={`Committed: ${formatNaira(committedExpenses)}`}
+            title={`Pending: ${formatNaira(committedExpenses)}`}
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 text-xs text-[#7A685D]">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-xs bg-[#174C37]" />
-            <span>Disbursed Expenses ({formatNaira(totalExpenses)})</span>
+            <span>Spent ({formatNaira(totalExpenses)})</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-xs bg-[#D6A23A]" />
-            <span>
-              Committed Purchase Orders ({formatNaira(committedExpenses)})
-            </span>
+            <span>Pending ({formatNaira(committedExpenses)})</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-xs bg-[#FAF6F0] border border-[#E5DDD3]" />
-            <span>Remaining Buffer ({formatNaira(remainingBudget)})</span>
+            <span>Remaining ({formatNaira(remainingBudget)})</span>
           </div>
         </div>
       </div>
@@ -344,11 +330,10 @@ export function TabOverview({
                 </div>
                 <div>
                   <h4 className="font-bold text-sm text-[#3D291F]">
-                    Tickets Status
+                    Ticket Sales
                   </h4>
                   <p className="text-[11px] text-[#7A685D]">
-                    {totalTicketsSold} sold of {totalTicketsCapacity} total
-                    capacity
+                    {totalTicketsSold} of {totalTicketsCapacity} sold
                   </p>
                 </div>
               </div>
@@ -364,7 +349,7 @@ export function TabOverview({
             <div className="space-y-1.5 pt-1">
               {ticketTiers.length === 0 ? (
                 <p className="text-xs text-[#7A685D] py-2">
-                  No ticket tiers configured for this event.
+                  No ticket tiers yet.
                 </p>
               ) : (
                 ticketTiers.slice(0, 3).map((tier) => (
@@ -391,7 +376,7 @@ export function TabOverview({
               type="button"
             >
               <Plus className="w-3.5 h-3.5 text-[#D6A23A]" />
-              <span>Issue & Record Ticket Sale</span>
+              <span>Record Ticket Sale</span>
             </button>
           )}
         </div>
@@ -409,9 +394,9 @@ export function TabOverview({
                     Cost Centers
                   </h4>
                   <p className="text-[11px] text-[#7A685D]">
-                    {costCenters.length} Center
-                    {costCenters.length === 1 ? "" : "s"} ·{" "}
-                    {formatNaira(totalExpenses)} disbursed
+                    {costCenters.length}{" "}
+                    {costCenters.length === 1 ? "Category" : "Categories"} ·{" "}
+                    {formatNaira(totalExpenses)} spent
                   </p>
                 </div>
               </div>
@@ -427,7 +412,7 @@ export function TabOverview({
             <div className="space-y-1.5 pt-1">
               {latestCostCenters.length === 0 ? (
                 <p className="text-xs text-[#7A685D] py-2">
-                  No cost centers or expenses recorded yet.
+                  No expenses recorded yet.
                 </p>
               ) : (
                 latestCostCenters.map((center) => (
@@ -467,7 +452,7 @@ export function TabOverview({
               type="button"
             >
               <Plus className="w-3.5 h-3.5 text-[#BA3C2A]" />
-              <span>Record Expense Voucher</span>
+              <span>Record Expense</span>
             </button>
           )}
         </div>
@@ -482,7 +467,7 @@ export function TabOverview({
                 </div>
                 <div>
                   <h4 className="font-bold text-sm text-[#3D291F]">
-                    P&L Snapshot
+                    Financial Summary
                   </h4>
                   <p className="text-[11px] text-[#7A685D]">
                     {netSurplus >= 0 ? "Surplus" : "Deficit"}:{" "}
@@ -495,25 +480,25 @@ export function TabOverview({
                 onClick={() => onNavigateTab("reports")}
                 type="button"
               >
-                View P&L &rarr;
+                View Report &rarr;
               </button>
             </div>
 
             <div className="space-y-2 pt-1 text-xs">
               <div className="flex justify-between text-[#5C4638]">
-                <span>Total Inflow:</span>
+                <span>Total Revenue:</span>
                 <strong className="font-mono text-[#174C37]">
                   {formatNaira(totalRevenue)}
                 </strong>
               </div>
               <div className="flex justify-between text-[#5C4638]">
-                <span>Total Outflow:</span>
+                <span>Total Expenses:</span>
                 <strong className="font-mono text-[#BA3C2A]">
                   {formatNaira(totalExpenses)}
                 </strong>
               </div>
               <div className="flex justify-between font-bold text-[#3D291F] pt-1 border-t border-[#E5DDD3]">
-                <span>Net Cash Margin:</span>
+                <span>Net Balance:</span>
                 <strong className="font-mono text-[#174C37]">
                   {formatNaira(netSurplus)}
                 </strong>
@@ -527,7 +512,7 @@ export function TabOverview({
             type="button"
           >
             <FileText className="w-3.5 h-3.5" />
-            <span>Open Executive Statement</span>
+            <span>View Full Report</span>
           </button>
         </div>
       </div>
@@ -537,11 +522,10 @@ export function TabOverview({
         <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD3]">
           <div>
             <h4 className="font-bold text-base text-[#3D291F]">
-              Recent Transactions & Box Office Entries
+              Recent Transactions
             </h4>
             <p className="text-xs text-[#7A685D]">
-              Latest authorized ledger entries. Complete retained history
-              available in Audit log.
+              Latest recorded event transactions.
             </p>
           </div>
 
@@ -550,14 +534,14 @@ export function TabOverview({
             onClick={() => onNavigateTab("audit_log")}
             type="button"
           >
-            <span>Go to Audit Log ({transactions.length} records)</span>
+            <span>Audit Log ({transactions.length})</span>
             <span>&rarr;</span>
           </button>
         </div>
 
         {transactions.length === 0 ? (
           <p className="text-xs text-[#7A685D] py-4 text-center">
-            No financial transactions recorded for this event yet.
+            No transactions recorded yet.
           </p>
         ) : (
           <div className="divide-y divide-[#E5DDD3]">

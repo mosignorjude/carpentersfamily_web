@@ -202,7 +202,7 @@ export function OfficerSessionControls({
                   pendingLabel="Opening Session…"
                   statusToastMessage="Opening live attendance check-in session."
                 >
-                  Open Attendance Session Now
+                  Open Check-In
                 </FormSubmitButton>
               </form>
             </div>
@@ -216,12 +216,12 @@ export function OfficerSessionControls({
                 <div className="flex items-center gap-2">
                   <QrCode className="w-4 h-4 text-[#174C37]" />
                   <h3 className="text-sm font-extrabold text-[#3D291F]">
-                    Dynamic 90-Second Check-In QR
+                    Live Check-In QR Code
                   </h3>
                 </div>
                 <p className="text-xs text-[#7A685D]">
-                  Project or display this cryptographic token on the meeting
-                  screen. The token automatically expires every 90 seconds.
+                  Display this QR code on the meeting screen for members to
+                  scan. Refreshes every 90 seconds.
                 </p>
                 <div className="pt-2">
                   <AttendanceQrIssuer eventId={eventId} />

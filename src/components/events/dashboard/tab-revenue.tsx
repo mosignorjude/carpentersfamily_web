@@ -75,20 +75,11 @@ export function TabRevenue({
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-[#174C37]" />
               <h3 className="text-lg font-bold text-[#3D291F]">
-                <span className="hidden sm:inline">
-                  Revenue Streams & Inflow Matrix
-                </span>
-                <span className="sm:hidden">Revenue Streams</span>
+                Revenue Streams
               </h3>
             </div>
             <p className="text-xs text-[#6B5D53] mt-1">
-              <span className="hidden sm:inline">
-                Reconciled receipts vs target projections across authorized club
-                revenue channels.
-              </span>
-              <span className="sm:hidden">
-                Target projections & revenue streams.
-              </span>
+              Actual revenue and pending inflows by category.
             </p>
           </div>
 
@@ -96,7 +87,7 @@ export function TabRevenue({
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <div className="bg-[#FAF6F0] px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-[#E5DDD3] text-right">
               <span className="text-[10px] sm:text-[11px] text-[#7A685D] block">
-                Gross Reconciled
+                Received
               </span>
               <span className="font-bold text-[#174C37] text-xs sm:text-base tabular-nums font-mono">
                 {formatNaira(totalActual)}
@@ -104,7 +95,7 @@ export function TabRevenue({
             </div>
             <div className="bg-[#FAF6F0] px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-[#E5DDD3] text-right">
               <span className="text-[10px] sm:text-[11px] text-[#7A685D] block">
-                Pending Receivables
+                Pending
               </span>
               <span className="font-bold text-[#8D5B0E] text-xs sm:text-base tabular-nums font-mono">
                 {formatNaira(totalPending)}
@@ -140,12 +131,12 @@ export function TabRevenue({
         {streams.length === 0 ? (
           <EmptyStateCard
             className="my-4"
-            description="No revenue streams or planned inflows have been recorded for this event yet."
+            description="Record non-ticket income such as sponsorships, donations, or vendor fees."
             icon={TrendingUp}
-            title="No Revenue Streams Recorded"
+            title="No Revenue Recorded Yet"
             {...(canManageCategories && onManageCategories
               ? {
-                  actionLabel: "Manage Revenue Streams",
+                  actionLabel: "Manage Categories",
                   onAction: onManageCategories,
                 }
               : {})}
@@ -208,7 +199,7 @@ export function TabRevenue({
                       </div>
                       <div className="text-right">
                         <span className="text-[#6B5D53] block text-[11px]">
-                          Reconciled Inflow:
+                          Received:
                         </span>
                         <span className="font-mono font-bold text-[#174C37]">
                           {formatNaira(stream.actual)}
@@ -220,7 +211,7 @@ export function TabRevenue({
                     <div>
                       <div className="flex items-baseline justify-between font-mono text-xs">
                         <span className="text-[11px] text-[#6B5D53]">
-                          Fulfillment:
+                          Progress:
                         </span>
                         <span className="font-semibold text-[#174C37]">
                           {formatPercent(percentage)}
@@ -245,11 +236,11 @@ export function TabRevenue({
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
-                      <th className="py-2.5 px-3.5">Stream Name</th>
+                      <th className="py-2.5 px-3.5">Stream</th>
                       <th className="py-2.5 px-3.5">Target</th>
-                      <th className="py-2.5 px-3.5">Reconciled Inflow</th>
-                      <th className="py-2.5 px-3.5">Pending Receivables</th>
-                      <th className="py-2.5 px-3.5">Fulfillment %</th>
+                      <th className="py-2.5 px-3.5">Received</th>
+                      <th className="py-2.5 px-3.5">Pending</th>
+                      <th className="py-2.5 px-3.5">Progress</th>
                       <th className="py-2.5 px-3.5 text-right">Status</th>
                     </tr>
                   </thead>
@@ -343,12 +334,12 @@ export function TabRevenue({
         )}
       </div>
 
-      {/* 2. Embedded Revenue Inflow Ledger */}
+      {/* 2. Embedded Revenue Ledger */}
       <EventDomainLedger
         currentUserId={currentUserId}
         domain="revenue"
         onInspect={(txn) => setSelectedTxn(txn)}
-        title="Revenue Inflows Ledger"
+        title="Revenue Ledger"
         transactions={revenueTransactions}
         userRole={userRole}
       />

@@ -34,12 +34,12 @@ export function PublishAnnouncementDisclosure({
           </div>
           <div>
             <h2 className="text-sm font-bold text-[#3D291F]">
-              Publish an announcement
+              Post Announcement
             </h2>
             <p className="text-xs text-[#7A685D]">
               {globalPublisher
-                ? "Authorized as Club Admin, President or Executive Officer"
-                : "Authorized as Event Lead for active assigned events"}
+                ? "Share an official notice with all members or an event"
+                : "Share an update for your assigned event"}
             </p>
           </div>
         </div>
@@ -119,12 +119,12 @@ export function PublishAnnouncementDisclosure({
                     htmlFor="announcement-expires-at"
                     className="block text-xs font-bold text-[#3D291F] mb-1"
                   >
-                    Highlight Expiry{" "}
+                    Expiry Date{" "}
                     {priority === "urgent"
                       ? "(Required)"
                       : priority === "important"
                         ? "(Optional)"
-                        : "(N/A for Standard)"}
+                        : "(N/A)"}
                   </label>
                   <input
                     id="announcement-expires-at"
@@ -167,7 +167,7 @@ export function PublishAnnouncementDisclosure({
                 htmlFor="announcement-message"
                 className="block text-xs font-bold text-[#3D291F] mb-1"
               >
-                Message Content (Plain text)
+                Message
               </label>
               <textarea
                 id="announcement-message"
@@ -193,7 +193,7 @@ export function PublishAnnouncementDisclosure({
                 pendingLabel="Publishing Notice…"
                 statusToastMessage="Broadcasting official notice to club members."
               >
-                Publish Notice
+                Post Announcement
               </FormSubmitButton>
             </div>
           </form>

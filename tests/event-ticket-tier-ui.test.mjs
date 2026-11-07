@@ -125,8 +125,8 @@ describe("TabTickets management controls", () => {
     );
     assert.match(
       source,
-      /Create Admission Tier/,
-      "Empty state button must say Create Admission Tier",
+      /Add Ticket Tier/,
+      "Empty state button must say Add Ticket Tier",
     );
   });
 

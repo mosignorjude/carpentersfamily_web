@@ -170,12 +170,11 @@ export function MemberDuesCard({
               className="text-lg font-bold text-[#3D291F]"
               id="dues-status-heading"
             >
-              Your {currentYear} Membership Dues
+              Member Dues
             </h3>
           </div>
           <p className="text-xs font-normal text-[#7A685D] mt-1">
-            Monthly contribution schedule for{" "}
-            <strong className="text-[#3D291F] font-bold">{memberName}</strong>.
+            Your monthly contribution for {currentYear}.
           </p>
         </div>
 
@@ -246,14 +245,11 @@ export function MemberDuesCard({
         {/* 1. Settled to Date */}
         <div className="p-4 sm:p-5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1.5 shadow-2xs">
           <span className="text-[11px] font-medium text-[#7A685D] block">
-            Contributions Paid ({currentYear})
+            Paid ({currentYear})
           </span>
           <div className="flex items-baseline justify-between">
             <span className="text-lg font-bold font-mono text-[#174C37] tabular-nums tracking-tight">
               {formatNaira(totalPaidAmount)}
-            </span>
-            <span className="text-xs font-semibold text-[#174C37]">
-              {paidMonthsCount} of {scheduledMonthsCount} scheduled months paid
             </span>
           </div>
           <div
@@ -272,7 +268,7 @@ export function MemberDuesCard({
           <p className="text-[11px] text-[#7A685D]">
             {scheduledMonthsCount === 0
               ? "No dues months are scheduled for this year yet."
-              : `${paidMonthsCount} of ${scheduledMonthsCount} scheduled months paid.`}
+              : `${paidMonthsCount}/${scheduledMonthsCount} months paid`}
           </p>
         </div>
 
@@ -296,8 +292,8 @@ export function MemberDuesCard({
           </div>
           <div className="text-xs font-normal text-[#7A685D] mt-1">
             {unpaidTotalNgn > 0
-              ? "Outstanding dues contributions on your membership account."
-              : "All scheduled dues contributions are fully settled."}
+              ? "Unpaid balance for scheduled months."
+              : "All scheduled months are paid."}
           </div>
         </div>
 
@@ -344,18 +340,12 @@ export function MemberDuesCard({
               className="home-dues-schedule-toggle-icon"
             />
             <span className="home-dues-schedule-toggle-label">
-              {isScheduleExpanded
-                ? "Hide Month-by-Month Schedule"
-                : "View Month-by-Month Schedule"}
-            </span>
-            <span className="home-dues-schedule-toggle-summary">
-              ({paidMonthsCount} of {scheduledMonthsCount} scheduled months paid
-              · January – December {currentYear})
+              Monthly Schedule (Jan – Dec {currentYear})
             </span>
           </span>
 
           <span className="home-dues-schedule-toggle-action">
-            <span>{isScheduleExpanded ? "Collapse" : "Expand"}</span>
+            <span>{isScheduleExpanded ? "Hide" : "View"}</span>
             {isScheduleExpanded ? (
               <ChevronUp aria-hidden="true" />
             ) : (
@@ -372,7 +362,7 @@ export function MemberDuesCard({
                 12-Month Schedule Breakdown
               </span>
               <span className="text-[#7A685D]">
-                Click paid months to view receipt details
+                Tap any paid month to view receipt
               </span>
             </div>
 

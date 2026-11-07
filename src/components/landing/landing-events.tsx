@@ -41,7 +41,7 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
               href="/tickets"
               className="btn bg-forest text-cream hover:bg-ochre hover:text-deep text-xs font-bold transition-colors"
             >
-              Box Office &amp; Tickets →
+              Visit Box Office →
             </Link>
           </div>
         </div>
@@ -169,9 +169,7 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
                   href="/tickets"
                   className="btn mt-5 bg-forest text-cream hover:bg-ochre hover:text-deep text-xs font-bold transition-colors"
                 >
-                  {card.soldOut
-                    ? "See the box office"
-                    : "Get tickets at the box office"}
+                  {card.soldOut ? "View Box Office" : "Get Tickets"}
                 </Link>
               </article>
             ))}
@@ -182,9 +180,8 @@ export function LandingEvents({ ticketedEvents }: LandingEventsProps) {
               No event is on sale right now
             </h3>
             <p className="mt-2 text-sm text-umber max-w-md mx-auto">
-              Ticketed shows open for sale as soon as the family confirms the
-              date. Members hear first — the box office lists every event the
-              moment it goes live.
+              Tickets go on sale as soon as dates are confirmed. Members get
+              first notice when the box office opens.
             </p>
             <div className="mt-5 flex flex-wrap justify-center gap-3">
               <Link

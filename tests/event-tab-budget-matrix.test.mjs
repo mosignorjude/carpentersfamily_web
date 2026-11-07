@@ -16,8 +16,8 @@ describe("TabBudgetAllocations Single Matrix Consolidation", () => {
 
   it("displays allocation ceiling, disbursed spend, committed POs, and burn rate bar in one view", () => {
     assert.match(source, /Allocated/i);
-    assert.match(source, /Disbursed/i);
-    assert.match(source, /Committed/i);
-    assert.match(source, /Burn Rate/i);
+    assert.match(source, /Spent/i);
+    assert.match(source, /Pending/i);
+    assert.match(source, /Used/i);
   });
 });

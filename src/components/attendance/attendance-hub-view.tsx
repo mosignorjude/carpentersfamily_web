@@ -349,8 +349,7 @@ export function AttendanceHubView({
               Meeting Hub
             </h1>
             <p className="text-xs sm:text-sm text-[#7A685D] mt-1 max-w-2xl">
-              Official meeting minutes transcribed by the Secretariat, live
-              meeting check-in sessions, and permanent club attendance records.
+              Live meeting check-in, official minutes, and attendance records.
             </p>
           </div>
 
@@ -391,7 +390,7 @@ export function AttendanceHubView({
                     </span>
                   </div>
                   <p className="text-[11px] text-[#7A685D] mt-0.5">
-                    Scheduled General House assemblies and executive sessions
+                    Scheduled general and executive meetings
                   </p>
                 </div>
               </div>
@@ -449,8 +448,7 @@ export function AttendanceHubView({
                     </span>
                   </div>
                   <p className="text-[11px] text-[#7A685D] mt-0.5">
-                    Concluded club meetings, historical roll calls, and ratified
-                    minutes
+                    Past meetings, attendance, and minutes
                   </p>
                 </div>
               </div>
@@ -504,7 +502,7 @@ export function AttendanceHubView({
                     </span>
                   </div>
                   <p className="text-[11px] text-[#7A685D] mt-0.5">
-                    Historical cancelled assemblies and archived meeting records
+                    Cancelled and archived meetings
                   </p>
                 </div>
               </div>
@@ -633,21 +631,21 @@ export function AttendanceHubView({
             {/* Card 3: Secretariat Minutes */}
             <div className="p-3 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
               <div className="flex items-center justify-between text-xs text-[#6B5D53]">
-                <span className="font-bold">Secretariat Record</span>
+                <span className="font-bold">Minutes</span>
                 <FileText className="w-4 h-4 text-[#174C37]" />
               </div>
               <div className="text-base sm:text-xl font-extrabold text-[#3D291F]">
                 {minutes ? `Rev. ${minutes.revision_number}` : "Pending"}
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#6B5D53] truncate">
-                {minutes ? "Ratified" : "No transcription yet"}
+                {minutes ? "Ratified" : "Not published yet"}
               </p>
             </div>
 
             {/* Card 4: Meeting Roll Call */}
             <div className="p-3 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
               <div className="flex items-center justify-between text-xs text-[#6B5D53]">
-                <span className="font-bold">Roll Call Tally</span>
+                <span className="font-bold">Attendance</span>
                 <Users className="w-4 h-4 text-[#174C37]" />
               </div>
               <div className="text-base sm:text-xl font-extrabold text-[#3D291F]">
@@ -714,7 +712,7 @@ export function AttendanceHubView({
                 type="button"
               >
                 <Shield className="w-3.5 h-3.5" />
-                <span>Officer Audit Trail</span>
+                <span>Audit Log</span>
               </button>
             )}
           </div>
@@ -794,7 +792,7 @@ export function AttendanceHubView({
                     {selectedEvent.id.slice(0, 8).toUpperCase()}
                   </span>
                   <h2 className="text-lg font-extrabold text-[#3D291F]">
-                    Official Meeting Minutes — {selectedEvent.title}
+                    Minutes — {selectedEvent.title}
                   </h2>
                   <p className="text-xs text-[#7A685D]">
                     Convened on{" "}

@@ -3,14 +3,14 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { getNavigationItems } from "../src/lib/app-navigation.mjs";
 
-test("app navigation provides /portal for Home and /tickets for Box office", () => {
+test("app navigation provides /portal for Home and /tickets for Tickets", () => {
   const items = getNavigationItems(["member"]);
   const homeItem = items.find((i) => i.label === "Home");
   assert.ok(homeItem, "Home navigation item must exist");
   assert.equal(homeItem.href, "/portal");
 
-  const ticketsItem = items.find((i) => i.label === "Box office");
-  assert.ok(ticketsItem, "Box office navigation item must exist");
+  const ticketsItem = items.find((i) => i.label === "Tickets");
+  assert.ok(ticketsItem, "Tickets navigation item must exist");
   assert.equal(ticketsItem.href, "/tickets");
 });
 

@@ -57,7 +57,7 @@ export function DownloadReportModal({
             className="text-lg font-bold text-[#231F1D] tracking-tight"
             id="report-modal-title"
           >
-            Download Event Report
+            Download Report
           </h3>
           <button
             aria-label="Close dialog"
@@ -70,7 +70,7 @@ export function DownloadReportModal({
         </div>
 
         <p className="text-sm text-[#5C4638] leading-relaxed">
-          Export the complete financial reconciliation and ticket ledger for{" "}
+          Export the financial report or transaction ledger for{" "}
           <strong className="text-[#231F1D] font-semibold">{eventTitle}</strong>
           .
         </p>

@@ -49,7 +49,7 @@ export function LandingWhatWeDo() {
             Entertainment · Brands · Family
           </p>
           <h2 className="mt-2 font-serif font-bold text-forest text-3xl sm:text-4xl leading-tight">
-            What we do as a family to set the pace in Asaba.
+            Setting the Pace in Asaba
           </h2>
           <p className="mt-4 text-sm sm:text-base text-body leading-relaxed">
             Carpenters Family is both a close-knit family and a professional
@@ -112,13 +112,13 @@ export function LandingWhatWeDo() {
               href="/?modal=partnership"
               className="btn bg-forest text-cream hover:bg-ochre hover:text-deep text-xs sm:text-sm transition-colors"
             >
-              Partner With Us / Book Services
+              Partner With Us
             </Link>
             <a
               href="#events"
               className="btn border border-forest text-forest hover:bg-forest hover:text-cream text-xs sm:text-sm transition-colors"
             >
-              Explore Past Events →
+              Explore Events →
             </a>
           </div>
         </div>

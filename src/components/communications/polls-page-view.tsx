@@ -57,7 +57,7 @@ export function PollsPageView({
         </div>
 
         <span className="text-[11px] px-2.5 py-1 rounded-md bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3] self-start sm:self-auto font-medium">
-          Electoral Governance Protocol
+          Anonymous Voting
         </span>
       </div>
 
@@ -110,12 +110,9 @@ export function PollsPageView({
       {polls.length === 0 ? (
         <div className="bg-white rounded-xl border border-[#E5DDD3] p-12 text-center space-y-2">
           <Vote className="w-8 h-8 text-[#7A685D] mx-auto opacity-40" />
-          <h2 className="text-base font-bold text-[#3D291F]">
-            There are no polls yet
-          </h2>
+          <h2 className="text-base font-bold text-[#3D291F]">No Polls Yet</h2>
           <p className="text-xs text-[#7A685D] max-w-md mx-auto">
-            Active club consultations and referendum ballots will appear here
-            once scheduled.
+            Active club polls and member votes will appear here once opened.
           </p>
         </div>
       ) : (
@@ -132,9 +129,7 @@ export function PollsPageView({
                   Open for Voting ({openPolls.length})
                 </h2>
               </div>
-              <span className="text-xs text-[#7A685D]">
-                Live anonymous ballots
-              </span>
+              <span className="text-xs text-[#7A685D]">Anonymous voting</span>
             </div>
 
             {openPolls.length === 0 ? (
@@ -162,9 +157,7 @@ export function PollsPageView({
                   Closed Polls ({closedPolls.length})
                 </h2>
               </div>
-              <span className="text-xs text-[#7A685D]">
-                Concluded ballots & verified final totals
-              </span>
+              <span className="text-xs text-[#7A685D]">Final results</span>
             </div>
 
             {closedPolls.length === 0 ? (

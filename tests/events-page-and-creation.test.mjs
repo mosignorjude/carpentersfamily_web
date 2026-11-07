@@ -26,8 +26,11 @@ describe("Events Page & /create-event Route (Stage 3)", () => {
       assert.doesNotMatch(eventsPageViewSource, /Events and planning/);
     });
 
-    it("changes 'general assemblies' to 'General House'", () => {
-      assert.match(eventsPageViewSource, /General\s+House/);
+    it("changes 'general assemblies' to concise club events subtitle", () => {
+      assert.match(
+        eventsPageViewSource,
+        /Schedule, planning, and budgets for club shows, celebrations, and\s+projects\./,
+      );
       assert.doesNotMatch(eventsPageViewSource, /general assemblies/);
     });
 

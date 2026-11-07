@@ -96,14 +96,12 @@ export function EventBudgetCeilingModal({
                 className="text-base font-bold text-[#3D291F]"
                 id="budget-ceiling-modal-title"
               >
-                {isEditing
-                  ? "Edit Event Budget Total"
-                  : "Set Event Budget Total"}
+                {isEditing ? "Edit Event Budget" : "Set Event Budget"}
               </h3>
               <p className="text-xs text-[#7A685D]">
                 {isEditing
-                  ? "Update approved financial ceiling and preserve category allocations."
-                  : "Establish the club-approved expenditure ceiling for this event."}
+                  ? "Update the total budget for this event."
+                  : "Set the approved spending limit for this event."}
               </p>
             </div>
           </div>
@@ -152,8 +150,7 @@ export function EventBudgetCeilingModal({
               className="block font-semibold text-[#3D291F]"
               htmlFor="event-budget-total"
             >
-              Approved Budget Total (NGN){" "}
-              <span className="text-[#BA3C2A]">*</span>
+              Total Budget (₦) <span className="text-[#BA3C2A]">*</span>
             </label>
             <FormattedAmountInput
               aria-describedby={

@@ -46,7 +46,7 @@ export function PersonalNotificationsCard({
             className="text-lg font-bold text-[#3D291F]"
             id="notifications-heading"
           >
-            Recent Member Activity & Notices
+            Recent Activity
           </h3>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
@@ -76,7 +76,7 @@ export function PersonalNotificationsCard({
             className="text-lg font-bold text-[#3D291F]"
             id="notifications-heading"
           >
-            Recent Member Activity & Notices
+            Recent Activity
           </h3>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
@@ -103,7 +103,7 @@ export function PersonalNotificationsCard({
           className="text-lg font-bold text-[#3D291F]"
           id="notifications-heading"
         >
-          Recent Member Activity & Notices
+          Recent Activity
         </h3>
       </div>
 

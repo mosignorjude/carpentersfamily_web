@@ -67,11 +67,11 @@ export function PollCard({ poll }: PollCardProps) {
             {/* Status Pill */}
             {poll.isOpen ? (
               <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/30">
-                Status: Open for voting
+                Open
               </span>
             ) : (
               <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-neutral-200 text-neutral-700 border border-neutral-300">
-                Status: Closed
+                Closed
               </span>
             )}
 
@@ -83,7 +83,7 @@ export function PollCard({ poll }: PollCardProps) {
               </span>
             ) : (
               <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#FAF6F0] text-[#174C37] border border-[#E5DDD3] font-semibold">
-                Club-Wide Consultation
+                Club-Wide
               </span>
             )}
 
@@ -91,7 +91,7 @@ export function PollCard({ poll }: PollCardProps) {
             {poll.isOpen && poll.isClosingSoon && (
               <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#FFF8E6] text-[#8A641A] border border-[#D6A23A] font-bold flex items-center gap-1 animate-pulse">
                 <AlertTriangle className="w-3.5 h-3.5 text-[#D6A23A]" />
-                <span>Closing soon (over 75% duration elapsed)</span>
+                <span>Closing soon</span>
               </span>
             )}
           </div>
@@ -110,7 +110,7 @@ export function PollCard({ poll }: PollCardProps) {
             title="Edit poll parameters"
           >
             <Edit3 className="w-3.5 h-3.5 text-[#174C37]" />
-            <span>Edit Poll...</span>
+            <span>Edit</span>
           </button>
         )}
       </div>
@@ -119,7 +119,7 @@ export function PollCard({ poll }: PollCardProps) {
       {poll.isOpen && (
         <div className="p-4 bg-[#FAF6F0]/60 rounded-xl border border-[#E5DDD3] space-y-3">
           <div className="text-xs font-bold text-[#3D291F] flex items-center justify-between">
-            <span>Official Ballot Options</span>
+            <span>Options</span>
             {poll.hasVoted ? (
               <span className="text-[#174C37] font-semibold flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -127,7 +127,7 @@ export function PollCard({ poll }: PollCardProps) {
               </span>
             ) : (
               <span className="text-[#7A685D] font-normal">
-                Select one choice · Single vote allowed
+                Select one option
               </span>
             )}
           </div>
@@ -197,7 +197,7 @@ export function PollCard({ poll }: PollCardProps) {
                     pendingLabel="Recording Vote…"
                     statusToastMessage="Sealing your anonymous ballot."
                   >
-                    Submit Final Vote
+                    Submit Vote
                   </FormSubmitButton>
                 </div>
               </div>
@@ -262,12 +262,9 @@ export function PollCard({ poll }: PollCardProps) {
             /* Verified Aggregate Results (>= 5 votes) */
             <div className="p-4 bg-[#FAF6F0]/60 rounded-xl border border-[#E5DDD3] space-y-3">
               <div className="flex items-center justify-between text-xs font-bold text-[#3D291F]">
-                <span>
-                  Verified Anonymous Results ({totalVotesCount} total votes
-                  cast)
-                </span>
+                <span>Final Results ({totalVotesCount} votes)</span>
                 <span className="text-[#174C37] font-semibold text-[11px]">
-                  ✓ 5-Vote Privacy Threshold Satisfied
+                  ✓ Anonymous
                 </span>
               </div>
 
@@ -353,7 +350,7 @@ export function PollCard({ poll }: PollCardProps) {
         <div className="p-3.5 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] space-y-2 text-xs">
           <div className="flex items-center gap-1.5 font-bold text-[#3D291F]">
             <History className="w-3.5 h-3.5 text-[#174C37]" />
-            <span>Preserved Poll Revision History</span>
+            <span>Revision History</span>
           </div>
           <div className="space-y-2">
             {poll.revisions.map((rev) => (

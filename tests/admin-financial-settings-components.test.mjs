@@ -137,7 +137,7 @@ describe("OpeningBalanceEntryCard component requirements", () => {
     const source = readFileSync(openingBalanceCardPath, "utf8");
     assert.match(
       source,
-      /Opening Reserve Verified & Locked|Opening Reserve Verified/i,
+      /Verified &(?:amp;)? Locked/i,
       "Must render verified & locked badge when existingOpeningBalance is provided",
     );
     assert.match(

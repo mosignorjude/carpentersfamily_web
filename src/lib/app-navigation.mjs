@@ -13,14 +13,14 @@ export function getNavigationItems(roles) {
   return [
     { href: "/portal", label: "Home" },
     { href: "/events", label: "Events" },
-    { href: "/tickets", label: "Box office" },
+    { href: "/tickets", label: "Tickets" },
     { href: "/meeting-hub", label: "Meeting Hub" },
     { href: "/dues", label: "Dues" },
     { href: "/finances", label: "Finances" },
     { href: "/announcements", label: "Announcements" },
     { href: "/polls", label: "Polls" },
     ...(canSeeOfficerAreas
-      ? [{ href: "/officers/members", label: "Member administration" }]
+      ? [{ href: "/officers/members", label: "Member Admin" }]
       : []),
   ];
 }

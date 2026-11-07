@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, ShieldCheck, Users } from "lucide-react";
+import { ShieldCheck, Users } from "lucide-react";
 import { EmptyStateCard } from "@/components/ui/state-screen";
 import type {
   DashboardEventInfo,
@@ -12,7 +12,7 @@ interface TabTeamRolesProps {
   team: DashboardTeamMember[];
 }
 
-export function TabTeamRoles({ event, team }: TabTeamRolesProps) {
+export function TabTeamRoles({ team }: TabTeamRolesProps) {
   return (
     <div className="space-y-6 min-w-0">
       <div className="bg-white sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 border-[#E5DDD3] p-4 sm:p-0 shadow-xs sm:shadow-none space-y-4 text-xs min-w-0">
@@ -21,23 +21,22 @@ export function TabTeamRoles({ event, team }: TabTeamRolesProps) {
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-[#174C37]" />
               <h4 className="text-base font-bold text-[#3D291F]">
-                {event.title} Executive Committee & Planning Leads
+                Event Committee & Leads
               </h4>
             </div>
             <p className="text-xs text-[#7A685D] mt-0.5">
-              Assigned officers responsible for event ticketing, logistics,
-              security, and treasury reconciliation.
+              Members assigned to manage this event.
             </p>
           </div>
           <span className="text-[#174C37] font-semibold font-mono bg-[#FAF6F0] px-3 py-1.5 rounded-xl border border-[#E5DDD3] shrink-0">
-            {team.length} Active Committee Officer{team.length === 1 ? "" : "s"}
+            {team.length} Assigned
           </span>
         </div>
 
         {team.length === 0 ? (
           <EmptyStateCard
             className="my-4"
-            description="No committee officers or event leads have been assigned to this event yet."
+            description="No team members assigned to this event yet."
             icon={Users}
             title="No Committee Assigned"
           />
@@ -70,17 +69,12 @@ export function TabTeamRoles({ event, team }: TabTeamRolesProps) {
                   </div>
 
                   <div className="pt-2 border-t border-[#FAF6F0] text-xs text-[#5C4638] flex items-center justify-between">
-                    <span className="text-[#7A685D]">Authorization Level:</span>
+                    <span className="text-[#7A685D]">Access:</span>
                     <strong className="text-[#3D291F]">
                       {isExecutive
-                        ? "Full Executive Sign-off"
-                        : "Operational Verification"}
+                        ? "Full Event Management"
+                        : "Event Operations"}
                     </strong>
-                  </div>
-
-                  <div className="text-[11px] text-[#7A685D] flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#174C37]" />
-                    <span>Bound by Club Charter &amp; Audit Mandate</span>
                   </div>
                 </div>
               );
@@ -106,11 +100,9 @@ export function TabTeamRoles({ event, team }: TabTeamRolesProps) {
           </summary>
           <div className="mt-2.5 pt-2.5 border-t border-[#E5DDD3] text-xs text-[#7A685D] leading-relaxed animate-in fade-in duration-150">
             <p>
-              All transactions above ₦500,000 require dual executive sign-off
-              from the Treasurer and Event Director. Ledger modifications are
-              strictly immutable: entries can only be voided with a stated
-              reason, retaining their chronological row position with
-              strike-through styling to guarantee audit integrity.
+              All ledger entries are permanent. Incorrect entries cannot be
+              deleted — they must be voided with a reason and remain visible in
+              the audit log.
             </p>
           </div>
         </details>

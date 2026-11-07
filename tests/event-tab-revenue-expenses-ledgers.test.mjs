@@ -14,7 +14,7 @@ const expSource = readFileSync(
 describe("TabRevenue & TabExpenses Single-Card Matrices & Ledgers", () => {
   it("consolidates revenue streams into a single matrix card with single header record button", () => {
     assert.doesNotMatch(revSource, /grid\s+grid-cols-1\s+lg:grid-cols-2\s+gap-5/);
-    assert.match(revSource, /Revenue Streams & Inflow Matrix/i);
+    assert.match(revSource, /Revenue Streams/i);
     assert.match(revSource, /Record Revenue/);
     assert.match(revSource, /<EventDomainLedger/);
     assert.match(revSource, /domain="revenue"/);
@@ -22,8 +22,8 @@ describe("TabRevenue & TabExpenses Single-Card Matrices & Ledgers", () => {
 
   it("consolidates cost centers into a single matrix card with single header disburse button", () => {
     assert.doesNotMatch(expSource, /grid\s+grid-cols-1\s+lg:grid-cols-2\s+gap-5/);
-    assert.match(expSource, /Operational Cost Centers & Budget Matrix/i);
-    assert.match(expSource, /Record Disbursement/);
+    assert.match(expSource, /Expenses by Category/i);
+    assert.match(expSource, /Record Expense/);
     assert.match(expSource, /<EventDomainLedger/);
     assert.match(expSource, /domain="expenses"/);
   });

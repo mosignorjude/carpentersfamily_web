@@ -404,10 +404,10 @@ export function RecordTransactionModal({
                 className="text-base font-bold text-[#3D291F]"
                 id="record-modal-title"
               >
-                Record Event Transaction
+                Record Transaction
               </h3>
               <p className="text-xs text-[#7A685D]">
-                Club Governance & Audit Mandate
+                Add a ticket sale, revenue entry, or expense.
               </p>
             </div>
           </div>
@@ -476,7 +476,7 @@ export function RecordTransactionModal({
             }}
             type="button"
           >
-            <span>Disbursement</span>
+            <span>Expense</span>
           </button>
         </div>
 
@@ -503,7 +503,7 @@ export function RecordTransactionModal({
                   className="font-bold text-[#3D291F] block"
                   htmlFor="ticket-tier-select"
                 >
-                  Select Admission Tier
+                  Ticket Tier
                 </label>
                 <select
                   className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
@@ -531,7 +531,7 @@ export function RecordTransactionModal({
                     className="font-bold text-[#3D291F] block"
                     htmlFor="ticket-quantity-input"
                   >
-                    Quantity Passes
+                    Quantity
                   </label>
                   <input
                     className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
@@ -552,7 +552,7 @@ export function RecordTransactionModal({
 
                 <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] flex flex-col justify-center">
                   <span className="text-[10px] text-[#7A685D] uppercase font-bold">
-                    Total Amount Due
+                    Total Amount
                   </span>
                   <span className="text-base font-bold text-[#174C37] font-mono tabular-nums">
                     {formatNaira(calculatedTicketTotal)}
@@ -565,7 +565,7 @@ export function RecordTransactionModal({
                   className="font-bold text-[#3D291F] block"
                   htmlFor="ticket-attendee-name"
                 >
-                  Attendee / Purchaser Name
+                  Buyer Name
                 </label>
                 <input
                   aria-describedby={
@@ -597,7 +597,7 @@ export function RecordTransactionModal({
                   className="font-bold text-[#3D291F] block"
                   htmlFor="ticket-attendee-phone"
                 >
-                  Phone Number (Optional for SMS pass)
+                  Phone Number (Optional)
                 </label>
                 <input
                   className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
@@ -679,7 +679,7 @@ export function RecordTransactionModal({
                   htmlFor="category-select"
                 >
                   {mode === "revenue"
-                    ? "Revenue Stream Category"
+                    ? "Revenue Category"
                     : "Budget Allocation (Cost Center)"}
                 </label>
                 <select
@@ -811,7 +811,7 @@ export function RecordTransactionModal({
                   className="font-bold text-[#3D291F] block"
                   htmlFor="txn-description"
                 >
-                  Transaction Description
+                  Description
                 </label>
                 <input
                   aria-describedby={
@@ -848,7 +848,7 @@ export function RecordTransactionModal({
                     className="font-bold text-[#3D291F] block"
                     htmlFor="txn-amount"
                   >
-                    Amount (₦ NGN)
+                    Amount (₦)
                   </label>
                   <FormattedAmountInput
                     aria-describedby={
@@ -879,7 +879,7 @@ export function RecordTransactionModal({
                     className="font-bold text-[#3D291F] block"
                     htmlFor="txn-payment-method"
                   >
-                    Payment Channel
+                    Payment Method
                   </label>
                   <select
                     className="w-full h-10 px-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
@@ -903,9 +903,7 @@ export function RecordTransactionModal({
                     className="font-bold text-[#3D291F] block"
                     htmlFor="txn-party"
                   >
-                    {mode === "revenue"
-                      ? "Payer / Counterparty"
-                      : "Payee / Vendor"}
+                    {mode === "revenue" ? "Payer" : "Payee / Vendor"}
                   </label>
                   <input
                     aria-describedby={
@@ -968,8 +966,7 @@ export function RecordTransactionModal({
                       className="font-bold text-[#3D291F] block"
                       htmlFor="txn-receipt-file"
                     >
-                      Payment Receipt / Voucher{" "}
-                      <span className="text-[#BA3C2A]">*</span>
+                      Receipt <span className="text-[#BA3C2A]">*</span>
                     </label>
                     <input
                       aria-describedby={
@@ -1011,7 +1008,7 @@ export function RecordTransactionModal({
               className="font-bold text-[#3D291F] block"
               htmlFor="txn-notes"
             >
-              Auditor Notes (Optional)
+              Notes (Optional)
             </label>
             <textarea
               className="w-full h-20 p-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] resize-none"
@@ -1058,15 +1055,15 @@ export function RecordTransactionModal({
               <span>
                 {isPending
                   ? mode === "ticket"
-                    ? "Posting Ticket Sale…"
+                    ? "Recording Ticket Sale…"
                     : mode === "expense"
-                      ? "Posting Disbursement…"
-                      : "Posting Revenue…"
+                      ? "Recording Expense…"
+                      : "Recording Revenue…"
                   : mode === "ticket"
-                    ? "Issue & Post Ticket Sale"
+                    ? "Record Ticket Sale"
                     : mode === "expense"
-                      ? "Post Disbursement"
-                      : "Post Revenue Receipt"}
+                      ? "Record Expense"
+                      : "Record Revenue"}
               </span>
             </button>
           </div>

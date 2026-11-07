@@ -126,16 +126,14 @@ export function FormSubmitButton({
   const resolvedLabel =
     loadingText ??
     pendingLabel ??
-    (typeof children === "string" ? `${children}…` : "Processing Action…");
+    (typeof children === "string" ? `${children}…` : "Saving…");
 
   useEffect(() => {
     if (pending && !wasPendingRef.current && showStatusToast) {
       wasPendingRef.current = true;
       dispatchActionStatusToast({
         title: statusToastTitle ?? resolvedLabel.replace(/\.+$/, ""),
-        message:
-          statusToastMessage ??
-          "Processing your request and updating club records…",
+        message: statusToastMessage ?? "Saving your changes…",
       });
     } else if (!pending) {
       wasPendingRef.current = false;

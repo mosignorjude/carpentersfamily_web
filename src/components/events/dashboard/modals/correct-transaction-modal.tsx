@@ -61,10 +61,10 @@ export function CorrectTransactionModal({
                 className="text-base font-extrabold text-[#3D291F]"
                 id="correct-event-txn-title"
               >
-                Correct Event Ledger Entry
+                Edit Transaction
               </h3>
               <p className="text-xs text-[#54433A] font-medium">
-                Audited modification of event financial record
+                Update this record with an audit note.
               </p>
             </div>
           </div>
@@ -261,8 +261,7 @@ export function CorrectTransactionModal({
               className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
               htmlFor="correct-reason"
             >
-              Audited Correction Reason{" "}
-              <span className="text-[#BA3C2A]">*</span>
+              Reason for Correction <span className="text-[#BA3C2A]">*</span>
             </label>
             <textarea
               className="w-full h-20 p-2.5 bg-white border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] resize-none"
@@ -284,7 +283,7 @@ export function CorrectTransactionModal({
               Cancel
             </button>
             <FormSubmitButton loadingText="Correcting...">
-              Save Audited Correction
+              Save Correction
             </FormSubmitButton>
           </div>
         </form>

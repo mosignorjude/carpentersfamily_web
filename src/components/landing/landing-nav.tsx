@@ -102,7 +102,7 @@ export function LandingNav() {
                   className="px-3 min-h-[44px] inline-flex items-center hover:text-forest transition-colors"
                   href="/tickets"
                 >
-                  Box Office / Tickets
+                  Tickets
                 </Link>
               </li>
             </ul>
@@ -222,7 +222,7 @@ export function LandingNav() {
               href="/tickets"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Box Office / Tickets
+              Tickets
             </Link>
           </li>
         </ul>

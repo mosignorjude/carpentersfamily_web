@@ -134,8 +134,7 @@ export function EventDomainLedger({
             <h4 className="text-base font-bold text-[#3D291F]">{title}</h4>
           </div>
           <p className="text-xs text-[#7A685D] mt-0.5">
-            Transparent, chronological record of all verified and pending{" "}
-            {domain} entries.
+            All verified and pending {domain} records.
           </p>
         </div>
 
@@ -148,7 +147,7 @@ export function EventDomainLedger({
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            placeholder="Search ref, counterparty, description..."
+            placeholder="Search transactions..."
             type="text"
             value={searchQuery}
           />
@@ -303,12 +302,12 @@ export function EventDomainLedger({
           <div className="py-12 px-4 text-center text-[#6B5D53]">
             <AlertCircle className="w-6 h-6 mx-auto mb-2 text-[#D6A23A]" />
             <p className="font-semibold text-sm text-[#3D291F]">
-              No domain transactions found
+              No transactions found
             </p>
             <p className="text-xs mt-1">
               {searchQuery
                 ? "No records match your search criteria."
-                : `No ${statusFilter === "all" ? "" : statusFilter} entries recorded for this event.`}
+                : `No ${statusFilter === "all" ? "" : `${statusFilter} `}records for this event yet.`}
             </p>
           </div>
         ) : (
@@ -417,7 +416,7 @@ export function EventDomainLedger({
                     {/* Status Badge */}
                     {isPending && (
                       <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
-                        Recorded (Pending)
+                        Pending Review
                       </span>
                     )}
                     {isApproved && (
@@ -460,7 +459,7 @@ export function EventDomainLedger({
                       isPending &&
                       (isExecutive && isSelfReview ? (
                         <span className="text-[10px] font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-2.5 py-1.5 rounded-lg text-center">
-                          Awaiting Independent Officer Review
+                          Needs Another Officer's Review
                         </span>
                       ) : (
                         <>
@@ -503,13 +502,13 @@ export function EventDomainLedger({
             <thead>
               <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
                 <th className="py-3 px-4">Ref & Date</th>
-                <th className="py-3 px-4">Description & Counterparty</th>
+                <th className="py-3 px-4">Description & Party</th>
                 <th className="py-3 px-4">
                   {domain === "tickets" ? "Channel" : "Category"}
                 </th>
-                <th className="py-3 px-4 text-right">Amount (NGN)</th>
-                <th className="py-3 px-4 text-center">Voucher Evidence</th>
-                <th className="py-3 px-4 text-center">Review Status</th>
+                <th className="py-3 px-4 text-right">Amount</th>
+                <th className="py-3 px-4 text-center">Receipt</th>
+                <th className="py-3 px-4 text-center">Status</th>
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -522,12 +521,12 @@ export function EventDomainLedger({
                   >
                     <AlertCircle className="w-6 h-6 mx-auto mb-2 text-[#D6A23A]" />
                     <p className="font-semibold text-sm text-[#3D291F]">
-                      No domain transactions found
+                      No transactions found
                     </p>
                     <p className="text-xs mt-1">
                       {searchQuery
                         ? "No records match your search criteria."
-                        : `No ${statusFilter === "all" ? "" : statusFilter} entries recorded for this event.`}
+                        : `No ${statusFilter === "all" ? "" : `${statusFilter} `}records for this event yet.`}
                     </p>
                   </td>
                 </tr>
@@ -652,7 +651,7 @@ export function EventDomainLedger({
                       <td className="py-3 px-4 text-center whitespace-nowrap">
                         {isPending && (
                           <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
-                            Recorded (Pending)
+                            Pending Review
                           </span>
                         )}
                         {isApproved && (
@@ -689,7 +688,7 @@ export function EventDomainLedger({
                             isPending &&
                             (isExecutive && isSelfReview ? (
                               <span className="text-[10px] font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-2 py-1 rounded-lg">
-                                Awaiting Independent Officer Review
+                                Needs Another Officer's Review
                               </span>
                             ) : (
                               <>

@@ -144,8 +144,7 @@ export function OfficerAuditHistory({
               </span>
             </div>
             <p className="text-xs text-[#54433A] font-medium">
-              Indelible, immutable audit log of all financial mutations and cost
-              center adjustments
+              Permanent log of all financial changes and category updates
             </p>
           </div>
         </div>
@@ -215,9 +214,7 @@ export function OfficerAuditHistory({
                       >
                         <FileCode className="w-3.5 h-3.5 text-[#174C37]" />
                         <span>
-                          {isExpanded
-                            ? "Hide State Diff"
-                            : "Inspect State Diff"}
+                          {isExpanded ? "Hide Details" : "View Details"}
                         </span>
                         {isExpanded ? (
                           <ChevronUp className="w-3 h-3 text-[#7A685D]" />

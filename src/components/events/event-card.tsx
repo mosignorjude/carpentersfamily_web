@@ -89,34 +89,34 @@ export function EventCard({
   // Status visual configuration
   const statusConfig = isRetainedArchive
     ? {
-        text: "Status: Archived",
+        text: "Archived",
         badge: "text-[#7A685D] bg-[#FAF6F0] border-[#E5DDD3]",
         border: "border-[#E5DDD3]",
         desc: "Retained indefinitely in club repository. Record is read-only.",
       }
     : isPastScheduled
       ? {
-          text: "Status: Awaiting Completion",
+          text: "Awaiting Completion",
           badge: "text-[#D6A23A] bg-[#FAF6F0] border-[#D6A23A]/50",
           border: "border-[#D6A23A]/40",
           desc: "Event date has passed. Awaiting final minutes or completion confirmation from Event Lead/Administration.",
         }
       : event.status === "scheduled"
         ? {
-            text: "Status: Scheduled",
+            text: "Scheduled",
             badge: "text-[#174C37] bg-[#174C37]/10 border-[#174C37]/30",
             border: "border-[#174C37]/30",
             desc: "Active event. Open for member attendance & logistics planning.",
           }
         : isCompleted
           ? {
-              text: "Status: Completed",
+              text: "Completed",
               badge: "text-[#5C4638] bg-[#FAF6F0] border-[#E5DDD3]",
               border: "border-[#E5DDD3]",
               desc: "Concluded. Planning locked. Only Admin or President can reopen.",
             }
           : {
-              text: "Status: Cancelled",
+              text: "Cancelled",
               badge: "text-[#BA3C2A] bg-[#BA3C2A]/10 border-[#BA3C2A]/30",
               border: "border-[#BA3C2A]/30",
               desc: "Planning halted and locked. Only Admin or President can reopen.",
@@ -218,11 +218,7 @@ export function EventCard({
           onClick={() => setDetailsExpanded(!detailsExpanded)}
           type="button"
         >
-          <span>
-            {detailsExpanded
-              ? "Hide Details & Governance"
-              : "View Details & Committee Roles"}
-          </span>
+          <span>{detailsExpanded ? "Hide Details" : "View Details"}</span>
           {detailsExpanded ? (
             <ChevronUp className="w-4 h-4 text-[#174C37]" />
           ) : (
@@ -349,7 +345,7 @@ export function EventCard({
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[48px] no-underline"
                 href={`/events/${event.id}/dashboard`}
               >
-                <span>Open Event Dashboard</span>
+                <span>Event Dashboard</span>
                 <ArrowRight className="w-4 h-4 text-[#D6A23A]" />
               </Link>
               {isManager &&
@@ -362,7 +358,7 @@ export function EventCard({
                     href={`/events/${event.id}/dashboard?action=record-transaction`}
                   >
                     <DollarSign className="w-4 h-4" />
-                    <span>Make a Transaction</span>
+                    <span>Record Transaction</span>
                   </Link>
                 )}
             </div>
@@ -549,7 +545,7 @@ export function EventCard({
                   className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl transition-colors shadow-xs min-h-[44px] no-underline"
                   href={`/events/${event.id}/dashboard`}
                 >
-                  <span className="text-white">Open Event Dashboard</span>
+                  <span className="text-white">Event Dashboard</span>
                   <ArrowRight className="w-3.5 h-3.5 text-[#D6A23A]" />
                 </Link>
                 {isManager &&
@@ -562,7 +558,7 @@ export function EventCard({
                       href={`/events/${event.id}/dashboard?action=record-transaction`}
                     >
                       <DollarSign className="w-4 h-4" />
-                      <span>Make a Transaction</span>
+                      <span>Record Transaction</span>
                     </Link>
                   )}
               </>

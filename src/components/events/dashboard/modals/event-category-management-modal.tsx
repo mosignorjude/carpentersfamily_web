@@ -52,9 +52,9 @@ const typeLabels: Record<
     singular: "Expense Category",
   },
   budget_allocation: {
-    title: "Budget Allocation Categories",
+    title: "Budget Categories",
     tab: "budget",
-    singular: "Budget Allocation Category",
+    singular: "Budget Category",
   },
   revenue: {
     title: "Revenue Categories",
@@ -253,7 +253,7 @@ export function EventCategoryManagementModal({
                   <div className="flex items-center justify-between text-xs font-bold text-[#174C37]">
                     <div className="flex items-center gap-2">
                       <FolderPlus className="w-4 h-4 text-[#174C37]" />
-                      <span>Add / Allocate Budget Category</span>
+                      <span>Add Budget Category</span>
                     </div>
                     {remainingHeadroom > 0 ? (
                       <span className="text-[11px] text-[#174C37] font-semibold font-mono">
@@ -282,7 +282,7 @@ export function EventCategoryManagementModal({
                         htmlFor="quick-select-category"
                         className="text-[11px] font-semibold text-[#7A685D] block"
                       >
-                        Choose from existing unallocated catalog categories:
+                        Quick-select an unallocated category:
                       </label>
                       <select
                         id="quick-select-category"
@@ -431,7 +431,7 @@ export function EventCategoryManagementModal({
                         type="text"
                         value={allocReason}
                       />
-                      <FormFieldHint message="Required by Club Governance for all budget modifications." />
+                      <FormFieldHint message="Recorded in the audit trail." />
                     </div>
 
                     <div className="flex items-center justify-between pt-1">
@@ -747,7 +747,7 @@ export function EventCategoryManagementModal({
                                   type="text"
                                   value={editAllocReason}
                                 />
-                                <FormFieldHint message="Required by Club Governance for all budget modifications." />
+                                <FormFieldHint message="Recorded in the audit trail." />
                               </div>
 
                               <div className="flex items-center justify-end gap-2 pt-1">

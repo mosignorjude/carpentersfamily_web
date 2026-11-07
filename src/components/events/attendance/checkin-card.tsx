@@ -76,7 +76,7 @@ export function CheckinCard({
               className="text-base font-extrabold text-[#3D291F]"
               id="checkin-card-heading"
             >
-              Member Self-Check-In
+              Meeting Check-In
             </h2>
             <p className="text-xs text-[#7A685D]">
               Record personal attendance for this session
@@ -101,7 +101,7 @@ export function CheckinCard({
         <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-2 text-xs">
           <div className="flex items-center gap-2 font-bold text-[#174C37]">
             <CheckCircle2 className="w-4 h-4 text-[#174C37]" />
-            <span>Attendance Successfully Confirmed</span>
+            <span>Checked In</span>
           </div>
           <p className="text-[#5C4638]">{currentStatus?.desc}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-[#E5DDD3] text-[#7A685D] font-mono text-[11px]">
@@ -128,7 +128,7 @@ export function CheckinCard({
         <div className="space-y-4">
           <p className="text-xs text-[#5C4638] leading-relaxed">
             {sessionOpen && isMutable
-              ? "The attendance session is currently active. Click below to verify and record your physical presence."
+              ? "Check-in is open. Tap below to record your attendance."
               : "Check-in is currently inactive. An Executive or Club Admin must open the attendance session."}
           </p>
 

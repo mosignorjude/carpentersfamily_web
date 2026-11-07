@@ -51,11 +51,11 @@ describe("Event Ledger Recorded/Auth by Attribution", () => {
     );
   });
 
-  it("renames Authorized By column header to Recorded/Auth by in TabAuditLog", () => {
+  it("renames Authorized By column header to Recorded By in TabAuditLog", () => {
     assert.match(
       auditLogSource,
-      /<th[^>]*>Recorded\/Auth by<\/th>/,
-      "TabAuditLog must label column Recorded/Auth by",
+      /<th[^>]*>Recorded By<\/th>/,
+      "TabAuditLog must label column Recorded By",
     );
     assert.doesNotMatch(
       auditLogSource,
@@ -64,11 +64,11 @@ describe("Event Ledger Recorded/Auth by Attribution", () => {
     );
   });
 
-  it("renames Authorized Officer to Recorded / Authorized by in TransactionDetailModal", () => {
+  it("renames Authorized Officer to Recorded By in TransactionDetailModal", () => {
     assert.match(
       modalSource,
-      /Recorded\s*\/\s*Authorized by/,
-      "TransactionDetailModal must label metadata card Recorded / Authorized by",
+      /Recorded By/,
+      "TransactionDetailModal must label metadata card Recorded By",
     );
   });
 });

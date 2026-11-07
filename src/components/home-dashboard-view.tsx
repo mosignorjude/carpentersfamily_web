@@ -99,8 +99,7 @@ export default function HomeDashboardView({
               </h1>
 
               <p className="home-dashboard-intro-copy mt-2 max-w-2xl text-xs leading-relaxed font-normal sm:text-sm text-[#E5DDD3]">
-                Welcome back. Here is an overview of what is happening in the
-                family today.
+                Welcome back. Here’s what’s happening in the family today.
               </p>
             </div>
           </div>

@@ -13,8 +13,8 @@ const PORTAL_SOURCE = readFileSync(
 
 test("OfficerBoxOfficeDesk renders core KPI metrics and governance controls", () => {
   assert.match(DESK_SOURCE, /Officer Box Office Desk/);
-  assert.match(DESK_SOURCE, /Gross Ticketing Inflow/);
-  assert.match(DESK_SOURCE, /Passes Issued \/ Capacity/);
+  assert.match(DESK_SOURCE, /Ticket Sales Revenue/);
+  assert.match(DESK_SOURCE, /Tickets Sold \/ Capacity/);
   assert.match(DESK_SOURCE, /Verification Queue/);
   assert.match(DESK_SOURCE, /Active Ticketed Events/);
   assert.match(DESK_SOURCE, /href="\/create-event"/);
@@ -26,11 +26,11 @@ test("PortalBoxOfficeView connects to Member Portal and renders ticket inventory
     "src/components/tickets/portal-box-office-view.tsx",
     "utf8",
   );
-  assert.match(portalSource, /Box Office & Passes/);
+  assert.match(portalSource, /Tickets & Reservations/);
   assert.match(portalSource, /href="\/tickets\/order"/);
   assert.match(portalSource, /href="\/tickets\?view=public"/);
   assert.match(portalSource, /OfficerBoxOfficeDesk/);
-  assert.match(portalSource, /Admission Tiers & Pass Pricing/);
+  assert.match(portalSource, /Ticket Tiers & Prices/);
 
   // No breadcrumb
   assert.doesNotMatch(

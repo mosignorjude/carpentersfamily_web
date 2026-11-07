@@ -276,7 +276,7 @@ export function PreLaunchDuesReconciliationCard({
           </div>
           <div>
             <h3 className="text-sm font-extrabold text-[#3D291F]">
-              Pre-Launch Dues Reconciliation Workspace
+              Pre-Launch Dues (Feb–Sep 2026)
             </h3>
             <p className="text-xs text-[#7A685D] mt-0.5">
               Access restricted to the Club Admin and the President. Only they
@@ -304,7 +304,7 @@ export function PreLaunchDuesReconciliationCard({
               className="text-base sm:text-lg font-black text-[#3D291F]"
               id="dues-reconciliation-heading"
             >
-              Pre-Launch Dues Reconciliation Workspace (Feb–Sep 2026)
+              Pre-Launch Dues (Feb–Sep 2026)
             </h3>
           </div>
           <p className="text-xs text-[#54433A] max-w-2xl leading-relaxed">

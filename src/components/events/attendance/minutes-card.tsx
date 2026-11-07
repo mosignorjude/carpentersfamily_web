@@ -43,7 +43,7 @@ export function MinutesCard({
                 className="text-base font-extrabold text-[#3D291F]"
                 id="minutes-card-heading"
               >
-                Meeting Minutes & Secretariat Record
+                Meeting Minutes
               </h2>
             </div>
             <p className="text-xs text-[#7A685D]">
@@ -59,7 +59,7 @@ export function MinutesCard({
             </span>
           ) : (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-[#7A685D] bg-[#FAF6F0] border border-[#E5DDD3]">
-              Pending Transcription
+              Not Published
             </span>
           )}
 
@@ -118,7 +118,7 @@ export function MinutesCard({
               ? () => setEditorOpen(true)
               : undefined
           }
-          title="Minutes Pending Publication"
+          title="No Minutes Published Yet"
         />
       )}
 

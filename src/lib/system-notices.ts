@@ -49,8 +49,8 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
   },
   saved: {
     type: "success",
-    title: "Operation Recorded",
-    message: "The record was saved into the institutional ledger.",
+    title: "Saved",
+    message: "Record saved to the club ledger.",
   },
   corrected: {
     type: "info",
@@ -251,8 +251,7 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
   "minutes-saved": {
     type: "success",
     title: "Minutes Saved",
-    message:
-      "Meeting minutes were saved and recorded in the Secretariat archive.",
+    message: "Meeting minutes saved and published.",
   },
   "attendance-opened": {
     type: "success",

@@ -134,7 +134,7 @@ function PartnershipEnquiryForm({ onClose }: { onClose: () => void }) {
 
         <div className="flex gap-2 pt-2">
           <ModalSubmit className="bg-ochre text-deep hover:bg-forest hover:text-cream">
-            Send Partnership Inquiry
+            Send Enquiry
           </ModalSubmit>
           <button
             type="button"

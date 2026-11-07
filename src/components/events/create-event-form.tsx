@@ -178,8 +178,7 @@ export function CreateEventForm() {
             ))}
           </select>
           <span className={HINT_CLASS}>
-            The last day keeps the event live all day, even after its start has
-            passed.
+            The event stays active until the end of its final day.
           </span>
         </div>
 
@@ -223,7 +222,7 @@ export function CreateEventForm() {
             </h4>
           </div>
           <span className="text-[11px] text-[#7A685D]">
-            Feature choices are permanently locked upon event creation
+            Cannot be changed after the event is created
           </span>
         </div>
 
@@ -288,7 +287,7 @@ export function CreateEventForm() {
                   type="checkbox"
                   value="enabled"
                 />
-                <span>Ticketing Passes</span>
+                <span>Tickets & Reservations</span>
               </label>
             </div>
           </div>
@@ -306,7 +305,7 @@ export function CreateEventForm() {
                   type="checkbox"
                   value="enabled"
                 />
-                <span>Meeting Minutes & Secretarial Record</span>
+                <span>Meeting Minutes</span>
               </label>
 
               <label className="flex items-center gap-2 p-3 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] text-xs font-semibold text-[#3D291F] cursor-pointer">
@@ -318,7 +317,7 @@ export function CreateEventForm() {
                   type="checkbox"
                   value="enabled"
                 />
-                <span>Member Attendance Roster & Check-In</span>
+                <span>Attendance & Check-In</span>
               </label>
             </div>
 
@@ -382,7 +381,7 @@ export function CreateEventForm() {
             pendingLabel="Creating Event…"
             statusToastMessage="Publishing new event to the club calendar."
           >
-            Publish & Create Event
+            Create Event
           </FormSubmitButton>
         </div>
       </div>

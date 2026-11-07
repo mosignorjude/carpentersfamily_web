@@ -87,7 +87,7 @@ export interface AccessDeniedCardProps {
  */
 export function AccessDeniedCard({
   title = "Restricted Access",
-  description = "You do not have the required club leadership clearance or executive assignment to access this management desk.",
+  description = "You do not have permission to view this page.",
   backHref = "/",
   backLabel = "Return to Dashboard",
   className = "",
@@ -103,7 +103,7 @@ export function AccessDeniedCard({
 
       <div className="space-y-2">
         <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BA3C2A] bg-[#BA3C2A]/10 px-2.5 py-1 rounded-md inline-block">
-          Clearance Required
+          Restricted Access
         </span>
         <h2 className="text-lg sm:text-xl font-extrabold text-[#3D291F] tracking-tight">
           {title}
@@ -139,9 +139,9 @@ export interface DataUnavailableCardProps {
  */
 export function DataUnavailableCard({
   title = "Records Temporarily Unavailable",
-  description = "We could not securely verify the requested records from the institutional database. Check your network connection or try again shortly.",
+  description = "We could not load these records right now. Check your connection and try again.",
   onRetry,
-  retryLabel = "Retry Verification",
+  retryLabel = "Try Again",
   className = "",
 }: DataUnavailableCardProps) {
   return (
@@ -155,7 +155,7 @@ export function DataUnavailableCard({
 
       <div className="space-y-1.5">
         <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A685D] block">
-          {clubBrand.shortName} Verification
+          {clubBrand.shortName}
         </span>
         <h3 className="text-base sm:text-lg font-bold text-[#3D291F] tracking-tight">
           {title}

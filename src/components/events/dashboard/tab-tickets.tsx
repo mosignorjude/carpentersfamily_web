@@ -66,20 +66,11 @@ export function TabTickets({
             <div className="flex items-center gap-2">
               <Ticket className="w-5 h-5 text-[#174C37]" />
               <h3 className="text-lg font-bold text-[#3D291F]">
-                <span className="hidden sm:inline">
-                  Admission Tiers & Inventory Matrix
-                </span>
-                <span className="sm:hidden">Ticket Tiers</span>
+                Ticket Tiers &amp; Inventory
               </h3>
             </div>
             <p className="text-xs text-[#6B5D53] mt-1">
-              <span className="hidden sm:inline">
-                Reconciled ticketing tallies across all authorized admission
-                tiers.
-              </span>
-              <span className="sm:hidden">
-                Tier inventory & revenue tallies.
-              </span>
+              Ticket prices, capacity, and sales across all tiers.
             </p>
           </div>
 
@@ -87,7 +78,7 @@ export function TabTickets({
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
               <span className="text-[#7A685D] block text-[11px]">
-                Gross Ticketing Inflow
+                Ticket Revenue
               </span>
               <span className="font-bold text-[#174C37] text-sm tabular-nums font-mono">
                 {formatNaira(totalGross)}
@@ -96,7 +87,7 @@ export function TabTickets({
 
             <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
               <span className="text-[#7A685D] block text-[11px]">
-                Total Passes Issued
+                Tickets Sold
               </span>
               <span className="font-bold text-[#3D291F] text-sm tabular-nums font-mono">
                 {totalSold} / {totalCapacity}
@@ -162,9 +153,9 @@ export function TabTickets({
           <div className="space-y-4">
             <EmptyStateCard
               className="my-4"
-              description="No ticket tiers have been created for this event. Configure admission tiers to begin issuing passes."
+              description="Add a ticket tier to start recording ticket sales."
               icon={Ticket}
-              title="No Ticket Tiers Configured"
+              title="No Ticket Tiers Yet"
             />
             {canManage && onOpenCreateTierModal && (
               <div className="text-center">
@@ -175,7 +166,7 @@ export function TabTickets({
                   type="button"
                 >
                   <Plus className="w-4 h-4 text-[#D6A23A]" />
-                  <span>Create Admission Tier</span>
+                  <span>Add Ticket Tier</span>
                 </button>
               </div>
             )}
@@ -240,7 +231,7 @@ export function TabTickets({
                     <div>
                       <div className="flex items-baseline justify-between text-xs font-mono">
                         <span className="text-[#6B5D53]">
-                          Passes:{" "}
+                          Sold:{" "}
                           <strong className="text-[#3D291F]">
                             {tier.sold} / {tier.capacity}
                           </strong>
@@ -265,7 +256,7 @@ export function TabTickets({
 
                     <div className="flex items-center justify-between pt-2 border-t border-[#F2ECE4] text-xs">
                       <div>
-                        <span className="text-[#6B5D53]">Gross Inflow: </span>
+                        <span className="text-[#6B5D53]">Revenue: </span>
                         <span className="font-mono font-bold text-[#3D291F]">
                           {formatNaira(revenue)}
                         </span>
@@ -309,15 +300,11 @@ export function TabTickets({
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
-                      <th className="py-2.5 px-3.5">Admission Tier</th>
-                      <th className="py-2.5 px-3.5">Unit Price</th>
-                      <th className="py-2.5 px-3.5">
-                        Passes Issued / Capacity
-                      </th>
-                      <th className="py-2.5 px-3.5">Gross Inflow</th>
-                      <th className="py-2.5 px-3.5 text-right">
-                        Tier Controls
-                      </th>
+                      <th className="py-2.5 px-3.5">Tier</th>
+                      <th className="py-2.5 px-3.5">Price</th>
+                      <th className="py-2.5 px-3.5">Sold / Capacity</th>
+                      <th className="py-2.5 px-3.5">Revenue</th>
+                      <th className="py-2.5 px-3.5 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#EBE5DC]">
@@ -460,7 +447,7 @@ export function TabTickets({
                               </div>
                             ) : (
                               <span className="text-[11px] text-[#7A685D]">
-                                Active Quota
+                                Active
                               </span>
                             )}
                           </td>

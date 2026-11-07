@@ -36,7 +36,7 @@ function MembershipIntakeForm({ onClose }: { onClose: () => void }) {
       onClose={onClose}
       titleId="membership-modal-title"
       eyebrow="By Invitation & Vetted Merit"
-      title="Request Membership Introduction"
+      title="Request Membership"
       notice={state ?? undefined}
     >
       <p className="mt-2 text-xs leading-relaxed text-umber">
@@ -113,7 +113,7 @@ function MembershipIntakeForm({ onClose }: { onClose: () => void }) {
 
         <div className="flex gap-2 pt-2">
           <ModalSubmit className="bg-forest text-cream hover:bg-ochre hover:text-deep">
-            Submit to Secretariat
+            Submit Application
           </ModalSubmit>
           <button
             type="button"

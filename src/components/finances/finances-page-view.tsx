@@ -158,22 +158,11 @@ export function FinancesPageView({
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#3D291F] tracking-tight">
-              <span className="sm:hidden">Club Finances</span>
-              <span className="hidden sm:inline">
-                Club Finances &amp; Institutional Ledger
-              </span>
+              Club Finances
             </h1>
 
             <p className="text-xs sm:text-sm text-[#443A33] leading-relaxed font-normal">
-              <span className="sm:hidden">
-                Consolidated income, institutional balances, and verified
-                disbursements.
-              </span>
-              <span className="hidden sm:inline">
-                Shared club-level financial ledger. Members can review
-                consolidated club income, institutional balances, and verified
-                disbursements.
-              </span>
+              Club balances, recorded income, and verified expenses.
             </p>
           </div>
 

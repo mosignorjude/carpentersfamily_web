@@ -113,11 +113,11 @@ export function DuesAuditHistoryCard({
               className="text-base sm:text-lg font-extrabold text-[#3D291F]"
               id="dues-audit-heading"
             >
-              Officer Dues Audit Trail
+              Dues Audit Log
             </h2>
           </div>
           <p className="text-xs text-[#54433A] font-medium mt-1">
-            Indelible, immutable audit history
+            Permanent log of dues changes and approvals
           </p>
         </div>
 
@@ -181,7 +181,7 @@ export function DuesAuditHistoryCard({
                   {/* Expandable JSON Diff */}
                   <details className="text-xs group border border-[#E5DDD3] rounded-lg bg-white overflow-hidden">
                     <summary className="p-2.5 font-bold text-[#174C37] hover:bg-[#FAF6F0] cursor-pointer flex items-center justify-between transition-colors">
-                      <span>View Recorded State Payload (Before / After)</span>
+                      <span>View Change Details (Before / After)</span>
                       <ChevronDown className="w-4 h-4 text-[#54433A] group-open:rotate-180 transition-transform" />
                     </summary>
                     <div className="p-3 bg-[#FAF6F0] border-t border-[#E5DDD3] overflow-x-auto">

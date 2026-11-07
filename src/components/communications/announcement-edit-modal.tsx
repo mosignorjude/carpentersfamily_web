@@ -168,7 +168,7 @@ export function AnnouncementEditModal({
               htmlFor={`edit-reason-${announcement.id}`}
               className="block text-xs font-bold text-[#3D291F] mb-1"
             >
-              Reason for this Revision (Mandatory Governance Audit)
+              Reason for Edit (Recorded in Audit Log)
             </label>
             <input
               id={`edit-reason-${announcement.id}`}
@@ -201,7 +201,7 @@ export function AnnouncementEditModal({
               pendingLabel="Saving Revision…"
               statusToastMessage="Recording announcement revision and audit note."
             >
-              Save Revision
+              Save Changes
             </FormSubmitButton>
           </div>
         </form>

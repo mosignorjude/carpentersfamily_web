@@ -53,7 +53,7 @@ export default async function CreateEventPage() {
         href="/events"
       >
         <ArrowLeft className="w-4 h-4 text-[#174C37] shrink-0" />
-        <span>Back to Events & Activities</span>
+        <span>Back to Events</span>
       </Link>
 
       <section className="bg-white rounded-2xl border border-[#E5DDD3] p-6 sm:p-8 shadow-xs">
@@ -66,8 +66,7 @@ export default async function CreateEventPage() {
               New Event
             </h1>
             <p className="text-xs text-[#7A685D] font-medium mt-1">
-              Authorized for the Executive Council, Club Admin, and President ·{" "}
-              {userRoleTitle}
+              Set up a new club event, budget, and committee · {userRoleTitle}
             </p>
           </div>
         </div>

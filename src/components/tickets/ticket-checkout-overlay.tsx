@@ -313,7 +313,7 @@ function TicketCheckoutInner({
         <div className="p-4 sm:p-6 border-b border-linen bg-warm-canvas/60 flex items-start justify-between gap-4 shrink-0">
           <div className="min-w-0 space-y-1">
             <span className="inline-flex items-center px-3 py-1 rounded-full bg-forest/10 text-forest text-[11px] font-bold tracking-widest uppercase">
-              BOX OFFICE CHECKOUT
+              TICKET CHECKOUT
             </span>
             <h2
               className="text-xl sm:text-2xl font-serif font-bold text-espresso truncate leading-tight"
@@ -623,7 +623,7 @@ function TicketCheckoutInner({
                       className="block text-[11px] font-semibold uppercase tracking-wider text-muted mb-1.5"
                       htmlFor={`buyer-name-${event.id}`}
                     >
-                      GUEST / BUYER NAME
+                      FULL NAME
                     </label>
                     <input
                       aria-describedby={
@@ -903,7 +903,7 @@ function TicketCheckoutInner({
                     <div className="bg-warm-canvas rounded-2xl border border-linen p-5 space-y-4">
                       <div>
                         <span className="block text-[11px] font-semibold uppercase tracking-wider text-ochre">
-                          PAYMENT STEP A
+                          STEP A · BANK TRANSFER
                         </span>
                         <h4 className="mt-1 font-serif font-bold text-base sm:text-lg text-espresso">
                           Transfer the exact total from your banking app
@@ -1036,7 +1036,7 @@ function TicketCheckoutInner({
                     <div className="bg-white rounded-2xl border border-linen p-5 sm:p-6 space-y-5 shadow-xs">
                       <div>
                         <span className="block text-[11px] font-semibold uppercase tracking-wider text-ochre">
-                          PAYMENT STEP B
+                          STEP B · UPLOAD RECEIPT
                         </span>
                         <h4 className="mt-1 font-serif font-bold text-base sm:text-lg text-espresso">
                           Upload your transfer receipt

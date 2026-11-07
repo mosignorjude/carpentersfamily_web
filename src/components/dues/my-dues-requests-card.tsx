@@ -44,7 +44,7 @@ export function MyDuesRequestsCard({ requests = [] }: MyDuesRequestsCardProps) {
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20">
             <CheckCircle2 className="w-3.5 h-3.5 text-[#174C37]" />
-            <span>Approved &amp; Credited</span>
+            <span>Approved</span>
           </span>
         );
       case "rejected":
@@ -113,7 +113,7 @@ export function MyDuesRequestsCard({ requests = [] }: MyDuesRequestsCardProps) {
             className="text-base font-extrabold text-[#3D291F] tracking-tight"
             id="my-requests-heading"
           >
-            My Dues Payment Submissions
+            My Payment Submissions
           </h2>
         </div>
         <span className="text-xs text-[#54433A]">

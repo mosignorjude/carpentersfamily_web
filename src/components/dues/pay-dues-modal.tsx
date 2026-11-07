@@ -147,7 +147,7 @@ export function PayDuesModal({
                 className="text-base font-extrabold text-[#3D291F]"
                 id="pay-dues-title"
               >
-                Settle Statutory Membership Dues
+                Pay Membership Dues
               </h3>
               <p className="text-xs text-[#54433A] font-medium">
                 Carpenters Family Social Club · Dues Desk
@@ -247,7 +247,7 @@ export function PayDuesModal({
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-bold text-[#54433A] uppercase tracking-wider">
-                          Select Months to Settle
+                          Select Months to Pay
                         </span>
                         <div className="flex items-center gap-2">
                           <button
@@ -312,7 +312,7 @@ export function PayDuesModal({
                     {/* Channel Selector */}
                     <div>
                       <span className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-2">
-                        Select Settlement Channel
+                        Payment Method
                       </span>
                       <div className="grid grid-cols-3 gap-2">
                         <button
@@ -563,8 +563,7 @@ export function PayDuesModal({
                 leftIcon={ShieldCheck}
                 loadingText="Submitting Payment..."
               >
-                Submit Payment for Verification (
-                {formatNaira(selectedAmountNgn)})
+                Submit Payment · {formatNaira(selectedAmountNgn)}
               </FormSubmitButton>
             )}
           </div>

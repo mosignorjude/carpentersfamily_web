@@ -93,7 +93,7 @@ export default async function PortalPage({
           <header className="signin-heading">
             <h1 id="sign-in-heading">Sign in</h1>
             <p className="signin-intro">
-              Access your account to continue with Carpenters Family.
+              Sign in to your Carpenters Family account.
             </p>
           </header>
 
@@ -172,7 +172,7 @@ export default async function PortalPage({
           </AuthValidatedForm>
 
           <p className="signin-account-prompt">
-            New to the club? <Link href="/signup">Request account access</Link>
+            New to the club? <Link href="/signup">Request Membership</Link>
           </p>
         </div>
       </AuthPageLayout>
@@ -246,15 +246,14 @@ export default async function PortalPage({
           ) : null}
           {profile.profile_completed_at ? (
             <p>
-              Your email is confirmed and your profile is complete. An
-              authorized officer must approve the request before member access
-              is enabled.
+              Your email is confirmed and your profile is complete. Your
+              membership is now awaiting officer approval.
             </p>
           ) : (
             <>
               <p>
-                Complete your profile. An authorized officer must approve the
-                request before member access is enabled.
+                Complete your profile below so an officer can review and approve
+                your membership.
               </p>
               <AuthValidatedForm
                 action={completeProfileAction}

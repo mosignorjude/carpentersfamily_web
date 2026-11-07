@@ -39,15 +39,14 @@ export const MembershipRequestsSection: React.FC<
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-bold text-[#3D291F]">
-                Membership requests
+                Membership Requests
               </h2>
               <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#D6A23A]/15 text-[#8A641A] border border-[#D6A23A]/30">
                 {pendingRequests.length} Pending
               </span>
             </div>
             <p className="text-xs text-[#7A685D]">
-              New prospective member applications submitted to Carpenters Family
-              Secretariat.
+              Pending applications awaiting officer review.
             </p>
           </div>
         </div>
@@ -68,10 +67,7 @@ export const MembershipRequestsSection: React.FC<
               <p className="font-semibold text-[#3D291F]">
                 No Pending Requests
               </p>
-              <p>
-                All submitted membership applications have been reviewed and
-                acted upon.
-              </p>
+              <p>All membership applications have been reviewed.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -106,7 +102,7 @@ export const MembershipRequestsSection: React.FC<
                       {/* Profile completion state */}
                       <div className="pt-1 flex items-center gap-2 text-xs">
                         <span className="font-medium text-[#3D291F]">
-                          Eligibility State:
+                          Status:
                         </span>
                         {isEligible ? (
                           <span className="inline-flex items-center gap-1 text-[#174C37] font-semibold bg-[#174C37]/10 px-2.5 py-0.5 rounded-full text-[11px]">
@@ -116,7 +112,7 @@ export const MembershipRequestsSection: React.FC<
                         ) : (
                           <span className="inline-flex items-center gap-1 text-[#8B261E] font-semibold bg-[#8B261E]/10 px-2.5 py-0.5 rounded-full text-[11px]">
                             <AlertCircle className="w-3.5 h-3.5" />
-                            <span>Requirements Incomplete</span>
+                            <span>Incomplete</span>
                           </span>
                         )}
                       </div>
@@ -159,7 +155,7 @@ export const MembershipRequestsSection: React.FC<
                         className="cf-btn cf-btn--neutral cf-btn--danger-text"
                       >
                         <X className="w-4 h-4" />
-                        <span>Reject...</span>
+                        <span>Reject</span>
                       </button>
                     </div>
                   </div>

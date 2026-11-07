@@ -10,11 +10,11 @@ export const MemberAdminPermissionGuide: React.FC = () => {
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 text-[#174C37]" />
           <h3 className="text-xs font-bold text-[#3D291F] uppercase tracking-wider inline">
-            Governance &amp; Permission Rules
+            Role &amp; Permission Rules
           </h3>
         </div>
         <span className="text-xs font-semibold text-[#174C37] group-open:hidden">
-          View Guide ▾
+          View Rules ▾
         </span>
         <span className="text-xs font-semibold text-[#7A685D] hidden group-open:inline">
           Hide ▴

@@ -43,7 +43,9 @@ export function TabReports({
           <h3 className="text-xl font-bold text-[#3D291F] break-words">
             {event.title} — Income Statement
           </h3>
-          <p className="text-xs text-[#7A685D]">Reconciled ledger statement.</p>
+          <p className="text-xs text-[#7A685D]">
+            Official income and expense statement.
+          </p>
         </div>
 
         <div className="w-full sm:w-auto grid grid-cols-2 sm:flex items-center gap-2">
@@ -110,7 +112,7 @@ export function TabReports({
             <span className="text-[10px] text-[#7A685D] block truncate">
               {budgetCeiling > 0
                 ? `${formatPercent((totalRevenue / safeBudget) * 100)} of Target`
-                : "Reconciled Inflows"}
+                : "Approved revenue"}
             </span>
           </div>
 
@@ -124,7 +126,7 @@ export function TabReports({
             <span className="text-[10px] text-[#7A685D] block truncate">
               {budgetCeiling > 0
                 ? `${formatPercent((totalExpenses / safeBudget) * 100)} of Ceiling`
-                : "Reconciled Outflows"}
+                : "Approved expenses"}
             </span>
           </div>
 
@@ -136,13 +138,13 @@ export function TabReports({
               {formatNaira(netSurplus)}
             </span>
             <span className="text-[10px] text-[#174C37] font-semibold block truncate">
-              {netSurplus >= 0 ? "Positive Flow" : "Net Deficit"}
+              {netSurplus >= 0 ? "Surplus" : "Net Deficit"}
             </span>
           </div>
 
           <div className="min-w-0">
             <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
-              Profit Margin
+              Net Margin
             </span>
             <span className="text-base sm:text-lg font-bold font-mono text-[#3D291F] block mt-0.5 tabular-nums truncate">
               {totalRevenue > 0
@@ -150,7 +152,7 @@ export function TabReports({
                 : "0.0%"}
             </span>
             <span className="text-[10px] text-[#7A685D] block truncate">
-              Non-profit
+              Club event
             </span>
           </div>
         </div>
@@ -158,7 +160,7 @@ export function TabReports({
         {/* Statement of Revenues Table */}
         <div className="space-y-3">
           <h4 className="text-sm font-bold text-[#0C3325] uppercase tracking-wider border-b border-[#E5DDD3] pb-1.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
-            <span>1. Revenues ({revenueStreams.length} Streams)</span>
+            <span>1. Revenue ({revenueStreams.length} Streams)</span>
             <span className="font-mono text-xs text-[#174C37] font-bold">
               {formatNaira(totalRevenue)}
             </span>
@@ -232,7 +234,7 @@ export function TabReports({
         {/* Statement of Expenses Table */}
         <div className="space-y-3 pt-2">
           <h4 className="text-sm font-bold text-[#0C3325] uppercase tracking-wider border-b border-[#E5DDD3] pb-1.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
-            <span>2. Disbursements ({costCenters.length} Centers)</span>
+            <span>2. Expenses ({costCenters.length} Categories)</span>
             <span className="font-mono text-xs text-[#BA3C2A] font-bold">
               {formatNaira(totalExpenses)}
             </span>
@@ -261,8 +263,7 @@ export function TabReports({
                         className="py-4 text-center text-[#7A685D]"
                         colSpan={5}
                       >
-                        No cost center disbursements recorded for this event
-                        yet.
+                        No expenses recorded for this event yet.
                       </td>
                     </tr>
                   ) : (

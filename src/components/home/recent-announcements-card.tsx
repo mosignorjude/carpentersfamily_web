@@ -37,7 +37,7 @@ export function RecentAnnouncementsCard({
             className="text-lg font-bold text-[#3D291F]"
             id="announcements-heading"
           >
-            Recent Club Announcements
+            Recent Announcements
           </h3>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
@@ -68,7 +68,7 @@ export function RecentAnnouncementsCard({
             className="text-lg font-bold text-[#3D291F]"
             id="announcements-heading"
           >
-            Recent Club Announcements
+            Recent Announcements
           </h3>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
@@ -77,8 +77,7 @@ export function RecentAnnouncementsCard({
             No Announcements Published
           </h4>
           <p className="text-xs font-medium text-[#5C4638] max-w-sm mx-auto leading-relaxed">
-            There are no active general circulars or executive announcements at
-            this time.
+            New announcements from club leadership will appear here.
           </p>
         </div>
       </section>
@@ -98,7 +97,7 @@ export function RecentAnnouncementsCard({
             className="text-lg font-bold text-[#3D291F]"
             id="announcements-heading"
           >
-            Recent Club Announcements
+            Recent Announcements
           </h3>
         </div>
 
@@ -158,7 +157,7 @@ export function RecentAnnouncementsCard({
                 onClick={() => onOpenAnnouncement(ann)}
                 type="button"
               >
-                <span>Read Full Notice</span>
+                <span>Read More</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>

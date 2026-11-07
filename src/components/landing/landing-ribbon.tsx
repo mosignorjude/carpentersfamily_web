@@ -21,15 +21,13 @@ export function LandingRibbon({ ticketedEvents }: LandingRibbonProps) {
             {next.whenLabel ? ` · ${next.whenLabel}` : ""}
           </span>
         ) : (
-          <span>
-            Ticketed events open for sale as soon as the family confirms a date
-          </span>
+          <span>Ticket sales open as soon as event dates are confirmed</span>
         )}
         <Link
           href="/tickets"
           className="underline underline-offset-4 min-h-[44px] inline-flex items-center hover:text-ochre font-medium transition-colors"
         >
-          Tickets / Reservations
+          Tickets &amp; Reservations
         </Link>
         <LandingCountdownBadge startsAt={next?.startsAt} />
       </div>

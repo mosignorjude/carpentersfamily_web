@@ -72,11 +72,11 @@ export function EventLedgerSection({
         <div className="p-10 text-center space-y-2">
           <Calendar className="w-10 h-10 text-[#B8ACA0] mx-auto" />
           <h4 className="text-sm font-bold text-[#3D291F]">
-            No Event Results Posted
+            No Closed Events Yet
           </h4>
           <p className="text-xs text-[#7A685D] max-w-sm mx-auto">
-            When events conclude or reconcile financial budgets, their audited
-            post results appear here.
+            Final financial snapshots of completed or cancelled events will
+            appear here.
           </p>
         </div>
       ) : (

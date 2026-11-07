@@ -112,7 +112,7 @@ export function DuesPaymentForm({
           className="block text-xs font-bold text-[#54433A] space-y-1.5 w-full min-w-0 max-w-full"
           htmlFor="dues-payment-amount"
         >
-          <span>Exact Payment Amount in Whole Naira (₦)</span>
+          <span>Payment Amount (₦)</span>
           <FormattedAmountInput
             className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] font-mono font-bold focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
             id="dues-payment-amount"
@@ -256,7 +256,7 @@ export function DuesWriteOffForm({
           className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-[10px] bg-[#BA3C2A] text-white text-xs font-bold hover:bg-[#a33222] transition-colors shadow-xs cursor-pointer min-h-[44px]"
           type="submit"
         >
-          Confirm Statutory Write-Off
+          Write Off Selected Months
         </button>
       </div>
     </form>
@@ -273,7 +273,7 @@ export function DuesPaymentCorrectionForm({
   return (
     <details className="group border border-[#E5DDD3] rounded-xl bg-white overflow-hidden text-xs">
       <summary className="p-3 font-bold text-[#174C37] hover:bg-[#FAF6F0] cursor-pointer flex items-center justify-between transition-colors">
-        <span>Officer Action: Correct This Payment Record</span>
+        <span>Edit Payment Record</span>
         <span className="text-[11px] text-[#54433A] font-medium">
           Audit Retained
         </span>
@@ -374,7 +374,7 @@ export function DuesPaymentCorrectionForm({
             className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[44px] sm:min-h-[38px]"
             type="submit"
           >
-            Save Payment Correction
+            Save Correction
           </button>
         </div>
       </form>
@@ -445,7 +445,7 @@ export function DuesRateForm({ nextMonth }: { nextMonth: string }) {
           className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[44px] sm:min-h-[38px]"
           type="submit"
         >
-          Schedule Dues Rate
+          Save Rate
         </button>
       </div>
     </form>

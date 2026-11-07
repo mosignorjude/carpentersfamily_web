@@ -9,8 +9,8 @@ export default async function NotFound() {
       <section className="panel">
         <p className="eyebrow">404</p>
         <h1>Page not found</h1>
-        <p>The requested page could not be found.</p>
-        <Link href="/">Return to the sign-in page</Link>
+        <p>The page you are looking for doesn’t exist or has been moved.</p>
+        <Link href="/">Back to Home</Link>
       </section>
     </main>
   );

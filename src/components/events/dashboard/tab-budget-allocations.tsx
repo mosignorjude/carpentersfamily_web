@@ -82,11 +82,11 @@ export function TabBudgetAllocations({
           <div className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-[#174C37]" />
             <h3 className="text-lg font-bold text-[#3D291F]">
-              Budget & Analytics
+              Budget & Allocations
             </h3>
           </div>
           <p className="text-xs text-[#7A685D] mt-1">
-            Capital allocation, revenue mix, and cash velocity.
+            Category allocations, revenue mix, and cash flow.
           </p>
         </div>
 
@@ -160,7 +160,7 @@ export function TabBudgetAllocations({
               onClick={() => setActiveChartTab("cash_velocity")}
               type="button"
             >
-              Cash Velocity
+              Cash Flow
             </button>
           </div>
         </div>
@@ -172,9 +172,9 @@ export function TabBudgetAllocations({
           {costCenters.length === 0 ? (
             <EmptyStateCard
               className="my-4"
-              description="No budget allocations or cost centers have been configured for this event yet."
+              description="Set an event budget and allocate categories to track spending."
               icon={Banknote}
-              title="No Budget Allocations Configured"
+              title="No Budget Allocations Yet"
               {...(canManageCategories && onOpenBudgetCeilingModal
                 ? {
                     actionLabel:
@@ -190,10 +190,10 @@ export function TabBudgetAllocations({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-[#E5DDD3]">
                 <div>
                   <h4 className="text-base font-bold text-[#3D291F]">
-                    Capital Allocation & Burn Rate Matrix
+                    Budget Allocations
                   </h4>
                   <p className="text-xs text-[#7A685D] mt-0.5">
-                    Approved ceilings, actual disbursements, and commitments.
+                    Allocated budget, actual spending, and pending commitments.
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3 w-full sm:w-auto">
@@ -207,7 +207,7 @@ export function TabBudgetAllocations({
                   </div>
                   <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
                     <span className="text-[11px] text-[#7A685D] block">
-                      Burn Rate
+                      Used
                     </span>
                     <span className="font-bold text-[#3D291F] text-sm tabular-nums font-mono">
                       {formatPercent(
@@ -235,11 +235,11 @@ export function TabBudgetAllocations({
                   <table className="w-full text-left text-xs border-collapse min-w-[580px]">
                     <thead>
                       <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
-                        <th className="py-2.5 px-3.5">Cost Center</th>
+                        <th className="py-2.5 px-3.5">Category</th>
                         <th className="py-2.5 px-3.5">Allocated</th>
-                        <th className="py-2.5 px-3.5">Disbursed</th>
-                        <th className="py-2.5 px-3.5">Committed</th>
-                        <th className="py-2.5 px-3.5">Burn Rate</th>
+                        <th className="py-2.5 px-3.5">Spent</th>
+                        <th className="py-2.5 px-3.5">Pending</th>
+                        <th className="py-2.5 px-3.5">Used</th>
                         <th className="py-2.5 px-3.5 text-right">Status</th>
                       </tr>
                     </thead>

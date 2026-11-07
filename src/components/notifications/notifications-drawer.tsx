@@ -285,10 +285,10 @@ export function NotificationsDrawer({
               <p className="text-xs text-[#7A685D]">
                 {unreadCount > 0 ? (
                   <span className="font-semibold text-[#174C37]">
-                    {unreadCount} unread alert{unreadCount === 1 ? "" : "s"}
+                    {unreadCount} unread
                   </span>
                 ) : (
-                  <span>All alerts caught up</span>
+                  <span>All caught up</span>
                 )}
               </p>
             </div>
@@ -340,8 +340,8 @@ export function NotificationsDrawer({
                 No notifications
               </p>
               <p className="text-xs text-[#7A685D] max-w-xs mx-auto">
-                When official circulars, dues updates, or meeting reminders are
-                posted, they will appear here.
+                New announcements, dues updates, and meeting reminders will
+                appear here.
               </p>
             </div>
           ) : (

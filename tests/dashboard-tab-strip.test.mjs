@@ -484,7 +484,7 @@ describe("dashboard tab strip", () => {
     // property under test is the visibility OUTCOME, and accepting any of
     // sm/md/lg/xl as a spelling let `sm:hidden` — which drops the cue at 640px,
     // while the strip is still mid-scroll — pass every assertion in this block.
-    const copyAt = source.search(/more sections/i);
+    const copyAt = source.search(/for more sections/i);
     assert.notEqual(copyAt, -1, "the phone hint copy is gone from the file");
     const wrappers = enclosingTags(source, copyAt);
     assert.ok(

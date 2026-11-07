@@ -273,12 +273,11 @@ export const MemberAdminPageView: React.FC<MemberAdminPageViewProps> = ({
       {/* 3. PAGE HEADER */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-[#3D291F] tracking-tight">
-          Member administration
+          Member Administration
         </h1>
         <p className="text-sm text-[#7A685D] mt-1 max-w-3xl">
-          Review incoming membership applications, maintain member account
-          statuses, assign club executive responsibilities, and staff scheduled
-          events.
+          Approve membership requests, manage member accounts, assign executive
+          roles, and staff club events.
         </p>
       </div>
 

@@ -45,17 +45,17 @@ export function DuesRateScheduleCard({
               className="text-base sm:text-lg font-extrabold text-[#3D291F]"
               id="rate-history-heading"
             >
-              Statutory Rate Schedule
+              Monthly Dues Rate
             </h2>
           </div>
           <p className="text-xs text-[#54433A] font-medium mt-1">
-            Historical and effective monthly dues rates set by club governance
+            Current and past monthly dues rates
           </p>
         </div>
 
         <div className="flex items-center gap-1.5 text-xs font-bold text-[#174C37] bg-white px-3 py-1 rounded-lg border border-[#E5DDD3] shadow-2xs">
           <ShieldCheck className="w-4 h-4 text-[#174C37]" />
-          <span>Governance Resolution Enforced</span>
+          <span>Active Rate</span>
         </div>
       </div>
 

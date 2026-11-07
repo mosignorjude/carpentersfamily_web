@@ -45,16 +45,16 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
 
   const priorityBadges = {
     standard: {
-      label: "Standard Notice",
+      label: "Standard",
       className: "bg-neutral-100 text-[#5C4638] border-neutral-200",
     },
     important: {
-      label: "Important Notice",
+      label: "Important",
       className:
         "bg-[#D6A23A]/15 text-[#8A641A] border-[#D6A23A]/40 font-semibold",
     },
     urgent: {
-      label: "Urgent Alert",
+      label: "Urgent",
       className: "bg-[#8B261E]/10 text-[#8B261E] border-[#8B261E]/30 font-bold",
     },
   };
@@ -84,7 +84,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
             <span
               className={`text-[11px] px-2.5 py-0.5 rounded-full border ${priorityConfig.className}`}
             >
-              Priority: {priorityConfig.label}
+              {priorityConfig.label}
             </span>
 
             {/* Scope Label */}
@@ -95,7 +95,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
               </span>
             ) : (
               <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#FAF6F0] text-[#174C37] border border-[#E5DDD3] font-semibold">
-                Club-Wide Notice
+                Club-Wide
               </span>
             )}
 
@@ -110,10 +110,10 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
               }`}
             >
               {announcement.readStatusUnavailable
-                ? "Read status unavailable"
+                ? "Status unavailable"
                 : isUnread
-                  ? "Unread for you"
-                  : "Read by you"}
+                  ? "Unread"
+                  : "Read"}
             </span>
           </div>
 
@@ -152,7 +152,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
               title="Edit announcement (requires audit reason)"
             >
               <Edit3 className="w-3.5 h-3.5 text-[#174C37]" />
-              <span>Edit...</span>
+              <span>Edit</span>
             </button>
           )}
         </div>
@@ -174,9 +174,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
           {announcement.expiresAt && (
             <span className="text-[#8A641A] font-medium flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5 text-[#D6A23A]" />
-              <span>
-                Highlight active until: {formatWAT(announcement.expiresAt)}
-              </span>
+              <span>Active until {formatWAT(announcement.expiresAt)}</span>
             </span>
           )}
         </div>
@@ -216,7 +214,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
         <div className="mt-3 p-3.5 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] space-y-2.5 text-xs">
           <div className="flex items-center gap-1.5 font-bold text-[#3D291F]">
             <History className="w-3.5 h-3.5 text-[#174C37]" />
-            <span>Preserved Revision History</span>
+            <span>Revision History</span>
           </div>
           <div className="space-y-2">
             {announcement.revisions.map((rev) => (

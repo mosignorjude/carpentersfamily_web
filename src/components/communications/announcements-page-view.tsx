@@ -113,14 +113,14 @@ export function AnnouncementsPageView({
         {/* Scope segmented tabs */}
         <div className="bg-white rounded-lg border border-[#E5DDD3] p-1 flex items-center gap-1 self-start sm:self-auto">
           {[
-            { id: "all", label: `All Notices (${announcements.length})` },
+            { id: "all", label: `All (${announcements.length})` },
             {
               id: "club_wide",
               label: `Club-Wide (${announcements.filter((a) => !a.eventId).length})`,
             },
             {
               id: "event",
-              label: `Event Updates (${announcements.filter((a) => Boolean(a.eventId)).length})`,
+              label: `Events (${announcements.filter((a) => Boolean(a.eventId)).length})`,
             },
           ].map((tab) => (
             <button
@@ -145,7 +145,7 @@ export function AnnouncementsPageView({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search circulars..."
+            placeholder="Search announcements..."
             className="w-full pl-8 pr-3 py-1.5 bg-white border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] placeholder-[#7A685D] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
           />
         </div>
@@ -156,11 +156,10 @@ export function AnnouncementsPageView({
         <div className="bg-white rounded-xl border border-[#E5DDD3] p-12 text-center space-y-2">
           <Megaphone className="w-8 h-8 text-[#7A685D] mx-auto opacity-40" />
           <h2 className="text-base font-bold text-[#3D291F]">
-            There are no announcements yet
+            No Announcements Yet
           </h2>
           <p className="text-xs text-[#7A685D] max-w-md mx-auto">
-            Club circulars, executive welfare notices, and event updates will
-            appear here once published.
+            Club notices and event updates will appear here once published.
           </p>
         </div>
       ) : (

@@ -75,12 +75,11 @@ export function TabExpenses({
             <div className="flex items-center gap-2">
               <Wallet className="w-5 h-5 text-[#174C37]" />
               <h3 className="text-lg font-bold text-[#3D291F]">
-                Operational Cost Centers & Budget Matrix
+                Expenses by Category
               </h3>
             </div>
             <p className="text-xs text-[#6B5D53] mt-1">
-              Reconciliation of operational cost centers and authorized
-              disbursements.
+              Spending and pending commitments by budget category.
             </p>
           </div>
 
@@ -88,7 +87,7 @@ export function TabExpenses({
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <div className="bg-[#FAF6F0] px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-[#E5DDD3] text-right">
               <span className="text-[10px] sm:text-[11px] text-[#7A685D] block">
-                Disbursed Outflows
+                Spent
               </span>
               <span className="font-bold text-[#BA3C2A] text-xs sm:text-base tabular-nums font-mono">
                 {formatNaira(totalSpent)}
@@ -96,7 +95,7 @@ export function TabExpenses({
             </div>
             <div className="bg-[#FAF6F0] px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-[#E5DDD3] text-right">
               <span className="text-[10px] sm:text-[11px] text-[#7A685D] block">
-                Committed POs
+                Pending
               </span>
               <span className="font-bold text-[#8D5B0E] text-xs sm:text-base tabular-nums font-mono">
                 {formatNaira(totalCommitted)}
@@ -104,7 +103,7 @@ export function TabExpenses({
             </div>
             <div className="bg-[#FAF6F0] px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-[#E5DDD3] text-right">
               <span className="text-[10px] sm:text-[11px] text-[#7A685D] block">
-                Unallocated Buffer
+                Remaining Budget
               </span>
               <span className="font-bold text-[#174C37] text-xs sm:text-base tabular-nums font-mono">
                 {formatNaira(totalRemaining)}
@@ -119,7 +118,7 @@ export function TabExpenses({
                 type="button"
               >
                 <Plus className="w-4 h-4 text-white" />
-                <span>Record Disbursement</span>
+                <span>Record Expense</span>
               </button>
             )}
           </div>
@@ -128,9 +127,9 @@ export function TabExpenses({
         {/* Cost Centers Table Matrix */}
         {costCenters.length === 0 ? (
           <EmptyStateCard
-            actionLabel={canRecord ? "Record Disbursement" : undefined}
+            actionLabel={canRecord ? "Record Expense" : undefined}
             className="my-4"
-            description="No expenses recorded against budget allocations yet."
+            description="No expenses have been recorded for this event yet."
             icon={Wallet}
             onAction={canRecord ? () => onRecordExpense() : undefined}
             title="No Expenses Recorded"
@@ -145,13 +144,11 @@ export function TabExpenses({
                 <thead>
                   <tr className="border-b border-[#E5DDD3] bg-[#F7F3EC] text-[#7A685D] uppercase tracking-wider font-semibold text-[11px]">
                     <th className="py-2.5 px-3.5">Cost Center</th>
-                    <th className="py-2.5 px-3.5">Budget Ceiling</th>
-                    <th className="py-2.5 px-3.5">Disbursed Spend</th>
-                    <th className="py-2.5 px-3.5">Committed POs</th>
-                    <th className="py-2.5 px-3.5">Utilization Bar</th>
-                    <th className="py-2.5 px-3.5 text-right">
-                      Available Buffer
-                    </th>
+                    <th className="py-2.5 px-3.5">Allocated</th>
+                    <th className="py-2.5 px-3.5">Spent</th>
+                    <th className="py-2.5 px-3.5">Pending</th>
+                    <th className="py-2.5 px-3.5">Used</th>
+                    <th className="py-2.5 px-3.5 text-right">Remaining</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#EBE5DC]">
@@ -244,12 +241,12 @@ export function TabExpenses({
         )}
       </div>
 
-      {/* 2. Embedded Disbursement Ledger */}
+      {/* 2. Embedded Expenses Ledger */}
       <EventDomainLedger
         currentUserId={currentUserId}
         domain="expenses"
         onInspect={(txn) => setSelectedTxn(txn)}
-        title="Disbursement Ledger"
+        title="Expenses Ledger"
         transactions={expenseTransactions}
         userRole={userRole}
       />

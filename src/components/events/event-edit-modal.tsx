@@ -122,8 +122,7 @@ export function EventEditModal({
                 Edit Event Logistics & Details
               </h3>
               <p className="text-xs text-[#54433A] font-medium">
-                Update schedule, venue, and description with mandatory audit
-                justification
+                Update schedule, venue, or committee roles for {event.title}.
               </p>
             </div>
           </div>

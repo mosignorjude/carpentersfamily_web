@@ -56,7 +56,7 @@ export function RecordExpenseModal({
                 className="text-base font-extrabold text-[#3D291F]"
                 id="record-expense-title"
               >
-                Record Institutional Disbursement
+                Record Club Expense
               </h3>
               <p className="text-xs text-[#54433A] font-medium">
                 Authorized club operational and capital expenses

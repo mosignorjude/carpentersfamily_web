@@ -197,11 +197,10 @@ export function VoucherInspectionDrawer({
                 className="text-base font-bold text-[#3D291F]"
                 id="voucher-inspection-title"
               >
-                Voucher Audit & Verification Inspection
+                Transaction & Receipt Review
               </h3>
               <p className="text-xs text-[#7A685D] mt-0.5">
-                Inspect receipt voucher documentation against the claimed
-                financial record.
+                Verify the attached receipt against the recorded transaction.
               </p>
             </div>
           </div>
@@ -225,11 +224,11 @@ export function VoucherInspectionDrawer({
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Pane: Claimed Transaction Details */}
+            {/* Left Pane: Transaction Details */}
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-[#E5DDD3]">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[#7A685D]">
-                  Claimed Transaction Details
+                  Transaction Details
                 </h4>
                 <span
                   className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F]"
@@ -244,7 +243,7 @@ export function VoucherInspectionDrawer({
               {/* Amount Display */}
               <div className="p-4 rounded-2xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
                 <span className="text-[11px] font-semibold text-[#7A685D] block uppercase">
-                  Claimed Amount ({transaction.type})
+                  Amount ({transaction.type})
                 </span>
                 <div
                   className={`text-2xl sm:text-3xl font-extrabold font-mono tabular-nums ${
@@ -307,12 +306,12 @@ export function VoucherInspectionDrawer({
                   </div>
                   <div>
                     <span className="text-[#7A685D] block text-[11px]">
-                      Current Review Status
+                      Status
                     </span>
                     <div className="mt-0.5">
                       {isPending && (
                         <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
-                          Recorded (Pending)
+                          Pending Review
                         </span>
                       )}
                       {isApproved && (
@@ -351,7 +350,7 @@ export function VoucherInspectionDrawer({
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-[#E5DDD3]">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[#7A685D]">
-                  Receipt Voucher Evidence
+                  Receipt
                 </h4>
                 {transaction.receipt && (
                   <span className="text-xs font-mono text-[#7A685D]">
@@ -441,11 +440,10 @@ export function VoucherInspectionDrawer({
                   <ShieldAlert className="w-8 h-8 mx-auto text-[#D6A23A]" />
                   <div>
                     <h5 className="text-sm font-bold text-[#3D291F]">
-                      No Receipt Document Uploaded
+                      No Receipt Attached
                     </h5>
                     <p className="text-xs text-[#7A685D] mt-1 max-w-sm mx-auto">
-                      This transaction claim was submitted without an attached
-                      digital voucher or invoice.
+                      No receipt was uploaded for this transaction.
                     </p>
                   </div>
                 </div>
@@ -459,7 +457,7 @@ export function VoucherInspectionDrawer({
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[#BA3C2A] flex items-center gap-1.5">
                   <XCircle className="w-4 h-4" />
-                  Mandatory Reversal Explanation
+                  Reason for Reversal
                 </span>
                 <button
                   className="text-xs text-[#7A685D] hover:underline cursor-pointer"
@@ -491,7 +489,7 @@ export function VoucherInspectionDrawer({
                   type="button"
                 >
                   <X className="w-4 h-4" />
-                  <span>Confirm Reversal & Backout Funds</span>
+                  <span>Confirm Reversal</span>
                 </button>
               </div>
             </div>
@@ -561,13 +559,13 @@ export function VoucherInspectionDrawer({
               isExecutiveSelfReview ? (
                 <span className="text-[#B27D16] font-semibold flex items-center gap-1">
                   <ShieldAlert className="w-3.5 h-3.5" />
-                  Awaiting Independent Officer Review: You entered this claim.
+                  Needs Another Officer's Review: You entered this claim.
                 </span>
               ) : (
-                <span>Authorized Officer Audit Panel</span>
+                <span>Officer Review</span>
               )
             ) : (
-              <span>Transparent Member Audit View</span>
+              <span>Member View</span>
             )}
           </div>
 
@@ -584,7 +582,7 @@ export function VoucherInspectionDrawer({
               !isNotCounted &&
               (isExecutiveSelfReview ? (
                 <span className="text-xs font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-3 py-2 rounded-xl">
-                  Awaiting Independent Officer Review
+                  Needs Another Officer's Review
                 </span>
               ) : (
                 <>

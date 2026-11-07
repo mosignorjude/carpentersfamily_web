@@ -33,16 +33,16 @@ export function OfficerFinanceControls({
                 className="text-sm sm:text-base font-extrabold text-[#3D291F]"
                 id="officer-tools-heading"
               >
-                Officer Treasury Controls & Record Management
+                Treasury Controls
               </h4>
               <p className="text-xs text-[#7A685D] font-medium">
-                Authorized Executive Role · Club Financial Governance Policy
+                Record club income, expenses, and categories
               </p>
             </div>
           </div>
 
           <span className="text-[11px] font-mono text-[#174C37] bg-[#FAF6F0] px-3 py-1 rounded-md border border-[#E5DDD3] self-start sm:self-center font-bold">
-            Governance Active
+            Officer Access
           </span>
         </div>
 
@@ -55,7 +55,7 @@ export function OfficerFinanceControls({
             type="button"
           >
             <TrendingUp className="w-4 h-4 text-[#D6A23A]" />
-            <span>Record Non-Dues Income</span>
+            <span>Record Other Income</span>
           </button>
 
           <button
@@ -65,7 +65,7 @@ export function OfficerFinanceControls({
             type="button"
           >
             <TrendingDown className="w-4 h-4" />
-            <span>Record an Expense</span>
+            <span>Record Expense</span>
           </button>
 
           <button
@@ -75,7 +75,7 @@ export function OfficerFinanceControls({
             type="button"
           >
             <Tag className="w-4 h-4 text-[#7A685D]" />
-            <span>Manage Cost Centers</span>
+            <span>Manage Categories</span>
           </button>
         </div>
 

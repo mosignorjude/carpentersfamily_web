@@ -62,7 +62,7 @@ export function getMemberProfileReadiness({
   if (!profileComplete) {
     return {
       profileState: "incomplete_bio",
-      profileStateDescription: "Profile documentation incomplete.",
+      profileStateDescription: "Profile incomplete.",
     };
   }
 
@@ -70,14 +70,13 @@ export function getMemberProfileReadiness({
     return {
       profileState: "incomplete_email",
       profileStateDescription:
-        "The applicant has not confirmed their email address. Approval unlocks once they open the confirmation link we sent.",
+        "Email not yet confirmed. Approval unlocks once the applicant opens their confirmation link.",
     };
   }
 
   return {
     profileState: "complete",
-    profileStateDescription:
-      "All requirements met: Email verified and profile complete.",
+    profileStateDescription: "Email verified and profile complete.",
   };
 }
 

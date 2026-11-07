@@ -53,10 +53,11 @@ export function NewMeetingModal({ isOpen, onClose }: NewMeetingModalProps) {
                 className="text-lg font-extrabold text-[#3D291F]"
                 id="new-meeting-title"
               >
-                Schedule New Meeting
+                Schedule Meeting
               </h2>
               <p className="text-xs text-[#7A685D]">
-                Create a General House or Executive meeting session.
+                Set up a general or executive meeting with attendance and
+                minutes.
               </p>
             </div>
           </div>

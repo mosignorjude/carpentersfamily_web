@@ -91,9 +91,8 @@ export function EventsPageView({
             </h1>
 
             <p className="text-xs sm:text-sm text-[#7A685D] mt-1.5 max-w-2xl leading-relaxed">
-              Official schedule, activity workspaces, and planning for General
-              House sessions, executive council projects, and annual club
-              celebrations.
+              Schedule, planning, and budgets for club shows, celebrations, and
+              projects.
             </p>
           </div>
 
@@ -156,11 +155,11 @@ export function EventsPageView({
           <div className="p-8 rounded-2xl bg-white border border-[#E5DDD3] text-center space-y-2">
             <Calendar className="w-8 h-8 text-[#7A685D] mx-auto opacity-60" />
             <h3 className="text-sm font-bold text-[#3D291F]">
-              No Upcoming Events Scheduled
+              No Upcoming Events
             </h3>
             <p className="text-xs text-[#5C4638] max-w-sm mx-auto">
-              There are currently no upcoming events matching your filter
-              criteria.
+              No upcoming club events right now. New events will appear here
+              once scheduled.
             </p>
           </div>
         ) : (
@@ -194,7 +193,7 @@ export function EventsPageView({
             </h2>
           </div>
           <span className="text-xs text-[#7A685D] font-medium sm:text-right">
-            Past Events, Concluded Sessions, & Overdue Schedules
+            Concluded and past club events
           </span>
         </div>
 
@@ -259,7 +258,7 @@ export function EventsPageView({
             </button>
           </div>
           <span className="text-xs text-[#7A685D] font-medium sm:text-right">
-            Permanent Reporting Repository · Club Governance Active
+            Archived event records
           </span>
         </div>
 

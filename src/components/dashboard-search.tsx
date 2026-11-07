@@ -75,7 +75,7 @@ export default function DashboardSearch({
     <div className="dashboard-search" ref={containerRef}>
       <ClubIcon className="dashboard-search-icon" name="search" />
       <label className="visually-hidden" htmlFor={id}>
-        Search pages, events, announcements, and polls
+        Search pages, events, and announcements
       </label>
       <input
         autoComplete="off"
@@ -93,7 +93,7 @@ export default function DashboardSearch({
             setQuery("");
           }
         }}
-        placeholder="Search pages, events, announcements, and polls…"
+        placeholder="Search pages, events, and announcements…"
         type="search"
         value={query}
       />
@@ -117,7 +117,7 @@ export default function DashboardSearch({
               ))}
             </ul>
           ) : (
-            <p>No matching pages, events, announcements, or polls.</p>
+            <p>No matching results found.</p>
           )}
         </div>
       ) : null}

@@ -81,16 +81,16 @@ export function EventTicketTierModal({
       : retireEventTicketTierAction;
 
   const modalTitle = isCreate
-    ? "Create Admission Tier"
+    ? "Add Ticket Tier"
     : isEdit
-      ? "Edit Admission Tier"
-      : "Retire Admission Tier";
+      ? "Edit Ticket Tier"
+      : "Retire Ticket Tier";
 
   const modalSubtitle = isCreate
-    ? "Configure a new ticket tier and pricing capacity for this event."
+    ? "Set the name, price, and capacity for this tier."
     : isEdit
-      ? `Update pricing or capacity parameters for ${tier?.name ?? "this tier"}.`
-      : `Retire ${tier?.name ?? "this tier"} from active ticket inventory.`;
+      ? `Update price or capacity for ${tier?.name ?? "this tier"}.`
+      : `Stop future ticket sales for ${tier?.name ?? "this tier"}.`;
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     const form = e.currentTarget;
@@ -196,7 +196,7 @@ export function EventTicketTierModal({
             <div className="p-3.5 rounded-xl bg-[#BA3C2A]/5 border border-[#BA3C2A]/20 space-y-2 text-[#5C4638]">
               <div className="flex items-start gap-2 text-[#BA3C2A] font-semibold">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>Notice on Retiring Admission Tiers</span>
+                <span>Retiring This Tier</span>
               </div>
               <p className="text-[11px] leading-relaxed">
                 Retiring <strong>{tier.name}</strong> will prevent any future
@@ -255,7 +255,7 @@ export function EventTicketTierModal({
                     className="block font-semibold text-[#3D291F]"
                     htmlFor="ticket-tier-price"
                   >
-                    Ticket Price (NGN) <span className="text-[#BA3C2A]">*</span>
+                    Price (₦) <span className="text-[#BA3C2A]">*</span>
                   </label>
                   <FormattedAmountInput
                     aria-describedby={
@@ -287,7 +287,7 @@ export function EventTicketTierModal({
                     className="block font-semibold text-[#3D291F]"
                     htmlFor="ticket-tier-capacity"
                   >
-                    Capacity (Passes) <span className="text-[#BA3C2A]">*</span>
+                    Capacity <span className="text-[#BA3C2A]">*</span>
                   </label>
                   <input
                     aria-describedby={
@@ -370,7 +370,7 @@ export function EventTicketTierModal({
                 message={fieldErrors.reason}
               />
               <div className="flex justify-between items-center text-[10px] text-[#7A685D]">
-                <span>Required for club governance compliance.</span>
+                <span>Recorded in the audit trail.</span>
                 <span>{reason.length}/500</span>
               </div>
             </div>

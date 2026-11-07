@@ -135,11 +135,10 @@ export const MemberRosterSection: React.FC<MemberRosterSectionProps> = ({
     <section className="bg-white rounded-xl border border-[#E5DDD3] shadow-xs p-5 space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-[#3D291F]">Member roster</h2>
+          <h2 className="text-lg font-bold text-[#3D291F]">Member Roster</h2>
           <p className="text-xs text-[#7A685D]">
-            Tabular directory sorted by Active (registration date), Deactivated,
-            and Rejected. Email addresses and private dues are strictly
-            excluded.
+            Club directory sorted by status and registration date. Email
+            addresses and personal dues are kept private.
           </p>
         </div>
         <span className="text-xs text-[#7A685D] self-start sm:self-auto font-medium">
@@ -154,7 +153,7 @@ export const MemberRosterSection: React.FC<MemberRosterSectionProps> = ({
           <input
             type="text"
             aria-label="Search members by full name or username"
-            placeholder="Search by full name or username (@...)"
+            placeholder="Search by name or username..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-base sm:text-xs text-[#3D291F] placeholder-[#7A685D] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
@@ -171,14 +170,12 @@ export const MemberRosterSection: React.FC<MemberRosterSectionProps> = ({
             }
             className="px-3 py-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-base sm:text-xs font-semibold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
           >
-            <option value="all">All Statuses ({rosterMembers.length})</option>
-            <option value="active">Active Members ({activeCount})</option>
+            <option value="all">All ({rosterMembers.length})</option>
+            <option value="active">Active ({activeCount})</option>
             <option value="deactivated">
-              Deactivated Members ({deactivatedCount})
+              Deactivated ({deactivatedCount})
             </option>
-            <option value="rejected">
-              Rejected Applications ({rejectedCount})
-            </option>
+            <option value="rejected">Rejected ({rejectedCount})</option>
           </select>
         </div>
       </div>
@@ -194,7 +191,7 @@ export const MemberRosterSection: React.FC<MemberRosterSectionProps> = ({
       ) : (
         <div className="space-y-2">
           <p className="sm:hidden text-[11px] font-medium text-[#7A685D]">
-            Swipe horizontally to view all member roster columns &rarr;
+            Swipe to view all columns &rarr;
           </p>
           <div className="rounded-xl border border-[#E5DDD3] overflow-hidden">
             <TableScroll label="Member roster">
@@ -204,9 +201,9 @@ export const MemberRosterSection: React.FC<MemberRosterSectionProps> = ({
                     <th className="py-3 px-4">Member</th>
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4">Club Role</th>
-                    <th className="py-3 px-4">Profile State</th>
-                    <th className="py-3 px-4">Date of Registration</th>
-                    <th className="py-3 px-4 text-right">Officer Actions</th>
+                    <th className="py-3 px-4">Profile</th>
+                    <th className="py-3 px-4">Joined</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E5DDD3] text-xs">

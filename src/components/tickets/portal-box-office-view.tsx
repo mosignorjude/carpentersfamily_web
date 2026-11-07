@@ -43,7 +43,7 @@ export function PortalBoxOfficeView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-espresso tracking-tight">
-            Box Office & Passes
+            Tickets & Reservations
           </h1>
           <p className="text-xs sm:text-sm text-muted max-w-2xl">
             The official Carpenters Family Box office - tickets tiers, prices
@@ -211,7 +211,7 @@ export function PortalBoxOfficeView({
                         {/* Tiers List */}
                         <div className="space-y-3 pt-3 border-t border-linen">
                           <span className="text-xs font-bold text-espresso block">
-                            Admission Tiers & Pass Pricing
+                            Ticket Tiers & Prices
                           </span>
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             {tiers.map((tier) => {

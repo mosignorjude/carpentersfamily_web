@@ -79,7 +79,7 @@ export function OfficerBoxOfficeDesk({
         <div className="rounded-2xl bg-warm-canvas border border-linen p-4 sm:p-5 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-bold text-muted uppercase tracking-wider">
-              Gross Ticketing Inflow
+              Ticket Sales Revenue
             </span>
             <div className="w-7 h-7 rounded-lg bg-forest/10 flex items-center justify-center text-forest">
               <Ticket className="w-4 h-4" />
@@ -97,7 +97,7 @@ export function OfficerBoxOfficeDesk({
         <div className="rounded-2xl bg-warm-canvas border border-linen p-4 sm:p-5 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-bold text-muted uppercase tracking-wider">
-              Passes Issued / Capacity
+              Tickets Sold / Capacity
             </span>
             <div className="w-7 h-7 rounded-lg bg-espresso/10 flex items-center justify-center text-espresso">
               <Layers className="w-4 h-4" />

@@ -86,11 +86,11 @@ export function DuesPaymentsHistoryCard({
               className="text-base sm:text-lg font-extrabold text-[#3D291F]"
               id="payment-history-heading"
             >
-              Recorded Payment History
+              Payment History
             </h2>
           </div>
           <p className="text-xs text-[#54433A] font-medium mt-1">
-            Official statutory payment receipts and audit trail
+            Confirmed dues payments and covered months
           </p>
         </div>
 

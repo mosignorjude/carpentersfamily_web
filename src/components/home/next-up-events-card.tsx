@@ -45,7 +45,7 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
         <div className="flex items-center gap-2 mb-3">
           <Calendar className="w-5 h-5 text-[#3D291F]" />
           <h3 className="text-lg font-bold text-[#3D291F]" id="events-heading">
-            Next Up: Scheduled Events
+            Upcoming Events
           </h3>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
@@ -73,17 +73,16 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
         <div className="flex items-center gap-2 mb-3">
           <Calendar className="w-5 h-5 text-[#174C37]" />
           <h3 className="text-lg font-bold text-[#3D291F]" id="events-heading">
-            Next Up: Scheduled Events
+            Upcoming Events
           </h3>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
           <Calendar className="w-6 h-6 text-[#174C37] mx-auto" />
           <h4 className="text-sm font-bold text-[#3D291F]">
-            No Events Currently Scheduled
+            No Upcoming Events
           </h4>
           <p className="text-xs font-medium text-[#5C4638] max-w-sm mx-auto leading-relaxed">
-            There are no official club events scheduled on the calendar right
-            now.
+            New club events will appear here once scheduled.
           </p>
         </div>
       </section>
@@ -100,7 +99,7 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
         <div className="flex items-center gap-2">
           <Calendar className="w-5 h-5 text-[#174C37]" />
           <h3 className="text-lg font-bold text-[#3D291F]" id="events-heading">
-            Next Up: Scheduled Events
+            Upcoming Events
           </h3>
         </div>
 
@@ -121,15 +120,15 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
             evt.attendanceStatus === "late";
           const attendanceLabel = attendanceRecorded
             ? evt.attendanceStatus === "late"
-              ? "Attendance Recorded · Late"
-              : "Attendance Recorded"
+              ? "Checked In · Late"
+              : "Checked In"
             : evt.attendanceStatus === "absent"
-              ? "Attendance Marked Absent"
+              ? "Marked Absent"
               : evt.attendanceStatus === "rejected"
-                ? "Attendance Record Rejected"
+                ? "Check-in Declined"
                 : evt.attendanceStatus === "unavailable"
-                  ? "Attendance Status Unavailable"
-                  : "Open Attendance";
+                  ? "Status Unavailable"
+                  : "Check In";
 
           return (
             <div
@@ -214,7 +213,7 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
                           href={`/events/${evt.id}/dashboard?action=record-transaction`}
                         >
                           <DollarSign className="w-3.5 h-3.5 text-[#D6A23A]" />
-                          <span className="text-white">Make a Transaction</span>
+                          <span className="text-white">Record Transaction</span>
                         </Link>
                       )}
                       <Link

@@ -81,11 +81,10 @@ export function ProfileSettingsView({
           Account &amp; Security
         </span>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#3D291F]">
-          Member Profile Settings
+          Profile Settings
         </h1>
         <p className="text-xs sm:text-sm text-[#5C4638] max-w-2xl leading-relaxed">
-          Manage your club handle, profile photo, sign-in email address, and
-          account password.
+          Manage your profile photo, username, email address, and password.
         </p>
       </section>
 
@@ -95,7 +94,7 @@ export function ProfileSettingsView({
           <User className="w-5 h-5 text-[#174C37]" />
           <div>
             <h2 className="text-base sm:text-lg font-extrabold text-[#3D291F]">
-              Profile Picture &amp; Username
+              Photo &amp; Username
             </h2>
             <p className="text-xs text-[#7A685D]">
               {fullName} · {role}
@@ -166,7 +165,7 @@ export function ProfileSettingsView({
                 className="block text-[11px] font-bold uppercase tracking-wider text-[#54433A] mb-1.5"
                 htmlFor="settings-full-name"
               >
-                Verified Full Name
+                Full Name
               </label>
               <input
                 className="w-full h-11 px-3.5 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] text-xs font-semibold text-[#7A685D] cursor-not-allowed"
@@ -182,7 +181,7 @@ export function ProfileSettingsView({
                 className="block text-[11px] font-bold uppercase tracking-wider text-[#54433A] mb-1.5"
                 htmlFor="settings-username"
               >
-                Username Handle
+                Username
               </label>
               <input
                 className="w-full h-11 px-3.5 rounded-xl border border-[#E5DDD3] bg-white text-xs font-semibold text-[#3D291F]"
@@ -207,7 +206,7 @@ export function ProfileSettingsView({
               pendingLabel="Saving Profile…"
               statusToastMessage="Saving your profile settings…"
             >
-              Save Profile Settings
+              Save Profile
             </FormSubmitButton>
           </div>
         </form>
@@ -222,7 +221,7 @@ export function ProfileSettingsView({
               Email Address
             </h2>
             <p className="text-xs text-[#7A685D]">
-              Update the email address linked to your member sign-in.
+              Update the email address used to sign in.
             </p>
           </div>
         </div>
@@ -252,7 +251,7 @@ export function ProfileSettingsView({
               pendingLabel="Updating Email…"
               statusToastMessage="Requesting email address update…"
             >
-              Update Email Address
+              Update Email
             </FormSubmitButton>
           </div>
         </form>

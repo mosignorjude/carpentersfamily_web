@@ -60,7 +60,7 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
     it("uses concise tab labels in view switcher", () => {
       assert.match(budgetSource, />\s*Spending\s*</);
       assert.match(budgetSource, />\s*Revenue Mix\s*</);
-      assert.match(budgetSource, />\s*Cash Velocity\s*</);
+      assert.match(budgetSource, />\s*Cash Flow\s*</);
     });
 
     it("renders the Capital Allocation & Burn Rate Matrix as a horizontally scrollable table on mobile with helper text", () => {

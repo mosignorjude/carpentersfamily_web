@@ -74,10 +74,10 @@ export function VoidTransactionModal({
                 className="text-base font-bold text-[#3D291F]"
                 id="void-modal-title"
               >
-                Void Ledger Record
+                Void Transaction
               </h3>
               <p className="text-xs text-[#7A685D]">
-                Carpenters Family Financial Compliance
+                Reverse this entry while keeping it in the audit log.
               </p>
             </div>
           </div>
@@ -100,7 +100,7 @@ export function VoidTransactionModal({
           {/* Policy Notice */}
           <div className="p-3.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1 text-[#5C4638]">
             <span className="font-semibold text-[#174C37] block">
-              Immutable Retained History Rule:
+              Permanent Audit Record:
             </span>
             <p className="leading-relaxed">
               Permanent deletion is prohibited. This transaction will remain
@@ -136,7 +136,7 @@ export function VoidTransactionModal({
               className="font-bold text-[#3D291F] block"
               htmlFor="void-reason-input"
             >
-              Mandatory Void Reason / Audit Note
+              Reason for Voiding
             </label>
             <textarea
               className="w-full h-24 p-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#7A685D] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A] resize-none"
@@ -179,7 +179,7 @@ export function VoidTransactionModal({
               ) : (
                 <>
                   <ShieldAlert className="w-4 h-4" />
-                  <span>Confirm Void Record</span>
+                  <span>Void Transaction</span>
                 </>
               )}
             </button>

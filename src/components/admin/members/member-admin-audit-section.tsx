@@ -29,15 +29,15 @@ export const MemberAdminAuditSection: React.FC<
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-bold text-[#3D291F]">
-                Member administration audit history
+                Member Admin Audit Log
               </h2>
               <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]">
                 {auditLog.length} Records
               </span>
             </div>
             <p className="text-xs text-[#7A685D]">
-              Immutable, timestamped audit log of all status decisions, role
-              assignments, and governance reasons.
+              Permanent log of member status changes, role assignments, and
+              reasons.
             </p>
           </div>
         </div>

@@ -48,7 +48,7 @@ export function OpeningBalanceEntryCard({
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
-                Treasury Opening Cash Reserve
+                Opening Balance
               </h3>
               <p className="text-xs text-[#7A685D] font-medium">
                 Baseline opening balance established as of launch
@@ -58,7 +58,7 @@ export function OpeningBalanceEntryCard({
 
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F2F8F5] border border-[#174C37]/30 text-[#174C37] text-xs font-bold">
             <CheckCircle2 className="w-3.5 h-3.5 text-[#174C37]" />
-            Opening Reserve Verified &amp; Locked
+            Verified &amp; Locked
           </span>
         </div>
 
@@ -115,7 +115,7 @@ export function OpeningBalanceEntryCard({
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
-                Treasury Opening Cash Reserve
+                Opening Balance
               </h3>
               <p className="text-xs text-[#7A685D] font-medium">
                 Starting balance for launch operations

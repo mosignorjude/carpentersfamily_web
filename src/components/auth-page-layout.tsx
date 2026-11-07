@@ -100,7 +100,7 @@ function AuthPhotoPanel({ variant }: { variant: AuthPageVariant }) {
         >
           <li>
             <ClubIcon name="calendar" />
-            <span>Events &amp; Ticketing</span>
+            <span>Events &amp; Tickets</span>
           </li>
           <li>
             <ClubIcon name="users" />
@@ -112,7 +112,7 @@ function AuthPhotoPanel({ variant }: { variant: AuthPageVariant }) {
           </li>
           <li>
             <ClubIcon name="megaphone" />
-            <span>Updates &amp; Announcements</span>
+            <span>Announcements &amp; Polls</span>
           </li>
         </ul>
       </div>

@@ -89,14 +89,14 @@ export function AttendanceRosterTable({
                 className="text-base font-extrabold text-[#3D291F]"
                 id="attendance-roster-heading"
               >
-                Verified Attendance Roster
+                Attendance List
               </h2>
               <span className="text-xs font-mono font-bold text-[#174C37] bg-[#FAF6F0] px-2.5 py-0.5 rounded-full border border-[#E5DDD3]">
                 {attendance.length} Records
               </span>
             </div>
             <p className="text-xs text-[#7A685D]">
-              Secretariat check-in ledger with automated audit justifications
+              Member check-ins and officer updates
             </p>
           </div>
         </div>

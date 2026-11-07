@@ -27,55 +27,55 @@ const dashboardNoticeMap: Record<
   { message: string; isError?: boolean }
 > = {
   "category-created": {
-    message: "The event finance category was created and logged.",
+    message: "Category created.",
   },
   "category-renamed": {
-    message: "The event finance category was renamed and logged.",
+    message: "Category renamed.",
   },
   "category-retired": {
-    message: "The event finance category was retired and logged.",
+    message: "Category retired.",
   },
   "budget-saved": {
-    message: "The event budget and allocations were saved.",
+    message: "Budget saved.",
   },
   "transaction-recorded": {
-    message: "The event financial transaction was recorded.",
+    message: "Transaction recorded.",
   },
   "transaction-corrected": {
-    message: "The event financial transaction was corrected.",
+    message: "Transaction updated.",
   },
   "transaction-voided": {
-    message: "The event financial transaction was voided and retained.",
+    message: "Transaction voided.",
   },
   "tier-saved": {
-    message: "The ticket tier was saved.",
+    message: "Ticket tier saved.",
   },
   "tier-retired": {
-    message: "The ticket tier was retired.",
+    message: "Ticket tier retired.",
   },
   "ticket-recorded": {
-    message: "The ticket sale was recorded.",
+    message: "Ticket sale recorded.",
   },
   "ticket-refunded": {
-    message: "The ticket sale was marked refunded.",
+    message: "Ticket sale refunded.",
   },
   saved: {
-    message: "The event financial transaction was recorded.",
+    message: "Transaction recorded.",
   },
   corrected: {
-    message: "The event financial transaction was corrected.",
+    message: "Transaction updated.",
   },
   voided: {
-    message: "The event financial transaction was voided and retained.",
+    message: "Transaction voided.",
   },
   "sale-saved": {
-    message: "The ticket sale was recorded.",
+    message: "Ticket sale recorded.",
   },
   "sale-edited": {
-    message: "The ticket sale was updated.",
+    message: "Ticket sale updated.",
   },
   refunded: {
-    message: "The ticket sale was marked refunded.",
+    message: "Ticket sale refunded.",
   },
   denied: {
     message: "You are not authorized to perform that action.",

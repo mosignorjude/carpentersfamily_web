@@ -52,15 +52,13 @@ describe("Phase 3: Table-to-Card Responsive Transformation & Tap Floors", () => 
     assert.match(tabRevenue, /<TableScroll[^>]*label="Revenue streams by source"/);
   });
 
-  it("tab-expenses renders Operational Cost Centers & Budget Matrix before Disbursement Ledger with mobile helper text", () => {
-    const ledgerIdx = tabExpenses.indexOf('title="Disbursement Ledger"');
-    const matrixIdx = tabExpenses.indexOf(
-      "Operational Cost Centers & Budget Matrix"
-    );
+  it("tab-expenses renders Expenses by Category before Expenses Ledger with mobile helper text", () => {
+    const ledgerIdx = tabExpenses.indexOf('title="Expenses Ledger"');
+    const matrixIdx = tabExpenses.indexOf("Expenses by Category");
     assert.ok(ledgerIdx !== -1 && matrixIdx !== -1);
     assert.ok(
       matrixIdx < ledgerIdx,
-      "Operational Cost Centers & Budget Matrix must appear before Disbursement Ledger"
+      "Expenses by Category must appear before Expenses Ledger"
     );
     assert.doesNotMatch(tabExpenses, /hidden\s+sm:block/);
     assert.match(

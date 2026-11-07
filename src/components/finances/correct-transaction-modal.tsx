@@ -52,10 +52,10 @@ export function CorrectTransactionModal({
                 className="text-base font-extrabold text-[#3D291F]"
                 id="correct-modal-title"
               >
-                Correct Posted Ledger Entry
+                Edit Transaction
               </h3>
               <p className="text-xs text-[#54433A] font-medium">
-                Update parameters with mandatory audited justification
+                Update transaction details with a reason for the audit log
               </p>
             </div>
           </div>

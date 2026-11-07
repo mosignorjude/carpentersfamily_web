@@ -491,8 +491,8 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                 <UserCog className="w-5 h-5 text-[#D6A23A]" />
                 <h3 className="text-base font-bold text-[#3D291F]">
                   {targetClubRole === "Executive"
-                    ? "Assign Executive Status"
-                    : "Remove Executive Status"}
+                    ? "Assign Executive Role"
+                    : "Remove Executive Role"}
                 </h3>
               </div>
               <button
@@ -505,7 +505,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
             </div>
 
             <div className="p-3 bg-[#FAF6F0] rounded-lg border border-[#E5DDD3] text-xs space-y-1">
-              <span className="text-[#7A685D]">Target Member:</span>
+              <span className="text-[#7A685D]">Member:</span>
               <p className="font-bold text-[#3D291F]">
                 {selectedMember.fullName}
               </p>
@@ -530,7 +530,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                 htmlFor="role-change-reason"
                 className="text-xs font-bold text-[#3D291F]"
               >
-                Constitutional / Meeting Reason (Mandatory)
+                Reason for Role Change *
               </label>
               <textarea
                 id="role-change-reason"
@@ -583,7 +583,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                     <span>Updating Role…</span>
                   </>
                 ) : (
-                  "Confirm Role Change"
+                  "Update Role"
                 )}
               </button>
             </div>
@@ -599,7 +599,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               <div className="flex items-center gap-2 text-[#174C37]">
                 <UserCog className="w-5 h-5 text-[#D6A23A]" />
                 <h3 className="text-base font-bold text-[#3D291F]">
-                  Assign Event Staff Role
+                  Assign Event Role
                 </h3>
               </div>
               <button
@@ -634,7 +634,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                 }}
                 className="w-full p-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:ring-2 focus:ring-[#174C37]"
               >
-                <option value="">-- Choose active member --</option>
+                <option value="">Select a member...</option>
                 {activeMembers.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.fullName} ({m.username}) · {m.clubRole}
@@ -659,15 +659,9 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                 }
                 className="w-full p-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:ring-2 focus:ring-[#174C37]"
               >
-                <option value="Event lead">
-                  Event lead (Principal Organizer)
-                </option>
-                <option value="Event assistant">
-                  Event assistant (Operational Co-lead)
-                </option>
-                <option value="Committee">
-                  Committee (Logistics / Welfare)
-                </option>
+                <option value="Event lead">Event Lead</option>
+                <option value="Event assistant">Event Assistant</option>
+                <option value="Committee">Committee Member</option>
               </select>
             </div>
 
@@ -677,7 +671,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               <div className="p-3 bg-[#FFF8E6] rounded-lg border border-[#D6A23A]/50 text-xs text-[#3D291F] space-y-1">
                 <p className="font-bold flex items-center gap-1.5 text-[#8A641A]">
                   <AlertCircle className="w-4 h-4 text-[#D6A23A]" />
-                  <span>Single-Occupancy Role Notice</span>
+                  <span>Replaces Current Holder</span>
                 </p>
                 <p>
                   Assigning a replacement {targetEventRole} will replace the
@@ -744,7 +738,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                     <span>Assigning Role…</span>
                   </>
                 ) : (
-                  "Confirm Assignment"
+                  "Assign Role"
                 )}
               </button>
             </div>
@@ -760,7 +754,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               <div className="flex items-center gap-2 text-[#8B261E]">
                 <UserX className="w-5 h-5" />
                 <h3 className="text-base font-bold text-[#3D291F]">
-                  Remove Event Assignment
+                  Remove Event Role
                 </h3>
               </div>
               <button
@@ -773,7 +767,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
             </div>
 
             <div className="p-3 bg-[#FAF6F0] rounded-lg border border-[#E5DDD3] text-xs space-y-1">
-              <span className="text-[#7A685D]">Staff Member:</span>
+              <span className="text-[#7A685D]">Member:</span>
               <p className="font-bold text-[#3D291F]">
                 {selectedAssignment.memberName}
               </p>
@@ -790,7 +784,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                 htmlFor="remove-event-role-reason"
                 className="text-xs font-bold text-[#3D291F]"
               >
-                Reason for Removal (Mandatory)
+                Reason for Removal *
               </label>
               <textarea
                 id="remove-event-role-reason"
@@ -842,7 +836,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                     <span>Removing Role…</span>
                   </>
                 ) : (
-                  "Confirm Removal"
+                  "Remove Role"
                 )}
               </button>
             </div>
