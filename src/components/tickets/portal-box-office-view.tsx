@@ -46,8 +46,8 @@ export function PortalBoxOfficeView({
             Box Office & Passes
           </h1>
           <p className="text-xs sm:text-sm text-muted max-w-2xl">
-            Official tickets, pass allocations, and celebration admissions for
-            Carpenters Family events.
+            The official Carpenters Family Box office - tickets tiers, prices
+            and reservations for our shows and events.
           </p>
         </div>
 

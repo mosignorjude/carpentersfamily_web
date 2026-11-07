@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 const TITLE = "Box Office & Event Tickets · Carpenters Family Social Club";
 const DESCRIPTION =
-  "The official Carpenters Family Social Club box office — ticket tiers, prices and reservations for our shows and celebrations in Asaba, Delta State.";
+  "The official Carpenters Family Box office - tickets tiers, prices and reservations for our shows and events.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -32,10 +32,10 @@ export const metadata: Metadata = {
     siteName: "Carpenters Family Social Club",
     images: [
       {
-        url: "/landing/og-share.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Carpenters Family Social Club box office",
+        url: "/tickets/tickets-hero-banner.jpg",
+        width: 1024,
+        height: 571,
+        alt: "Carpenters Family Box Office",
       },
     ],
     locale: "en_NG",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: ["/landing/og-share.jpg"],
+    images: ["/tickets/tickets-hero-banner.jpg"],
   },
 };
 

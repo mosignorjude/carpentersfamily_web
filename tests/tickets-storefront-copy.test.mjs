@@ -68,3 +68,22 @@ test("the lookup keeps the email out of the URL", () => {
   assert.doesNotMatch(actions, /buyer_email=\$\{/);
   assert.doesNotMatch(actions, /redirect\(.*tickets\/order\?.*email/);
 });
+
+test("tickets page metadata and hero display official box office image and description", () => {
+  const pageSource = readFileSync("src/app/tickets/page.tsx", "utf8");
+  assert.match(
+    pageSource,
+    /The official Carpenters Family Box office - tickets tiers, prices and reservations for our shows and events\./,
+  );
+  assert.match(pageSource, /"\/tickets\/tickets-hero-banner\.jpg"/);
+
+  const storefrontSource = readFileSync(
+    "src/components/tickets/tickets-storefront-view.tsx",
+    "utf8",
+  );
+  assert.match(
+    storefrontSource,
+    /The official Carpenters Family Box office - tickets tiers, prices\s+and reservations for our shows and events\./,
+  );
+  assert.match(storefrontSource, /tickets-hero-banner\.jpg/);
+});

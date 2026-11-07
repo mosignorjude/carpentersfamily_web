@@ -153,9 +153,8 @@ export function TicketsStorefrontView({
               Experience The Vibe. See Events Below.
             </h1>
             <p className="text-xs sm:text-sm text-linen/90 leading-relaxed max-w-xl font-medium">
-              Official guest passes to Carpenters Family raves, galas, and
-              flagship nights out. Pick your event, transfer directly, and
-              upload your receipt for officer verification.
+              The official Carpenters Family Box office - tickets tiers, prices
+              and reservations for our shows and events.
             </p>
           </div>
         </section>
