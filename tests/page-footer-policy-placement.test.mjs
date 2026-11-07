@@ -101,19 +101,19 @@ describe("Page Footer Policy & Governance Relocation", () => {
     );
   });
 
-  it("relocates Privacy & Shared Ledger Mandate to the footer of FinancesPageView", () => {
+  it("relocates Financial Privacy & Transparency to the footer of FinancesPageView", () => {
     // Must NOT be placed inside the hero section
     assert.doesNotMatch(
       financesView,
-      /<section[^>]*finances-hero-heading[\s\S]*?Privacy & Shared Ledger Mandate[\s\S]*?<\/section>/,
-      "Finances hero section must not contain the bulky privacy mandate banner"
+      /<section[^>]*finances-hero-heading[\s\S]*?Financial Privacy & Transparency[\s\S]*?<\/section>/,
+      "Finances hero section must not contain the bulky privacy mandate banner",
     );
 
     // Must be placed inside the footer
     assert.match(
       financesView,
-      /<footer[\s\S]*?Privacy &amp; Shared Ledger Mandate[\s\S]*?<\/footer>/,
-      "Finances privacy & shared ledger mandate must reside in the page footer"
+      /<footer[\s\S]*?Financial Privacy &amp; Transparency[\s\S]*?<\/footer>/,
+      "Finances financial privacy & transparency must reside in the page footer",
     );
   });
 
@@ -122,38 +122,38 @@ describe("Page Footer Policy & Governance Relocation", () => {
     assert.doesNotMatch(
       duesView,
       /<\/section>\s*\{isDuesExempt\s*&&[\s\S]*?Club Admin Exemption[\s\S]*?Review Individual Member Ledger/,
-      "Dues page must not interpose the exemption banner between hero and member switcher"
+      "Dues page must not interpose the exemption banner between hero and member switcher",
     );
 
     // Must be placed inside the footer
     assert.match(
       duesView,
       /<footer[\s\S]*?Club Admin Dues Exemption Policy[\s\S]*?<\/footer>/,
-      "the Club Admin dues exemption must reside in the dues page footer"
+      "the Club Admin dues exemption must reside in the dues page footer",
     );
   });
 
-  it("removes redundant inline governance note from EventCard body and retains in drawer", () => {
+  it("removes redundant inline governance note from EventCard body and retains timeline in drawer", () => {
     // Must NOT have the inline governance note box above features
     assert.doesNotMatch(
       eventCard,
       /event\.location[\s\S]*?Governance Note:[\s\S]*?Features:/,
-      "EventCard must not display bulky inline governance note in card body"
+      "EventCard must not display bulky inline governance note in card body",
     );
 
-    // Must retain governance schedule in drawer
+    // Must retain timeline in drawer
     assert.match(
       eventCard,
-      /Governance & Audit Schedule[\s\S]*?Archived:/,
-      "EventCard drawer must retain governance & audit schedule details"
+      /Event History & Timeline[\s\S]*?Archived:/,
+      "EventCard drawer must retain event history & timeline details",
     );
   });
 
-  it("renders Financial Governance Rules as a collapsible footer disclosure in TabTeamRoles", () => {
-    assert.match(
+  it("omits misplaced Financial Governance Rules from TabTeamRoles", () => {
+    assert.doesNotMatch(
       teamRolesTab,
-      /<details[\s\S]*?Financial Governance Rules[\s\S]*?All ledger entries are permanent[\s\S]*?<\/details>/,
-      "TabTeamRoles must render financial governance rules inside a collapsible disclosure"
+      /Financial Governance Rules/,
+      "TabTeamRoles must not render misplaced financial governance rules",
     );
   });
 });

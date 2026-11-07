@@ -95,11 +95,11 @@ export function OfficerSessionControls({
 
       {activeTab === "session" && (
         <div className="space-y-5 animate-in fade-in duration-150">
-          {/* Current Session Telemetry */}
+          {/* Current Session Status */}
           <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A685D]">
-                Session Telemetry
+                Session Status
               </span>
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${

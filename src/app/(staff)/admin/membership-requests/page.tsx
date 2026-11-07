@@ -52,8 +52,7 @@ export default async function AdminMembershipRequestsPage({
             Membership Intake Requests
           </h1>
           <p className="text-sm text-stone-600 mt-1">
-            Review prospective member applications and issue cryptographic
-            invitations.
+            Review prospective member applications and issue invitation links.
           </p>
         </div>
 

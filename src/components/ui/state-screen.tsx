@@ -102,9 +102,11 @@ export function AccessDeniedCard({
       </div>
 
       <div className="space-y-2">
-        <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BA3C2A] bg-[#BA3C2A]/10 px-2.5 py-1 rounded-md inline-block">
-          Restricted Access
-        </span>
+        {title.trim().toLowerCase() !== "restricted access" && (
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BA3C2A] bg-[#BA3C2A]/10 px-2.5 py-1 rounded-md inline-block">
+            Restricted Access
+          </span>
+        )}
         <h2 className="text-lg sm:text-xl font-extrabold text-[#3D291F] tracking-tight">
           {title}
         </h2>

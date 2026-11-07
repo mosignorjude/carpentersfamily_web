@@ -55,10 +55,6 @@ export function PollsPageView({
             anonymous and final.
           </p>
         </div>
-
-        <span className="text-[11px] px-2.5 py-1 rounded-md bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3] self-start sm:self-auto font-medium">
-          Anonymous Voting
-        </span>
       </div>
 
       {/* Live Refresh Component */}

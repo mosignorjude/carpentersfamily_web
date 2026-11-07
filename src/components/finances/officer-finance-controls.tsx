@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock, Shield, Tag, TrendingDown, TrendingUp } from "lucide-react";
+import { Shield, Tag, TrendingDown, TrendingUp } from "lucide-react";
 
 interface OfficerFinanceControlsProps {
   isOfficer: boolean;
@@ -77,19 +77,6 @@ export function OfficerFinanceControls({
             <Tag className="w-4 h-4 text-[#7A685D]" />
             <span>Manage Categories</span>
           </button>
-        </div>
-
-        {/* Explicit Privacy & Scope Guardrail */}
-        <div className="p-3.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#5C4638] flex items-start gap-2.5">
-          <Lock className="w-3.5 h-3.5 text-[#7A685D] shrink-0 mt-0.5" />
-          <span className="leading-relaxed">
-            <strong className="text-[#3D291F]">Ledger Privacy Guard: </strong>
-            Individual member dues status and debt collections are strictly
-            confidential and remain isolated in individual member ledgers.
-            {canCorrect
-              ? " As an Administrator, you also hold rights to void or correct posted entries with mandatory audit justification."
-              : " Correcting or voiding existing entries is restricted to Administrators."}
-          </span>
         </div>
       </div>
     </section>

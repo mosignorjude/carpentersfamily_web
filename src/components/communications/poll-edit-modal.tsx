@@ -37,8 +37,7 @@ export function PollEditModal({ poll, isOpen, onClose }: PollEditModalProps) {
                 Edit Poll
               </h3>
               <p className="text-xs text-[#7A685D]">
-                Revision #{poll.revisionNumber + 1} will be preserved in the
-                audit log
+                Revision #{poll.revisionNumber + 1}
               </p>
             </div>
           </div>
@@ -63,13 +62,12 @@ export function PollEditModal({ poll, isOpen, onClose }: PollEditModalProps) {
             <div className="p-3 bg-[#FAF6F0] rounded-lg border border-[#E5DDD3] text-[#7A685D] space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-[#3D291F]">
                 <Lock className="w-4 h-4 text-[#D6A23A]" />
-                <span>Structural Choices Locked</span>
+                <span>Poll Options Locked</span>
               </div>
               <p>
-                Because member ballots have already been cast or voting has
-                concluded, questions and choice options are permanently locked
-                from alteration. You may only adjust administrative deadlines
-                with a recorded governance audit reason.
+                Ballots have already been cast or voting has concluded.
+                Questions and options cannot be changed. Only the closing time
+                may be adjusted with an edit reason.
               </p>
             </div>
           )}
@@ -190,7 +188,7 @@ export function PollEditModal({ poll, isOpen, onClose }: PollEditModalProps) {
               htmlFor={`edit-reason-${poll.id}`}
               className="block text-xs font-bold text-[#3D291F] mb-1"
             >
-              Reason for Edit (Recorded in Audit Log)
+              Reason for Edit *
             </label>
             <input
               id={`edit-reason-${poll.id}`}

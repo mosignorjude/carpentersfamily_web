@@ -236,12 +236,11 @@ export function PollCard({ poll }: PollCardProps) {
             <div className="p-4 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] text-xs text-[#7A685D] space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-[#3D291F]">
                 <AlertCircle className="w-4 h-4 text-[#D6A23A]" />
-                <span>Results Verification Pending / Unavailable</span>
+                <span>Results Verification Pending</span>
               </div>
               <p>
-                Final electoral tallies cannot be verified by the secretariat at
-                this time. Totals are withheld in accordance with club
-                governance guidelines. Missing data is never presented as zero.
+                Final vote tallies could not be verified at this time. Totals
+                are temporarily withheld to ensure accuracy.
               </p>
             </div>
           ) : !poll.resultsVisible ? (
@@ -249,13 +248,12 @@ export function PollCard({ poll }: PollCardProps) {
             <div className="p-4 bg-[#FFF8E6] rounded-xl border border-[#D6A23A]/60 text-xs text-[#3D291F] space-y-1.5">
               <div className="flex items-center gap-1.5 font-bold text-[#8A641A]">
                 <Shield className="w-4 h-4 text-[#D6A23A]" />
-                <span>Final Totals Withheld Under Privacy Threshold</span>
+                <span>Results Withheld for Privacy</span>
               </div>
               <p className="text-[#7A685D] leading-relaxed">
-                This consultation closed with fewer than 5 member votes (
-                {totalVotesCount} cast). In compliance with club confidentiality
-                regulations, final choice tallies are withheld to prevent the
-                deduction of individual voter identities.
+                This poll closed with fewer than 5 member votes (
+                {totalVotesCount} cast). To protect voter anonymity, choice
+                breakdown tallies are withheld.
               </p>
             </div>
           ) : (
@@ -317,13 +315,6 @@ export function PollCard({ poll }: PollCardProps) {
         </span>
 
         <div className="flex items-center gap-3">
-          <span>
-            Scope:{" "}
-            <strong className="text-[#3D291F]">
-              {poll.eventTitle ?? "Club-wide"}
-            </strong>
-          </span>
-
           {hasEditedRevisions && (
             <button
               type="button"

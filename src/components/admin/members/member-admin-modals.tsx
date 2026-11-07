@@ -216,12 +216,9 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
             <div className="space-y-1.5">
               <label
                 htmlFor="reject-reason"
-                className="text-xs font-bold text-[#3D291F] flex items-center justify-between"
+                className="text-xs font-bold text-[#3D291F] block"
               >
-                <span>Governance Rejection Reason (Mandatory)</span>
-                <span className="text-[10px] text-[#7A685D] font-normal">
-                  Retained in Audit
-                </span>
+                Reason for Rejection *
               </label>
               <textarea
                 id="reject-reason"
@@ -242,9 +239,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
             </div>
 
             <p className="text-[11px] text-[#7A685D] leading-relaxed">
-              Note: This action records a formal rejection. The reason is
-              permanently retained in the audit log for future secretarial
-              verification.
+              Recorded in the member audit log.
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -317,12 +312,9 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
             <div className="space-y-1.5">
               <label
                 htmlFor="deactivate-reason"
-                className="text-xs font-bold text-[#3D291F] flex items-center justify-between"
+                className="text-xs font-bold text-[#3D291F] block"
               >
-                <span>Reason for Deactivation (Mandatory)</span>
-                <span className="text-[10px] text-[#7A685D] font-normal">
-                  Audit Logged
-                </span>
+                Reason for Deactivation *
               </label>
               <textarea
                 id="deactivate-reason"

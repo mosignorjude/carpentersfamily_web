@@ -100,21 +100,8 @@ export function TabAuditLog({
           </div>
         </div>
 
-        {/* Role Notice & Filter Controls */}
+        {/* Filter Controls */}
         <div className="space-y-3">
-          <div className="p-2.5 sm:p-3 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] text-xs text-[#5C4638] flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-[#174C37] shrink-0">
-                Governance:
-              </span>
-              <span className="text-[11px] sm:text-xs text-[#6B5D53]">
-                Admins, Executives, and Event Leads can record · Admins can void
-              </span>
-            </div>
-            <span className="text-[10px] sm:text-[11px] font-mono text-[#6B5D53] shrink-0">
-              Role: {userRole.toUpperCase()}
-            </span>
-          </div>
 
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
             {/* Segmented Filter Buttons */}

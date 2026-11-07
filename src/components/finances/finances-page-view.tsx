@@ -368,7 +368,7 @@ export function FinancesPageView({
                 <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#174C37]" />
               </div>
               <span className="font-bold text-[#3D291F] truncate">
-                Privacy &amp; Shared Ledger Mandate
+                Financial Privacy &amp; Transparency
               </span>
             </div>
             <span className="text-[11px] font-semibold text-[#174C37] group-open:hidden shrink-0">
@@ -379,16 +379,10 @@ export function FinancesPageView({
             </span>
           </summary>
           <div className="mt-2.5 pt-2.5 border-t border-[#E5DDD3] space-y-2 animate-in fade-in duration-150 text-[#5C4638] leading-relaxed">
-            <p className="font-medium text-[#3D291F]">
-              Financial records are restricted to registered members in good
-              standing. All transactions are logged and audited by the Executive
-              Committee.
-            </p>
             <p>
-              Members can review recorded club income and expenses, including
-              payer or payee details. Individual member dues records and
-              personal debt collections remain strictly private to the member
-              and authorized club officers.
+              Members can review recorded club income and expenses. Individual
+              member dues records and personal payment histories remain strictly
+              private to each member and authorized club officers.
             </p>
           </div>
         </details>

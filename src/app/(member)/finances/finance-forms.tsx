@@ -751,8 +751,9 @@ export function FinanceCorrectionForm({
       <div>
         <CfTextField
           autoComplete="off"
+          hint="Recorded in the audit log."
           id="correct-reason"
-          label="Required Correction Reason (Audited) *"
+          label="Reason for Correction *"
           maxLength={500}
           name="reason"
           placeholder="e.g. Correcting typo in vendor invoice amount per receipt voucher"
@@ -789,12 +790,6 @@ export function FinanceVoidForm({
     <form
       action={voidClubFinanceAction}
       className="space-y-4 text-xs text-[#3D291F]"
-      onSubmit={(event) =>
-        confirmSubmit(
-          event,
-          "Void this financial record? It will remain in the history and no longer count toward the balance.",
-        )
-      }
     >
       <input name="transaction_id" type="hidden" value={transaction.id} />
 
@@ -812,8 +807,9 @@ export function FinanceVoidForm({
       <div>
         <CfTextField
           autoComplete="off"
+          hint="Recorded in the audit log."
           id="void-reason"
-          label="Required Void Reason (Audited) *"
+          label="Reason for Voiding *"
           maxLength={500}
           name="reason"
           placeholder="e.g. Duplicated voucher entry created in error"

@@ -787,9 +787,8 @@ export function AttendanceHubView({
             <div className="bg-white rounded-2xl border border-[#E5DDD3] p-6 shadow-xs space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
                 <div>
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#7A685D] block">
-                    Secretariat Archive Document #CFSC-SEC-
-                    {selectedEvent.id.slice(0, 8).toUpperCase()}
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#174C37] block">
+                    Meeting Minutes
                   </span>
                   <h2 className="text-lg font-extrabold text-[#3D291F]">
                     Minutes — {selectedEvent.title}
@@ -883,11 +882,9 @@ export function AttendanceHubView({
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-[#174C37] bg-[#174C37]/10 border border-[#174C37]/30">
-                  {attendanceRate >= 80
-                    ? "Good Standing"
-                    : "Attendance Under Review"}{" "}
-                  ({attendanceRate}%)
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-[#174C37] bg-[#174C37]/10 border border-[#174C37]/30">
+                  Attendance Rate: {attendanceRate}%
+                  {attendanceRate >= 80 ? " · Good Standing" : ""}
                 </span>
               </div>
             </div>

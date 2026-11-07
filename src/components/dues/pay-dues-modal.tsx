@@ -530,10 +530,9 @@ export function PayDuesModal({
                   </>
                 )}
 
-                {/* Verification Protocol Notice */}
+                {/* Verification Notice */}
                 <FormAlertBanner
-                  message="Dues payments are database-backed and verified by designated Club Officers (Executive or President). Officers cannot approve their own dues."
-                  title="Verification Protocol"
+                  message="Payment submissions are reviewed and verified by a club officer before being recorded."
                   variant="info"
                 />
               </>

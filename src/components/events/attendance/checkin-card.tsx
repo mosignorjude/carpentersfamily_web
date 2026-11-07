@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Shield, UserCheck } from "lucide-react";
+import { CheckCircle2, UserCheck } from "lucide-react";
 import { AttendanceCheckIn } from "./attendance-controls";
 import type { AttendanceRow } from "./attendance-types";
 
@@ -140,16 +140,6 @@ export function CheckinCard({
               sessionOpen={sessionOpen && isMutable}
             />
           </div>
-        </div>
-      )}
-
-      {!canReviewAttendance && (
-        <div className="pt-2 border-t border-[#E5DDD3] flex items-center gap-2 text-[11px] text-[#7A685D]">
-          <Shield className="w-3.5 h-3.5 text-[#174C37]" />
-          <span>
-            Under the General Meeting privacy policy, only your personal
-            attendance record is visible.
-          </span>
         </div>
       )}
     </section>

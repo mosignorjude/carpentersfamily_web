@@ -180,13 +180,6 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          <span>
-            Scope:{" "}
-            <strong className="text-[#3D291F]">
-              {announcement.eventTitle ?? "Club-wide"}
-            </strong>
-          </span>
-
           {/* Revision History Link */}
           {hasEditedRevisions && (
             <button

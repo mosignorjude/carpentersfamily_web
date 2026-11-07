@@ -101,37 +101,9 @@ export function OpeningBalanceEntryCard({
     );
   }
 
-  // Not recorded yet, but user does not have permission to record
+  // Not recorded yet, and user does not have permission to record
   if (!canRecord) {
-    return (
-      <div
-        className="bg-white rounded-2xl border border-[#E5DDD3] p-5 sm:p-6 shadow-xs space-y-4"
-        data-testid="opening-balance-unauthorized"
-      >
-        <div className="flex items-center justify-between pb-3.5 border-b border-[#E5DDD3]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-[#7A685D] flex items-center justify-center shadow-xs">
-              <DollarSign className="w-4 h-4 text-[#7A685D]" />
-            </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
-                Opening Balance
-              </h3>
-              <p className="text-xs text-[#7A685D] font-medium">
-                Starting balance for launch operations
-              </p>
-            </div>
-          </div>
-          <span className="text-[11px] font-mono font-bold text-[#7A685D] bg-[#FAF6F0] px-2.5 py-1 rounded-md border border-[#E5DDD3]">
-            Pending Entry
-          </span>
-        </div>
-        <p className="text-xs text-[#7A685D] leading-relaxed">
-          Opening cash reserve has not yet been recorded. Entry is restricted to
-          the Club Admin and the President.
-        </p>
-      </div>
-    );
+    return null;
   }
 
   // Not recorded yet, and canRecord is true: show entry form

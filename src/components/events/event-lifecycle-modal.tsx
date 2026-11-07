@@ -94,7 +94,6 @@ export function EventLifecycleModal({
     complete: {
       title: "Mark Event as Completed",
       subtitle: "Conclude event proceedings and lock planning changes",
-      badge: "Completion Governance",
       buttonText: "Confirm Event Completion",
       buttonClass: "bg-[#174C37] hover:bg-[#103D2B] text-white",
       icon: <CheckCircle2 className="w-5 h-5 text-white" />,
@@ -108,7 +107,6 @@ export function EventLifecycleModal({
     cancel: {
       title: "Cancel Scheduled Event",
       subtitle: "Halt preparations and lock future transactions",
-      badge: "Cancellation Protocol",
       buttonText: "Confirm Event Cancellation",
       buttonClass: "bg-[#BA3C2A] hover:bg-[#9B2F20] text-white",
       icon: <AlertTriangle className="w-5 h-5 text-white" />,
@@ -121,30 +119,26 @@ export function EventLifecycleModal({
     reopen: {
       title: "Reopen Concluded Event Planning",
       subtitle: "Authorize administrative correction and unlock modifications",
-      badge: "Governance Override",
       buttonText: "Authorize & Reopen Event",
       buttonClass: "bg-[#174C37] hover:bg-[#103D2B] text-white",
       icon: <RotateCcw className="w-5 h-5 text-[#D6A23A]" />,
       iconBg: "bg-[#0C3325]",
       serverAction: reopenEventAction,
       statusValue: null,
-      confirmLabel:
-        "I certify administrative necessity to reopen locked event planning",
-      desc: "Restricted to the President or a Club Admin. This action writes directly to the immutable governance audit trail.",
+      confirmLabel: "I confirm reopening planning for this event",
+      desc: "Restricted to the President or a Club Admin. This action is recorded in the audit log.",
     },
     archive: {
-      title: "Move Event to Retained Archive",
-      subtitle: "Preserve historical record in permanent archive",
-      badge: "Permanent Archive",
-      buttonText: "Confirm Retained Archive",
+      title: "Move Event to Archive",
+      subtitle: "Preserve historical record in archive",
+      buttonText: "Confirm Archive",
       buttonClass: "bg-[#3D291F] hover:bg-[#2A1C15] text-white",
       icon: <Archive className="w-5 h-5 text-[#D6A23A]" />,
       iconBg: "bg-[#3D291F]",
       serverAction: archiveEventAction,
       statusValue: null,
-      confirmLabel:
-        "I confirm this event is moving to the retained archive for permanent reporting",
-      desc: "Removes the event from active lists while preserving complete attendance rosters, minutes, and linked financial vouchers for permanent audit compliance.",
+      confirmLabel: "I confirm moving this event to the archive",
+      desc: "Removes the event from active lists while preserving complete attendance rosters, minutes, and linked financial records.",
     },
   }[action];
 
@@ -226,7 +220,7 @@ export function EventLifecycleModal({
               className="block text-[11px] font-bold text-[#54433A] uppercase tracking-wider mb-1.5"
               htmlFor="event-lifecycle-reason"
             >
-              Governance Reason / Audit Justification{" "}
+              Reason for Change{" "}
               <span className="text-[#BA3C2A]">*</span>
             </label>
             <textarea
@@ -234,10 +228,10 @@ export function EventLifecycleModal({
               className="w-full h-24 p-3 bg-white border border-[#E5DDD3] rounded-lg text-xs font-medium text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
               maxLength={500}
               name="reason"
-              placeholder="State the formal club resolution, executive consensus, or operational cause..."
+              placeholder="State the reason for this lifecycle change..."
               required
             />
-            <FormFieldHint message="Recorded in the permanent governance audit log with your member identity." />
+            <FormFieldHint message="Recorded in the audit log." />
           </div>
 
           {/* Mandatory Confirmation Checkbox */}

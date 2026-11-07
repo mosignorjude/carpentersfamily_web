@@ -54,8 +54,7 @@ export function AnnouncementEditModal({
                 Edit Announcement
               </h3>
               <p className="text-xs text-[#7A685D]">
-                Revision #{announcement.revisionNumber + 1} will be preserved in
-                the audit log
+                Revision #{announcement.revisionNumber + 1}
               </p>
             </div>
           </div>
@@ -168,7 +167,7 @@ export function AnnouncementEditModal({
               htmlFor={`edit-reason-${announcement.id}`}
               className="block text-xs font-bold text-[#3D291F] mb-1"
             >
-              Reason for Edit (Recorded in Audit Log)
+              Reason for Edit *
             </label>
             <input
               id={`edit-reason-${announcement.id}`}
@@ -181,10 +180,7 @@ export function AnnouncementEditModal({
             />
             <p className="text-[11px] text-[#7A685D] mt-1 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5 text-[#D6A23A] shrink-0" />
-              <span>
-                This reason is permanently appended to the announcement revision
-                history.
-              </span>
+              <span>Recorded in the revision history.</span>
             </p>
           </div>
 

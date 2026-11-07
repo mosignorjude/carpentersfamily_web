@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, ShieldCheck } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { signOutAction } from "@/app/actions";
@@ -268,12 +268,8 @@ export default function AppHeader({
           />
         </div>
 
-        {/* Right Side: Security Badge, Mobile Search, and Notification Bell */}
+        {/* Right Side: Mobile Search, and Notification Bell */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <div className="hidden xl:flex items-center gap-1.5 text-xs font-semibold text-[#174C37] bg-white/75 px-3 py-1.5 rounded-lg border border-[#E5DDD3] shadow-2xs">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#174C37]" />
-            <span>Private Portal</span>
-          </div>
 
           {/* Mobile Search Toggle Button */}
           <button

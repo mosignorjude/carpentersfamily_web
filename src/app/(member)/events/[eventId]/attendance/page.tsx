@@ -20,5 +20,5 @@ export default async function EventAttendancePage({
   if (query.notice) nextParams.set("notice", query.notice);
   if (query.tab) nextParams.set("tab", query.tab);
 
-  redirect(`/attendance?${nextParams.toString()}`);
+  redirect(`/meeting-hub?${nextParams.toString()}`);
 }

@@ -287,10 +287,9 @@ export function CreatePollDisclosure({
             <div className="p-3 bg-[#FAF6F0] rounded-lg border border-[#E5DDD3] text-[11px] text-[#7A685D] flex items-start gap-2">
               <Lock className="w-3.5 h-3.5 text-[#D6A23A] shrink-0 mt-0.5" />
               <p>
-                <strong>Confidentiality Policy:</strong> In accordance with club
-                bylaws, all member votes are permanently anonymous. Running
-                totals stay hidden until voting concludes, and are released only
-                when 5 or more votes are cast.
+                <strong>Confidentiality Notice:</strong> All member votes are
+                permanently anonymous. Results are revealed only after voting
+                closes and at least 5 votes are cast.
               </p>
             </div>
 

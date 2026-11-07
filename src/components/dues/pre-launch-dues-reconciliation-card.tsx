@@ -263,29 +263,9 @@ export function PreLaunchDuesReconciliationCard({
   // Collapsed by default on mobile to eliminate 1,900px vertical scroll burden
   const [isCollapsed, setIsCollapsed] = useState(true);
 
-  // If not admin, render clean read-only administrative advisory
+  // Reconciliation management is restricted to the Club Admin and the President
   if (!isAdmin) {
-    return (
-      <div
-        className="bg-white rounded-2xl border border-[#E5DDD3] p-5 shadow-xs"
-        data-testid="pre-launch-reconciliation-read-only"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-[#7A685D] flex items-center justify-center">
-            <Lock className="w-4 h-4 text-[#7A685D]" />
-          </div>
-          <div>
-            <h3 className="text-sm font-extrabold text-[#3D291F]">
-              Pre-Launch Dues (Feb–Sep 2026)
-            </h3>
-            <p className="text-xs text-[#7A685D] mt-0.5">
-              Access restricted to the Club Admin and the President. Only they
-              may reconcile historical dues.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

@@ -73,10 +73,6 @@ export function AnnouncementsPageView({
             Club notices and event updates for active members.
           </p>
         </div>
-
-        <span className="text-[11px] px-2.5 py-1 rounded-md bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3] self-start sm:self-auto font-medium">
-          Official Club Notices
-        </span>
       </div>
 
       {/* Error or History Unavailable Banners */}

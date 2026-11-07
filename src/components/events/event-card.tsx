@@ -316,7 +316,7 @@ export function EventCard({
 
               <div>
                 <span className="font-bold text-[11px] uppercase tracking-wider text-[#7A685D] block mb-1">
-                  Governance & Audit Schedule
+                  Event History & Timeline
                 </span>
                 <p className="font-medium text-[#3D291F]">
                   Created {dateFormatter.format(new Date(event.created_at))}

@@ -97,18 +97,6 @@ export function VoidTransactionModal({
           className="p-6 space-y-4 text-xs overflow-y-auto flex-1"
           onSubmit={handleSubmit}
         >
-          {/* Policy Notice */}
-          <div className="p-3.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1 text-[#5C4638]">
-            <span className="font-semibold text-[#174C37] block">
-              Permanent Audit Record:
-            </span>
-            <p className="leading-relaxed">
-              Permanent deletion is prohibited. This transaction will remain
-              visible in the ledger marked with strike-through, zero financial
-              effect, and your permanent reason for audit accountability.
-            </p>
-          </div>
-
           {/* Transaction Summary Card */}
           <div className="p-3 rounded-xl border border-[#E5DDD3] bg-white space-y-1">
             <div className="flex items-center justify-between">

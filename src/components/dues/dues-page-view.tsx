@@ -526,22 +526,16 @@ export function DuesPageView({
         </div>
       )}
 
-      {/* Dignified Club Footer & Policy */}
+      {/* Dignified Club Footer */}
       <footer className="pt-6 pb-6 border-t border-[#E5DDD3] space-y-4 text-xs text-[#54433A]">
         {isDuesExempt && (
-          <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#174C37]/30 flex items-start gap-3 text-xs text-[#174C37] font-medium shadow-2xs">
-            <ShieldCheck className="w-5 h-5 text-[#174C37] shrink-0 mt-0.5" />
-            <div className="leading-relaxed">
-              <strong className="font-bold block text-[#3D291F]">
-                Club Admin Dues Exemption Policy
-              </strong>
-              <span>
-                The Club Admin is not billed statutory membership dues while
-                holding the role. Those months return when the role is
-                withdrawn, and the club then decides whether an officer writes
-                them off.
-              </span>
-            </div>
+          <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] text-[11px] text-[#54433A]">
+            <strong className="text-[#3D291F]">
+              Club Admin Dues Exemption Policy:
+            </strong>{" "}
+            Club Admins are exempt from monthly dues while serving. Exempted
+            dues return when the role is withdrawn unless recorded separately by
+            an officer.
           </div>
         )}
 

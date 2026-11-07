@@ -79,17 +79,17 @@ describe("Finance Page Clean-Up & Audit Pagination (Stage 5)", () => {
   });
 
   describe("Financial Ledger Privacy Statement Relocation", () => {
-    it("places the exact privacy statement in the Finance page footer", () => {
+    it("places the streamlined privacy statement in the Finance page footer", () => {
       assert.match(
         financesViewSource,
-        /<footer[\s\S]*?Financial records are restricted to registered members in good\s*standing\. All transactions are logged and audited by the Executive\s*Committee\.[\s\S]*?<\/footer>/,
+        /<footer[\s\S]*?Members can review recorded club income and expenses\. Individual\s*member dues records and personal payment histories remain strictly\s*private to each member and authorized club officers\.[\s\S]*?<\/footer>/,
       );
     });
 
-    it("preserves Privacy & Shared Ledger Mandate in the footer", () => {
+    it("preserves Financial Privacy & Transparency in the footer", () => {
       assert.match(
         financesViewSource,
-        /<footer[\s\S]*?Privacy &amp; Shared Ledger Mandate[\s\S]*?<\/footer>/,
+        /<footer[\s\S]*?Financial Privacy &amp; Transparency[\s\S]*?<\/footer>/,
       );
     });
   });
