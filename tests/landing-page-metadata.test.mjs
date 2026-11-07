@@ -107,3 +107,17 @@ test("the box office carries its own title and description", () => {
   assert.match(content, /Tickets/i);
   assert.match(content, /description:/);
 });
+
+test("root page and layout declare social preview image for WhatsApp and social cards", () => {
+  const landing = read("src/app/page.tsx");
+  assert.match(landing, /url:\s*"\/landing\/og-share\.jpg"/);
+  assert.match(landing, /images:\s*\["\/landing\/og-share\.jpg"\]/);
+  assert.match(landing, /width:\s*1024/);
+  assert.match(landing, /height:\s*571/);
+
+  const layout = read("src/app/layout.tsx");
+  assert.match(layout, /url:\s*"\/landing\/og-share\.jpg"/);
+  assert.match(layout, /images:\s*\["\/landing\/og-share\.jpg"\]/);
+
+  assert.equal(existsSync("public/landing/og-share.jpg"), true);
+});

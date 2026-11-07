@@ -28,8 +28,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/landing/og-share.jpg",
-        width: 1200,
-        height: 630,
+        width: 1024,
+        height: 571,
         alt: "Carpenters Family Social Club · Asaba, Delta State",
       },
     ],

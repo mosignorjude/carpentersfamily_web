@@ -54,6 +54,28 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
   title: clubBrand.name,
   description: clubBrand.description,
+  openGraph: {
+    title: clubBrand.name,
+    description: clubBrand.description,
+    url: SITE_ORIGIN,
+    siteName: clubBrand.name,
+    images: [
+      {
+        url: "/landing/og-share.jpg",
+        width: 1024,
+        height: 571,
+        alt: clubBrand.name,
+      },
+    ],
+    locale: "en_NG",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: clubBrand.name,
+    description: clubBrand.description,
+    images: ["/landing/og-share.jpg"],
+  },
   icons: {
     icon: [
       { url: "/icon.png", type: "image/png" },
