@@ -1,6 +1,7 @@
 "use client";
 
-import { MapPin } from "lucide-react";
+import { AlertCircle, CheckCircle2, MapPin, X } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import ClubLogo from "@/components/club-logo";
 import type { DuesPaymentSettings } from "@/components/dues/pay-dues-modal";
@@ -24,6 +25,7 @@ type HomeDashboardViewProps = {
   greeting?: string;
   roles: string[];
   notice?: string;
+  noticeIsError?: boolean;
   paymentSettings?: DuesPaymentSettings | null;
 };
 
@@ -33,7 +35,8 @@ export default function HomeDashboardView({
   username,
   greeting,
   roles,
-  notice: _notice,
+  notice,
+  noticeIsError = false,
   paymentSettings,
 }: HomeDashboardViewProps) {
   const [selectedAnnouncement, setSelectedAnnouncement] =
@@ -75,7 +78,40 @@ export default function HomeDashboardView({
   };
 
   return (
-    <div className="home-dashboard min-h-full p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full font-sans antialiased text-[#3D291F]">
+    <main className="home-dashboard min-h-full p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full font-sans antialiased text-[#3D291F]">
+      {notice ? (
+        <div
+          className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-xs sm:text-sm font-semibold shadow-2xs ${
+            noticeIsError
+              ? "border-[#BA3C2A]/35 bg-[#FAF0EE] text-[#BA3C2A]"
+              : "border-[#174C37]/30 bg-white text-[#174C37]"
+          }`}
+          role={noticeIsError ? "alert" : "status"}
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            {noticeIsError ? (
+              <AlertCircle
+                aria-hidden="true"
+                className="w-4 h-4 shrink-0 text-[#BA3C2A]"
+              />
+            ) : (
+              <CheckCircle2
+                aria-hidden="true"
+                className="w-4 h-4 shrink-0 text-[#174C37]"
+              />
+            )}
+            <span>{notice}</span>
+          </div>
+          <Link
+            aria-label="Dismiss notice"
+            className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg text-[#7A685D] hover:bg-[#FAF6F0] hover:text-[#3D291F] transition-colors"
+            href="/portal"
+          >
+            <X aria-hidden="true" className="w-4 h-4" />
+          </Link>
+        </div>
+      ) : null}
+
       {/* Welcoming Family-Oriented Member Header */}
       <section
         aria-labelledby="welcome-heading"
@@ -153,6 +189,6 @@ export default function HomeDashboardView({
         isOpen={Boolean(selectedAnnouncement)}
         onClose={() => setSelectedAnnouncement(null)}
       />
-    </div>
+    </main>
   );
 }

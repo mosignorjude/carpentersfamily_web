@@ -87,18 +87,18 @@ export function MemberDuesCard({
       >
         <div className="flex items-center gap-2 mb-3">
           <DollarSign className="w-5 h-5 text-[#3D291F]" />
-          <h3
+          <h2
             className="text-lg font-bold text-[#3D291F]"
             id="dues-status-heading"
           >
             {currentYear ?? "Annual"} Membership Dues
-          </h3>
+          </h2>
         </div>
         <div className="p-6 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
           <AlertCircle className="w-6 h-6 text-[#7A685D] mx-auto" />
-          <h4 className="text-sm font-bold text-[#3D291F]">
+          <h3 className="text-sm font-bold text-[#3D291F]">
             Dues Ledger Currently Unavailable
-          </h4>
+          </h3>
           <p className="text-xs font-medium text-[#5C4638] max-w-md mx-auto leading-relaxed">
             Your dues records could not be loaded. Please check back shortly or
             visit your dues page.
@@ -162,16 +162,16 @@ export function MemberDuesCard({
       className="bg-white rounded-xl border border-[#E5DDD3] p-6 sm:p-7 shadow-xs space-y-6"
     >
       {/* Header and Privacy Notice */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
+      <div className="flex items-start justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
         <div>
           <div className="flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-[#174C37]" />
-            <h3
+            <h2
               className="text-lg font-bold text-[#3D291F]"
               id="dues-status-heading"
             >
               Member Dues
-            </h3>
+            </h2>
           </div>
           <p className="text-xs font-normal text-[#7A685D] mt-1">
             Your monthly contribution for {currentYear}.
@@ -181,7 +181,7 @@ export function MemberDuesCard({
         {/* Header Right Zone: Open Ledger link (anchored text, no badge) */}
         <div className="flex items-center shrink-0">
           <Link
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#174C37] hover:text-[#0C3325] hover:underline transition-colors py-1.5"
+            className="inline-flex min-h-[44px] items-center gap-1.5 px-2 -mr-2 -mt-2 text-xs font-semibold text-[#174C37] hover:text-[#0C3325] hover:underline transition-colors"
             href="/dues"
           >
             <span>Full ledger</span>
@@ -226,7 +226,7 @@ export function MemberDuesCard({
           </span>
           {unpaidTotalNgn > 0 ? (
             <button
-              className="mt-1 px-2.5 py-1 text-[11px] font-bold text-white bg-[#174C37] hover:bg-[#0C3325] rounded-lg transition-colors shadow-2xs"
+              className="mt-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 py-2 text-[11px] font-bold text-white bg-[#174C37] hover:bg-[#0C3325] rounded-lg transition-colors shadow-2xs cursor-pointer"
               onClick={() => setIsPayModalOpen(true)}
               type="button"
             >
@@ -501,9 +501,9 @@ export function MemberDuesCard({
                 <FileText className="w-5 h-5 text-[#174C37]" />
               </div>
               <div>
-                <h4 className="text-sm font-extrabold text-[#3D291F]">
+                <h3 className="text-sm font-extrabold text-[#3D291F]">
                   Dues Payment Record · {selectedPaidMonth.name} {currentYear}
-                </h4>
+                </h3>
                 <dl className="mt-2 grid gap-x-5 gap-y-1 text-xs sm:grid-cols-2">
                   <div>
                     <dt className="inline font-medium text-[#7A685D]">

@@ -190,7 +190,8 @@ export default async function PortalPage({
   if (profileError || !profile) {
     return (
       <main className="shell">
-        <section className="panel">
+        <section className="panel narrow-panel">
+          <AuthBrand />
           <p className="eyebrow">Access status</p>
           <h1>We could not verify your membership</h1>
           <p>
@@ -212,6 +213,7 @@ export default async function PortalPage({
     return (
       <main className="shell">
         <section className="panel narrow-panel">
+          <AuthBrand />
           <p className="eyebrow">Staff access</p>
           <h1>Staff access disabled</h1>
           <p>
@@ -232,6 +234,7 @@ export default async function PortalPage({
     return (
       <main className="shell">
         <section className="panel narrow-panel">
+          <AuthBrand />
           <p className="eyebrow">Membership request</p>
           <h1>
             Welcome,{" "}
@@ -307,6 +310,7 @@ export default async function PortalPage({
     return (
       <main className="shell">
         <section className="panel narrow-panel">
+          <AuthBrand />
           <p className="eyebrow">Membership status</p>
           <h1>Account deactivated</h1>
           <p>
@@ -327,6 +331,7 @@ export default async function PortalPage({
     return (
       <main className="shell">
         <section className="panel narrow-panel">
+          <AuthBrand />
           <p className="eyebrow">Membership status</p>
           <h1>Membership request declined</h1>
           <p>
@@ -442,6 +447,7 @@ export default async function PortalPage({
         greeting={greeting}
         memberName={profile.full_name}
         notice={notice}
+        noticeIsError={noticeIsError}
         paymentSettings={paymentSettings}
         roles={roles}
         username={profile.username || userProfile.username}

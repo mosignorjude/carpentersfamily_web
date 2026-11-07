@@ -42,18 +42,18 @@ export function PersonalNotificationsCard({
       >
         <div className="flex items-center gap-2 mb-3">
           <Bell className="w-5 h-5 text-[#3D291F]" />
-          <h3
+          <h2
             className="text-lg font-bold text-[#3D291F]"
             id="notifications-heading"
           >
             Recent Activity
-          </h3>
+          </h2>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
           <Bell className="w-6 h-6 text-[#7A685D] mx-auto" />
-          <h4 className="text-sm font-bold text-[#3D291F]">
+          <h3 className="text-sm font-bold text-[#3D291F]">
             Activity History Unavailable
-          </h4>
+          </h3>
           <p className="text-xs font-medium text-[#5C4638] max-w-sm mx-auto leading-relaxed">
             Recent club activity could not be retrieved at this time.
           </p>
@@ -72,18 +72,18 @@ export function PersonalNotificationsCard({
       >
         <div className="flex items-center gap-2 mb-3">
           <Bell className="w-5 h-5 text-[#174C37]" />
-          <h3
+          <h2
             className="text-lg font-bold text-[#3D291F]"
             id="notifications-heading"
           >
             Recent Activity
-          </h3>
+          </h2>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
           <Bell className="w-6 h-6 text-[#174C37] mx-auto" />
-          <h4 className="text-sm font-bold text-[#3D291F]">
+          <h3 className="text-sm font-bold text-[#3D291F]">
             No Recent Activity
-          </h4>
+          </h3>
           <p className="text-xs font-medium text-[#5C4638] max-w-sm mx-auto leading-relaxed">
             New activity and club notices will appear here as they happen.
           </p>
@@ -99,12 +99,12 @@ export function PersonalNotificationsCard({
     >
       <div className="flex items-center gap-2 pb-3 border-b border-[#E5DDD3]">
         <Bell className="w-5 h-5 text-[#174C37]" />
-        <h3
+        <h2
           className="text-lg font-bold text-[#3D291F]"
           id="notifications-heading"
         >
           Recent Activity
-        </h3>
+        </h2>
       </div>
 
       <div className="space-y-3">
@@ -129,9 +129,9 @@ export function PersonalNotificationsCard({
                   className="block space-y-1.5 rounded-lg -mx-1.5 px-1.5 py-1 hover:bg-[#FAF6F0] transition-colors focus-visible:outline-2 focus-visible:outline-[#174C37] group"
                   href={item.href}
                 >
-                  <h4 className="font-bold text-[#3D291F] group-hover:text-[#174C37] transition-colors text-sm leading-snug">
+                  <h3 className="font-bold text-[#3D291F] group-hover:text-[#174C37] transition-colors text-sm leading-snug">
                     {item.title}
-                  </h4>
+                  </h3>
 
                   <p className="text-xs font-normal text-[#5C4638] leading-relaxed">
                     {item.body}
@@ -139,9 +139,9 @@ export function PersonalNotificationsCard({
                 </Link>
               ) : (
                 <div className="space-y-1.5">
-                  <h4 className="font-bold text-[#3D291F] text-sm leading-snug">
+                  <h3 className="font-bold text-[#3D291F] text-sm leading-snug">
                     {item.title}
-                  </h4>
+                  </h3>
 
                   <p className="text-xs font-normal text-[#5C4638] leading-relaxed">
                     {item.body}

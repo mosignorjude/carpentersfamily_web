@@ -65,7 +65,7 @@ export function UserProfileBadge({
       <form action={signOutAction} className={`w-full ${className}`}>
         <button
           aria-label="Sign out"
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          className="w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           title="Sign out"
           type="submit"
         >
@@ -84,7 +84,7 @@ export function UserProfileBadge({
         aria-expanded={isDropdownOpen}
         aria-haspopup="menu"
         aria-label={`User menu for ${user.fullName}`}
-        className="hidden sm:flex items-center gap-2.5 px-2.5 py-1 rounded-xl bg-white/75 hover:bg-white border border-[#E5DDD3] shadow-2xs transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#174C37] text-left"
+        className="hidden sm:flex min-h-[44px] items-center gap-2.5 px-2.5 py-1 rounded-xl bg-white/75 hover:bg-white border border-[#E5DDD3] shadow-2xs transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#174C37] text-left"
         onClick={() => setIsDropdownOpen((prev) => !prev)}
         type="button"
       >
@@ -122,7 +122,7 @@ export function UserProfileBadge({
           aria-expanded={isDropdownOpen}
           aria-haspopup="menu"
           aria-label={`User menu for ${user.fullName}`}
-          className="w-9 h-9 rounded-full bg-[#174C37] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-[#174C37] overflow-hidden"
+          className="w-11 h-11 min-h-[44px] min-w-[44px] rounded-full bg-[#174C37] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-[#174C37] overflow-hidden"
           onClick={() => setIsDropdownOpen((prev) => !prev)}
           type="button"
         >
@@ -159,7 +159,7 @@ export function UserProfileBadge({
           {/* 2. [icon] Settings with bottom border */}
           <div className="p-1.5 border-b border-[#E5DDD3]">
             <Link
-              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-bold text-[#3D291F] hover:bg-[#FAF6F0] transition-colors cursor-pointer no-underline"
+              className="w-full min-h-[44px] flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-bold text-[#3D291F] hover:bg-[#FAF6F0] transition-colors cursor-pointer no-underline"
               href="/settings"
               onClick={() => setIsDropdownOpen(false)}
               role="menuitem"
@@ -173,7 +173,7 @@ export function UserProfileBadge({
           <div className="p-1.5">
             <form action={signOutAction}>
               <button
-                className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-bold text-[#BA3C2A] hover:bg-red-50 transition-colors cursor-pointer"
+                className="w-full min-h-[44px] flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-bold text-[#BA3C2A] hover:bg-red-50 transition-colors cursor-pointer"
                 role="menuitem"
                 type="submit"
               >

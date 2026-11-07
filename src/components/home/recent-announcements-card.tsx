@@ -33,18 +33,18 @@ export function RecentAnnouncementsCard({
       >
         <div className="flex items-center gap-2 mb-3">
           <Megaphone className="w-5 h-5 text-[#3D291F]" />
-          <h3
+          <h2
             className="text-lg font-bold text-[#3D291F]"
             id="announcements-heading"
           >
             Recent Announcements
-          </h3>
+          </h2>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
           <Megaphone className="w-6 h-6 text-[#7A685D] mx-auto" />
-          <h4 className="text-sm font-bold text-[#3D291F]">
+          <h3 className="text-sm font-bold text-[#3D291F]">
             Announcements Unavailable
-          </h4>
+          </h3>
           <p className="text-xs font-medium text-[#5C4638] max-w-sm mx-auto leading-relaxed">
             Announcements could not be loaded at this time. Please check back
             shortly.
@@ -64,18 +64,18 @@ export function RecentAnnouncementsCard({
       >
         <div className="flex items-center gap-2 mb-3">
           <Megaphone className="w-5 h-5 text-[#174C37]" />
-          <h3
+          <h2
             className="text-lg font-bold text-[#3D291F]"
             id="announcements-heading"
           >
             Recent Announcements
-          </h3>
+          </h2>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
           <Megaphone className="w-6 h-6 text-[#174C37] mx-auto" />
-          <h4 className="text-sm font-bold text-[#3D291F]">
+          <h3 className="text-sm font-bold text-[#3D291F]">
             No Announcements Published
-          </h4>
+          </h3>
           <p className="text-xs font-medium text-[#5C4638] max-w-sm mx-auto leading-relaxed">
             New announcements from club leadership will appear here.
           </p>
@@ -93,16 +93,16 @@ export function RecentAnnouncementsCard({
       <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD3]">
         <div className="flex items-center gap-2">
           <Megaphone className="w-5 h-5 text-[#174C37]" />
-          <h3
+          <h2
             className="text-lg font-bold text-[#3D291F]"
             id="announcements-heading"
           >
             Recent Announcements
-          </h3>
+          </h2>
         </div>
 
         <Link
-          className="text-xs text-[#174C37] font-bold hover:underline flex items-center gap-1"
+          className="inline-flex min-h-[44px] items-center gap-1 px-2 -mr-2 text-xs text-[#174C37] font-bold hover:underline"
           href="/announcements"
         >
           <span>View All</span>
@@ -126,7 +126,7 @@ export function RecentAnnouncementsCard({
                       className={`text-[11px] font-bold uppercase tracking-wider ${
                         ann.priority === "urgent"
                           ? "text-[#BA3C2A]"
-                          : "text-[#D6A23A]"
+                          : "bg-[#D6A23A]/20 text-[#3D291F] px-2 py-0.5 rounded-md"
                       }`}
                     >
                       {ann.priority === "urgent" ? "Urgent" : "Important"}
@@ -143,9 +143,9 @@ export function RecentAnnouncementsCard({
             </div>
 
             {/* Title & Excerpt */}
-            <h4 className="text-sm font-bold text-[#3D291F] leading-snug">
+            <h3 className="text-sm font-bold text-[#3D291F] leading-snug">
               {ann.title}
-            </h4>
+            </h3>
             <p className="text-xs font-normal text-[#5C4638] mt-1 leading-relaxed line-clamp-2">
               {announcementPreview(ann.message, 140)}
             </p>

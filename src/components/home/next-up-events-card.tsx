@@ -44,15 +44,15 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
       >
         <div className="flex items-center gap-2 mb-3">
           <Calendar className="w-5 h-5 text-[#3D291F]" />
-          <h3 className="text-lg font-bold text-[#3D291F]" id="events-heading">
+          <h2 className="text-lg font-bold text-[#3D291F]" id="events-heading">
             Upcoming Events
-          </h3>
+          </h2>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
           <Calendar className="w-6 h-6 text-[#7A685D] mx-auto" />
-          <h4 className="text-sm font-bold text-[#3D291F]">
+          <h3 className="text-sm font-bold text-[#3D291F]">
             Events Schedule Unavailable
-          </h4>
+          </h3>
           <p className="text-xs font-medium text-[#5C4638] max-w-sm mx-auto leading-relaxed">
             The event calendar could not be loaded at this moment. Please check
             back shortly.
@@ -72,15 +72,15 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
       >
         <div className="flex items-center gap-2 mb-3">
           <Calendar className="w-5 h-5 text-[#174C37]" />
-          <h3 className="text-lg font-bold text-[#3D291F]" id="events-heading">
+          <h2 className="text-lg font-bold text-[#3D291F]" id="events-heading">
             Upcoming Events
-          </h3>
+          </h2>
         </div>
         <div className="p-8 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-center space-y-2">
           <Calendar className="w-6 h-6 text-[#174C37] mx-auto" />
-          <h4 className="text-sm font-bold text-[#3D291F]">
+          <h3 className="text-sm font-bold text-[#3D291F]">
             No Upcoming Events
-          </h4>
+          </h3>
           <p className="text-xs font-medium text-[#5C4638] max-w-sm mx-auto leading-relaxed">
             New club events will appear here once scheduled.
           </p>
@@ -98,13 +98,13 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
       <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD3]">
         <div className="flex items-center gap-2">
           <Calendar className="w-5 h-5 text-[#174C37]" />
-          <h3 className="text-lg font-bold text-[#3D291F]" id="events-heading">
+          <h2 className="text-lg font-bold text-[#3D291F]" id="events-heading">
             Upcoming Events
-          </h3>
+          </h2>
         </div>
 
         <Link
-          className="text-xs text-[#174C37] font-bold hover:underline flex items-center gap-1"
+          className="inline-flex min-h-[44px] items-center gap-1 px-2 -mr-2 text-xs text-[#174C37] font-bold hover:underline"
           href="/events"
         >
           <span>All Events</span>
@@ -154,9 +154,9 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
 
               {/* Title */}
               <div>
-                <h4 className="text-base font-bold text-[#3D291F] leading-snug">
+                <h3 className="text-base font-bold text-[#3D291F] leading-snug">
                   {evt.title}
-                </h4>
+                </h3>
               </div>
 
               {/* Location */}
@@ -166,27 +166,7 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
               </div>
 
               {/* Attendance Self-Check & Details Action */}
-              <div className="pt-2 flex items-center justify-between gap-3">
-                {evt.attendanceEnabled && evt.eventType !== "party" ? (
-                  <Link
-                    className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-colors min-h-[44px] min-w-[44px] no-underline ${
-                      attendanceRecorded
-                        ? "bg-[#174C37] !text-white shadow-xs hover:bg-[#103D2B]"
-                        : "bg-[#FAF6F0] border-2 border-[#E5DDD3] text-[#3D291F] hover:bg-white hover:border-[#174C37]"
-                    }`}
-                    href={`/meeting-hub?event=${encodeURIComponent(evt.id)}`}
-                  >
-                    {attendanceRecorded ? (
-                      <CheckCircle2 className="h-4 w-4 text-white shrink-0" />
-                    ) : (
-                      <Calendar className="h-4 w-4 text-[#7A685D] shrink-0" />
-                    )}
-                    <span className={attendanceRecorded ? "text-white" : ""}>
-                      {attendanceLabel}
-                    </span>
-                  </Link>
-                ) : null}
-
+              <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
                 {(() => {
                   const hasDashboardFeatures = Boolean(
                     evt.budgetEnabled ||
@@ -204,26 +184,59 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
                     isOfficer && hasDashboardFeatures
                       ? `/events/${evt.id}/dashboard`
                       : "/events";
+                  const showAttendance =
+                    evt.attendanceEnabled && evt.eventType !== "party";
 
                   return (
-                    <div className="flex flex-wrap items-center gap-2">
-                      {canTransact && (
-                        <Link
-                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-xs font-bold bg-[#174C37] !text-white hover:bg-[#103D2B] transition-colors min-h-[40px] no-underline shadow-2xs"
-                          href={`/events/${evt.id}/dashboard?action=record-transaction`}
-                        >
-                          <DollarSign className="w-3.5 h-3.5 text-[#D6A23A]" />
-                          <span className="text-white">Record Transaction</span>
-                        </Link>
-                      )}
+                    <>
+                      {showAttendance || canTransact ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          {showAttendance ? (
+                            <Link
+                              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-colors min-h-[44px] min-w-[44px] no-underline ${
+                                attendanceRecorded
+                                  ? "bg-[#174C37] !text-white shadow-xs hover:bg-[#103D2B]"
+                                  : "bg-[#FAF6F0] border-2 border-[#E5DDD3] text-[#3D291F] hover:bg-white hover:border-[#174C37]"
+                              }`}
+                              href={`/meeting-hub?event=${encodeURIComponent(evt.id)}`}
+                            >
+                              {attendanceRecorded ? (
+                                <CheckCircle2 className="h-4 w-4 text-white shrink-0" />
+                              ) : (
+                                <Calendar className="h-4 w-4 text-[#7A685D] shrink-0" />
+                              )}
+                              <span
+                                className={
+                                  attendanceRecorded ? "text-white" : ""
+                                }
+                              >
+                                {attendanceLabel}
+                              </span>
+                            </Link>
+                          ) : null}
+
+                          {canTransact ? (
+                            <Link
+                              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-xs font-bold bg-[#174C37] !text-white hover:bg-[#103D2B] transition-colors min-h-[44px] no-underline shadow-2xs"
+                              href={`/events/${evt.id}/dashboard?action=record-transaction`}
+                            >
+                              <DollarSign className="w-3.5 h-3.5 text-[#D6A23A]" />
+                              <span className="text-white">
+                                Record Transaction
+                              </span>
+                            </Link>
+                          ) : null}
+                        </div>
+                      ) : null}
+
                       <Link
-                        className="text-xs font-bold text-[#174C37] hover:underline flex items-center gap-1 py-1"
+                        className="ml-auto inline-flex min-h-[44px] items-center gap-1 px-2 -mr-2 text-xs font-bold text-[#174C37] hover:underline"
                         href={detailsHref}
                       >
                         <span>View Details</span>
                         <ChevronRight className="w-3.5 h-3.5" />
                       </Link>
-                    </div>
+                    </>
                   );
                 })()}
               </div>

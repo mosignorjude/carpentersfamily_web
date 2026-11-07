@@ -49,12 +49,12 @@ export default function DashboardSearch({
       })),
       ...events.map((event) => ({
         category: "Event",
-        href: "/events",
+        href: `/events#event-${event.id}`,
         label: event.title,
       })),
       ...announcements.map((announcement) => ({
         category: "Announcement",
-        href: "/announcements",
+        href: `/announcements#announcement-${announcement.id}`,
         label: announcement.title,
       })),
     ],

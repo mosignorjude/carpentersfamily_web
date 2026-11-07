@@ -84,12 +84,12 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
   return (
     <section aria-labelledby="quick-links-heading" className="space-y-4">
       <div className="flex items-center justify-between pb-2 border-b border-[#E5DDD3]">
-        <h3
+        <h2
           className="text-base font-bold text-[#3D291F]"
           id="quick-links-heading"
         >
           Quick Links
-        </h3>
+        </h2>
         <span className="text-xs text-[#7A685D]">
           Jump straight to key club sections
         </span>
@@ -114,10 +114,10 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
                   <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7A685D]" />
                 </div>
 
-                <h4 className="text-xs sm:text-sm font-bold text-[#3D291F] leading-snug">
+                <h3 className="text-xs sm:text-sm font-bold text-[#3D291F] leading-snug">
                   {link.title}
-                </h4>
-                <p className="hidden sm:block text-[11px] text-[#7A685D] mt-1 leading-relaxed">
+                </h3>
+                <p className="text-[11px] text-[#7A685D] mt-1 leading-relaxed line-clamp-2">
                   {link.description}
                 </p>
               </div>
