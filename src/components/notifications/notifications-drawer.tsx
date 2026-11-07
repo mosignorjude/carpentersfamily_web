@@ -5,13 +5,14 @@ import {
   Calendar,
   CheckCheck,
   Megaphone,
+  MoreHorizontal,
   RotateCcw,
   Trash2,
   Users,
   Wallet,
   X,
 } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import {
   deleteAllNotificationsAsyncAction,
@@ -53,6 +54,8 @@ interface NotificationsDrawerProps {
   onUnreadCountChange?: (count: number) => void;
 }
 
+type FilterType = "all" | "unread" | "events" | "finance" | "members";
+
 function getCategoryIcon(category: string) {
   if (category.includes("money") || category.includes("dues")) {
     return <Wallet className="w-3.5 h-3.5 text-[#8A641A]" />;
@@ -69,6 +72,125 @@ function getCategoryIcon(category: string) {
   return <Bell className="w-3.5 h-3.5 text-[#174C37]" />;
 }
 
+function formatShortTimeAgo(timestamp: string, nowMs = Date.now()): string {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "";
+  const diffSeconds = Math.max(1, Math.floor((nowMs - date.getTime()) / 1000));
+  if (diffSeconds < 60) return "just now";
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  const diffWeeks = Math.floor(diffDays / 7);
+  return `${diffWeeks}w ago`;
+}
+
+function getTimeBucket(createdAt: string): "TODAY" | "YESTERDAY" | "EARLIER" {
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) return "EARLIER";
+
+  const now = new Date();
+  const todayStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  ).getTime();
+  const yesterdayStart = todayStart - 24 * 60 * 60 * 1000;
+  const time = date.getTime();
+
+  if (time >= todayStart) {
+    return "TODAY";
+  }
+  if (time >= yesterdayStart) {
+    return "YESTERDAY";
+  }
+  return "EARLIER";
+}
+
+const BODY_TOKEN_REGEX =
+  /(@[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)*|₦[\d,]+(?:\.\d+)?)/g;
+
+function formatNotificationBody(body: string) {
+  if (!body) return null;
+  const regex = new RegExp(BODY_TOKEN_REGEX);
+  const elements: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match = regex.exec(body);
+
+  while (match !== null) {
+    const matchStart = match.index;
+    const matchText = match[0];
+
+    if (matchStart > lastIndex) {
+      elements.push(body.slice(lastIndex, matchStart));
+    }
+
+    const key = `token-${matchStart}`;
+    if (matchText.startsWith("@")) {
+      elements.push(
+        <span
+          className="font-mono text-xs font-semibold text-[#174C37] bg-[#174C37]/[0.07] px-1.5 py-0.5 rounded"
+          key={key}
+        >
+          {matchText}
+        </span>,
+      );
+    } else if (matchText.startsWith("₦")) {
+      elements.push(
+        <span className="font-mono font-semibold text-[#174C37]" key={key}>
+          {matchText}
+        </span>,
+      );
+    } else {
+      elements.push(matchText);
+    }
+
+    lastIndex = matchStart + matchText.length;
+    match = regex.exec(body);
+  }
+
+  if (lastIndex < body.length) {
+    elements.push(body.slice(lastIndex));
+  }
+
+  return elements.length > 0 ? elements : body;
+}
+
+function matchesFilter(
+  notification: AppNotification,
+  filter: FilterType,
+): boolean {
+  if (filter === "all") return true;
+  if (filter === "unread") return notification.read_at === null;
+  const cat = (notification.category || "").toLowerCase();
+  if (filter === "events") {
+    return cat.includes("event") || cat.includes("attendance");
+  }
+  if (filter === "finance") {
+    return (
+      cat.includes("money") || cat.includes("dues") || cat.includes("finance")
+    );
+  }
+  if (filter === "members") {
+    return (
+      cat.includes("member") ||
+      cat.includes("poll") ||
+      cat.includes("announcement")
+    );
+  }
+  return true;
+}
+
+const FILTER_TABS: { id: FilterType; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "unread", label: "Unread" },
+  { id: "events", label: "Events" },
+  { id: "finance", label: "Finance" },
+  { id: "members", label: "Members" },
+];
+
 export function NotificationsDrawer({
   isOpen,
   onClose,
@@ -77,7 +199,11 @@ export function NotificationsDrawer({
   onUnreadCountChange,
 }: NotificationsDrawerProps) {
   const [items, setItems] = useState<AppNotification[]>(initialList);
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const router = useRouter();
   const titleId = useId();
 
   useEffect(() => {
@@ -114,6 +240,14 @@ export function NotificationsDrawer({
     return () =>
       window.removeEventListener(NOTIFICATION_SYNC_EVENT, handleSync);
   }, []);
+
+  // Close open action menu when clicking outside
+  useEffect(() => {
+    if (!openMenuId) return;
+    const handleOutsideClick = () => setOpenMenuId(null);
+    window.addEventListener("click", handleOutsideClick);
+    return () => window.removeEventListener("click", handleOutsideClick);
+  }, [openMenuId]);
 
   useModalHygiene({ isOpen, onClose });
 
@@ -211,9 +345,10 @@ export function NotificationsDrawer({
     setIsPending(false);
   }
 
-  async function handleDeleteAll() {
+  async function handleDeleteAll(skipConfirm = false) {
     if (isPending || items.length === 0) return;
     if (
+      !skipConfirm &&
       typeof window !== "undefined" &&
       !window.confirm("Clear all notifications? This action cannot be undone.")
     ) {
@@ -221,6 +356,7 @@ export function NotificationsDrawer({
     }
 
     setIsPending(true);
+    setConfirmClearAll(false);
     const prevItems = items;
     const prevUnread = unreadCount;
 
@@ -249,8 +385,40 @@ export function NotificationsDrawer({
       });
       void markNotificationReadAsyncAction(notification.id);
     }
+    const href = getNotificationHref(notification);
+    if (href) {
+      router.push(href);
+    }
     onClose();
   }
+
+  const filterCounts: Record<FilterType, number> = {
+    all: items.length,
+    unread: items.filter((n) => n.read_at === null).length,
+    events: items.filter((n) => matchesFilter(n, "events")).length,
+    finance: items.filter((n) => matchesFilter(n, "finance")).length,
+    members: items.filter((n) => matchesFilter(n, "members")).length,
+  };
+
+  const filteredItems = items.filter((item) =>
+    matchesFilter(item, activeFilter),
+  );
+
+  const todayItems = filteredItems.filter(
+    (n) => getTimeBucket(n.created_at) === "TODAY",
+  );
+  const yesterdayItems = filteredItems.filter(
+    (n) => getTimeBucket(n.created_at) === "YESTERDAY",
+  );
+  const earlierItems = filteredItems.filter(
+    (n) => getTimeBucket(n.created_at) === "EARLIER",
+  );
+
+  const timeBuckets = [
+    { label: "TODAY", items: todayItems },
+    { label: "YESTERDAY", items: yesterdayItems },
+    { label: "EARLIER", items: earlierItems },
+  ].filter((b) => b.items.length > 0);
 
   return (
     <div
@@ -306,12 +474,12 @@ export function NotificationsDrawer({
                 <span>Mark all read</span>
               </button>
             )}
-            {items.length > 0 && (
+            {items.length > 0 && !confirmClearAll && (
               <button
                 aria-label="Clear all notifications"
                 className="text-xs text-[#BA3C2A] hover:text-[#962D1E] hover:underline flex items-center gap-1 font-bold px-2 py-1 rounded-md transition-colors cursor-pointer disabled:opacity-50"
                 disabled={isPending}
-                onClick={handleDeleteAll}
+                onClick={() => setConfirmClearAll(true)}
                 type="button"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -329,8 +497,70 @@ export function NotificationsDrawer({
           </div>
         </div>
 
-        {/* Notifications List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {/* 2-Step Confirmation Strip for Clear All */}
+        {confirmClearAll && (
+          <div className="px-4 py-2.5 bg-[#FDF2F0] border-b border-[#F4C7C2] flex items-center justify-between gap-3 text-xs shrink-0 animate-in fade-in duration-150">
+            <span className="font-semibold text-[#BA3C2A]">
+              Clear all notifications?
+            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                className="px-2.5 py-1 rounded-md bg-[#BA3C2A] text-white font-bold hover:bg-[#962D1E] transition-colors cursor-pointer disabled:opacity-50 text-xs"
+                disabled={isPending}
+                onClick={() => {
+                  void handleDeleteAll(true);
+                }}
+                type="button"
+              >
+                Clear all
+              </button>
+              <button
+                className="px-2.5 py-1 rounded-md text-[#7A685D] hover:text-[#3D291F] hover:bg-[#FAF6F0] transition-colors cursor-pointer text-xs font-semibold"
+                disabled={isPending}
+                onClick={() => setConfirmClearAll(false)}
+                type="button"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Horizontal Scrollable Filter Pill Bar */}
+        <div className="flex items-center gap-1.5 px-4 py-2.5 overflow-x-auto border-b border-[#E5DDD3] bg-[#FAF6F0] shrink-0 no-scrollbar">
+          {FILTER_TABS.map((tab) => {
+            const isActive = activeFilter === tab.id;
+            const count = filterCounts[tab.id];
+            return (
+              <button
+                className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 ${
+                  isActive
+                    ? "bg-[#174C37] text-white shadow-2xs"
+                    : "bg-white/80 text-[#5C4638] hover:bg-white hover:text-[#3D291F] border border-[#E5DDD3]"
+                }`}
+                key={tab.id}
+                onClick={() => setActiveFilter(tab.id)}
+                type="button"
+              >
+                <span>{tab.label}</span>
+                {count > 0 && (
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-[#174C37]/10 text-[#174C37]"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Notifications List grouped into Time Buckets */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {items.length === 0 ? (
             <div className="text-center py-16 px-4 space-y-2">
               <div className="w-12 h-12 rounded-full bg-white border border-[#E5DDD3] mx-auto flex items-center justify-center text-[#B8ACA0] shadow-2xs">
@@ -344,121 +574,217 @@ export function NotificationsDrawer({
                 appear here.
               </p>
             </div>
+          ) : filteredItems.length === 0 ? (
+            <div className="text-center py-12 px-4 space-y-2">
+              <div className="w-10 h-10 rounded-full bg-white border border-[#E5DDD3] mx-auto flex items-center justify-center text-[#B8ACA0] shadow-2xs">
+                <Bell className="w-4 h-4" />
+              </div>
+              <p className="text-sm font-bold text-[#3D291F]">
+                No {activeFilter === "unread" ? "unread" : activeFilter}{" "}
+                notifications
+              </p>
+              <p className="text-xs text-[#7A685D] max-w-xs mx-auto">
+                There are no notifications matching this filter.
+              </p>
+              <button
+                className="mt-2 text-xs font-semibold text-[#174C37] hover:underline cursor-pointer"
+                onClick={() => setActiveFilter("all")}
+                type="button"
+              >
+                View all notifications
+              </button>
+            </div>
           ) : (
-            items.map((notification) => {
-              const isUnread = notification.read_at === null;
-              const timestamp = getNotificationTimestamp(
-                notification.created_at,
-              );
-              const categoryLabel = getNotificationCategoryLabel(
-                notification.category,
-              );
-              const href = getNotificationHref(notification);
-
-              return (
-                <div
-                  className={`p-3.5 rounded-xl border transition-all text-xs space-y-2 ${
-                    isUnread
-                      ? "bg-white border-[#174C37]/35 shadow-xs"
-                      : "bg-white/60 border-[#E5DDD3] opacity-85 hover:opacity-100"
-                  }`}
-                  key={notification.id}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5 truncate">
-                      <span className="p-1 rounded bg-[#FAF6F0] border border-[#E5DDD3] shrink-0">
-                        {getCategoryIcon(notification.category)}
-                      </span>
-                      <span className="font-bold text-[11px] uppercase tracking-wider text-[#174C37] truncate">
-                        {categoryLabel}
-                      </span>
-                      <span
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${
-                          isUnread
-                            ? "bg-[#174C37]/15 text-[#174C37]"
-                            : "bg-[#E5DDD3]/80 text-[#7A685D]"
-                        }`}
-                      >
-                        {isUnread ? "Unread" : "Read"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      {isUnread ? (
-                        <button
-                          className="text-[11px] text-[#174C37] hover:underline font-bold cursor-pointer disabled:opacity-50"
-                          disabled={isPending}
-                          onClick={() => handleMarkSingleRead(notification.id)}
-                          type="button"
-                        >
-                          Mark read
-                        </button>
-                      ) : (
-                        <button
-                          className="inline-flex items-center gap-1 text-[11px] text-[#5C4638] hover:text-[#174C37] hover:underline font-semibold cursor-pointer disabled:opacity-50"
-                          disabled={isPending}
-                          onClick={() =>
-                            handleMarkSingleUnread(notification.id)
-                          }
-                          type="button"
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                          <span>Mark unread</span>
-                        </button>
-                      )}
-                      <button
-                        aria-label={`Delete "${notification.title}" notification`}
-                        className="p-1 text-[#8C7D73] hover:text-[#BA3C2A] hover:bg-[#FAF6F0] rounded-md transition-colors cursor-pointer disabled:opacity-50"
-                        disabled={isPending}
-                        onClick={() => handleDeleteSingle(notification.id)}
-                        title="Delete alert"
-                        type="button"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <Link
-                    className="block space-y-1 rounded-lg -mx-1 px-1 py-0.5 hover:bg-[#FAF6F0]/80 transition-colors focus-visible:outline-2 focus-visible:outline-[#174C37] group"
-                    href={href}
-                    onClick={() => handleAlertClick(notification)}
-                  >
-                    <h3 className="font-bold text-[#3D291F] group-hover:text-[#174C37] transition-colors text-xs leading-snug">
-                      {notification.title}
-                    </h3>
-
-                    <p className="text-[#5C4638] text-xs leading-relaxed">
-                      {notification.body}
-                    </p>
-                  </Link>
-
-                  <div className="pt-1 border-t border-[#E5DDD3]/60 flex items-center justify-end">
-                    <time
-                      className="text-[10px] text-[#8C7D73] font-mono"
-                      dateTime={timestamp.dateTime}
-                    >
-                      {timestamp.label}
-                    </time>
-                  </div>
+            timeBuckets.map((bucket) => (
+              <div className="space-y-2" key={bucket.label}>
+                <div className="px-1 pt-1">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#7A685D]">
+                    {bucket.label}
+                  </span>
                 </div>
-              );
-            })
+
+                <div className="space-y-2">
+                  {bucket.items.map((notification) => {
+                    const isUnread = notification.read_at === null;
+                    const timestamp = getNotificationTimestamp(
+                      notification.created_at,
+                    );
+                    const shortTimeAgo = formatShortTimeAgo(
+                      notification.created_at,
+                    );
+                    const categoryLabel = getNotificationCategoryLabel(
+                      notification.category,
+                    );
+
+                    return (
+                      <article
+                        className={`relative rounded-xl border transition-all px-3.5 py-3 ${
+                          isUnread
+                            ? "bg-white border-[#174C37]/35 shadow-xs cursor-pointer"
+                            : "bg-white/80 border-[#E5DDD3] hover:bg-white cursor-pointer"
+                        }`}
+                        key={notification.id}
+                        onClick={() => handleAlertClick(notification)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleAlertClick(notification);
+                          }
+                        }}
+                      >
+                        {/* Unread Left Accent Bar */}
+                        {isUnread && (
+                          <span className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-[#174C37]" />
+                        )}
+
+                        <div className="flex items-start gap-3">
+                          {/* Left Category Icon Box with Unread Ochre Dot */}
+                          <div className="relative w-9 h-9 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] grid place-items-center shrink-0 mt-0.5">
+                            {getCategoryIcon(notification.category)}
+                            {isUnread && (
+                              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#D6A23A] ring-2 ring-white" />
+                            )}
+                          </div>
+
+                          {/* Right Content Column */}
+                          <div className="flex-1 min-w-0">
+                            {/* Row 1: Category Eyebrow + Inline Timestamp + Single Action Menu Button */}
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-[#174C37] truncate">
+                                  {categoryLabel}
+                                </span>
+                                <span className="text-[#E5DDD3]">·</span>
+                                <time
+                                  className="font-mono text-[11px] text-[#7A685D] shrink-0"
+                                  dateTime={timestamp.dateTime}
+                                >
+                                  {shortTimeAgo}
+                                </time>
+                              </div>
+
+                              <div className="relative">
+                                <button
+                                  aria-label="Notification actions"
+                                  className="w-7 h-7 rounded-lg text-[#7A685D] hover:text-[#3D291F] hover:bg-[#FAF6F0] grid place-items-center transition-colors cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenMenuId((prev) =>
+                                      prev === notification.id
+                                        ? null
+                                        : notification.id,
+                                    );
+                                  }}
+                                  type="button"
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </button>
+
+                                {/* Action Menu Dropdown */}
+                                {openMenuId === notification.id && (
+                                  <div
+                                    aria-orientation="vertical"
+                                    className="absolute right-0 top-8 z-30 w-36 rounded-xl bg-white border border-[#E5DDD3] shadow-lg py-1 animate-in fade-in zoom-in-95 duration-100"
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Escape") {
+                                        e.stopPropagation();
+                                        setOpenMenuId(null);
+                                      }
+                                    }}
+                                    role="menu"
+                                    tabIndex={-1}
+                                  >
+                                    {isUnread ? (
+                                      <button
+                                        className="w-full text-left px-3 py-1.5 text-xs text-[#174C37] hover:bg-[#FAF6F0] font-semibold flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                                        disabled={isPending}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setOpenMenuId(null);
+                                          void handleMarkSingleRead(
+                                            notification.id,
+                                          );
+                                        }}
+                                        role="menuitem"
+                                        type="button"
+                                      >
+                                        <CheckCheck className="w-3.5 h-3.5" />
+                                        <span>Mark as read</span>
+                                      </button>
+                                    ) : (
+                                      <button
+                                        className="w-full text-left px-3 py-1.5 text-xs text-[#5C4638] hover:bg-[#FAF6F0] font-medium flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                                        disabled={isPending}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setOpenMenuId(null);
+                                          void handleMarkSingleUnread(
+                                            notification.id,
+                                          );
+                                        }}
+                                        role="menuitem"
+                                        type="button"
+                                      >
+                                        <RotateCcw className="w-3.5 h-3.5" />
+                                        <span>Mark unread</span>
+                                      </button>
+                                    )}
+                                    <button
+                                      className="w-full text-left px-3 py-1.5 text-xs text-[#BA3C2A] hover:bg-[#FAF6F0] font-medium flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                                      disabled={isPending}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenMenuId(null);
+                                        void handleDeleteSingle(
+                                          notification.id,
+                                        );
+                                      }}
+                                      role="menuitem"
+                                      type="button"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                      <span>Delete</span>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Row 2: Title */}
+                            <h3
+                              className={`mt-0.5 text-sm leading-snug ${
+                                isUnread
+                                  ? "font-bold text-[#3D291F]"
+                                  : "font-semibold text-[#5C4638]"
+                              }`}
+                            >
+                              {notification.title}
+                            </h3>
+
+                            {/* Row 3: Body Copy with Highlighted @handles and ₦ amounts */}
+                            <p className="mt-1 text-xs text-[#5C4638] leading-relaxed">
+                              {formatNotificationBody(notification.body)}
+                            </p>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
           )}
         </div>
 
         {/* Drawer Footer */}
-        <div className="p-3.5 border-t border-[#E5DDD3] bg-white flex items-center justify-between text-xs text-[#54433A] shrink-0">
+        <div className="p-3 border-t border-[#E5DDD3] bg-white flex items-center justify-between text-xs text-[#7A685D] shrink-0">
           <span className="font-medium text-[#7A685D]">
             Private Member Portal
           </span>
-          <button
-            type="button"
-            className="font-semibold text-[#174C37] hover:underline cursor-pointer"
-            onClick={onClose}
-          >
-            Close
-          </button>
+          <span className="text-[11px] font-mono text-[#A8988B]">
+            {items.length}{" "}
+            {items.length === 1 ? "notification" : "notifications"}
+          </span>
         </div>
       </aside>
     </div>
