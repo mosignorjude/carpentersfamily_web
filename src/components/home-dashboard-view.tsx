@@ -63,7 +63,7 @@ export default function HomeDashboardView({
             id: `evt-${evt.id}`,
             category: "event_activity",
             title: evt.title,
-            body: `${evt.location} — Scheduled club event`,
+            body: `${evt.location} - Scheduled club event`,
             createdAt: evt.startsAt,
             readAt: null,
             href: `/events#event-${evt.id}`,
@@ -111,7 +111,7 @@ export default function HomeDashboardView({
         </div>
       ) : null}
 
-      {/* 1. Greeting Banner ("Good Night, <Name>") — Sleek, High-Density */}
+      {/* 1. Greeting Banner ("Good Night, <Name>"): Sleek, High-Density */}
       <section
         aria-labelledby="welcome-heading"
         className="rounded-2xl bg-[#174C37] border border-[#0C3325] text-white px-4 py-3.5 shadow-xs relative overflow-hidden"

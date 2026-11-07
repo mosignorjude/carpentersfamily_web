@@ -273,7 +273,7 @@ export function MemberDuesCard({
       >
         <span className="flex items-center gap-2">
           <Calendar className="w-3.5 h-3.5 text-[#174C37]" />
-          <span>Monthly Schedule (Jan – Dec {currentYear})</span>
+          <span>Monthly Schedule (Jan - Dec {currentYear})</span>
         </span>
         <span className="text-[#7A685D] flex items-center gap-1 font-normal text-[11px]">
           <span>{isScheduleExpanded ? "Hide" : "View"}</span>
@@ -320,7 +320,7 @@ export function MemberDuesCard({
                     )}
                   </div>
                   <span className="font-mono text-[10px] text-[#7A685D] block mt-0.5">
-                    {row?.amountNgn ? formatNaira(row.amountNgn) : "—"}
+                    {row?.amountNgn ? formatNaira(row.amountNgn) : "-"}
                   </span>
                 </div>
               );
