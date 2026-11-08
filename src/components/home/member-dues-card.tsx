@@ -99,7 +99,7 @@ export function MemberDuesCard({
             ₦
           </div>
           <h2
-            className="font-serif font-bold text-base text-[#3D291F]"
+            className="font-bold text-base text-[#3D291F]"
             id="dues-status-heading"
           >
             {currentYear ?? "Annual"} Member Dues
@@ -175,7 +175,7 @@ export function MemberDuesCard({
             ₦
           </div>
           <h2
-            className="font-serif font-bold text-base text-[#3D291F]"
+            className="font-bold text-base text-[#3D291F]"
             id="dues-status-heading"
           >
             Member Dues

@@ -119,7 +119,7 @@ export default function HomeDashboardView({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div>
             <h1
-              className="font-serif font-bold text-lg sm:text-2xl text-white leading-tight tracking-tight break-words"
+              className="font-bold text-lg sm:text-2xl text-white leading-tight tracking-tight break-words"
               id="welcome-heading"
             >
               {effectiveGreeting}, {greetingName}

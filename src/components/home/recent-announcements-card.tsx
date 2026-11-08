@@ -102,7 +102,7 @@ export function RecentAnnouncementsCard({
         <div className="flex items-center gap-2">
           <Megaphone className="w-4 h-4 text-[#174C37]" />
           <h2
-            className="font-serif font-bold text-base text-[#3D291F]"
+            className="font-bold text-base text-[#3D291F]"
             id="announcements-heading"
           >
             Recent Announcements

@@ -79,7 +79,7 @@ export function QuickLinksSection({ roles }: QuickLinksSectionProps) {
     <section aria-labelledby="quick-links-heading" className="space-y-2.5">
       <div className="flex items-center justify-between pb-1.5 border-b border-[#E5DDD3]">
         <h2
-          className="font-serif font-bold text-base text-[#3D291F]"
+          className="font-bold text-base text-[#3D291F]"
           id="quick-links-heading"
         >
           Quick Links

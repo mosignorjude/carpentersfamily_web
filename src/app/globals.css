@@ -7292,7 +7292,7 @@ textarea:focus-visible {
   overflow-x: clip;
   background: var(--slk-bg);
   color: var(--slk-text);
-  font-family: var(--font-dm-sans), var(--font-fallback);
+  font-family: var(--font-sans);
 }
 
 .slk-event-sidebar {

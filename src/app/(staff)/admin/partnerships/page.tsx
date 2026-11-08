@@ -42,7 +42,7 @@ export default async function AdminPartnershipsPage({
 
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-stone-200">
         <div>
-          <h1 className="text-2xl font-serif font-bold text-stone-900">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#3D291F]">
             Partnership &amp; Brand Enquiries
           </h1>
           <p className="text-sm text-stone-600 mt-1">

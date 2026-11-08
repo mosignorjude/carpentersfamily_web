@@ -48,7 +48,7 @@ export default async function AdminMembershipRequestsPage({
 
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
         <div>
-          <h1 className="text-2xl font-serif font-bold text-[#3D291F]">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#3D291F]">
             Membership Intake Requests
           </h1>
           <p className="text-sm text-[#7A685D] mt-1">

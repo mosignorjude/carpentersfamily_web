@@ -59,10 +59,7 @@ function SignupInvitationRequired({
       <div className="signin-content signup-auth-content text-center">
         <AuthBrand />
         <header className="signin-heading">
-          <h1
-            id="signup-heading"
-            className="text-2xl font-serif text-[#3D291F]"
-          >
+          <h1 id="signup-heading" className="text-2xl font-bold text-[#3D291F]">
             {title}
           </h1>
           <p

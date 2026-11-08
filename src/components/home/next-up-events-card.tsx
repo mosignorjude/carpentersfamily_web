@@ -104,7 +104,7 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-[#174C37]" />
           <h2
-            className="font-serif font-bold text-base text-[#3D291F]"
+            className="font-bold text-base text-[#3D291F]"
             id="events-heading"
           >
             Upcoming Events
@@ -179,7 +179,7 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
 
               {/* Row 2: Event Title + Single-line truncated location with MapPin */}
               <div>
-                <h3 className="font-serif font-bold text-base text-[#3D291F] leading-snug">
+                <h3 className="font-bold text-base text-[#3D291F] leading-snug">
                   {evt.title}
                 </h3>
                 <div className="flex items-center gap-1 text-xs text-[#7A685D] mt-0.5 truncate">

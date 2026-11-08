@@ -134,10 +134,7 @@ export function MobileTabBottomSheet({
             {/* Sheet Header */}
             <div className="px-5 py-3 border-b border-[#F2ECE4] flex items-center justify-between">
               <div>
-                <h3
-                  className="font-serif font-bold text-base text-[#2A2521]"
-                  id={titleId}
-                >
+                <h3 className="font-bold text-base text-[#2A2521]" id={titleId}>
                   Event Sections
                 </h3>
                 <p className="text-xs text-[#7A685D]" id={descriptionId}>
