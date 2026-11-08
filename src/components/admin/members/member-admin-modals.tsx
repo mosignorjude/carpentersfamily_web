@@ -110,7 +110,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
       {/* 1. APPROVE MEMBERSHIP MODAL */}
       {activeModal === "approve" && selectedMember && (
         <div className="fixed inset-0 z-50 bg-[#0C3325]/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full p-6 space-y-5 animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 animate-in fade-in">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#174C37]">
                 <CheckCircle2 className="w-5 h-5 text-[#174C37]" />
@@ -152,12 +152,12 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               personal dues records.
             </p>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3 pt-2">
               <button
                 type="button"
                 disabled={isPending}
                 onClick={resetAndClose}
-                className="cf-btn cf-btn--neutral cf-btn--modal"
+                className="cf-btn cf-btn--neutral cf-btn--modal w-full sm:w-auto"
               >
                 Cancel
               </button>
@@ -167,7 +167,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                 onClick={() => {
                   onConfirmApprove(selectedMember);
                 }}
-                className="cf-btn cf-btn--primary cf-btn--modal cf-btn--wide"
+                className="cf-btn cf-btn--primary cf-btn--modal cf-btn--wide w-full sm:w-auto"
               >
                 {isPending ? (
                   <>
@@ -186,7 +186,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
       {/* 2. REJECT MEMBERSHIP MODAL */}
       {activeModal === "reject" && selectedMember && (
         <div className="fixed inset-0 z-50 bg-[#0C3325]/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full p-6 space-y-5">
+          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#8B261E]">
                 <XCircle className="w-5 h-5" />
@@ -229,7 +229,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                   setActionError(null);
                 }}
                 placeholder="e.g. Failure to satisfy residency qualification in Delta State per Article 4.1..."
-                className="w-full p-3 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#8B261E] focus:outline-hidden"
+                className="w-full p-3 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-base sm:text-xs text-[#3D291F] focus:ring-2 focus:ring-[#8B261E] focus:outline-hidden"
               />
               {actionError && (
                 <p className="text-xs text-[#8B261E] font-medium">
@@ -242,12 +242,12 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               Recorded in the member audit log.
             </p>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3 pt-2">
               <button
                 type="button"
                 disabled={isPending}
                 onClick={resetAndClose}
-                className="cf-btn cf-btn--neutral cf-btn--modal"
+                className="cf-btn cf-btn--neutral cf-btn--modal w-full sm:w-auto"
               >
                 Cancel
               </button>
@@ -263,7 +263,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                   }
                   onConfirmReject(selectedMember, reasonInput.trim());
                 }}
-                className="cf-btn cf-btn--danger cf-btn--modal cf-btn--wide"
+                className="cf-btn cf-btn--danger cf-btn--modal cf-btn--wide w-full sm:w-auto"
               >
                 {isPending ? (
                   <>
@@ -282,7 +282,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
       {/* 3. DEACTIVATE ACCOUNT MODAL */}
       {activeModal === "deactivate" && selectedMember && (
         <div className="fixed inset-0 z-50 bg-[#0C3325]/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full p-6 space-y-5">
+          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#8B261E]">
                 <UserX className="w-5 h-5" />
@@ -325,7 +325,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                   setActionError(null);
                 }}
                 placeholder="e.g. Voluntary hiatus due to relocation, or administrative suspension..."
-                className="w-full p-3 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#8B261E] focus:outline-hidden"
+                className="w-full p-3 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-base sm:text-xs text-[#3D291F] focus:ring-2 focus:ring-[#8B261E] focus:outline-hidden"
               />
               {actionError && (
                 <p className="text-xs text-[#8B261E] font-medium">
@@ -339,12 +339,12 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               The record is preserved for reinstatement.
             </p>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3 pt-2">
               <button
                 type="button"
                 onClick={resetAndClose}
                 disabled={isPending}
-                className="cf-btn cf-btn--neutral cf-btn--modal disabled:opacity-50"
+                className="cf-btn cf-btn--neutral cf-btn--modal disabled:opacity-50 w-full sm:w-auto"
               >
                 Cancel
               </button>
@@ -366,7 +366,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                   }
                   onConfirmDeactivate(selectedMember, reasonInput.trim());
                 }}
-                className="cf-btn cf-btn--danger cf-btn--modal cf-btn--wide inline-flex items-center justify-center gap-2 disabled:opacity-75"
+                className="cf-btn cf-btn--danger cf-btn--modal cf-btn--wide inline-flex items-center justify-center gap-2 disabled:opacity-75 w-full sm:w-auto"
               >
                 {isPending ? (
                   <>
@@ -385,7 +385,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
       {/* 4. REACTIVATE ACCOUNT MODAL */}
       {activeModal === "reactivate" && selectedMember && (
         <div className="fixed inset-0 z-50 bg-[#0C3325]/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full p-6 space-y-5">
+          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#174C37]">
                 <RefreshCw className="w-5 h-5 text-[#D6A23A]" />
@@ -428,7 +428,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                   setActionError(null);
                 }}
                 placeholder="e.g. Return from overseas posting; dues arrears cleared..."
-                className="w-full p-3 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
+                className="w-full p-3 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-base sm:text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
               />
               {actionError && (
                 <p className="text-xs text-[#8B261E] font-medium">
@@ -437,12 +437,12 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3 pt-2">
               <button
                 type="button"
                 disabled={isPending}
                 onClick={resetAndClose}
-                className="cf-btn cf-btn--neutral cf-btn--modal"
+                className="cf-btn cf-btn--neutral cf-btn--modal w-full sm:w-auto"
               >
                 Cancel
               </button>
@@ -458,7 +458,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                   }
                   onConfirmReactivate(selectedMember, reasonInput.trim());
                 }}
-                className="cf-btn cf-btn--primary cf-btn--modal cf-btn--wide"
+                className="cf-btn cf-btn--primary cf-btn--modal cf-btn--wide w-full sm:w-auto"
               >
                 {isPending ? (
                   <>
@@ -477,7 +477,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
       {/* 5. CHANGE CLUB ROLE MODAL */}
       {activeModal === "change_club_role" && selectedMember && (
         <div className="fixed inset-0 z-50 bg-[#0C3325]/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full p-6 space-y-5">
+          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#174C37]">
                 <UserCog className="w-5 h-5 text-[#D6A23A]" />
@@ -533,7 +533,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                   setActionError(null);
                 }}
                 placeholder="e.g. Ratified by the General Meeting for the 2026/2027 tenure..."
-                className="w-full p-3 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
+                className="w-full p-3 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-base sm:text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
               />
               {actionError && (
                 <p className="text-xs text-[#8B261E] font-medium">
@@ -542,12 +542,12 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3 pt-2">
               <button
                 type="button"
                 disabled={isPending}
                 onClick={resetAndClose}
-                className="cf-btn cf-btn--neutral cf-btn--modal"
+                className="cf-btn cf-btn--neutral cf-btn--modal w-full sm:w-auto"
               >
                 Cancel
               </button>
@@ -567,7 +567,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                     reasonInput.trim(),
                   );
                 }}
-                className="cf-btn cf-btn--primary cf-btn--modal cf-btn--wide"
+                className="cf-btn cf-btn--primary cf-btn--modal cf-btn--wide w-full sm:w-auto"
               >
                 {isPending ? (
                   <>
@@ -586,7 +586,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
       {/* 6. ASSIGN EVENT ROLE MODAL */}
       {activeModal === "assign_event_role" && selectedEvent && (
         <div className="fixed inset-0 z-50 bg-[#0C3325]/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full p-6 space-y-5">
+          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#174C37]">
                 <UserCog className="w-5 h-5 text-[#D6A23A]" />
@@ -624,7 +624,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                   setTargetStaffMemberId(e.target.value);
                   setActionError(null);
                 }}
-                className="w-full p-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:ring-2 focus:ring-[#174C37]"
+                className="w-full p-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-base sm:text-xs font-semibold text-[#3D291F] focus:ring-2 focus:ring-[#174C37] min-h-[44px]"
               >
                 <option value="">Select a member...</option>
                 {activeMembers.map((m) => (
@@ -649,7 +649,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                 onChange={(e) =>
                   setTargetEventRole(e.target.value as EventStaffRole)
                 }
-                className="w-full p-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:ring-2 focus:ring-[#174C37]"
+                className="w-full p-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-base sm:text-xs font-semibold text-[#3D291F] focus:ring-2 focus:ring-[#174C37] min-h-[44px]"
               >
                 <option value="Event lead">Event Lead</option>
                 <option value="Event assistant">Event Assistant</option>
@@ -689,7 +689,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                   setActionError(null);
                 }}
                 placeholder="e.g. Appointed to oversee hospitality & vendor logistics..."
-                className="w-full p-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
+                className="w-full p-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-base sm:text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
               />
               {actionError && (
                 <p className="text-xs text-[#8B261E] font-medium">
@@ -698,12 +698,12 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3 pt-2">
               <button
                 type="button"
                 disabled={isPending}
                 onClick={resetAndClose}
-                className="cf-btn cf-btn--neutral cf-btn--modal"
+                className="cf-btn cf-btn--neutral cf-btn--modal w-full sm:w-auto"
               >
                 Cancel
               </button>
@@ -722,7 +722,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                     reasonInput.trim(),
                   );
                 }}
-                className="cf-btn cf-btn--primary cf-btn--modal cf-btn--wide"
+                className="cf-btn cf-btn--primary cf-btn--modal cf-btn--wide w-full sm:w-auto"
               >
                 {isPending ? (
                   <>
@@ -741,7 +741,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
       {/* 7. REMOVE EVENT ROLE MODAL */}
       {activeModal === "remove_event_role" && selectedAssignment && (
         <div className="fixed inset-0 z-50 bg-[#0C3325]/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full p-6 space-y-5">
+          <div className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#8B261E]">
                 <UserX className="w-5 h-5" />
@@ -787,7 +787,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                   setActionError(null);
                 }}
                 placeholder="e.g. Schedule conflict; reassigned to technical operations committee..."
-                className="w-full p-3 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#8B261E] focus:outline-hidden"
+                className="w-full p-3 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-base sm:text-xs text-[#3D291F] focus:ring-2 focus:ring-[#8B261E] focus:outline-hidden"
               />
               {actionError && (
                 <p className="text-xs text-[#8B261E] font-medium">
@@ -796,12 +796,12 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3 pt-2">
               <button
                 type="button"
                 disabled={isPending}
                 onClick={resetAndClose}
-                className="cf-btn cf-btn--neutral cf-btn--modal"
+                className="cf-btn cf-btn--neutral cf-btn--modal w-full sm:w-auto"
               >
                 Cancel
               </button>
@@ -820,7 +820,7 @@ export const MemberAdminModals: React.FC<MemberAdminModalsProps> = ({
                     reasonInput.trim(),
                   );
                 }}
-                className="cf-btn cf-btn--danger cf-btn--modal cf-btn--wide"
+                className="cf-btn cf-btn--danger cf-btn--modal cf-btn--wide w-full sm:w-auto"
               >
                 {isPending ? (
                   <>

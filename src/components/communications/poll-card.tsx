@@ -10,7 +10,6 @@ import {
   Edit3,
   History,
   Layers,
-  Lock,
   Shield,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -142,7 +141,7 @@ export function PollCard({ poll }: PollCardProps) {
                   return (
                     <label
                       key={option.optionId}
-                      className={`flex items-start gap-3 p-3 rounded-lg border text-xs cursor-pointer transition-all ${
+                      className={`flex items-center gap-3 p-3.5 min-h-[48px] rounded-xl border text-xs cursor-pointer transition-all ${
                         isSelected
                           ? "bg-white border-[#174C37] shadow-2xs ring-1 ring-[#174C37]"
                           : "bg-white border-[#E5DDD3] hover:border-[#174C37]/40"
@@ -155,9 +154,9 @@ export function PollCard({ poll }: PollCardProps) {
                         required
                         checked={isSelected}
                         onChange={() => setSelectedOptionId(option.optionId)}
-                        className="mt-0.5 text-[#174C37] focus:ring-[#174C37] cursor-pointer"
+                        className="text-[#174C37] focus:ring-[#174C37] cursor-pointer"
                       />
-                      <span className="font-medium text-[#3D291F] flex-1">
+                      <span className="font-semibold text-[#3D291F] flex-1">
                         {option.label}
                       </span>
                     </label>
@@ -167,7 +166,7 @@ export function PollCard({ poll }: PollCardProps) {
 
               {/* Confirmation and Submit */}
               <div className="pt-2 border-t border-[#E5DDD3] space-y-3">
-                <label className="flex items-center gap-2 text-xs text-[#3D291F] cursor-pointer">
+                <label className="flex items-center gap-2.5 text-xs text-[#3D291F] cursor-pointer min-h-[44px]">
                   <input
                     type="checkbox"
                     name="confirm_final_vote"
@@ -183,17 +182,17 @@ export function PollCard({ poll }: PollCardProps) {
                 </label>
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-                  <p className="text-[11px] text-[#7A685D] flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-[#D6A23A] shrink-0" />
+                  <p className="text-[11px] text-[#7A685D] flex items-center gap-1.5 bg-[#FAF6F0] p-2 rounded-lg border border-[#E5DDD3]">
+                    <Shield className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
                     <span>
                       Ballots are 100% anonymous. Live counts are withheld until
-                      voting closes.
+                      voting closes (5+ votes required for aggregate release).
                     </span>
                   </p>
 
                   <FormSubmitButton
                     disabled={!selectedOptionId || !confirmed}
-                    className="cf-btn cf-btn--primary shrink-0"
+                    className="cf-btn cf-btn--primary w-full sm:w-auto shrink-0 min-h-[44px]"
                     pendingLabel="Recording Vote…"
                     statusToastMessage="Sealing your anonymous ballot."
                   >

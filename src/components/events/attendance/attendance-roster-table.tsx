@@ -196,7 +196,7 @@ export function AttendanceRosterTable({
 
                     {canCorrect && (
                       <button
-                        className="px-3 py-1.5 text-xs font-semibold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-lg transition-colors cursor-pointer min-h-[38px]"
+                        className="px-3.5 py-2 text-xs font-semibold text-[#174C37] bg-[#FAF6F0] border border-[#174C37]/30 hover:bg-[#174C37] hover:text-white rounded-xl transition-colors cursor-pointer min-h-[44px]"
                         onClick={() => setCorrectingRecord(row)}
                         type="button"
                       >

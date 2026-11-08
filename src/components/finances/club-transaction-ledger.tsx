@@ -308,7 +308,7 @@ export function ClubTransactionLedger({
                   <div className="flex items-center justify-between pt-2.5 border-t border-[#F2ECE4] text-xs">
                     <div>
                       <button
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer min-h-[38px] ${
+                        className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer min-h-[44px] ${
                           linkedReceipts.length > 0
                             ? "bg-[#174C37]/10 text-[#174C37] hover:bg-[#174C37] hover:text-white"
                             : isOfficer && !isVoided
@@ -335,7 +335,7 @@ export function ClubTransactionLedger({
                           <>
                             <button
                               aria-label={`Correct transaction ${transaction.id}`}
-                              className="px-2.5 py-1.5 text-xs font-semibold text-[#54433A] bg-white border border-[#E5DDD3] hover:bg-[#FAF6F0] rounded-xl transition-colors cursor-pointer min-h-[38px] inline-flex items-center gap-1"
+                              className="px-3 py-2 text-xs font-semibold text-[#54433A] bg-white border border-[#E5DDD3] hover:bg-[#FAF6F0] rounded-xl transition-colors cursor-pointer min-h-[44px] inline-flex items-center gap-1"
                               onClick={() => onInitiateCorrect(transaction)}
                               type="button"
                             >
@@ -344,7 +344,7 @@ export function ClubTransactionLedger({
                             </button>
                             <button
                               aria-label={`Void transaction ${transaction.id}`}
-                              className="px-2.5 py-1.5 text-xs font-semibold text-[#BA3C2A] bg-white border border-[#BA3C2A]/30 hover:bg-[#BA3C2A] hover:text-white rounded-xl transition-colors cursor-pointer min-h-[38px] inline-flex items-center gap-1"
+                              className="px-3 py-2 text-xs font-semibold text-[#BA3C2A] bg-white border border-[#BA3C2A]/30 hover:bg-[#BA3C2A] hover:text-white rounded-xl transition-colors cursor-pointer min-h-[44px] inline-flex items-center gap-1"
                               onClick={() => onInitiateVoid(transaction)}
                               type="button"
                             >

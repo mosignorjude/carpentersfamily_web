@@ -111,15 +111,15 @@ export const MemberRosterSection: React.FC<MemberRosterSectionProps> = ({
   > = {
     active: {
       label: "Active",
-      className: "bg-[#174C37]/10 text-[#174C37] border-[#174C37]/30",
+      className: "cf-badge cf-badge--success",
     },
     deactivated: {
       label: "Deactivated",
-      className: "bg-neutral-200 text-neutral-700 border-neutral-300",
+      className: "cf-badge cf-badge--neutral",
     },
     rejected: {
       label: "Rejected",
-      className: "bg-red-50 text-[#8B261E] border-red-200",
+      className: "cf-badge cf-badge--danger",
     },
   };
 
@@ -189,11 +189,151 @@ export const MemberRosterSection: React.FC<MemberRosterSectionProps> = ({
           <p>Try modifying your search query or status filter.</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          <p className="sm:hidden text-[11px] font-medium text-[#7A685D]">
-            Swipe to view all columns &rarr;
-          </p>
-          <div className="rounded-xl border border-[#E5DDD3] overflow-hidden">
+        <div className="space-y-4">
+          {/* Mobile Member Cards (sm:hidden) */}
+          <div className="sm:hidden space-y-3">
+            {filteredMembers.map((member) => {
+              const isCurrentUser = member.id === currentOfficerId;
+              const badge =
+                statusBadges[
+                  member.accountStatus as "active" | "deactivated" | "rejected"
+                ] ?? statusBadges.deactivated;
+
+              return (
+                <div
+                  key={`mobile-roster-${member.id}`}
+                  className={`p-4 rounded-xl border border-[#E5DDD3] space-y-3 shadow-xs ${
+                    isCurrentUser ? "bg-[#FAF6F0]" : "bg-white"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[#3D291F] text-sm">
+                          {member.fullName}
+                        </span>
+                        {isCurrentUser && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#174C37] text-white font-bold whitespace-nowrap">
+                            You
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] font-mono text-[#7A685D] block mt-0.5">
+                        {member.username}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-1">
+                      <span
+                        className={`inline-flex px-2.5 py-0.5 rounded-full border text-[11px] font-semibold ${badge.className}`}
+                      >
+                        {badge.label}
+                      </span>
+                      <span
+                        className={`inline-flex px-2 py-0.5 rounded text-[10px] font-medium ${roleBadges[member.clubRole]}`}
+                      >
+                        {member.clubRole}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-[#7A685D] pt-2 border-t border-[#E5DDD3]">
+                    <span>
+                      Profile:{" "}
+                      <strong>
+                        {getMemberProfileStateLabel(member.profileState)}
+                      </strong>
+                    </span>
+                    <span className="font-mono text-[11px]">
+                      {member.requestDateWAT}
+                    </span>
+                  </div>
+
+                  {member.lastStatusChangeReason && (
+                    <div className="text-[11px] text-[#7A685D] bg-[#FAF6F0] p-2 rounded-lg border border-[#E5DDD3]">
+                      <strong className="text-[#3D291F]">Reason:</strong>{" "}
+                      {member.lastStatusChangeReason}
+                    </div>
+                  )}
+
+                  {/* Actions on Mobile */}
+                  <div className="pt-1 flex flex-col gap-2">
+                    {member.accountStatus === "active" && (
+                      <>
+                        {isAdminOrPresident && !roleLookupFailed && (
+                          <>
+                            {member.clubRole === "Member" && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  onOpenChangeClubRoleModal(member, "Executive")
+                                }
+                                className="cf-btn cf-btn--neutral cf-btn--accent w-full min-h-[44px]"
+                              >
+                                <UserCheck className="w-4 h-4 text-[#D6A23A]" />
+                                <span>Assign Executive</span>
+                              </button>
+                            )}
+
+                            {member.clubRole === "Executive" && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  onOpenChangeClubRoleModal(member, "Member")
+                                }
+                                className="cf-btn cf-btn--neutral cf-btn--muted-danger w-full min-h-[44px]"
+                              >
+                                <UserX className="w-4 h-4 text-[#8B261E]" />
+                                <span>Remove Executive</span>
+                              </button>
+                            )}
+                          </>
+                        )}
+
+                        {isAdminOrPresident && (
+                          <button
+                            type="button"
+                            disabled={isCurrentUser}
+                            onClick={() => onOpenDeactivateModal(member)}
+                            className="cf-btn cf-btn--neutral cf-btn--danger-text w-full min-h-[44px]"
+                            title={
+                              isCurrentUser
+                                ? "Cannot deactivate currently signed-in administrator"
+                                : "Deactivate member account"
+                            }
+                          >
+                            <UserX className="w-4 h-4" />
+                            <span>Deactivate Account…</span>
+                          </button>
+                        )}
+                      </>
+                    )}
+
+                    {member.accountStatus === "deactivated" &&
+                      isAdminOrPresident && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenReactivateModal(member)}
+                          className="cf-btn cf-btn--primary w-full min-h-[44px]"
+                        >
+                          <RefreshCw className="w-4 h-4 text-[#D6A23A]" />
+                          <span>Reactivate Account</span>
+                        </button>
+                      )}
+
+                    {member.accountStatus === "rejected" && (
+                      <span className="text-xs text-[#7A685D] italic text-center py-1">
+                        Application closed
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table (hidden sm:block) */}
+          <div className="hidden sm:block rounded-xl border border-[#E5DDD3] overflow-hidden">
             <TableScroll label="Member roster">
               <table className="w-full text-left border-collapse min-w-[780px]">
                 <thead>

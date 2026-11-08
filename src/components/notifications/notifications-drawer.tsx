@@ -465,7 +465,7 @@ export function NotificationsDrawer({
           <div className="flex items-center gap-1.5">
             {unreadCount > 0 && (
               <button
-                className="text-xs text-[#174C37] hover:text-[#0E3325] hover:underline flex items-center gap-1 font-bold px-2 py-1 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                className="text-xs text-[#174C37] hover:text-[#0E3325] hover:underline flex items-center gap-1 font-bold px-2.5 py-1 min-h-[44px] rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 disabled={isPending}
                 onClick={handleMarkAllRead}
                 type="button"
@@ -477,7 +477,7 @@ export function NotificationsDrawer({
             {items.length > 0 && !confirmClearAll && (
               <button
                 aria-label="Clear all notifications"
-                className="text-xs text-[#BA3C2A] hover:text-[#962D1E] hover:underline flex items-center gap-1 font-bold px-2 py-1 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                className="text-xs text-[#BA3C2A] hover:text-[#962D1E] hover:underline flex items-center gap-1 font-bold px-2.5 py-1 min-h-[44px] rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 disabled={isPending}
                 onClick={() => setConfirmClearAll(true)}
                 type="button"
@@ -488,7 +488,7 @@ export function NotificationsDrawer({
             )}
             <button
               aria-label="Close notifications"
-              className="p-2 text-[#7A685D] hover:text-[#3D291F] rounded-lg hover:bg-[#FAF6F0] transition-colors cursor-pointer"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-[#7A685D] hover:text-[#3D291F] rounded-lg hover:bg-[#FAF6F0] transition-colors cursor-pointer"
               onClick={onClose}
               type="button"
             >
@@ -533,7 +533,7 @@ export function NotificationsDrawer({
             const count = filterCounts[tab.id];
             return (
               <button
-                className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3.5 py-2 min-h-[44px] rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 ${
                   isActive
                     ? "bg-[#174C37] text-white shadow-2xs"
                     : "bg-white/80 text-[#5C4638] hover:bg-white hover:text-[#3D291F] border border-[#E5DDD3]"

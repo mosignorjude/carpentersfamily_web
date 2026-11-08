@@ -123,7 +123,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 sm:pt-0">
           {/* Mark as read button */}
           {!announcement.readStatusUnavailable && isUnread && (
             <form action={markAnnouncementReadAction}>
@@ -133,7 +133,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
                 value={announcement.id}
               />
               <FormSubmitButton
-                className="cf-btn cf-btn--primary"
+                className="cf-btn cf-btn--primary min-h-[44px]"
                 pendingLabel="Marking Read…"
                 showStatusToast={false}
               >
@@ -148,7 +148,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
             <button
               type="button"
               onClick={() => setIsEditOpen(true)}
-              className="cf-btn cf-btn--neutral cf-btn--accent"
+              className="cf-btn cf-btn--neutral cf-btn--accent min-h-[44px]"
               title="Edit announcement (requires audit reason)"
             >
               <Edit3 className="w-3.5 h-3.5 text-[#174C37]" />
@@ -159,7 +159,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
       </div>
 
       {/* Message Content */}
-      <div className="text-xs sm:text-sm text-[#3D291F] leading-relaxed whitespace-pre-line bg-[#FAF6F0]/40 p-4 rounded-xl border border-[#E5DDD3]/70">
+      <div className="text-sm sm:text-base text-[#3D291F] leading-relaxed whitespace-pre-line bg-[#FAF6F0]/40 p-4 sm:p-5 rounded-xl border border-[#E5DDD3]/70 break-words">
         {announcement.message}
       </div>
 

@@ -66,7 +66,7 @@ export function MinutesCard({
           {canWriteMinutes && (
             <button
               id="btn-toggle-minutes-editor"
-              className="px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-white hover:bg-[#FAF6F0] text-xs font-bold text-[#174C37] flex items-center gap-1.5 transition-colors cursor-pointer min-h-[36px]"
+              className="px-3.5 py-2 rounded-xl border border-[#E5DDD3] bg-white hover:bg-[#FAF6F0] text-xs font-bold text-[#174C37] flex items-center gap-1.5 transition-colors cursor-pointer min-h-[44px]"
               onClick={() => setEditorOpen(!editorOpen)}
               type="button"
             >
@@ -91,7 +91,7 @@ export function MinutesCard({
       {/* Reader View */}
       {minutes ? (
         <div className="space-y-3">
-          <div className="p-5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#3D291F] leading-relaxed whitespace-pre-wrap font-sans">
+          <div className="p-5 sm:p-6 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-sm sm:text-base text-[#3D291F] leading-relaxed whitespace-pre-wrap font-sans break-words">
             {minutes.content}
           </div>
           <div className="flex items-center justify-between text-[11px] text-[#7A685D] pt-1">

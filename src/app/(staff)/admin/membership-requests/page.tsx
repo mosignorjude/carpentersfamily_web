@@ -46,25 +46,25 @@ export default async function AdminMembershipRequestsPage({
     <div className="space-y-6">
       <StaffNoticeToast notice={notice} />
 
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-stone-200">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
         <div>
-          <h1 className="text-2xl font-serif font-bold text-stone-900">
+          <h1 className="text-2xl font-serif font-bold text-[#3D291F]">
             Membership Intake Requests
           </h1>
-          <p className="text-sm text-stone-600 mt-1">
+          <p className="text-sm text-[#7A685D] mt-1">
             Review prospective member applications and issue invitation links.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {["pending", "approved", "rejected", "all"].map((s) => (
             <Link
               key={s}
               href={`/admin/membership-requests?status=${s}`}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors ${
+              className={`px-3.5 py-2 min-h-[44px] flex items-center rounded-xl text-xs font-bold uppercase tracking-wider transition-colors ${
                 currentStatus === s
-                  ? "bg-emerald-800 text-white"
-                  : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                  ? "bg-[#174C37] text-white shadow-xs"
+                  : "bg-[#FAF6F0] text-[#5C4638] hover:bg-white hover:text-[#3D291F] border border-[#E5DDD3]"
               }`}
             >
               {s}
@@ -74,12 +74,12 @@ export default async function AdminMembershipRequestsPage({
       </header>
 
       {error ? (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-sm">
+        <div className="p-4 bg-[#FFF9F8] border border-[#BA3C2A]/30 rounded-xl text-[#BA3C2A] text-sm font-semibold">
           Failed to load membership requests. Please try again.
         </div>
       ) : !requests || requests.length === 0 ? (
-        <div className="p-8 text-center bg-stone-50 border border-stone-200 rounded-2xl">
-          <p className="text-stone-600 text-sm">
+        <div className="p-8 text-center bg-white border border-[#E5DDD3] rounded-2xl shadow-xs">
+          <p className="text-[#7A685D] text-sm font-medium">
             No {currentStatus} membership requests found.
           </p>
         </div>
@@ -88,44 +88,44 @@ export default async function AdminMembershipRequestsPage({
           {requests.map((req) => (
             <div
               key={req.id}
-              className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm space-y-4"
+              className="bg-white border border-[#E5DDD3] rounded-2xl p-6 shadow-xs space-y-4"
             >
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                 <div>
-                  <h3 className="text-lg font-bold text-stone-900">
+                  <h3 className="text-lg font-bold text-[#3D291F]">
                     {req.full_name}
                   </h3>
-                  <div className="text-sm text-stone-500 flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                  <div className="text-sm text-[#7A685D] flex flex-wrap gap-x-4 gap-y-1 mt-1">
                     <span>{req.email}</span>
                     <span>{req.phone}</span>
-                    <span className="font-medium text-stone-700">
+                    <span className="font-medium text-[#3D291F]">
                       {req.profession}
                     </span>
                   </div>
                 </div>
                 <span
-                  className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium uppercase tracking-wider ${
+                  className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border ${
                     req.status === "approved"
-                      ? "bg-emerald-100 text-emerald-800"
+                      ? "bg-[#174C37]/10 text-[#174C37] border-[#174C37]/30"
                       : req.status === "rejected"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-amber-100 text-amber-800"
+                        ? "bg-[#BA3C2A]/10 text-[#BA3C2A] border-[#BA3C2A]/30"
+                        : "bg-[#D6A23A]/15 text-[#8A641A] border-[#D6A23A]/30"
                   }`}
                 >
                   {req.status}
                 </span>
               </div>
 
-              <div className="bg-stone-50 p-4 rounded-xl border border-stone-100 text-sm text-stone-700">
-                <span className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-1">
+              <div className="bg-[#FAF6F0] p-4 rounded-xl border border-[#E5DDD3] text-sm text-[#3D291F]">
+                <span className="block text-xs font-bold uppercase tracking-wider text-[#7A685D] mb-1">
                   Reason for Joining
                 </span>
                 <p className="whitespace-pre-wrap">{req.reason_for_joining}</p>
               </div>
 
               {req.rejection_reason && (
-                <div className="bg-red-50 p-4 rounded-xl border border-red-100 text-sm text-red-800">
-                  <span className="block text-xs font-bold uppercase tracking-wider text-red-600 mb-1">
+                <div className="bg-[#FFF9F8] p-4 rounded-xl border border-[#BA3C2A]/20 text-sm text-[#BA3C2A]">
+                  <span className="block text-xs font-bold uppercase tracking-wider text-[#BA3C2A] mb-1">
                     Rejection Reason
                   </span>
                   <p>{req.rejection_reason}</p>
@@ -133,7 +133,7 @@ export default async function AdminMembershipRequestsPage({
               )}
 
               {req.status === "pending" && (
-                <div className="pt-2 border-t border-stone-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                <div className="pt-2 border-t border-[#E5DDD3] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                   <form
                     action={reviewMembershipRequestAction}
                     className="inline-block"
@@ -142,7 +142,7 @@ export default async function AdminMembershipRequestsPage({
                     <input type="hidden" name="decision" value="approved" />
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-emerald-800 text-white rounded-xl text-sm font-semibold hover:bg-emerald-900 transition-colors"
+                      className="w-full sm:w-auto px-5 py-2.5 bg-[#174C37] text-white rounded-xl text-xs font-bold hover:bg-[#103D2B] transition-colors min-h-[44px] flex items-center justify-center cursor-pointer shadow-xs"
                     >
                       Approve &amp; Issue Invite
                     </button>
@@ -158,13 +158,13 @@ export default async function AdminMembershipRequestsPage({
                       type="text"
                       name="rejection_reason"
                       placeholder="Reason for rejection (min 5 chars)…"
-                      className="px-3 py-1.5 text-sm border border-stone-300 rounded-xl focus:outline-emerald-800 flex-1"
+                      className="px-3.5 py-2 text-base sm:text-xs border border-[#E5DDD3] bg-white text-[#3D291F] rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#174C37] flex-1 min-h-[44px]"
                       required
                       minLength={5}
                     />
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-stone-100 text-stone-700 hover:bg-red-50 hover:text-red-700 border border-stone-200 rounded-xl text-sm font-semibold transition-colors"
+                      className="px-4 py-2 bg-white text-[#8B261E] hover:bg-[#FFF9F8] border border-[#E5DDD3] hover:border-[#8B261E]/40 rounded-xl text-xs font-bold transition-colors min-h-[44px] flex items-center justify-center cursor-pointer"
                     >
                       Reject
                     </button>

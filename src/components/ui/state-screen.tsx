@@ -54,14 +54,14 @@ export function EmptyStateCard({
         <div className="pt-2">
           {actionHref ? (
             <Link
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-xs"
+              className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-xs"
               href={actionHref}
             >
               {actionLabel}
             </Link>
           ) : (
             <button
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-xs cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-xs cursor-pointer"
               onClick={onAction}
               type="button"
             >
@@ -117,7 +117,7 @@ export function AccessDeniedCard({
 
       <div className="pt-2">
         <Link
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] hover:border-[#174C37]/40 text-xs font-bold text-[#174C37] transition-colors shadow-2xs"
+          className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] hover:border-[#174C37]/40 text-xs font-bold text-[#174C37] transition-colors shadow-2xs"
           href={backHref}
         >
           <ArrowLeft className="w-4 h-4 text-[#174C37]" />
@@ -170,7 +170,7 @@ export function DataUnavailableCard({
       {onRetry && (
         <div className="pt-2">
           <button
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F] text-xs font-bold hover:bg-white transition-colors cursor-pointer shadow-2xs"
+            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F] text-xs font-bold hover:bg-white transition-colors cursor-pointer shadow-2xs"
             onClick={onRetry}
             type="button"
           >

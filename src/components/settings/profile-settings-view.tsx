@@ -8,6 +8,7 @@ import {
   updateMemberPasswordAction,
   updateMemberProfileSettingsAction,
 } from "@/app/actions";
+import AuthPasswordInput from "@/components/auth-password-input";
 import { FormSubmitButton } from "@/components/ui/cf-button";
 
 interface ProfileSettingsViewProps {
@@ -200,9 +201,9 @@ export function ProfileSettingsView({
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex sm:justify-end">
             <FormSubmitButton
-              className="cf-btn cf-btn--primary px-5 py-2.5 text-xs font-bold"
+              className="cf-btn cf-btn--primary w-full sm:w-auto px-5 py-2.5 text-xs font-bold min-h-[44px]"
               pendingLabel="Saving Profile…"
               statusToastMessage="Saving your profile settings…"
             >
@@ -245,9 +246,9 @@ export function ProfileSettingsView({
             />
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex sm:justify-end">
             <FormSubmitButton
-              className="cf-btn cf-btn--primary px-5 py-2.5 text-xs font-bold"
+              className="cf-btn cf-btn--primary w-full sm:w-auto px-5 py-2.5 text-xs font-bold min-h-[44px]"
               pendingLabel="Updating Email…"
               statusToastMessage="Requesting email address update…"
             >
@@ -280,7 +281,7 @@ export function ProfileSettingsView({
               >
                 New Password
               </label>
-              <input
+              <AuthPasswordInput
                 autoComplete="new-password"
                 className="w-full h-11 px-3.5 rounded-xl border border-[#E5DDD3] bg-white text-xs font-semibold text-[#3D291F]"
                 id="settings-password"
@@ -289,7 +290,6 @@ export function ProfileSettingsView({
                 name="password"
                 placeholder="At least 12 characters"
                 required
-                type="password"
               />
             </div>
 
@@ -300,7 +300,7 @@ export function ProfileSettingsView({
               >
                 Confirm New Password
               </label>
-              <input
+              <AuthPasswordInput
                 autoComplete="new-password"
                 className="w-full h-11 px-3.5 rounded-xl border border-[#E5DDD3] bg-white text-xs font-semibold text-[#3D291F]"
                 id="settings-confirm-password"
@@ -309,14 +309,13 @@ export function ProfileSettingsView({
                 name="confirm_password"
                 placeholder="Re-enter new password"
                 required
-                type="password"
               />
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex sm:justify-end">
             <FormSubmitButton
-              className="cf-btn cf-btn--primary px-5 py-2.5 text-xs font-bold"
+              className="cf-btn cf-btn--primary w-full sm:w-auto px-5 py-2.5 text-xs font-bold min-h-[44px]"
               pendingLabel="Updating Password…"
               statusToastMessage="Updating your account password…"
             >

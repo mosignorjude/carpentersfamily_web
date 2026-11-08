@@ -225,7 +225,7 @@ export function FlashCard({
         {/* Manual Dismiss "X" Button */}
         <button
           aria-label="Dismiss notification"
-          className="shrink-0 -mr-1 -mt-1 p-1 rounded-lg text-[#7A685D] hover:text-[#3D291F] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
+          className="shrink-0 -mr-2 -mt-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-[#7A685D] hover:text-[#3D291F] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
           onClick={handleClose}
           type="button"
         >

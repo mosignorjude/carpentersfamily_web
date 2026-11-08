@@ -69,7 +69,7 @@ export function ClubFinancialSummary({
                 </span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#174C37] shadow-xs" />
               </div>
-              <div className="text-2xl font-black font-mono text-[#0C3325] tracking-tight tabular-nums">
+              <div className="text-xl sm:text-2xl font-black font-mono text-[#0C3325] tracking-tight tabular-nums">
                 {formatNaira(currentBalance)}
               </div>
             </div>
@@ -88,7 +88,7 @@ export function ClubFinancialSummary({
                 </span>
                 <Coins className="w-4 h-4 text-[#174C37]" />
               </div>
-              <div className="text-2xl font-black font-mono text-[#174C37] tracking-tight tabular-nums">
+              <div className="text-xl sm:text-2xl font-black font-mono text-[#174C37] tracking-tight tabular-nums">
                 {formatNaira(duesIncome)}
               </div>
             </div>
@@ -106,7 +106,7 @@ export function ClubFinancialSummary({
                 </span>
                 <TrendingUp className="w-4 h-4 text-[#D6A23A]" />
               </div>
-              <div className="text-2xl font-black font-mono text-[#3D291F] tracking-tight tabular-nums">
+              <div className="text-xl sm:text-2xl font-black font-mono text-[#3D291F] tracking-tight tabular-nums">
                 {formatNaira(otherIncome)}
               </div>
             </div>
@@ -124,7 +124,7 @@ export function ClubFinancialSummary({
                 </span>
                 <TrendingDown className="w-4 h-4 text-[#BA3C2A]" />
               </div>
-              <div className="text-2xl font-black font-mono text-[#BA3C2A] tracking-tight tabular-nums">
+              <div className="text-xl sm:text-2xl font-black font-mono text-[#BA3C2A] tracking-tight tabular-nums">
                 {formatNaira(totalExpenses)}
               </div>
             </div>
@@ -142,7 +142,7 @@ export function ClubFinancialSummary({
                 </span>
                 <Scale className="w-4 h-4 text-[#D6A23A]" />
               </div>
-              <div className="text-2xl font-black font-mono text-[#3D291F] tracking-tight tabular-nums">
+              <div className="text-xl sm:text-2xl font-black font-mono text-[#3D291F] tracking-tight tabular-nums">
                 {formatNaira(eventNet)}
               </div>
               <div className="mt-1.5 flex items-center gap-3 text-[11px] font-mono tabular-nums text-[#54433A]">

@@ -197,11 +197,13 @@ export default function StaffMemberTable({
               {query ? (
                 <button
                   aria-label="Clear search"
-                  className="absolute right-2.5 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-muted hover:bg-stone-200 hover:text-espresso cursor-pointer"
+                  className="absolute right-1 inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-xs font-bold text-muted hover:text-espresso cursor-pointer"
                   onClick={() => setQuery("")}
                   type="button"
                 >
-                  ✕
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full hover:bg-stone-200">
+                    ✕
+                  </span>
                 </button>
               ) : null}
             </div>

@@ -74,7 +74,7 @@ export function AttendanceCheckIn({
         </div>
       ) : null}
       <FormSubmitButton
-        className="px-6 py-2.5 rounded-xl bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-bold transition-colors shadow-xs cursor-pointer min-h-[42px] flex items-center gap-2"
+        className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#174C37] hover:bg-[#103D2B] text-white text-xs sm:text-sm font-bold transition-colors shadow-xs cursor-pointer min-h-[48px] flex items-center justify-center gap-2"
         pendingLabel="Recording Check-In…"
         statusToastMessage="Verifying and recording your event attendance."
       >

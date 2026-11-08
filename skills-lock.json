@@ -31,6 +31,12 @@
       "skillPath": "skills/finishing-a-development-branch/SKILL.md",
       "computedHash": "4f571e7befb8b0946d9d7770232c818812412e9ab1dfb811f847edfba1fc6275"
     },
+    "graphify": {
+      "source": "graphify-labs/graphify",
+      "sourceType": "github",
+      "skillPath": "graphify/SKILL.md",
+      "computedHash": "ea44f597458a8280b7cf9c438e3d2d73840d94b9d1849a9e98d0c7586f056ec7"
+    },
     "receiving-code-review": {
       "source": "obra/superpowers",
       "sourceType": "github",
