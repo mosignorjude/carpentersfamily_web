@@ -131,7 +131,7 @@ export function RecordTransactionModal({
   const [selectedTierId, setSelectedTierId] = useState<string>(
     ticketTiers[1]?.id || ticketTiers[0]?.id || "regular",
   );
-  const [ticketQuantity, setTicketQuantity] = useState<number>(1);
+  const [ticketQuantity, setTicketQuantity] = useState<number | "">(1);
   const [attendeePhone, setAttendeePhone] = useState<string>("");
 
   const [category, setCategory] = useState<string>(() =>
@@ -211,8 +211,10 @@ export function RecordTransactionModal({
 
   const currentTier =
     ticketTiers.find((t) => t.id === selectedTierId) || ticketTiers[0];
+  const effectiveTicketQuantity =
+    typeof ticketQuantity === "number" ? ticketQuantity : 0;
   const calculatedTicketTotal = currentTier
-    ? currentTier.price * ticketQuantity
+    ? currentTier.price * effectiveTicketQuantity
     : 0;
 
   const authorizerName =
@@ -252,15 +254,20 @@ export function RecordTransactionModal({
         return;
       }
 
+      const finalQuantity =
+        typeof ticketQuantity === "number"
+          ? ticketQuantity
+          : Number.parseInt(ticketQuantity, 10) || 0;
+
       if (!currentTier) {
         setError("Please select a valid ticket tier.");
         return;
       }
-      if (ticketQuantity <= 0) {
+      if (finalQuantity <= 0) {
         setError("Please specify at least 1 ticket to issue.");
         return;
       }
-      if (currentTier.sold + ticketQuantity > currentTier.capacity) {
+      if (currentTier.sold + finalQuantity > currentTier.capacity) {
         setError(
           `Capacity exceeded! Only ${currentTier.capacity - currentTier.sold} tickets remaining for ${currentTier.name}.`,
         );
@@ -272,8 +279,8 @@ export function RecordTransactionModal({
         type: "revenue",
         category: "ticket_sales",
         categoryLabel: "Ticket Sales",
-        description: `Box Office Sale — ${ticketQuantity}x ${currentTier.name} (Direct Issue)`,
-        amount: calculatedTicketTotal,
+        description: `Box Office Sale — ${finalQuantity}x ${currentTier.name} (Direct Issue)`,
+        amount: currentTier.price * finalQuantity,
         payerPayee: attendeePhone.trim()
           ? `${payerPayee.trim()} (${attendeePhone.trim()})`
           : payerPayee.trim(),
@@ -282,9 +289,9 @@ export function RecordTransactionModal({
         authorizerRole,
         notes:
           notes.trim() ||
-          `Direct box office issuance for ${ticketQuantity} admission pass(es).`,
+          `Direct box office issuance for ${finalQuantity} admission pass(es).`,
         tierId: currentTier.id,
-        ticketQuantity,
+        ticketQuantity: finalQuantity,
         receiptFile,
       });
 
@@ -540,11 +547,28 @@ export function RecordTransactionModal({
                       currentTier ? currentTier.capacity - currentTier.sold : 10
                     }
                     min={1}
-                    onChange={(e) =>
-                      setTicketQuantity(
-                        Math.max(1, Number.parseInt(e.target.value, 10) || 1),
-                      )
-                    }
+                    onBlur={() => {
+                      const remaining = currentTier
+                        ? currentTier.capacity - currentTier.sold
+                        : 10;
+                      if (ticketQuantity === "" || ticketQuantity < 1) {
+                        setTicketQuantity(1);
+                      } else if (ticketQuantity > remaining) {
+                        setTicketQuantity(Math.max(1, remaining));
+                      }
+                    }}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "") {
+                        setTicketQuantity("");
+                        return;
+                      }
+                      const parsed = Number.parseInt(val, 10);
+                      if (!Number.isNaN(parsed)) {
+                        setTicketQuantity(parsed);
+                      }
+                    }}
+                    onFocus={(e) => e.target.select()}
                     type="number"
                     value={ticketQuantity}
                   />
