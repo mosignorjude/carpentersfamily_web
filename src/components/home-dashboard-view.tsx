@@ -155,23 +155,31 @@ export default function HomeDashboardView({
         paymentSettings={paymentSettings}
       />
 
-      {/* 3 & 4. 2-Column Split: Upcoming Events & Recent Announcements */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
-        {/* Next Up Events */}
-        <NextUpEventsCard events={dashboard.events} roles={roles} />
+      {/* 3. Balanced Dual-Column Dashboard Grid: Operations (Left) vs Communications & Feeds (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 lg:gap-6 items-start">
+        {/* Left Column (~58% width on desktop): Operations & Actions */}
+        <div className="contents lg:flex lg:flex-col lg:col-span-7 gap-4 sm:gap-5">
+          <div className="order-1 lg:order-none">
+            <NextUpEventsCard events={dashboard.events} roles={roles} />
+          </div>
+          <div className="order-4 lg:order-none">
+            <QuickLinksSection roles={roles} />
+          </div>
+        </div>
 
-        {/* Recent Announcements */}
-        <RecentAnnouncementsCard
-          announcements={dashboard.announcements}
-          onOpenAnnouncement={(ann) => setSelectedAnnouncement(ann)}
-        />
+        {/* Right Column (~42% width on desktop): Communications & Activity Stream */}
+        <div className="contents lg:flex lg:flex-col lg:col-span-5 gap-4 sm:gap-5">
+          <div className="order-2 lg:order-none">
+            <RecentAnnouncementsCard
+              announcements={dashboard.announcements}
+              onOpenAnnouncement={(ann) => setSelectedAnnouncement(ann)}
+            />
+          </div>
+          <div className="order-3 lg:order-none">
+            <PersonalNotificationsCard activity={effectiveActivity} />
+          </div>
+        </div>
       </div>
-
-      {/* 5. Personal Activity & Notifications */}
-      <PersonalNotificationsCard activity={effectiveActivity} />
-
-      {/* 6. Quick Access & Club Services */}
-      <QuickLinksSection roles={roles} />
 
       {/* Announcement Detail Modal */}
       <AnnouncementDetailModal

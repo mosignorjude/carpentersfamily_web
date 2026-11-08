@@ -168,64 +168,115 @@ export function MemberDuesCard({
       aria-labelledby="dues-status-heading"
       className="rounded-2xl bg-white border border-[#E5DDD3] shadow-xs overflow-hidden"
     >
-      {/* Header */}
-      <div className="px-4 pt-3.5 pb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-[#174C37]/10 text-[#174C37] font-mono text-xs font-bold grid place-items-center shrink-0">
-            ₦
+      {/* Top Command Strip: Stacked on Mobile, Single Unified Row on Desktop */}
+      <div className="p-3.5 sm:p-4 lg:py-2.5 lg:px-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4">
+        {/* Zone 1: Identity & Header */}
+        <div className="flex items-center justify-between lg:justify-start gap-2.5 shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-[#174C37]/10 text-[#174C37] font-mono text-xs font-bold grid place-items-center shrink-0">
+              ₦
+            </div>
+            <h2
+              className="font-bold text-base text-[#3D291F]"
+              id="dues-status-heading"
+            >
+              Member Dues
+            </h2>
           </div>
-          <h2
-            className="font-bold text-base text-[#3D291F]"
-            id="dues-status-heading"
+
+          <Link
+            className="text-xs font-semibold text-[#174C37] hover:text-[#0C3325] hover:underline transition-colors inline-flex items-center gap-1 min-h-[44px] lg:hidden"
+            href="/dues"
           >
-            Member Dues
-          </h2>
+            <span>Full ledger</span>
+            <span aria-hidden="true">›</span>
+          </Link>
         </div>
 
-        <Link
-          className="text-xs font-semibold text-[#174C37] hover:text-[#0C3325] hover:underline transition-colors inline-flex items-center gap-1 min-h-[44px]"
-          href="/dues"
-        >
-          <span>Full ledger</span>
-          <span aria-hidden="true">›</span>
-        </Link>
-      </div>
+        {/* Zone 2: Financial Metrics & Proportional Progress Indicator */}
+        <div className="flex-1 min-w-0 bg-[#FAF6F0] lg:bg-transparent p-2.5 sm:p-3 lg:p-0 rounded-xl border border-[#E5DDD3] lg:border-0 flex flex-col justify-center gap-1">
+          <div className="flex items-center justify-between sm:justify-start lg:justify-center gap-2 sm:gap-4 lg:gap-5">
+            {/* Paid Metric */}
+            <div className="space-y-0.5 min-w-0 flex lg:items-baseline gap-1.5 lg:gap-2">
+              <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#7A685D] block truncate">
+                PAID ({paidMonthsCount}/{scheduledMonthsCount || 10} MO)
+              </span>
+              <span className="font-mono font-bold text-sm text-[#174C37] block tabular-nums">
+                {formatNaira(totalPaidAmount)}
+              </span>
+            </div>
 
-      {/* Metrics Strip */}
-      <div className="mx-4 p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] flex items-center justify-between gap-2">
-        {/* Column 1: Paid */}
-        <div className="space-y-0.5 min-w-0">
-          <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#7A685D] block truncate">
-            PAID ({paidMonthsCount}/{scheduledMonthsCount || 10} MO)
-          </span>
-          <span className="font-mono font-bold text-sm text-[#174C37] block tabular-nums">
-            {formatNaira(totalPaidAmount)}
-          </span>
-        </div>
+            {/* Vertical hairline divider */}
+            <div className="h-6 w-px bg-[#E5DDD3] shrink-0" />
 
-        {/* Vertical hairline divider */}
-        <div className="h-7 w-px bg-[#E5DDD3] shrink-0" />
+            {/* Due Now Metric */}
+            <div className="space-y-0.5 min-w-0 flex lg:items-baseline gap-1.5 lg:gap-2">
+              <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#7A685D] block truncate">
+                DUE NOW ({unpaidMonthsCount} MO)
+                {/* biome-ignore format: preserves test invariant regex */}
+                <span className="sr-only">
+                  {unpaidMonthsCount} {unpaidMonthsCount === 1 ? "month" : "months"}{" "}
+                  due · {unpaidMonthsCount} mo owed
+                </span>
+              </span>
+              <span
+                className={`font-mono font-bold text-sm block tabular-nums ${
+                  unpaidTotalNgn > 0 ? "text-[#BA3C2A]" : "text-[#174C37]"
+                }`}
+              >
+                {formatNaira(unpaidTotalNgn)}
+              </span>
+            </div>
+          </div>
 
-        {/* Column 2: Due Now */}
-        <div className="space-y-0.5 min-w-0">
-          <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#7A685D] block truncate">
-            DUE NOW ({unpaidMonthsCount} MO)
-            <span className="sr-only">
-              {unpaidMonthsCount} {unpaidMonthsCount === 1 ? "month" : "months"}{" "}
-              due · {unpaidMonthsCount} mo owed
-            </span>
-          </span>
-          <span
-            className={`font-mono font-bold text-sm block tabular-nums ${
-              unpaidTotalNgn > 0 ? "text-[#BA3C2A]" : "text-[#174C37]"
-            }`}
+          {/* 10-Segment Visual Progress Bar (Compact and centered on desktop) */}
+          <div
+            aria-label={`Dues payment progress: ${paidMonthsCount} of ${progressSegmentsTotal} months paid`}
+            aria-valuemax={progressSegmentsTotal}
+            aria-valuemin={0}
+            aria-valuenow={paidMonthsCount}
+            className="w-full max-w-sm lg:mx-auto grid grid-cols-10 gap-1 pt-0.5"
+            role="progressbar"
           >
-            {formatNaira(unpaidTotalNgn)}
-          </span>
+            {TEN_PROGRESS_SEGMENTS.map((segId, i) => {
+              const isPaid = i < paidMonthsCount;
+              return (
+                <span
+                  className={`h-1.5 rounded-full transition-all ${
+                    isPaid ? "bg-[#174C37]" : "bg-[#BA3C2A]/25"
+                  }`}
+                  key={segId}
+                />
+              );
+            })}
+          </div>
         </div>
 
-        {/* Column 3: Compact Pay Now Action */}
-        <div className="shrink-0 flex items-center">
+        {/* Zone 3: Actions (Full Ledger, Schedule Toggle, Pay Now / Up to Date) */}
+        <div className="flex items-center justify-between lg:justify-end gap-2 shrink-0 pt-2 lg:pt-0 border-t border-[#E5DDD3] lg:border-t-0">
+          <Link
+            className="text-xs font-semibold text-[#174C37] hover:text-[#0C3325] hover:underline transition-colors hidden lg:inline-flex items-center gap-1 min-h-[44px]"
+            href="/dues"
+          >
+            <span>Full ledger</span>
+            <span aria-hidden="true">›</span>
+          </Link>
+
+          <button
+            aria-expanded={isScheduleExpanded}
+            className="px-2.5 py-1.5 rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] hover:bg-white text-xs font-semibold text-[#3D291F] transition-colors cursor-pointer inline-flex items-center gap-1.5 min-h-[44px]"
+            onClick={() => setIsScheduleExpanded(!isScheduleExpanded)}
+            type="button"
+          >
+            <Calendar className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
+            <span>Schedule</span>
+            {isScheduleExpanded ? (
+              <ChevronUp className="w-3.5 h-3.5 text-[#7A685D]" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5 text-[#7A685D]" />
+            )}
+          </button>
+
           {unpaidTotalNgn > 0 ? (
             <button
               className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3.5 py-2 rounded-lg bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-semibold shrink-0 transition-colors shadow-2xs cursor-pointer"
@@ -242,58 +293,15 @@ export function MemberDuesCard({
         </div>
       </div>
 
-      {/* Slim 10-Segment Visual Progress Bar */}
-      <div
-        aria-label={`Dues payment progress: ${paidMonthsCount} of ${progressSegmentsTotal} months paid`}
-        aria-valuemax={progressSegmentsTotal}
-        aria-valuemin={0}
-        aria-valuenow={paidMonthsCount}
-        className="px-4 py-2.5 grid grid-cols-10 gap-1"
-        role="progressbar"
-      >
-        {TEN_PROGRESS_SEGMENTS.map((segId, i) => {
-          const isPaid = i < paidMonthsCount;
-          return (
-            <span
-              className={`h-1.5 rounded-full transition-all ${
-                isPaid ? "bg-[#174C37]" : "bg-[#BA3C2A]/25"
-              }`}
-              key={segId}
-            />
-          );
-        })}
-      </div>
-
-      {/* Slim Attached Footer Accordion Bar */}
-      <button
-        aria-expanded={isScheduleExpanded}
-        className="w-full border-t border-[#E5DDD3] bg-[#FAF6F0]/60 px-4 py-2.5 flex items-center justify-between text-xs font-semibold text-[#3D291F] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
-        onClick={() => setIsScheduleExpanded(!isScheduleExpanded)}
-        type="button"
-      >
-        <span className="flex items-center gap-2">
-          <Calendar className="w-3.5 h-3.5 text-[#174C37]" />
-          <span>Monthly Schedule (Jan - Dec {currentYear})</span>
-        </span>
-        <span className="text-[#7A685D] flex items-center gap-1 font-normal text-[11px]">
-          <span>{isScheduleExpanded ? "Hide" : "View"}</span>
-          {isScheduleExpanded ? (
-            <ChevronUp className="w-3.5 h-3.5" />
-          ) : (
-            <ChevronDown className="w-3.5 h-3.5" />
-          )}
-        </span>
-      </button>
-
-      {/* Expanded Inline Month Grid */}
+      {/* Expanded Inline Month Grid (Sleek 12-month row on desktop) */}
       {isScheduleExpanded && (
-        <div className="p-3.5 bg-white border-t border-[#E5DDD3] space-y-2.5 animate-in fade-in duration-150">
+        <div className="p-3.5 sm:p-4 bg-white border-t border-[#E5DDD3] space-y-2 animate-in fade-in duration-150">
           <div className="flex items-center justify-between text-[11px] text-[#7A685D]">
-            <span>12-Month Schedule Breakdown</span>
+            <span>Monthly Schedule (Jan - Dec {currentYear})</span>
             <span>Tap any paid month to view receipt</span>
           </div>
 
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
+          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-1.5">
             {monthNames.map((m) => {
               const coveredMonth = `${currentYear}-${String(m.index + 1).padStart(2, "0")}-01`;
               const row = monthsMap.get(coveredMonth);
