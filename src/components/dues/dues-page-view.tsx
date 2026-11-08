@@ -439,7 +439,7 @@ export function DuesPageView({
         className="flex items-center gap-2 border-b border-[#E5DDD3] pb-2 overflow-x-auto"
       >
         <button
-          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer min-h-[44px] flex items-center gap-2 shrink-0 ${
+          className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer min-h-[44px] flex items-center gap-2 shrink-0 ${
             activeTab === "overview"
               ? "bg-[#174C37] text-white shadow-2xs"
               : "text-[#54433A] hover:bg-[#FAF6F0] bg-white border border-[#E5DDD3]"
@@ -448,11 +448,12 @@ export function DuesPageView({
           type="button"
         >
           <Calendar className="w-4 h-4" />
-          <span>Overview &amp; Schedule</span>
+          <span className="sm:hidden">Overview</span>
+          <span className="hidden sm:inline">Overview &amp; Schedule</span>
         </button>
 
         <button
-          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer min-h-[44px] flex items-center gap-2 shrink-0 ${
+          className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer min-h-[44px] flex items-center gap-2 shrink-0 ${
             activeTab === "history"
               ? "bg-[#174C37] text-white shadow-2xs"
               : "text-[#54433A] hover:bg-[#FAF6F0] bg-white border border-[#E5DDD3]"
@@ -461,7 +462,8 @@ export function DuesPageView({
           type="button"
         >
           <Receipt className="w-4 h-4" />
-          <span>Receipts &amp; Submissions</span>
+          <span className="sm:hidden">History</span>
+          <span className="hidden sm:inline">Receipts &amp; Submissions</span>
           {ownRequests.filter((r) => r.status === "pending").length > 0 && (
             <span className="w-2 h-2 rounded-full bg-[#D6A23A]" />
           )}
@@ -469,7 +471,7 @@ export function DuesPageView({
 
         {isOfficer && (
           <button
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer min-h-[44px] flex items-center gap-2 shrink-0 ${
+            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer min-h-[44px] flex items-center gap-2 shrink-0 ${
               activeTab === "officer"
                 ? "bg-[#174C37] text-white shadow-2xs"
                 : "text-[#54433A] hover:bg-[#FAF6F0] bg-white border border-[#E5DDD3]"
@@ -478,7 +480,8 @@ export function DuesPageView({
             type="button"
           >
             <Shield className="w-4 h-4" />
-            <span>Officer Treasury</span>
+            <span className="sm:hidden">Treasury</span>
+            <span className="hidden sm:inline">Officer Treasury</span>
             {pendingRequests.length > 0 && (
               <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[#D6A23A] text-[#3D291F]">
                 {pendingRequests.length}
