@@ -2,10 +2,14 @@
 
 import {
   AlertCircle,
+  Calendar,
+  CheckCircle2,
   CreditCard,
   Download,
   FileSpreadsheet,
   FileText,
+  Receipt,
+  Shield,
   ShieldCheck,
   UserCheck,
   Users,
@@ -18,6 +22,7 @@ import type {
   DuesMonthOption,
 } from "@/app/(member)/dues/dues-forms";
 import { clubBrand } from "@/lib/brand";
+import { formatNaira } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 import { type AuditRow, DuesAuditHistoryCard } from "./dues-audit-history-card";
 import {
@@ -38,6 +43,8 @@ import {
   PreLaunchDuesReconciliationCard,
   type ReconciliationMember,
 } from "./pre-launch-dues-reconciliation-card";
+
+type DuesTab = "overview" | "history" | "officer";
 
 interface DuesPageViewProps {
   member: DuesMemberOption;
@@ -84,6 +91,7 @@ interface DuesPageViewProps {
   ownRequests?: DuesPaymentRequestItem[];
   paymentSettings?: DuesPaymentSettings | null;
   reconciliationMembers?: ReconciliationMember[];
+  initialTab?: string;
 }
 
 export function DuesPageView({
@@ -102,7 +110,7 @@ export function DuesPageView({
   combinedAudit,
   actorNames,
   clubTotalIncome,
-  notice: _notice,
+  notice,
   invalidSelection,
   roleError,
   memberListError,
@@ -128,6 +136,7 @@ export function DuesPageView({
   ownRequests = [],
   paymentSettings,
   reconciliationMembers = [],
+  initialTab,
 }: DuesPageViewProps) {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [isDownloadReportOpen, setIsDownloadReportOpen] = useState(false);
@@ -135,6 +144,23 @@ export function DuesPageView({
     isOpen: isDownloadReportOpen,
     onClose: () => setIsDownloadReportOpen(false),
   });
+
+  const validTab: DuesTab =
+    initialTab === "officer" && isOfficer
+      ? "officer"
+      : initialTab === "history"
+        ? "history"
+        : "overview";
+  const [activeTab, setActiveTab] = useState<DuesTab>(validTab);
+
+  const handleTabChange = (newTab: DuesTab) => {
+    setActiveTab(newTab);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", newTab);
+      window.history.replaceState({}, "", url.toString());
+    }
+  };
 
   const paidRows = duesRows.filter((r) => r.status === "paid");
   const paidMonthsCount = paidRows.length;
@@ -157,12 +183,28 @@ export function DuesPageView({
 
   return (
     <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 pb-12 font-sans antialiased text-[#3D291F]">
+      {/* Notice Banner */}
+      {notice && (
+        <div
+          className="flex items-center justify-between gap-3 rounded-xl border border-[#174C37]/30 bg-white px-4 py-3 text-xs sm:text-sm font-semibold text-[#174C37] shadow-2xs animate-in fade-in duration-150"
+          role="status"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <CheckCircle2
+              aria-hidden="true"
+              className="w-4 h-4 shrink-0 text-[#174C37]"
+            />
+            <span className="truncate">{notice}</span>
+          </div>
+        </div>
+      )}
+
       {/* Main Dues Hero Banner */}
       <section
         aria-labelledby="dues-hero-heading"
         className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-8 shadow-xs"
       >
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6">
           <div className="space-y-2 sm:space-y-3">
             <div className="flex items-center gap-2 text-xs font-bold text-[#174C37] uppercase tracking-wider">
               <span>Club Treasury</span>
@@ -197,16 +239,6 @@ export function DuesPageView({
                 <UserCheck className="w-4 h-4 text-[#174C37]" />
                 <span className="capitalize">{member.status} Member</span>
               </div>
-              {isOfficer && (
-                <>
-                  <span aria-hidden="true" className="text-[#B8ACA0]">
-                    ·
-                  </span>
-                  <span className="text-[11px] font-bold text-white uppercase tracking-wider bg-[#0C3325] px-2.5 py-0.5 rounded shadow-2xs">
-                    Officer View
-                  </span>
-                </>
-              )}
             </div>
           </div>
 
@@ -241,6 +273,7 @@ export function DuesPageView({
         </div>
       </section>
 
+      {/* Download Report Modal */}
       {isDownloadReportOpen && (
         <div
           aria-labelledby="dues-report-modal-title"
@@ -272,9 +305,9 @@ export function DuesPageView({
               </button>
             </div>
 
-            <p className="text-sm text-[#5C4638] leading-relaxed">
-              Select a format to export your statutory membership dues schedule
-              and reconciliation ledger.
+            <p className="text-xs text-[#5C4638] leading-relaxed">
+              Choose a format to download your dues schedule and payment
+              records.
             </p>
 
             <div className="space-y-2.5 pt-1">
@@ -287,16 +320,11 @@ export function DuesPageView({
               >
                 <input name="format" type="hidden" value="pdf" />
                 <button
-                  className="w-full py-3 px-4 rounded-xl bg-[#174C37] text-white text-sm font-semibold flex items-center justify-between hover:bg-[#103D2B] active:scale-[0.99] transition shadow-xs cursor-pointer border-0 min-h-[44px]"
+                  className="w-full py-3 px-4 rounded-xl bg-[#174C37] text-white text-xs font-semibold flex items-center justify-center gap-2 hover:bg-[#103D2B] active:scale-[0.99] transition shadow-xs cursor-pointer border-0 min-h-[44px]"
                   type="submit"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <FileText className="w-4 h-4 text-[#85B89A] shrink-0" />
-                    <span>Full Dues Report (PDF)</span>
-                  </div>
-                  <span className="text-xs bg-[#103D2B] px-2 py-0.5 rounded text-white/90 font-mono">
-                    PDF
-                  </span>
+                  <FileText className="w-4 h-4 text-[#85B89A] shrink-0" />
+                  <span>Full Dues Report (PDF)</span>
                 </button>
               </form>
 
@@ -309,16 +337,11 @@ export function DuesPageView({
               >
                 <input name="format" type="hidden" value="csv" />
                 <button
-                  className="w-full py-3 px-4 rounded-xl border border-[#CFD5D0] bg-white text-[#231F1D] text-sm font-semibold flex items-center justify-between hover:bg-[#FAF6F0] active:scale-[0.99] transition shadow-xs cursor-pointer min-h-[44px]"
+                  className="w-full py-3 px-4 rounded-xl border border-[#CFD5D0] bg-white text-[#231F1D] text-xs font-semibold flex items-center justify-center gap-2 hover:bg-[#FAF6F0] active:scale-[0.99] transition shadow-xs cursor-pointer min-h-[44px]"
                   type="submit"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <FileSpreadsheet className="w-4 h-4 text-[#174C37] shrink-0" />
-                    <span>Dues Schedule Ledger (CSV)</span>
-                  </div>
-                  <span className="text-xs bg-[#FAF6F0] text-[#5C4638] px-2 py-0.5 rounded font-mono border border-[#E5DDD3]">
-                    CSV
-                  </span>
+                  <FileSpreadsheet className="w-4 h-4 text-[#174C37] shrink-0" />
+                  <span>Dues Schedule Ledger (CSV)</span>
                 </button>
               </form>
             </div>
@@ -326,23 +349,18 @@ export function DuesPageView({
         </div>
       )}
 
+      {/* Alert Notices */}
       {invalidSelection && (
         <div className="p-4 rounded-xl bg-[#FFF9F8] border border-[#F5C2C2] text-xs font-bold text-[#BA3C2A] flex items-center gap-2 shadow-2xs">
           <AlertCircle className="w-4 h-4 text-[#BA3C2A] shrink-0" />
-          <span>
-            That member selection could not be verified. Your own dues are
-            shown.
-          </span>
+          <span>Could not find that member. Showing your own dues.</span>
         </div>
       )}
 
       {roleError && (
         <div className="p-4 rounded-xl bg-[#FFF9F8] border border-[#F5C2C2] text-xs font-bold text-[#BA3C2A] flex items-center gap-2 shadow-2xs">
           <AlertCircle className="w-4 h-4 text-[#BA3C2A] shrink-0" />
-          <span>
-            Officer access could not be verified, so this page shows only your
-            own records.
-          </span>
+          <span>Could not verify officer access. Showing your own dues.</span>
         </div>
       )}
 
@@ -350,8 +368,8 @@ export function DuesPageView({
         <div className="p-4 rounded-xl bg-[#FFF9F8] border border-[#F5C2C2] text-xs font-bold text-[#BA3C2A] flex items-center gap-2 shadow-2xs">
           <AlertCircle className="w-4 h-4 text-[#BA3C2A] shrink-0" />
           <span>
-            Dues details could not be verified. Some financial views or mutation
-            forms may be temporarily unavailable.
+            Could not load dues details. Some features may be temporarily
+            unavailable.
           </span>
         </div>
       )}
@@ -359,46 +377,47 @@ export function DuesPageView({
       {auditError && (
         <div className="p-4 rounded-xl bg-[#FFF9F8] border border-[#F5C2C2] text-xs font-bold text-[#BA3C2A] flex items-center gap-2 shadow-2xs">
           <AlertCircle className="w-4 h-4 text-[#BA3C2A] shrink-0" />
-          <span>Dues audit history could not be verified or loaded.</span>
+          <span>Could not load the audit history.</span>
         </div>
       )}
 
-      {/* Officer Member Switcher */}
+      {/* Officer Member Switcher (Compact Toolbar) */}
       {isOfficer && (
         <section
           aria-labelledby="officer-picker-heading"
-          className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs"
+          className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-4 shadow-2xs"
         >
           <form
             action="/dues"
-            className="flex flex-col sm:flex-row sm:items-end justify-between gap-4"
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             method="get"
           >
-            <div className="flex-1 space-y-1.5">
+            <input name="tab" type="hidden" value={activeTab} />
+            <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2.5">
               <label
-                className="flex items-center gap-2 text-xs font-extrabold text-[#3D291F] uppercase tracking-wider"
+                className="flex items-center gap-2 text-xs font-bold text-[#3D291F] shrink-0"
                 htmlFor="officer-member-select"
                 id="officer-picker-heading"
               >
                 <Users className="w-4 h-4 text-[#174C37]" />
-                <span>View Member Dues</span>
+                <span>Viewing Member:</span>
               </label>
               <select
-                className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] font-bold focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden cursor-pointer"
+                className="w-full sm:max-w-md rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] px-3 py-2 text-xs text-[#3D291F] font-semibold focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden cursor-pointer"
                 defaultValue={targetMemberId}
                 id="officer-member-select"
                 name="member_id"
               >
                 {members.map((option) => (
                   <option key={option.id} value={option.id}>
-                    {option.full_name} · @{option.username} · {option.status}
+                    {option.full_name} (@{option.username}) · {option.status}
                   </option>
                 ))}
               </select>
             </div>
 
             <button
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[44px] sm:min-h-[40px]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[44px] sm:min-h-[38px]"
               type="submit"
             >
               View Member
@@ -407,122 +426,211 @@ export function DuesPageView({
 
           {memberListError && (
             <p className="text-xs text-[#BA3C2A] mt-2 font-medium" role="alert">
-              The full member roster could not be verified; only verified
-              identities are loaded.
+              Could not load the full member list. Only confirmed members are
+              shown.
             </p>
           )}
         </section>
       )}
 
-      {/* 4-Stat Metric Summary Strip */}
-      <div id="dues-summary" className="scroll-target">
-        <DuesSummaryCards
-          clubTotalIncome={clubTotalIncome}
-          isOfficer={isOfficer}
-          monthlyRate={currentMonthlyRate}
-          nextMonthRate={
-            nextRateObj
-              ? {
-                  effectiveMonth: nextRateObj.effective_month,
-                  amount: Number(nextRateObj.monthly_amount_ngn),
-                }
-              : null
-          }
-          openTotal={openTotal}
-          paidMonthsCount={paidMonthsCount}
-          totalPaidAmount={totalPaidAmount}
-          unpaidMonthsCount={
-            duesRows.filter((r) => r.status === "unpaid" || r.is_overdue).length
-          }
-        />
-      </div>
+      {/* Workspace Tabs Navigation Bar */}
+      <nav
+        aria-label="Dues sections"
+        className="flex items-center gap-2 border-b border-[#E5DDD3] pb-2 overflow-x-auto"
+      >
+        <button
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer min-h-[44px] flex items-center gap-2 shrink-0 ${
+            activeTab === "overview"
+              ? "bg-[#174C37] text-white shadow-2xs"
+              : "text-[#54433A] hover:bg-[#FAF6F0] bg-white border border-[#E5DDD3]"
+          }`}
+          onClick={() => handleTabChange("overview")}
+          type="button"
+        >
+          <Calendar className="w-4 h-4" />
+          <span>Overview &amp; Schedule</span>
+        </button>
 
-      {/* Officer Approvals Queue (Phase 4 Governance) */}
-      {isOfficer && viewerId && (
-        <div id="dues-approvals" className="scroll-target">
-          <OfficerDuesApprovalsCard
-            pendingMembersMap={pendingMembersMap}
-            pendingRequests={pendingRequests}
-            viewerId={viewerId}
-            viewerRoles={viewerRoles}
-          />
+        <button
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer min-h-[44px] flex items-center gap-2 shrink-0 ${
+            activeTab === "history"
+              ? "bg-[#174C37] text-white shadow-2xs"
+              : "text-[#54433A] hover:bg-[#FAF6F0] bg-white border border-[#E5DDD3]"
+          }`}
+          onClick={() => handleTabChange("history")}
+          type="button"
+        >
+          <Receipt className="w-4 h-4" />
+          <span>Receipts &amp; Submissions</span>
+          {ownRequests.filter((r) => r.status === "pending").length > 0 && (
+            <span className="w-2 h-2 rounded-full bg-[#D6A23A]" />
+          )}
+        </button>
+
+        {isOfficer && (
+          <button
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer min-h-[44px] flex items-center gap-2 shrink-0 ${
+              activeTab === "officer"
+                ? "bg-[#174C37] text-white shadow-2xs"
+                : "text-[#54433A] hover:bg-[#FAF6F0] bg-white border border-[#E5DDD3]"
+            }`}
+            onClick={() => handleTabChange("officer")}
+            type="button"
+          >
+            <Shield className="w-4 h-4" />
+            <span>Officer Treasury</span>
+            {pendingRequests.length > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[#D6A23A] text-[#3D291F]">
+                {pendingRequests.length}
+              </span>
+            )}
+          </button>
+        )}
+      </nav>
+
+      {/* TAB 1: OVERVIEW & SCHEDULE */}
+      {activeTab === "overview" && (
+        <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-150">
+          {/* 4-Stat Metric Summary Strip */}
+          <div className="scroll-target" id="dues-summary">
+            <DuesSummaryCards
+              clubTotalIncome={clubTotalIncome}
+              isOfficer={isOfficer}
+              monthlyRate={currentMonthlyRate}
+              nextMonthRate={
+                nextRateObj
+                  ? {
+                      effectiveMonth: nextRateObj.effective_month,
+                      amount: Number(nextRateObj.monthly_amount_ngn),
+                    }
+                  : null
+              }
+              openTotal={openTotal}
+              paidMonthsCount={paidMonthsCount}
+              totalPaidAmount={totalPaidAmount}
+              unpaidMonthsCount={
+                duesRows.filter((r) => r.status === "unpaid" || r.is_overdue)
+                  .length
+              }
+            />
+          </div>
+
+          {/* Actionable Outstanding Balance Alert */}
+          {openTotal > 0 && !isDuesExempt && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-[#FFF9F8] border border-[#F5C2C2] text-xs shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <AlertCircle className="w-4 h-4 text-[#BA3C2A] shrink-0" />
+                <span className="text-[#3D291F] font-medium">
+                  You have an outstanding balance of{" "}
+                  <strong className="font-mono font-bold text-[#BA3C2A]">
+                    {formatNaira(openTotal)}
+                  </strong>
+                  . Settle now to keep your club welfare active.
+                </span>
+              </div>
+              <button
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[#BA3C2A] text-white text-xs font-bold hover:bg-[#a33222] transition-colors shadow-2xs cursor-pointer min-h-[38px] shrink-0"
+                onClick={() => setIsPayModalOpen(true)}
+                type="button"
+              >
+                <CreditCard className="w-3.5 h-3.5 text-white" />
+                <span>Pay Balance</span>
+              </button>
+            </div>
+          )}
+
+          {/* Monthly Dues Schedule (Dual-Responsive) */}
+          <div className="scroll-target" id="dues-schedule">
+            <DuesScheduleCard
+              currentMonth={currentMonth}
+              duesRows={duesRows}
+              memberName={member.full_name}
+              onOpenPayDuesModal={() => setIsPayModalOpen(true)}
+            />
+          </div>
         </div>
       )}
 
-      {/* Member Submitted Dues Payment Requests */}
-      <div id="dues-requests" className="scroll-target">
-        <MyDuesRequestsCard requests={ownRequests} />
-      </div>
+      {/* TAB 2: RECEIPTS & SUBMISSIONS */}
+      {activeTab === "history" && (
+        <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-150">
+          {/* Member Submitted Dues Payment Requests */}
+          <div className="scroll-target" id="dues-requests">
+            <MyDuesRequestsCard requests={ownRequests} />
+          </div>
 
-      {/* Eligible Months Dues Schedule */}
-      <div id="dues-schedule" className="scroll-target">
-        <DuesScheduleCard
-          currentMonth={currentMonth}
-          duesRows={duesRows}
-          memberName={member.full_name}
-          onOpenPayDuesModal={() => setIsPayModalOpen(true)}
-        />
-      </div>
-
-      {/* Recorded Payment History */}
-      <div id="dues-payments" className="scroll-target">
-        <DuesPaymentsHistoryCard
-          canCorrect={canCorrect}
-          coverageByPayment={coverageByPayment}
-          members={members}
-          pageSize={pageSize}
-          paymentPage={paymentPage}
-          payments={payments}
-          targetMemberId={targetMemberId}
-          totalPaymentsCount={totalPaymentsCount}
-        />
-      </div>
-
-      {/* Officer Treasury Controls (Mutations: Record Payment, Write-off) */}
-      {isOfficer && (
-        <div id="dues-controls" className="scroll-target">
-          <OfficerDuesControlsCard
-            availableMonths={availableMonths}
-            canRecord={canRecord}
-            canWriteOff={canWriteOff}
-            memberId={targetMemberId}
-            memberName={member.full_name}
-            pastUnpaidMonths={pastUnpaidMonths}
-            today={today}
-          />
+          {/* Recorded Payment History */}
+          <div className="scroll-target" id="dues-payments">
+            <DuesPaymentsHistoryCard
+              canCorrect={canCorrect}
+              coverageByPayment={coverageByPayment}
+              members={members}
+              pageSize={pageSize}
+              paymentPage={paymentPage}
+              payments={payments}
+              targetMemberId={targetMemberId}
+              totalPaymentsCount={totalPaymentsCount}
+            />
+          </div>
         </div>
       )}
 
-      {/* Pre-Launch Dues Reconciliation Workspace (Feb-Sep 2026) */}
-      {isOfficer && (
-        <div id="dues-reconciliation" className="scroll-target">
-          <PreLaunchDuesReconciliationCard
-            isAdmin={Boolean(isAdmin)}
-            members={reconciliationMembers}
-          />
-        </div>
-      )}
+      {/* TAB 3: OFFICER TREASURY (Gated by isOfficer) */}
+      {activeTab === "officer" && isOfficer && (
+        <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-150">
+          {/* Officer Approvals Queue */}
+          {viewerId && (
+            <div className="scroll-target" id="dues-approvals">
+              <OfficerDuesApprovalsCard
+                pendingMembersMap={pendingMembersMap}
+                pendingRequests={pendingRequests}
+                viewerId={viewerId}
+                viewerRoles={viewerRoles}
+              />
+            </div>
+          )}
 
-      {/* Rate History & Admin Scheduling */}
-      <div id="dues-rates" className="scroll-target">
-        <DuesRateScheduleCard
-          canChangeRate={canChangeRate}
-          nextMonth={nextMonth}
-          rates={rates}
-        />
-      </div>
+          {/* Officer Treasury Controls (Record Payment, Write-off) */}
+          <div className="scroll-target" id="dues-controls">
+            <OfficerDuesControlsCard
+              availableMonths={availableMonths}
+              canRecord={canRecord}
+              canWriteOff={canWriteOff}
+              memberId={targetMemberId}
+              memberName={member.full_name}
+              pastUnpaidMonths={pastUnpaidMonths}
+              today={today}
+            />
+          </div>
 
-      {/* Officer Audit Trail */}
-      {isOfficer && (
-        <div id="dues-audit" className="scroll-target">
-          <DuesAuditHistoryCard
-            actorNames={actorNames}
-            auditEntries={combinedAudit}
-            auditPage={auditPage}
-            pageSize={pageSize}
-            targetMemberId={targetMemberId}
-            totalAuditCount={totalAuditCount}
-          />
+          {/* Pre-Launch Dues Reconciliation Workspace (Feb-Sep 2026) */}
+          <div className="scroll-target" id="dues-reconciliation">
+            <PreLaunchDuesReconciliationCard
+              isAdmin={Boolean(isAdmin)}
+              members={reconciliationMembers}
+            />
+          </div>
+
+          {/* Rate History & Admin Scheduling */}
+          <div className="scroll-target" id="dues-rates">
+            <DuesRateScheduleCard
+              canChangeRate={canChangeRate}
+              nextMonth={nextMonth}
+              rates={rates}
+            />
+          </div>
+
+          {/* Officer Audit Trail */}
+          <div className="scroll-target" id="dues-audit">
+            <DuesAuditHistoryCard
+              actorNames={actorNames}
+              auditEntries={combinedAudit}
+              auditPage={auditPage}
+              pageSize={pageSize}
+              targetMemberId={targetMemberId}
+              totalAuditCount={totalAuditCount}
+            />
+          </div>
         </div>
       )}
 
@@ -533,9 +641,9 @@ export function DuesPageView({
             <strong className="text-[#3D291F]">
               Club Admin Dues Exemption Policy:
             </strong>{" "}
-            Club Admins are exempt from monthly dues while serving. Exempted
-            dues return when the role is withdrawn unless recorded separately by
-            an officer.
+            Club Admins do not pay monthly dues while serving. Exempted dues
+            return when the role is withdrawn unless recorded separately by an
+            officer.
           </div>
         )}
 

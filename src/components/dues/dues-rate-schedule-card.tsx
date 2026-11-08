@@ -1,4 +1,4 @@
-import { Calendar, DollarSign, History, ShieldCheck } from "lucide-react";
+import { Calendar, DollarSign, History } from "lucide-react";
 import { DuesRateForm } from "@/app/(member)/dues/dues-forms";
 import { formatNaira } from "@/lib/format";
 
@@ -52,11 +52,6 @@ export function DuesRateScheduleCard({
             Current and past monthly dues rates
           </p>
         </div>
-
-        <div className="flex items-center gap-1.5 text-xs font-bold text-[#174C37] bg-white px-3 py-1 rounded-lg border border-[#E5DDD3] shadow-2xs">
-          <ShieldCheck className="w-4 h-4 text-[#174C37]" />
-          <span>Active Rate</span>
-        </div>
       </div>
 
       <div className="p-4 sm:p-6 space-y-5 pt-0">
@@ -77,13 +72,9 @@ export function DuesRateScheduleCard({
                   <span className="text-lg font-black font-mono text-[#174C37] tabular-nums">
                     {formatNaira(rate.monthly_amount_ngn)}
                   </span>
-                  {isLatest ? (
+                  {isLatest && (
                     <span className="text-[10px] font-bold text-white bg-[#174C37] px-2 py-0.5 rounded shadow-2xs">
-                      Effective Rate
-                    </span>
-                  ) : (
-                    <span className="text-[10px] font-bold text-[#54433A] bg-[#FAF6F0] px-2 py-0.5 rounded border border-[#E5DDD3]">
-                      Archived
+                      Current
                     </span>
                   )}
                 </div>
@@ -94,7 +85,7 @@ export function DuesRateScheduleCard({
                 </div>
 
                 <p className="text-[11px] text-[#54433A] leading-relaxed line-clamp-2">
-                  {rate.reason || "General statutory club contribution."}
+                  {rate.reason || "Monthly club dues."}
                 </p>
               </article>
             );

@@ -47,7 +47,7 @@ export function DuesSummaryCards({
       } gap-2.5 sm:gap-4`}
     >
       {/* 1. Total Settled Contributions */}
-      <div className="bg-white rounded-xl border border-[#E5DDD3] p-3 sm:p-5 shadow-2xs space-y-2 flex flex-col justify-between">
+      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-5 shadow-2xs space-y-2 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-[#54433A] uppercase tracking-wider">
             <span>Paid to Date</span>
@@ -59,8 +59,8 @@ export function DuesSummaryCards({
             <span className="text-base sm:text-2xl font-black font-mono text-[#174C37] tabular-nums tracking-tight">
               {formatNaira(totalPaidAmount)}
             </span>
-            <span className="text-[10px] sm:text-xs font-bold text-[#174C37] bg-[#FAF6F0] px-1.5 py-0.5 rounded border border-[#E5DDD3] w-max">
-              {paidMonthsCount} mo. paid
+            <span className="text-xs text-[#54433A] font-medium">
+              {paidMonthsCount} of 12 months
             </span>
           </div>
         </div>
@@ -73,14 +73,14 @@ export function DuesSummaryCards({
           </div>
           <p className="text-[10px] sm:text-[11px] font-medium text-[#54433A] mt-1.5 sm:mt-2 flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
-            <span className="truncate">Verified in ledger</span>
+            <span className="truncate">Confirmed payments</span>
           </p>
         </div>
       </div>
 
       {/* 2. Outstanding Balance */}
       <div
-        className={`rounded-xl border p-3 sm:p-5 shadow-2xs space-y-2 flex flex-col justify-between ${
+        className={`rounded-2xl border p-3.5 sm:p-5 shadow-2xs space-y-2 flex flex-col justify-between ${
           hasOutstanding
             ? "bg-[#FFF9F8] border-[#F5C2C2]"
             : "bg-white border-[#E5DDD3]"
@@ -116,24 +116,24 @@ export function DuesSummaryCards({
               {formatNaira(openTotal)}
             </span>
             <span
-              className={`text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded border w-max ${
+              className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full ${
                 hasOutstanding
-                  ? "bg-white text-[#BA3C2A] border-[#F5C2C2]"
-                  : "bg-[#FAF6F0] text-[#174C37] border-[#E5DDD3]"
+                  ? "bg-[#BA3C2A]/10 text-[#BA3C2A]"
+                  : "bg-[#174C37]/10 text-[#174C37]"
               }`}
             >
-              {hasOutstanding ? `${unpaidMonthsCount} mo. due` : "All Clear"}
+              {hasOutstanding ? `${unpaidMonthsCount} due` : "All clear"}
             </span>
           </div>
         </div>
 
         <p className="text-[10px] sm:text-[11px] font-medium text-[#54433A] mt-1.5 sm:mt-2 leading-relaxed truncate">
-          {hasOutstanding ? "Unpaid balance due." : "All dues up to date."}
+          {hasOutstanding ? "Balance to settle." : "Up to date."}
         </p>
       </div>
 
       {/* 3. Monthly Statutory Rate */}
-      <div className="bg-white rounded-xl border border-[#E5DDD3] p-3 sm:p-5 shadow-2xs space-y-2 flex flex-col justify-between">
+      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-5 shadow-2xs space-y-2 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-[#54433A] uppercase tracking-wider">
             <span>Monthly Rate</span>
@@ -144,9 +144,6 @@ export function DuesSummaryCards({
           <div className="mt-2 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
             <span className="text-base sm:text-2xl font-black font-mono text-[#3D291F] tabular-nums tracking-tight">
               {formatNaira(monthlyRate)}
-            </span>
-            <span className="text-[10px] sm:text-xs font-bold text-[#54433A] bg-[#FAF6F0] px-1.5 py-0.5 rounded border border-[#E5DDD3] w-max">
-              Per Month
             </span>
           </div>
         </div>
@@ -160,14 +157,14 @@ export function DuesSummaryCards({
               </strong>
             </span>
           ) : (
-            <span>Current club rate</span>
+            <span>Current rate</span>
           )}
         </p>
       </div>
 
       {/* 4. Club Aggregate Dues (Officers only) */}
       {isOfficer && (
-        <div className="bg-white rounded-xl border border-[#E5DDD3] p-3 sm:p-5 shadow-2xs space-y-2 flex flex-col justify-between">
+        <div className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-5 shadow-2xs space-y-2 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-[#54433A] uppercase tracking-wider">
               <span>All-Time Dues</span>
@@ -181,15 +178,12 @@ export function DuesSummaryCards({
                   ? formatNaira(clubTotalIncome)
                   : "₦0"}
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-[#174C37] bg-[#FAF6F0] px-1.5 py-0.5 rounded border border-[#E5DDD3] w-max">
-                Treasury
-              </span>
             </div>
           </div>
 
           <p className="text-[10px] sm:text-[11px] font-medium text-[#54433A] mt-1.5 sm:mt-2 flex items-center gap-1.5 truncate">
             <TrendingUp className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
-            <span className="truncate">All verified members</span>
+            <span className="truncate">All confirmed dues</span>
           </p>
         </div>
       )}

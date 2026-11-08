@@ -50,6 +50,7 @@ function historyPageHref(memberId: string, page: number) {
   const params = new URLSearchParams({
     member_id: memberId,
     audit_page: String(page),
+    tab: "officer",
   });
   return `/dues?${params.toString()}`;
 }
@@ -120,10 +121,6 @@ export function DuesAuditHistoryCard({
             Permanent log of dues changes and approvals
           </p>
         </div>
-
-        <span className="text-xs font-bold text-[#174C37] bg-white px-3 py-1 rounded-lg border border-[#E5DDD3] self-start sm:self-auto shadow-2xs">
-          {totalAuditCount} Total Audit Records
-        </span>
       </div>
 
       <div className="p-4 sm:p-6 space-y-3.5 pt-0">
@@ -131,11 +128,10 @@ export function DuesAuditHistoryCard({
           <div className="p-8 text-center space-y-2 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
             <FileSearch className="w-8 h-8 text-[#B8ACA0] mx-auto" />
             <h4 className="text-sm font-bold text-[#3D291F]">
-              No Audit Records Found
+              No audit records found
             </h4>
             <p className="text-xs text-[#54433A]">
-              Officer modifications will appear here with full before/after
-              state diffs.
+              Changes made by officers will appear here.
             </p>
           </div>
         ) : (
@@ -173,9 +169,9 @@ export function DuesAuditHistoryCard({
 
                   <p className="text-xs text-[#3D291F] font-medium leading-relaxed">
                     <strong className="text-[#54433A] font-bold">
-                      Audit Reason:
+                      Reason:
                     </strong>{" "}
-                    {entry.reason || "Operational statutory entry."}
+                    {entry.reason || "Payment recorded."}
                   </p>
 
                   {/* Expandable JSON Diff */}

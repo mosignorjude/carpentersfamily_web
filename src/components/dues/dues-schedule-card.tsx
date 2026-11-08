@@ -46,7 +46,7 @@ function formatDate(date: string) {
 export function DuesScheduleCard({
   duesRows,
   currentMonth,
-  memberName,
+  memberName: _memberName,
   onOpenPayDuesModal,
 }: DuesScheduleCardProps) {
   const [filter, setFilter] = useState<"all" | "unpaid" | "paid">("all");
@@ -69,23 +69,23 @@ export function DuesScheduleCard({
   const getStatusBadge = (row: DuesScheduleRow) => {
     if (row.status === "paid") {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EAF4ED] text-[#174C37] border border-[#A8D5BC]">
-          <CheckCircle2 className="w-3.5 h-3.5" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#EAF4ED] text-[#174C37]">
+          <CheckCircle2 className="w-3 h-3" />
           <span>Paid</span>
         </span>
       );
     }
     if (row.status === "written_off") {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FAF6F0] text-[#7A685D]">
           <span>Written off</span>
         </span>
       );
     }
     if (row.is_overdue) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#FDF2F2] text-[#BA3C2A] border border-[#F5C2C2]">
-          <AlertCircle className="w-3.5 h-3.5" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FDF2F2] text-[#BA3C2A]">
+          <AlertCircle className="w-3 h-3" />
           <span>Overdue</span>
         </span>
       );
@@ -94,22 +94,22 @@ export function DuesScheduleCard({
     const normalizedRowMonth = row.covered_month.slice(0, 7);
     if (normalizedRowMonth > normalizedCurrentMonth) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#FAF6F0] text-[#54433A] border border-[#E5DDD3]">
-          <Clock className="w-3.5 h-3.5 text-[#54433A]" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FAF6F0] text-[#54433A]">
+          <Clock className="w-3 h-3 text-[#54433A]" />
           <span>Upcoming</span>
         </span>
       );
     }
     if (normalizedRowMonth === normalizedCurrentMonth) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#FDF8EE] text-[#D6A23A] border border-[#EED7A1]">
-          <Clock className="w-3.5 h-3.5" />
-          <span>Due at Month End</span>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FDF8EE] text-[#D6A23A]">
+          <Clock className="w-3 h-3" />
+          <span>Due end of month</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#FDF2F2] text-[#BA3C2A] border border-[#F5C2C2]">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FDF2F2] text-[#BA3C2A]">
         <span>Unpaid</span>
       </span>
     );
@@ -133,8 +133,7 @@ export function DuesScheduleCard({
             </h2>
           </div>
           <p className="text-xs text-[#54433A] font-medium mt-1">
-            Monthly breakdown for{" "}
-            <strong className="text-[#3D291F] font-bold">{memberName}</strong>
+            See what's paid and what's due each month.
           </p>
         </div>
 
@@ -193,95 +192,133 @@ export function DuesScheduleCard({
         </div>
       </div>
 
-      {/* Schedule Table */}
       {sortedRows.length === 0 ? (
         <div className="p-8 text-center space-y-2">
           <Calendar className="w-8 h-8 text-[#B8ACA0] mx-auto" />
-          <h4 className="text-sm font-bold text-[#3D291F]">
-            No Schedule Records Match Filter
-          </h4>
+          <h4 className="text-sm font-bold text-[#3D291F]">No months found</h4>
           <p className="text-xs text-[#54433A]">
-            Select another filter tab or review your overall membership status.
+            Try switching to another filter or check back later.
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-[#E5DDD3] bg-white text-[#54433A] uppercase font-bold text-[11px] tracking-wider">
-                <th className="py-3 px-5" scope="col">
-                  Month
-                </th>
-                <th className="py-3 px-5" scope="col">
-                  Amount
-                </th>
-                <th className="py-3 px-5" scope="col">
-                  Due Date
-                </th>
-                <th className="py-3 px-5" scope="col">
-                  Status
-                </th>
-                <th className="py-3 px-5 text-right" scope="col">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5DDD3] bg-white font-medium text-[#3D291F]">
-              {sortedRows.map((row) => {
-                const isPaid = row.status === "paid";
-                const isWrittenOff = row.status === "written_off";
-                return (
-                  <tr
-                    className="hover:bg-[#FAF6F0]/75 transition-colors"
-                    key={row.covered_month}
-                  >
-                    <td className="py-3.5 px-5 font-bold">
-                      <div className="flex items-center gap-2">
-                        <span>{formatMonth(row.covered_month)}</span>
-                        {row.covered_month.slice(0, 7) ===
-                          currentMonth.slice(0, 7) && (
-                          <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-[#FAF6F0] text-[#174C37] border border-[#E5DDD3]">
-                            Current
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-5 font-mono font-bold text-[#174C37]">
+        <>
+          {/* Mobile High-Density Cards Layout (sm:hidden) */}
+          <div className="divide-y divide-[#E5DDD3] sm:hidden">
+            {sortedRows.map((row) => {
+              const isPaid = row.status === "paid";
+              const isWrittenOff = row.status === "written_off";
+
+              return (
+                <div
+                  key={`mobile-${row.covered_month}`}
+                  className="p-3.5 flex items-center justify-between gap-3 hover:bg-[#FAF6F0]/60 transition-colors"
+                >
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-[#3D291F] truncate">
+                        {formatMonth(row.covered_month)}
+                      </span>
+                      {getStatusBadge(row)}
+                    </div>
+                    <div className="text-[11px] text-[#54433A] flex items-center gap-1.5">
+                      <span>Due {formatDate(row.due_date)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    <span className="font-mono font-bold text-xs text-[#174C37]">
                       {row.amount_ngn != null
                         ? formatNaira(row.amount_ngn)
-                        : "Rate unavailable"}
-                    </td>
-                    <td className="py-3.5 px-5 text-[#54433A]">
-                      {formatDate(row.due_date)}
-                    </td>
-                    <td className="py-3.5 px-5">{getStatusBadge(row)}</td>
-                    <td className="py-3.5 px-5 text-right">
-                      {isPaid ? (
-                        <span className="text-xs font-bold text-[#174C37] inline-flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#174C37]" />
-                          <span>Paid</span>
-                        </span>
-                      ) : isWrittenOff ? (
-                        <span className="text-xs font-semibold text-[#7A685D] inline-flex items-center gap-1">
-                          <span>Written Off</span>
-                        </span>
-                      ) : (
-                        <button
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#FAF6F0] text-[#3D291F] hover:bg-[#E5DDD3] border border-[#E5DDD3] text-xs font-bold transition-colors cursor-pointer"
-                          onClick={onOpenPayDuesModal}
-                          type="button"
-                        >
-                          <CreditCard className="w-3 h-3 text-[#174C37]" />
-                          <span>Pay Now</span>
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                        : "—"}
+                    </span>
+
+                    {!isPaid && !isWrittenOff && (
+                      <button
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#FAF6F0] text-[#3D291F] hover:bg-[#E5DDD3] border border-[#E5DDD3] text-[11px] font-bold transition-colors cursor-pointer min-h-[34px]"
+                        onClick={onOpenPayDuesModal}
+                        type="button"
+                      >
+                        <CreditCard className="w-3 h-3 text-[#174C37]" />
+                        <span>Pay</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Structured Table Layout (hidden sm:block) */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-[#E5DDD3] bg-white text-[#54433A] uppercase font-bold text-[11px] tracking-wider">
+                  <th className="py-3 px-5" scope="col">
+                    Month
+                  </th>
+                  <th className="py-3 px-5" scope="col">
+                    Amount
+                  </th>
+                  <th className="py-3 px-5" scope="col">
+                    Due Date
+                  </th>
+                  <th className="py-3 px-5" scope="col">
+                    Status
+                  </th>
+                  <th className="py-3 px-5 text-right" scope="col">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E5DDD3] bg-white font-medium text-[#3D291F]">
+                {sortedRows.map((row) => {
+                  const isPaid = row.status === "paid";
+                  const isWrittenOff = row.status === "written_off";
+                  return (
+                    <tr
+                      className="hover:bg-[#FAF6F0]/75 transition-colors"
+                      key={`desktop-${row.covered_month}`}
+                    >
+                      <td className="py-3.5 px-5 font-bold">
+                        <span>{formatMonth(row.covered_month)}</span>
+                      </td>
+                      <td className="py-3.5 px-5 font-mono font-bold text-[#174C37]">
+                        {row.amount_ngn != null
+                          ? formatNaira(row.amount_ngn)
+                          : "Rate unavailable"}
+                      </td>
+                      <td className="py-3.5 px-5 text-[#54433A]">
+                        {formatDate(row.due_date)}
+                      </td>
+                      <td className="py-3.5 px-5">{getStatusBadge(row)}</td>
+                      <td className="py-3.5 px-5 text-right">
+                        {isPaid ? (
+                          <span className="text-xs font-bold text-[#174C37] inline-flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#174C37]" />
+                            <span>Paid</span>
+                          </span>
+                        ) : isWrittenOff ? (
+                          <span className="text-xs font-semibold text-[#7A685D] inline-flex items-center gap-1">
+                            <span>Written off</span>
+                          </span>
+                        ) : (
+                          <button
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#FAF6F0] text-[#3D291F] hover:bg-[#E5DDD3] border border-[#E5DDD3] text-xs font-bold transition-colors cursor-pointer"
+                            onClick={onOpenPayDuesModal}
+                            type="button"
+                          >
+                            <CreditCard className="w-3 h-3 text-[#174C37]" />
+                            <span>Pay Now</span>
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </section>
   );

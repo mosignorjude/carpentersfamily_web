@@ -42,7 +42,7 @@ export function MyDuesRequestsCard({ requests = [] }: MyDuesRequestsCardProps) {
     switch (status) {
       case "approved":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#174C37]/10 text-[#174C37]">
             <CheckCircle2 className="w-3.5 h-3.5 text-[#174C37]" />
             <span>Approved</span>
           </span>
@@ -50,9 +50,9 @@ export function MyDuesRequestsCard({ requests = [] }: MyDuesRequestsCardProps) {
       case "rejected":
         return (
           <div className="space-y-1 text-right">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#BA3C2A]/10 text-[#BA3C2A] border border-[#BA3C2A]/20">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#BA3C2A]/10 text-[#BA3C2A]">
               <XCircle className="w-3.5 h-3.5 text-[#BA3C2A]" />
-              <span>Rejected</span>
+              <span>Declined</span>
             </span>
             {reason && (
               <p className="text-[11px] text-[#BA3C2A] max-w-xs">{reason}</p>
@@ -61,15 +61,15 @@ export function MyDuesRequestsCard({ requests = [] }: MyDuesRequestsCardProps) {
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#D6A23A]/15 text-[#3D291F] border border-[#D6A23A]/40">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#D6A23A]/15 text-[#3D291F]">
             <Clock className="w-3.5 h-3.5 text-[#D6A23A]" />
-            <span>Pending Review</span>
+            <span>Under Review</span>
           </span>
         );
     }
   };
 
-  const getMethodBadge = (method: string) => {
+  const getMethodDisplay = (method: string) => {
     switch (method) {
       case "bank_transfer":
         return (
@@ -82,14 +82,14 @@ export function MyDuesRequestsCard({ requests = [] }: MyDuesRequestsCardProps) {
         return (
           <span className="inline-flex items-center gap-1 text-[11px] text-[#54433A]">
             <CreditCard className="w-3.5 h-3.5 text-[#D6A23A]" />
-            <span>Paystack Card</span>
+            <span>Card</span>
           </span>
         );
       case "pos":
         return (
           <span className="inline-flex items-center gap-1 text-[11px] text-[#54433A]">
             <Receipt className="w-3.5 h-3.5 text-[#3D291F]" />
-            <span>POS / Secretariat</span>
+            <span>Cash / POS</span>
           </span>
         );
       default:
@@ -113,7 +113,7 @@ export function MyDuesRequestsCard({ requests = [] }: MyDuesRequestsCardProps) {
             className="text-base font-extrabold text-[#3D291F] tracking-tight"
             id="my-requests-heading"
           >
-            My Payment Submissions
+            My Submitted Payments
           </h2>
         </div>
         <span className="text-xs text-[#54433A]">
@@ -133,7 +133,7 @@ export function MyDuesRequestsCard({ requests = [] }: MyDuesRequestsCardProps) {
                   {formatCoveredMonthsDisplay(req.covered_months)}
                 </strong>
                 <span className="text-[#B8ACA0]">·</span>
-                {getMethodBadge(req.payment_method)}
+                {getMethodDisplay(req.payment_method)}
                 <span className="text-[#B8ACA0]">·</span>
                 <ReceiptCell
                   paymentMethod={req.payment_method}

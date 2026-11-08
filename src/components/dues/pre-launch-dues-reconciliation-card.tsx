@@ -318,13 +318,12 @@ export function PreLaunchDuesReconciliationCard({
             <Info className="w-4 h-4 text-[#174C37] shrink-0 mt-0.5" />
             <div className="space-y-0.5 leading-relaxed">
               <strong className="text-[#174C37] font-bold block">
-                Accounting Guard &amp; Zero Double-Counting
+                Historical Record Note
               </strong>
               <span>
-                Pre-launch cash collected was deposited before portal go-live
-                and is formally audited in the Treasury Opening Cash Reserve.
-                Reconciling months here discharges member statutory liability
-                without double-counting bank deposits.
+                Past payments recorded here clear member dues without adding new
+                bank deposits, since this cash was already recorded before the
+                site launched.
               </span>
             </div>
           </div>

@@ -1,5 +1,4 @@
 import {
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   FileCheck,
@@ -56,6 +55,7 @@ function historyPageHref(memberId: string, page: number) {
   const params = new URLSearchParams({
     member_id: memberId,
     payment_page: String(page),
+    tab: "history",
   });
   return `/dues?${params.toString()}`;
 }
@@ -93,10 +93,6 @@ export function DuesPaymentsHistoryCard({
             Confirmed dues payments and covered months
           </p>
         </div>
-
-        <span className="text-xs font-bold text-[#174C37] bg-white px-3 py-1 rounded-lg border border-[#E5DDD3] self-start sm:self-auto shadow-2xs">
-          {totalPaymentsCount} Total Receipts
-        </span>
       </div>
 
       {/* Payment Cards */}
@@ -105,11 +101,10 @@ export function DuesPaymentsHistoryCard({
           <div className="p-8 text-center space-y-2 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
             <FileCheck className="w-8 h-8 text-[#B8ACA0] mx-auto" />
             <h4 className="text-sm font-bold text-[#3D291F]">
-              No Payments Recorded
+              No payments recorded yet
             </h4>
             <p className="text-xs text-[#54433A]">
-              Payments confirmed by the treasury desk will appear here with
-              verified coverage records.
+              Payments recorded for your dues will show up here.
             </p>
           </div>
         ) : (
@@ -139,15 +134,10 @@ export function DuesPaymentsHistoryCard({
                           <span className="text-base font-black font-mono text-[#174C37] tabular-nums">
                             {formatNaira(payment.amount_ngn)}
                           </span>
-                          {payment.corrected_at ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#BA3C2A] bg-[#FDF2F2] px-2 py-0.5 rounded border border-[#F5C2C2]">
+                          {payment.corrected_at && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#BA3C2A] bg-[#FDF2F2] px-2 py-0.5 rounded">
                               <ShieldAlert className="w-3 h-3" />
                               <span>Corrected</span>
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#174C37] bg-[#EAF4ED] px-2 py-0.5 rounded border border-[#A8D5BC]">
-                              <CheckCircle2 className="w-3 h-3" />
-                              <span>Verified</span>
                             </span>
                           )}
                         </div>
@@ -174,7 +164,7 @@ export function DuesPaymentsHistoryCard({
                     {paymentMonths.length > 0 ? (
                       paymentMonths.map((month) => (
                         <span
-                          className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-white text-[#174C37] border border-[#E5DDD3] shadow-2xs"
+                          className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-white text-[#174C37] border border-[#E5DDD3]"
                           key={month}
                         >
                           {formatMonth(month)}
@@ -182,7 +172,7 @@ export function DuesPaymentsHistoryCard({
                       ))
                     ) : (
                       <span className="text-xs text-[#7A685D] italic">
-                        No current coverage assigned
+                        No coverage assigned
                       </span>
                     )}
                   </div>
@@ -199,47 +189,49 @@ export function DuesPaymentsHistoryCard({
                 </article>
               );
             })}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-3 border-t border-[#E5DDD3]">
+                <div className="text-xs text-[#54433A]">
+                  Page <strong>{paymentPage + 1}</strong> of{" "}
+                  <strong>{totalPages}</strong>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {paymentPage > 0 ? (
+                    <Link
+                      className="px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-white text-xs font-bold text-[#3D291F] hover:bg-[#FAF6F0] inline-flex items-center gap-1 shadow-2xs"
+                      href={historyPageHref(targetMemberId, paymentPage - 1)}
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span>Previous</span>
+                    </Link>
+                  ) : (
+                    <span className="px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-neutral-100 text-xs text-neutral-400 inline-flex items-center gap-1 cursor-not-allowed">
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span>Previous</span>
+                    </span>
+                  )}
+
+                  {paymentPage + 1 < totalPages ? (
+                    <Link
+                      className="px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-white text-xs font-bold text-[#3D291F] hover:bg-[#FAF6F0] inline-flex items-center gap-1 shadow-2xs"
+                      href={historyPageHref(targetMemberId, paymentPage + 1)}
+                    >
+                      <span>Next</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                  ) : (
+                    <span className="px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-neutral-100 text-xs text-neutral-400 inline-flex items-center gap-1 cursor-not-allowed">
+                      <span>Next</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-
-        {/* Pagination Controls */}
-        {totalPaymentsCount > pageSize && (
-          <nav
-            aria-label="Payment history pagination"
-            className="flex items-center justify-between pt-3 border-t border-[#E5DDD3] text-xs font-bold text-[#54433A]"
-          >
-            <div>
-              {paymentPage > 0 ? (
-                <Link
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-white text-[#174C37] hover:bg-[#FAF6F0] transition-colors"
-                  href={historyPageHref(targetMemberId, paymentPage - 1)}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span>Newer receipts</span>
-                </Link>
-              ) : (
-                <div />
-              )}
-            </div>
-
-            <span>
-              Page {paymentPage + 1} of {Math.max(1, totalPages)}
-            </span>
-
-            <div>
-              {(paymentPage + 1) * pageSize < totalPaymentsCount ? (
-                <Link
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-white text-[#174C37] hover:bg-[#FAF6F0] transition-colors"
-                  href={historyPageHref(targetMemberId, paymentPage + 1)}
-                >
-                  <span>Older receipts</span>
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
-              ) : (
-                <div />
-              )}
-            </div>
-          </nav>
         )}
       </div>
     </section>

@@ -101,9 +101,8 @@ export function OfficerDuesControlsCard({
             <div className="flex items-start gap-2.5 bg-[#FAF6F0] p-3 rounded-xl border border-[#E5DDD3] text-xs text-[#54433A]">
               <CheckCircle2 className="w-4 h-4 text-[#174C37] shrink-0 mt-0.5" />
               <p className="leading-relaxed">
-                Recording a dues payment creates an official receipt voucher,
-                updates eligible covered months, and logs an indelible audit
-                entry in the system ledger.
+                Recording a payment marks the selected months as paid and saves
+                a receipt.
               </p>
             </div>
 
@@ -120,8 +119,8 @@ export function OfficerDuesControlsCard({
             <div className="flex items-start gap-2.5 bg-[#FFF9F8] p-3 rounded-xl border border-[#F5C2C2] text-xs text-[#BA3C2A]">
               <AlertCircle className="w-4 h-4 text-[#BA3C2A] shrink-0 mt-0.5" />
               <p className="leading-relaxed">
-                Writing off dues is a final financial disposition. The write-off
-                reason is permanently recorded in the audit history.
+                Writing off dues marks the selected months as cleared without
+                payment. Please include a reason for the record.
               </p>
             </div>
 

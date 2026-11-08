@@ -3,7 +3,6 @@
 import {
   Building2,
   CheckCircle2,
-  Clock,
   CreditCard,
   Receipt,
   ShieldAlert,
@@ -129,33 +128,24 @@ export function OfficerDuesApprovalsCard({
             >
               Pending Dues Approvals
             </h2>
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-black ${
-                pendingRequests.length > 0
-                  ? "bg-[#D6A23A]/20 text-[#3D291F] border border-[#D6A23A]/40"
-                  : "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]"
-              }`}
-            >
-              {pendingRequests.length} Pending
-            </span>
+            {pendingRequests.length > 0 && (
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#D6A23A]/20 text-[#3D291F] border border-[#D6A23A]/40">
+                {pendingRequests.length} Pending
+              </span>
+            )}
           </div>
           <p className="text-xs text-[#54433A]">
-            Verify member payment receipts and approve dues payments.
+            Review payment receipts and confirm dues payments.
           </p>
-        </div>
-
-        <div className="flex items-center gap-2 text-xs text-[#54433A]">
-          <Clock className="w-4 h-4 text-[#174C37]" />
-          <span>Officer Verification</span>
         </div>
       </div>
 
       {pendingRequests.length === 0 ? (
         <EmptyStateCard
           className="my-2"
-          description="All member dues submissions have been verified and settled. When members submit payment references, they will appear here for verification."
+          description="All member payment submissions have been reviewed. New submissions will appear here."
           icon={CheckCircle2}
-          title="No Pending Dues Submissions"
+          title="No Pending Submissions"
         />
       ) : (
         <div className="space-y-4">

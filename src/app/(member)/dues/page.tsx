@@ -51,21 +51,19 @@ const uuidPattern =
 const HISTORY_PAGE_SIZE = 50;
 
 const notices: Record<string, string> = {
-  saved: "The dues operation was recorded.",
-  "rate-saved": "The next-month dues rate was saved.",
-  denied: "You do not have permission to perform that operation.",
-  "invalid-request": "The dues operation details were invalid.",
+  saved: "Payment recorded.",
+  "rate-saved": "Monthly rate updated.",
+  denied: "You do not have permission to do that.",
+  "invalid-request": "Please check the details and try again.",
   "operation-failed":
-    "The request was rejected. Check the member state, selected months, amount, rate, and reason, then try again.",
+    "Could not complete the request. Please check the details and try again.",
   "dues-request-submitted":
-    "Your dues payment submission has been received and queued for officer review.",
-  "dues-request-approved":
-    "The dues payment submission was verified and approved into the club ledger.",
-  "dues-request-rejected": "The dues payment submission was rejected.",
-  "historical-dues-reconciled":
-    "Historical pre-launch dues were successfully reconciled and marked cleared.",
+    "Payment submitted. An officer will review it soon.",
+  "dues-request-approved": "Payment approved.",
+  "dues-request-rejected": "Payment request declined.",
+  "historical-dues-reconciled": "Past dues cleared.",
   "invalid-reconciliation-months":
-    "Selected months are invalid or outside the pre-launch window (Feb-Sep 2026).",
+    "Selected months are outside the pre-launch period (Feb–Sep 2026).",
 };
 
 function todayInWAT() {
@@ -117,6 +115,7 @@ export default async function DuesPage({
     member_id?: string;
     payment_page?: string;
     audit_page?: string;
+    tab?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -520,6 +519,7 @@ export default async function DuesPage({
       currentMonth={currentMonth}
       detailedDataError={detailedDataError}
       duesRows={duesRows}
+      initialTab={params.tab}
       invalidSelection={invalidSelection}
       isAdmin={isAdmin}
       isDuesExempt={isDuesExempt}

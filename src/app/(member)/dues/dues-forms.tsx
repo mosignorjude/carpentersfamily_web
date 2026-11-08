@@ -197,7 +197,7 @@ export function DuesWriteOffForm({
   if (pastUnpaidMonths.length === 0) {
     return (
       <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#54433A]">
-        No past unpaid months are currently eligible for statutory write-off.
+        There are no past unpaid months to write off.
       </div>
     );
   }
@@ -209,7 +209,7 @@ export function DuesWriteOffForm({
       onSubmit={(event) => {
         if (
           !window.confirm(
-            `Write off the selected full dues months for ${memberName}? This is a final financial disposition.`,
+            `Write off the selected dues months for ${memberName}? This cannot be undone.`,
           )
         ) {
           event.preventDefault();
@@ -240,13 +240,13 @@ export function DuesWriteOffForm({
       </label>
 
       <label className="block text-xs font-bold text-[#54433A] space-y-1.5">
-        <span>Required Governance & Audit Reason</span>
+        <span>Reason for write-off</span>
         <input
           autoComplete="off"
           className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] focus:border-[#BA3C2A] focus:ring-1 focus:ring-[#BA3C2A] outline-hidden"
           maxLength={500}
           name="reason"
-          placeholder="State the executive resolution or justification..."
+          placeholder="Brief reason for clearing these dues..."
           required
         />
       </label>
@@ -358,13 +358,13 @@ export function DuesPaymentCorrectionForm({
         </div>
 
         <label className="block text-xs font-bold text-[#54433A] space-y-1">
-          <span>Required Correction Reason (Recorded in Audit Trail)</span>
+          <span>Reason for correction</span>
           <input
             autoComplete="off"
             className="w-full rounded-lg border border-[#E5DDD3] bg-white p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
             maxLength={500}
             name="reason"
-            placeholder="Explain why this receipt record is being corrected..."
+            placeholder="Brief explanation of this correction..."
             required
           />
         </label>
@@ -429,13 +429,13 @@ export function DuesRateForm({ nextMonth }: { nextMonth: string }) {
       </div>
 
       <label className="block text-xs font-bold text-[#54433A] space-y-1">
-        <span>Governance Resolution or Justification</span>
+        <span>Reason for rate change</span>
         <input
           autoComplete="off"
           className="w-full rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] p-2.5 text-xs text-[#3D291F] focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden"
           maxLength={500}
           name="reason"
-          placeholder="e.g. General Meeting Resolution GM-2026-03"
+          placeholder="e.g. Approved at the general meeting"
           required
         />
       </label>
