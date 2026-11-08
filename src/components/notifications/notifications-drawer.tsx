@@ -527,15 +527,15 @@ export function NotificationsDrawer({
         )}
 
         {/* Horizontal Scrollable Filter Pill Bar */}
-        <div className="flex items-center gap-1.5 px-4 py-2.5 overflow-x-auto border-b border-[#E5DDD3] bg-[#FAF6F0] shrink-0 no-scrollbar">
+        <div className="flex items-center gap-1.5 px-4 py-2 overflow-x-auto border-b border-[#E5DDD3] bg-[#FAF6F0] shrink-0 no-scrollbar">
           {FILTER_TABS.map((tab) => {
             const isActive = activeFilter === tab.id;
             const count = filterCounts[tab.id];
             return (
               <button
-                className={`px-3.5 py-2 min-h-[44px] rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 ${
+                className={`relative px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 before:absolute before:-inset-y-2 before:inset-x-0 ${
                   isActive
-                    ? "bg-[#174C37] text-white shadow-2xs"
+                    ? "bg-[#174C37] text-white border border-[#174C37] shadow-2xs"
                     : "bg-white/80 text-[#5C4638] hover:bg-white hover:text-[#3D291F] border border-[#E5DDD3]"
                 }`}
                 key={tab.id}
