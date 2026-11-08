@@ -13,238 +13,235 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
   "budget-saved": {
     type: "success",
     title: "Budget Saved",
-    message: "The event budget and allocations were saved.",
+    message: "Event budget and category allocations saved.",
   },
   "category-created": {
     type: "success",
-    title: "Category Created",
-    message: "The event finance category was created and logged.",
+    title: "Category Added",
+    message: "Event finance category added.",
   },
   "category-renamed": {
     type: "success",
     title: "Category Renamed",
-    message: "The event finance category was renamed and logged.",
+    message: "Finance category renamed.",
   },
   "category-retired": {
     type: "info",
     title: "Category Retired",
-    message: "The event finance category was retired and logged.",
+    message: "Finance category retired.",
   },
 
   // Event Financial Transactions & Ledger
   "transaction-recorded": {
     type: "success",
     title: "Transaction Recorded",
-    message: "The event financial transaction was recorded.",
+    message: "Event transaction recorded.",
   },
   "transaction-corrected": {
     type: "info",
-    title: "Transaction Corrected",
-    message: "The event financial transaction was corrected.",
+    title: "Transaction Updated",
+    message: "Event transaction updated.",
   },
   "transaction-voided": {
     type: "warning",
     title: "Transaction Voided",
-    message: "The event financial transaction was voided and retained.",
+    message: "Event transaction voided.",
   },
   saved: {
     type: "success",
     title: "Saved",
-    message: "Record saved to the club ledger.",
+    message: "Record saved.",
   },
   corrected: {
     type: "info",
-    title: "Record Corrected",
-    message: "The record was corrected and prior values were audited.",
+    title: "Record Updated",
+    message: "Record updated.",
   },
   voided: {
     type: "warning",
     title: "Record Voided",
-    message: "The record was voided and retained in the history.",
+    message: "Record voided.",
   },
 
   // Ticketing & Sales
   "tier-saved": {
     type: "success",
     title: "Ticket Tier Saved",
-    message: "The ticket tier was saved.",
+    message: "Ticket tier saved.",
   },
   "tier-retired": {
     type: "info",
     title: "Ticket Tier Retired",
-    message: "The ticket tier was retired.",
+    message: "Ticket tier retired.",
   },
   "ticket-recorded": {
     type: "success",
     title: "Ticket Sale Recorded",
-    message: "The ticket sale was recorded.",
+    message: "Ticket sale recorded.",
   },
   "ticket-refunded": {
     type: "warning",
     title: "Ticket Refunded",
-    message: "The ticket sale was marked refunded.",
+    message: "Ticket sale refunded.",
   },
   "sale-saved": {
     type: "success",
-    title: "Ticket Sale Recorded",
-    message: "The ticket sale was recorded.",
+    title: "Ticket Order Saved",
+    message: "Ticket order recorded.",
   },
   "sale-edited": {
     type: "info",
-    title: "Ticket Sale Updated",
-    message: "The ticket sale was updated.",
+    title: "Ticket Order Updated",
+    message: "Ticket order updated.",
   },
   refunded: {
     type: "warning",
-    title: "Ticket Refunded",
-    message: "The ticket sale was marked refunded.",
+    title: "Refund Recorded",
+    message: "Refund recorded.",
   },
 
   // Event Lifecycle
   created: {
     type: "success",
     title: "Event Created",
-    message: "The event was created.",
+    message: "Event created successfully.",
   },
   updated: {
     type: "success",
     title: "Event Updated",
-    message: "The event details were updated.",
+    message: "Event details updated.",
   },
   completed: {
     type: "success",
     title: "Event Completed",
-    message: "The event was marked completed.",
+    message: "Event marked as completed.",
   },
   cancelled: {
     type: "warning",
     title: "Event Cancelled",
-    message: "The event was cancelled.",
+    message: "Event cancelled.",
   },
   reopened: {
     type: "info",
     title: "Event Reopened",
-    message: "The event was reopened.",
+    message: "Event reopened for active planning.",
   },
   archived: {
     type: "info",
     title: "Event Archived",
-    message: "The event was moved to retained archive.",
+    message: "Event archived.",
   },
 
   // Club Finances & Receipts
   "category-saved": {
     type: "success",
     title: "Category Added",
-    message: "The category was added.",
+    message: "Financial category added.",
   },
   "receipt-uploaded": {
     type: "success",
     title: "Receipt Attached",
-    message: "The receipt was securely attached to the financial record.",
+    message: "Receipt attached to the financial record.",
   },
   "receipt-duplicate": {
     type: "error",
     title: "Duplicate Receipt",
-    message: "That receipt is already attached to this financial record.",
+    message: "This receipt is already attached to this record.",
   },
   "receipt-invalid": {
     type: "error",
-    title: "Invalid Receipt",
-    message: "Choose a valid PDF, JPEG, or PNG receipt under 4 MiB.",
+    title: "Invalid Receipt File",
+    message: "Please choose a PDF, JPEG, or PNG under 4 MB.",
   },
   "receipt-too-large": {
     type: "error",
-    title: "Receipt Too Large",
-    message: "The receipt upload is too large.",
+    title: "File Too Large",
+    message: "Receipt must be under 4 MB.",
   },
   "receipt-failed": {
     type: "error",
     title: "Upload Failed",
-    message: "The receipt could not be attached. Try again later.",
+    message: "Could not attach receipt. Please try again.",
   },
   "receipt-unavailable": {
     type: "error",
     title: "Storage Unavailable",
-    message: "Receipt storage is not configured or is temporarily unavailable.",
+    message:
+      "Receipt storage is temporarily unavailable. Please try again shortly.",
   },
   "receipt-required": {
     type: "error",
-    title: "Receipt Needed",
-    message: "Attach the proof of transfer before submitting this order.",
+    title: "Receipt Required",
+    message: "Please attach your proof of transfer before submitting.",
   },
   "receipt-upload-failed": {
     type: "error",
     title: "Upload Failed",
-    message:
-      "The proof of transfer could not be saved. Check the file and try again.",
+    message: "Could not save proof of transfer. Check the file and try again.",
   },
   "receipt-storage-unavailable": {
     type: "error",
     title: "Storage Unavailable",
-    message:
-      "Receipt storage is not configured or is temporarily unavailable. Try again later.",
+    message: "Receipt storage is temporarily unavailable. Try again later.",
   },
 
   // Dues Treasury
   "rate-saved": {
     type: "success",
-    title: "Rate Saved",
-    message: "The next-month dues rate was saved.",
+    title: "Dues Rate Saved",
+    message: "Monthly dues rate saved for next month.",
   },
   "dues-request-submitted": {
     type: "success",
     title: "Dues Submitted",
-    message:
-      "Your dues payment submission has been received and queued for officer review.",
+    message: "Dues payment submitted for officer review.",
   },
   "dues-request-approved": {
     type: "success",
     title: "Dues Approved",
-    message:
-      "The dues payment submission was verified and approved into the club ledger.",
+    message: "Dues payment approved.",
   },
   "dues-request-rejected": {
     type: "error",
-    title: "Dues Rejected",
-    message: "The dues payment submission was rejected.",
+    title: "Payment Needs Attention",
+    message:
+      "Dues payment could not be verified. Please review or contact an officer.",
   },
   "payment-settings-saved": {
     code: "payment-settings-saved",
     type: "success",
     variant: "success",
-    title: "Payment Settings Saved",
-    message: "Club bank payment settings updated successfully.",
+    title: "Bank Details Saved",
+    message: "Club bank details and payment instructions updated.",
   },
   "invalid-payment-settings": {
     code: "invalid-payment-settings",
     type: "error",
     variant: "error",
-    title: "Invalid Payment Settings",
-    message:
-      "Invalid club bank details provided. Verify bank name, 10-digit NUBAN, and account name.",
+    title: "Invalid Bank Details",
+    message: "Please verify bank name, 10-digit NUBAN, and account name.",
   },
   "opening-balance-recorded": {
     code: "opening-balance-recorded",
     type: "success",
     variant: "success",
     title: "Opening Balance Recorded",
-    message: "Verified opening treasury reserve balance recorded successfully.",
+    message: "Opening treasury balance recorded.",
   },
   "historical-dues-reconciled": {
     code: "historical-dues-reconciled",
     type: "success",
     variant: "success",
-    title: "Historical Dues Reconciled",
-    message: "Historical member dues reconciled and cleared.",
+    title: "Dues Reconciled",
+    message: "Historical member dues reconciled.",
   },
   "invalid-reconciliation-months": {
     code: "invalid-reconciliation-months",
     type: "error",
     variant: "error",
-    title: "Invalid Reconciliation Months",
+    title: "Invalid Months Selected",
     message:
-      "Invalid reconciliation months provided. Only Feb–Sep 2026 are permitted.",
+      "Select at least one valid month between January and the current period.",
   },
 
   // Secretariat Attendance & Minutes
@@ -256,297 +253,283 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
   "attendance-opened": {
     type: "success",
     title: "Check-in Open",
-    message: "Attendance check-in is now open.",
+    message: "Member check-in is now open.",
   },
   "attendance-closed": {
     type: "info",
     title: "Check-in Closed",
-    message: "Attendance is closed and missing members were marked absent.",
+    message: "Member check-in has ended.",
   },
   "attendance-corrected": {
     type: "info",
-    title: "Attendance Corrected",
-    message: "The attendance record was corrected and audited.",
+    title: "Attendance Updated",
+    message: "Attendance record updated.",
   },
   "checked-in": {
     type: "success",
-    title: "Checked In",
-    message: "Your attendance was recorded.",
+    title: "Checked In!",
+    message: "You're checked in for this meeting.",
   },
   "cutoff-saved": {
     type: "success",
-    title: "Cutoff Saved",
-    message: "The club-wide late cutoff was updated.",
+    title: "Check-in Window Set",
+    message: "Automatic check-in window saved.",
   },
 
   // Communications & Polls
   "announcement-created": {
     type: "success",
     title: "Announcement Published",
-    message: "The announcement is now visible to active members.",
+    message: "Announcement is now live for all members.",
   },
   "announcement-updated": {
     type: "success",
     title: "Announcement Updated",
-    message: "The announcement edit and its reason were saved.",
+    message: "Announcement updated.",
   },
   "announcement-read": {
     type: "info",
     title: "Marked as Read",
-    message: "The announcement was marked as read.",
+    message: "Announcement marked as read.",
   },
   "poll-created": {
     type: "success",
     title: "Poll Created",
-    message: "The poll is open for voting.",
+    message: "Poll is now open for voting.",
   },
   "poll-updated": {
     type: "info",
     title: "Poll Updated",
-    message: "The poll edit and its reason were saved.",
+    message: "Poll details updated.",
   },
   voted: {
     type: "success",
     title: "Vote Recorded",
-    message: "Your final vote was recorded.",
+    message: "Thanks for voting! Your vote has been counted.",
   },
   read: {
     type: "info",
     title: "Notification Read",
-    message: "Your private read marker was saved.",
+    message: "Notification marked as read.",
   },
   unread: {
     type: "info",
     title: "Notification Unread",
-    message: "The notification was marked unread.",
+    message: "Notification marked as unread.",
   },
   "preference-saved": {
     type: "success",
     title: "Preferences Saved",
-    message: "Your notification preferences were saved.",
+    message: "Notification settings updated.",
   },
 
   // Member Administration
   "member-approved": {
     type: "success",
     title: "Member Approved",
-    message:
-      "The membership request was approved and member access is now enabled.",
+    message: "Membership approved and invitation sent.",
   },
   "member-rejected": {
     type: "info",
-    title: "Request Declined",
-    message: "The membership request was declined and the decision was logged.",
+    title: "Application Declined",
+    message: "Membership application declined.",
   },
   "member-deactivated": {
     type: "warning",
     title: "Member Deactivated",
-    message: "The member's access was deactivated. Their history is retained.",
+    message: "Member account deactivated.",
   },
   "member-reactivated": {
     type: "success",
     title: "Member Reactivated",
-    message: "The member's access was restored.",
+    message: "Member access restored.",
   },
   "email-confirmation-required": {
     type: "error",
-    title: "Email Not Confirmed",
-    message:
-      "Approval is blocked until the applicant confirms their email address. Ask them to open the confirmation link we sent, then approve again.",
+    title: "Email Confirmation Needed",
+    message: "Email confirmation is required before approval.",
   },
   "profile-incomplete": {
     type: "error",
     title: "Profile Incomplete",
-    message:
-      "Approval is blocked until the applicant completes their profile details, then the approval can be recorded.",
+    message: "Please complete your profile to continue.",
   },
   "confirmation-resent": {
     type: "success",
-    title: "Confirmation Email Queued",
-    message:
-      "A fresh confirmation link was queued for the applicant and the resend is recorded in the audit history.",
+    title: "Confirmation Sent",
+    message: "A new confirmation link was sent to your email.",
   },
   "already-confirmed": {
     type: "info",
-    title: "Email Already Confirmed",
-    message: "This applicant has already confirmed their email address.",
+    title: "Already Confirmed",
+    message: "This email address is already verified.",
   },
   "not-pending": {
     type: "info",
-    title: "Applicant Is Not Pending",
-    message: "Only a pending applicant can be sent a confirmation email.",
+    title: "Already Processed",
+    message: "This account is not pending confirmation.",
   },
   "resend-cooldown": {
     type: "warning",
-    title: "Confirmation Email Already Sent",
+    title: "Please Wait a Moment",
     message:
-      "A confirmation email was sent to this applicant less than 15 minutes ago. Try again later.",
+      "A confirmation email was sent recently. Please wait a minute before requesting another.",
   },
   "confirmation-send-failed": {
     type: "error",
-    title: "Confirmation Email Not Sent",
+    title: "Email Not Sent",
     message:
-      "The confirmation link could not be generated. No email was sent. Try again or contact the platform administrator.",
+      "Could not send confirmation email. Please check the address and try again.",
   },
   "role-updated": {
     type: "success",
-    title: "Club Role Updated",
-    message: "The club role change was saved and logged.",
+    title: "Role Updated",
+    message: "Member club role updated.",
   },
   "event-role-assigned": {
     type: "success",
     title: "Event Role Assigned",
-    message: "The event role was assigned and logged.",
+    message: "Member assigned to the event team.",
   },
   "event-role-revoked": {
     type: "info",
-    title: "Event Role Revoked",
-    message: "The event role was revoked and logged.",
+    title: "Event Role Removed",
+    message: "Member removed from the event team.",
   },
   "self-action-denied": {
     type: "error",
-    title: "Not Allowed on Your Own Account",
-    message:
-      "For accountability, another authorized officer must perform this action on your account.",
+    title: "Action Not Allowed",
+    message: "You cannot change your own administrative role.",
   },
 
   // Common Rejections & Errors
   "already-checked-in": {
     type: "info",
     title: "Already Checked In",
-    message: "Your attendance for this event was already recorded.",
+    message: "You have already checked in for this meeting.",
   },
   "event-read-only": {
     type: "error",
-    title: "Event Is Read-Only",
-    message:
-      "Archived events and their records are retained as read-only history.",
+    title: "Event Is View-Only",
+    message: "Archived events cannot be modified.",
   },
   "closed-or-locked": {
     type: "error",
-    title: "No Longer Open",
-    message:
-      "This session or poll is closed or locked, so it can no longer be changed.",
+    title: "Event Locked",
+    message: "This event is closed and can no longer be modified.",
   },
   "budget-exceeded": {
     type: "error",
-    title: "Budget Limit Reached",
+    title: "Budget Exceeded",
     message:
-      "The amounts don't fit the event budget. Check that allocations add up to the budget total and stay within limits.",
+      "Allocations exceed the event budget total. Please adjust category amounts.",
   },
   "budget-required": {
     type: "error",
     title: "Budget Required",
-    message: "Set the event budget total before adding allocation categories.",
+    message: "Set the event budget total before assigning category amounts.",
   },
   "already-processed": {
     type: "info",
     title: "Already Processed",
-    message:
-      "This item was already reviewed or refunded. Refresh to see its current status.",
+    message: "This item has already been reviewed or refunded.",
   },
   "duplicate-record": {
     type: "error",
     title: "Already Exists",
     message:
-      "A matching record already exists. Use a different name or review the existing entry.",
+      "A record with this name already exists. Please choose a different name.",
   },
   "invalid-state": {
     type: "error",
-    title: "Not Available Right Now",
-    message:
-      "This action isn't allowed for the record's current status (for example, a completed or cancelled event).",
+    title: "Not Available",
+    message: "This action is not available for the event's current status.",
   },
   "revoke-club-admin-first": {
     type: "error",
-    title: "Revoke Club Admin First",
+    title: "Remove Admin Role First",
     message:
-      "This member still holds the Club Admin role. Revoke it on the Governance page before deactivating the account, then try again.",
+      "Revoke the Club Admin role on Governance before deactivating this account.",
   },
 
   // Public box office (guest ticket till)
   "pending-review-blocks-close": {
     type: "error",
-    title: "Review Still Open",
+    title: "Pending Orders Remain",
     message:
-      "Tickets and transactions still await review. Approve, reject or cancel them before closing this event.",
+      "Review, reject, or cancel all pending ticket orders before closing this event.",
   },
   "ticket-order-limit-reached": {
     type: "error",
-    title: "Too Many Pending Orders",
-    message:
-      "This email address already has several ticket orders awaiting confirmation. Try again after an officer reviews them, or contact the club.",
+    title: "Order Limit Reached",
+    message: "You already have pending ticket orders awaiting review.",
   },
   "box-office-closed": {
     type: "error",
-    title: "Box Office Closed",
-    message: "This event is no longer accepting ticket orders.",
+    title: "Ticket Sales Closed",
+    message: "Ticket sales have ended for this event.",
   },
   "box-office-at-capacity": {
     type: "error",
-    title: "Box Office Busy",
+    title: "Ticket Desk Busy",
     message:
-      "Too many orders for this event are awaiting review. Please try again shortly.",
+      "Too many orders are currently awaiting review. Please try again shortly.",
   },
   "lookup-unavailable": {
     type: "error",
-    title: "Order Lookup Unavailable",
-    message:
-      "We could not check that order just now. Please try again shortly.",
+    title: "Lookup Unavailable",
+    message: "Could not check that order right now. Please try again shortly.",
   },
   denied: {
     type: "error",
     title: "Access Denied",
-    message: "You are not authorized to perform that action.",
+    message: "You do not have permission to perform this action.",
   },
   "invalid-request": {
     type: "error",
-    title: "Invalid Request",
-    message: "Check the submitted fields and try again.",
+    title: "Check Required Fields",
+    message: "Please check the submitted fields and try again.",
   },
   "operation-failed": {
     type: "error",
-    title: "Action Failed",
-    message:
-      "The requested change could not be saved. Check input requirements and permissions.",
+    title: "Something Went Wrong",
+    message: "Could not save your changes. Please try again.",
   },
   configuration: {
     type: "error",
-    title: "Configuration Error",
-    message: "Authentication or storage is not configured in this environment.",
+    title: "System Notice",
+    message: "This service is temporarily unavailable. Please try again later.",
   },
   "sign-in": {
     type: "warning",
     title: "Sign In Required",
-    message: "Please sign in with your verified member credentials.",
+    message: "Please sign in to access this page.",
   },
   "auth-failed": {
     type: "error",
-    title: "Authentication Failed",
-    message: "Sign in could not be completed. Check your credentials.",
+    title: "Sign-In Failed",
+    message: "Incorrect email or password. Please try again.",
   },
   "profile-settings-updated": {
     type: "success",
-    title: "Profile Settings Saved",
-    message: "Your username and profile picture have been updated.",
+    title: "Profile Saved",
+    message: "Profile details updated.",
   },
   "email-update-requested": {
     type: "info",
-    title: "Confirmation Email Sent",
+    title: "Check Your Inbox",
     message:
-      "Check your inbox to confirm and complete your email address change.",
+      "A confirmation link was sent to your new email. Click it to complete the update.",
   },
   "password-change-failed": {
     type: "error",
-    title: "Password Update Failed",
-    message:
-      "Enter a valid password (12 to 128 characters) and ensure both fields match.",
+    title: "Password Error",
+    message: "Passwords must be at least 12 characters and match each other.",
   },
   "username-taken": {
     type: "error",
-    title: "Username Unavailable",
-    message:
-      "That username is already in use by another member. Choose a different handle.",
+    title: "Username Taken",
+    message: "That username is already taken. Please choose another.",
   },
   // /settings renders no notice of its own, so these codes only reach the
   // member through the toast. The wording matches the sign-in screen, which
@@ -558,13 +541,13 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
   },
   "invalid-profile": {
     type: "error",
-    title: "Profile Details Invalid",
+    title: "Check Profile Details",
     message:
       "Use a name of at most 120 characters and a username of 3–30 letters, numbers, or underscores.",
   },
   "profile-update-failed": {
     type: "error",
-    title: "Profile Update Failed",
+    title: "Could Not Update Profile",
     message:
       "The profile could not be saved. The username may already be in use.",
   },
@@ -572,20 +555,20 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
   // Public Intake & Member Invites
   "membership-request-submitted": {
     type: "success",
-    title: "Application Received",
+    title: "Application Received!",
     message:
-      "Your membership application has been received and is currently under review by the Executive Committee.",
+      "Thank you for applying! Club officers will review your application shortly.",
   },
   "partnership-enquiry-submitted": {
     type: "success",
-    title: "Enquiry Received",
+    title: "Enquiry Received!",
     message:
-      "Thank you for reaching out. A club representative will review your proposal and respond promptly.",
+      "Thanks for reaching out! A club officer will get in touch with you shortly.",
   },
   "request-already-pending": {
     type: "error",
-    title: "Application Pending",
-    message: "A membership request with this email is already awaiting review.",
+    title: "Application Already Submitted",
+    message: "An application with this email is already awaiting review.",
   },
   "invite-invalid": {
     type: "error",
@@ -600,24 +583,23 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
   },
   "invalid-intake": {
     type: "error",
-    title: "Invalid Submission",
-    message: "Please fill in all required fields accurately before submitting.",
+    title: "Incomplete Details",
+    message: "Please fill in all required fields before submitting.",
   },
   "membership-approved": {
     type: "success",
     title: "Application Approved",
-    message:
-      "The membership application was approved and an invitation was issued.",
+    message: "Membership application approved and invitation sent.",
   },
   "membership-rejected": {
     type: "success",
-    title: "Application Rejected",
-    message: "The membership application was rejected.",
+    title: "Application Declined",
+    message: "Membership application declined.",
   },
   "enquiry-updated": {
     type: "success",
     title: "Enquiry Updated",
-    message: "The partnership enquiry status was updated.",
+    message: "Partnership enquiry status updated.",
   },
 };
 
