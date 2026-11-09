@@ -173,7 +173,7 @@ export default async function MeetingHubPage({
 
   // 7. Fetch audit logs if officer
   let audits: AuditRow[] = [];
-  if (isOfficer) {
+  if (isOfficer && selectedEvent) {
     const { data: auditData } = await supabase
       .from("audit_log")
       .select(
