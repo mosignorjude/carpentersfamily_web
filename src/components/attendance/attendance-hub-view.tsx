@@ -248,13 +248,8 @@ export function AttendanceHubView({
               <span className="text-sm font-extrabold text-[#3D291F] truncate">
                 {meeting.title}
               </span>
-              {isSelected && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#174C37] text-white">
-                  Active Context
-                </span>
-              )}
               <span
-                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border capitalize ${
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border capitalize ${
                   isArchived
                     ? "text-[#7A685D] bg-white border-[#E5DDD3]"
                     : isCancelled
@@ -302,7 +297,7 @@ export function AttendanceHubView({
                 onClick={() => handleEventChange(meeting.id)}
                 type="button"
               >
-                View Records
+                Select Meeting
               </button>
             )}
 
@@ -365,356 +360,224 @@ export function AttendanceHubView({
           )}
         </div>
 
-        {/* 3 Collapsible Meeting Sections */}
-        <div className="space-y-4">
-          {/* SECTION 1: Upcoming Meetings (Open by default) */}
-          <div className="bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-hidden">
-            <button
-              aria-controls="upcoming-meetings-panel"
-              aria-expanded={upcomingOpen}
-              className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-[#F5EFE6] transition-colors cursor-pointer"
-              onClick={() => setUpcomingOpen((prev) => !prev)}
-              type="button"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#174C37]/10 flex items-center justify-center shrink-0">
-                  <Calendar className="w-4 h-4 text-[#174C37]" />
+        {/* Selected Event Spotlight */}
+        {selectedEvent ? (
+          <div className="space-y-5">
+            {/* Spotlight Banner Card */}
+            <div className="p-4 sm:p-6 rounded-2xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-extrabold text-[#174C37] uppercase tracking-wider">
+                    Active Meeting
+                  </span>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border capitalize ${
+                      selectedEvent.archived_at
+                        ? "text-[#7A685D] bg-white border-[#E5DDD3]"
+                        : selectedEvent.status === "scheduled"
+                          ? "text-[#174C37] bg-[#174C37]/10 border-[#174C37]/30"
+                          : selectedEvent.status === "cancelled"
+                            ? "text-[#BA3C2A] bg-[#BA3C2A]/10 border-[#BA3C2A]/30"
+                            : "text-[#5C4638] bg-white border-[#E5DDD3]"
+                    }`}
+                  >
+                    {selectedEvent.archived_at
+                      ? "Archived"
+                      : selectedEvent.status}
+                  </span>
                 </div>
-                <div>
+
+                {/* Meeting Quick Switcher */}
+                {events.length > 1 && (
                   <div className="flex items-center gap-2">
-                    <h2 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
-                      Upcoming Meetings
-                    </h2>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-[#174C37]/15 text-[#174C37]">
-                      {upcomingMeetings.length}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-[#7A685D] mt-0.5">
-                    Scheduled general and executive meetings
-                  </p>
-                </div>
-              </div>
-              <div className="p-1 rounded-lg text-[#7A685D]">
-                {upcomingOpen ? (
-                  <ChevronUp className="w-5 h-5 text-[#174C37]" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-[#7A685D]" />
-                )}
-              </div>
-            </button>
-
-            {upcomingOpen && (
-              <div
-                className="p-4 sm:p-5 pt-0 border-t border-[#E5DDD3] space-y-3"
-                id="upcoming-meetings-panel"
-              >
-                {upcomingMeetings.length > 0 ? (
-                  upcomingMeetings.map((evt) => renderMeetingCard(evt))
-                ) : (
-                  <div className="p-5 text-center space-y-1 bg-white rounded-xl border border-[#E5DDD3]">
-                    <p className="text-xs font-bold text-[#3D291F]">
-                      No upcoming meetings currently scheduled
-                    </p>
-                    <p className="text-[11px] text-[#7A685D]">
-                      Use the New Meeting button to schedule a General House
-                      meeting.
-                    </p>
+                    <label
+                      className="text-xs font-medium text-[#7A685D] hidden sm:inline"
+                      htmlFor="meeting-selector-input"
+                    >
+                      Switch:
+                    </label>
+                    <select
+                      aria-label="Switch active meeting"
+                      className="h-9 pl-3 pr-8 bg-white border border-[#E5DDD3] rounded-lg text-xs font-bold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] cursor-pointer max-w-full sm:max-w-xs truncate"
+                      id="meeting-selector-input"
+                      onChange={(e) => handleEventChange(e.target.value)}
+                      value={selectedEvent.id}
+                    >
+                      {events.map((evt) => (
+                        <option key={evt.id} value={evt.id}>
+                          {evt.title} (
+                          {new Date(evt.starts_at).toLocaleDateString("en-GB", {
+                            month: "short",
+                            day: "numeric",
+                            timeZone: "Africa/Lagos",
+                          })}
+                          )
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
               </div>
-            )}
-          </div>
 
-          {/* SECTION 2: Past Meetings (Collapsed by default) */}
-          <div className="bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-hidden">
-            <button
-              aria-controls="past-meetings-panel"
-              aria-expanded={pastOpen}
-              className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-[#F5EFE6] transition-colors cursor-pointer"
-              onClick={() => setPastOpen((prev) => !prev)}
-              type="button"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white border border-[#E5DDD3] flex items-center justify-center shrink-0">
-                  <History className="w-4 h-4 text-[#7A685D]" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
-                      Past Meetings
-                    </h2>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-white border border-[#E5DDD3] text-[#5C4638]">
-                      {pastMeetings.length}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-[#7A685D] mt-0.5">
-                    Past meetings, attendance, and minutes
-                  </p>
-                </div>
-              </div>
-              <div className="p-1 rounded-lg text-[#7A685D]">
-                {pastOpen ? (
-                  <ChevronUp className="w-5 h-5 text-[#174C37]" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-[#7A685D]" />
-                )}
-              </div>
-            </button>
-
-            {pastOpen && (
-              <div
-                className="p-4 sm:p-5 pt-0 border-t border-[#E5DDD3] space-y-3"
-                id="past-meetings-panel"
-              >
-                {pastMeetings.length > 0 ? (
-                  pastMeetings.map((evt) => renderMeetingCard(evt))
-                ) : (
-                  <div className="p-5 text-center space-y-1 bg-white rounded-xl border border-[#E5DDD3]">
-                    <p className="text-xs font-bold text-[#3D291F]">
-                      No past meetings on record
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* SECTION 3: Cancelled / Archived Meetings (Collapsed by default) */}
-          <div className="bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-hidden">
-            <button
-              aria-controls="archived-meetings-panel"
-              aria-expanded={archivedOpen}
-              className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-[#F5EFE6] transition-colors cursor-pointer"
-              onClick={() => setArchivedOpen((prev) => !prev)}
-              type="button"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white border border-[#E5DDD3] flex items-center justify-center shrink-0">
-                  <Shield className="w-4 h-4 text-[#7A685D]" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
-                      Cancelled / Archived Meetings
-                    </h2>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-white border border-[#E5DDD3] text-[#7A685D]">
-                      {cancelledOrArchivedMeetings.length}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-[#7A685D] mt-0.5">
-                    Cancelled and archived meetings
-                  </p>
-                </div>
-              </div>
-              <div className="p-1 rounded-lg text-[#7A685D]">
-                {archivedOpen ? (
-                  <ChevronUp className="w-5 h-5 text-[#174C37]" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-[#7A685D]" />
-                )}
-              </div>
-            </button>
-
-            {archivedOpen && (
-              <div
-                className="p-4 sm:p-5 pt-0 border-t border-[#E5DDD3] space-y-3"
-                id="archived-meetings-panel"
-              >
-                {cancelledOrArchivedMeetings.length > 0 ? (
-                  cancelledOrArchivedMeetings.map((evt) =>
-                    renderMeetingCard(evt),
-                  )
-                ) : (
-                  <div className="p-5 text-center space-y-1 bg-white rounded-xl border border-[#E5DDD3]">
-                    <p className="text-xs font-bold text-[#3D291F]">
-                      No cancelled or archived meetings
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Selected Event Details Banner */}
-        {selectedEvent && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <span className="text-xs font-extrabold text-[#174C37]">
-                  Active Meeting:
-                </span>
-                <span className="text-xs sm:text-sm font-bold text-[#3D291F] truncate max-w-[220px] sm:max-w-none">
+              <div>
+                <h2 className="text-lg sm:text-2xl font-extrabold text-[#3D291F] tracking-tight">
                   {selectedEvent.title}
-                </span>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border capitalize ${
-                    selectedEvent.archived_at
-                      ? "text-[#7A685D] bg-white border-[#E5DDD3]"
-                      : selectedEvent.status === "scheduled"
-                        ? "text-[#174C37] bg-[#174C37]/10 border-[#174C37]/30"
-                        : "text-[#5C4638] bg-white border-[#E5DDD3]"
-                  }`}
-                >
-                  {selectedEvent.status}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-[#6B5D53]">
-                <Calendar className="w-3.5 h-3.5 text-[#174C37]" />
-                <span>
-                  {formatEventDateSpan(
-                    selectedEvent.starts_at,
-                    selectedEvent.duration_days,
+                </h2>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#6B5D53] mt-2">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-[#174C37] shrink-0" />
+                    <span>
+                      {formatEventDateSpan(
+                        selectedEvent.starts_at,
+                        selectedEvent.duration_days,
+                      )}
+                      , {formatEventTime(selectedEvent.starts_at)} WAT
+                    </span>
+                  </div>
+                  {selectedEvent.location && (
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="w-4 h-4 text-[#7A685D] shrink-0" />
+                      <span className="truncate max-w-md">
+                        {selectedEvent.location}
+                      </span>
+                    </div>
                   )}
-                  , {formatEventTime(selectedEvent.starts_at)} WAT
-                </span>
+                </div>
+              </div>
+
+              {/* KPI Strip: 2x2 matrix on mobile, 4-col on desktop */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 pt-1">
+                {/* 1. Live Check-In */}
+                <div className="p-3 sm:p-3.5 rounded-xl bg-white border border-[#E5DDD3] space-y-1">
+                  <div className="flex items-center justify-between text-xs text-[#6B5D53]">
+                    <span className="font-bold">Live Check-In</span>
+                    <Clock className="w-3.5 h-3.5 text-[#174C37]" />
+                  </div>
+                  <div className="text-sm sm:text-base font-extrabold text-[#3D291F]">
+                    {sessionOpen ? "Session Open" : "Session Inactive"}
+                  </div>
+                  <p className="text-[11px] text-[#6B5D53] truncate">
+                    {sessionOpen
+                      ? `Cutoff: ${session?.late_after_minutes}m`
+                      : "Awaiting activation"}
+                  </p>
+                </div>
+
+                {/* 2. My Standing */}
+                <div className="p-3 sm:p-3.5 rounded-xl bg-white border border-[#E5DDD3] space-y-1">
+                  <div className="flex items-center justify-between text-xs text-[#6B5D53]">
+                    <span className="font-bold">My Standing</span>
+                    <UserCheck className="w-3.5 h-3.5 text-[#D6A23A]" />
+                  </div>
+                  <div className="text-sm sm:text-base font-extrabold text-[#174C37] font-mono tabular-nums">
+                    {attendanceRate}%
+                  </div>
+                  <p className="text-[11px] text-[#6B5D53] truncate">
+                    {attendedCount} of {totalTrackedMeetings} attended
+                  </p>
+                </div>
+
+                {/* 3. Meeting Roll Call */}
+                <div className="p-3 sm:p-3.5 rounded-xl bg-white border border-[#E5DDD3] space-y-1">
+                  <div className="flex items-center justify-between text-xs text-[#6B5D53]">
+                    <span className="font-bold">Attendance</span>
+                    <Users className="w-3.5 h-3.5 text-[#174C37]" />
+                  </div>
+                  <div className="text-sm sm:text-base font-extrabold text-[#3D291F]">
+                    <span className="font-mono tabular-nums">
+                      {attendance.length}
+                    </span>{" "}
+                    Total
+                  </div>
+                  <p className="text-[11px] text-[#6B5D53] truncate">
+                    {presentCount} Present · {lateCount} Late
+                  </p>
+                </div>
+
+                {/* 4. Minutes */}
+                <div className="p-3 sm:p-3.5 rounded-xl bg-white border border-[#E5DDD3] space-y-1">
+                  <div className="flex items-center justify-between text-xs text-[#6B5D53]">
+                    <span className="font-bold">Minutes</span>
+                    <FileText className="w-3.5 h-3.5 text-[#174C37]" />
+                  </div>
+                  <div className="text-sm sm:text-base font-extrabold text-[#3D291F]">
+                    {minutes ? `Rev. ${minutes.revision_number}` : "Pending"}
+                  </div>
+                  <p className="text-[11px] text-[#6B5D53] truncate">
+                    {minutes ? "Published" : "Not published yet"}
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <select
-                aria-label="Switch active meeting"
-                className="h-9 pl-3 pr-8 bg-white border border-[#E5DDD3] rounded-lg text-xs font-bold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37] cursor-pointer"
-                id="meeting-selector-input"
-                onChange={(e) => handleEventChange(e.target.value)}
-                value={selectedEvent.id}
-              >
-                {events.map((evt) => (
-                  <option key={evt.id} value={evt.id}>
-                    {evt.title} (
-                    {new Date(evt.starts_at).toLocaleDateString("en-GB", {
-                      month: "short",
-                      day: "numeric",
-                      timeZone: "Africa/Lagos",
-                    })}
-                    )
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
-
-        {/* KPI Cards: 2x2 matrix on mobile, 4-col on desktop */}
-        {selectedEvent && (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-            {/* Card 1: Live Session Status */}
-            <div className="p-3 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
-              <div className="flex items-center justify-between text-xs text-[#6B5D53]">
-                <span className="font-bold">Live Check-In</span>
-                <Clock className="w-4 h-4 text-[#174C37]" />
-              </div>
-              <div className="text-base sm:text-xl font-extrabold text-[#3D291F]">
-                {sessionOpen ? "Session Open" : "Session Inactive"}
-              </div>
-              <p className="text-[10px] sm:text-[11px] text-[#6B5D53] truncate">
-                {sessionOpen
-                  ? `Cutoff: ${session?.late_after_minutes}m`
-                  : "Awaiting activation"}
-              </p>
-            </div>
-
-            {/* Card 2: Personal Attendance Standing */}
-            <div className="p-3 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
-              <div className="flex items-center justify-between text-xs text-[#6B5D53]">
-                <span className="font-bold">My Standing</span>
-                <UserCheck className="w-4 h-4 text-[#D6A23A]" />
-              </div>
-              <div className="text-base sm:text-xl font-extrabold text-[#174C37]">
-                {attendanceRate}%
-              </div>
-              <p className="text-[10px] sm:text-[11px] text-[#6B5D53] truncate">
-                {attendedCount} of {totalTrackedMeetings} attended
-              </p>
-            </div>
-
-            {/* Card 3: Secretariat Minutes */}
-            <div className="p-3 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
-              <div className="flex items-center justify-between text-xs text-[#6B5D53]">
-                <span className="font-bold">Minutes</span>
-                <FileText className="w-4 h-4 text-[#174C37]" />
-              </div>
-              <div className="text-base sm:text-xl font-extrabold text-[#3D291F]">
-                {minutes ? `Rev. ${minutes.revision_number}` : "Pending"}
-              </div>
-              <p className="text-[10px] sm:text-[11px] text-[#6B5D53] truncate">
-                {minutes ? "Ratified" : "Not published yet"}
-              </p>
-            </div>
-
-            {/* Card 4: Meeting Roll Call */}
-            <div className="p-3 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-1">
-              <div className="flex items-center justify-between text-xs text-[#6B5D53]">
-                <span className="font-bold">Attendance</span>
-                <Users className="w-4 h-4 text-[#174C37]" />
-              </div>
-              <div className="text-base sm:text-xl font-extrabold text-[#3D291F]">
-                {attendance.length} Total
-              </div>
-              <p className="text-[10px] sm:text-[11px] text-[#6B5D53] truncate">
-                {presentCount} Present · {lateCount} Late
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Navigation Tabs Bar — Shortened Headings */}
-        {selectedEvent && (
-          <div className="flex items-center gap-1.5 p-1 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-x-auto">
-            <button
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer min-h-[38px] flex items-center gap-2 shrink-0 ${
-                activeTab === "session"
-                  ? "bg-[#174C37] text-white shadow-xs border-0"
-                  : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
-              }`}
-              onClick={() => handleTabChange("session")}
-              type="button"
-            >
-              <UserCheck className="w-3.5 h-3.5" />
-              <span>Attendance</span>
-            </button>
-
-            <button
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer min-h-[38px] flex items-center gap-2 shrink-0 ${
-                activeTab === "minutes"
-                  ? "bg-[#174C37] text-white shadow-xs border-0"
-                  : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
-              }`}
-              id="tab-minutes-transcripts"
-              onClick={() => handleTabChange("minutes")}
-              type="button"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Minutes</span>
-            </button>
-
-            <button
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer min-h-[38px] flex items-center gap-2 shrink-0 ${
-                activeTab === "history"
-                  ? "bg-[#174C37] text-white shadow-xs border-0"
-                  : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
-              }`}
-              onClick={() => handleTabChange("history")}
-              type="button"
-            >
-              <History className="w-3.5 h-3.5" />
-              <span>Standing</span>
-            </button>
-
-            {isOfficer && (
+            {/* Navigation Tabs Bar — Shortened Headings */}
+            <div className="flex items-center gap-1.5 p-1 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-x-auto">
               <button
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer min-h-[38px] flex items-center gap-2 shrink-0 ${
-                  activeTab === "audit"
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer min-h-[40px] flex items-center gap-2 shrink-0 ${
+                  activeTab === "session"
                     ? "bg-[#174C37] text-white shadow-xs border-0"
                     : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
                 }`}
-                onClick={() => handleTabChange("audit")}
+                onClick={() => handleTabChange("session")}
                 type="button"
               >
-                <Shield className="w-3.5 h-3.5" />
-                <span>Audit Log</span>
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>Attendance</span>
               </button>
-            )}
+
+              <button
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer min-h-[40px] flex items-center gap-2 shrink-0 ${
+                  activeTab === "minutes"
+                    ? "bg-[#174C37] text-white shadow-xs border-0"
+                    : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
+                }`}
+                id="tab-minutes-transcripts"
+                onClick={() => handleTabChange("minutes")}
+                type="button"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Minutes</span>
+              </button>
+
+              <button
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer min-h-[40px] flex items-center gap-2 shrink-0 ${
+                  activeTab === "history"
+                    ? "bg-[#174C37] text-white shadow-xs border-0"
+                    : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
+                }`}
+                onClick={() => handleTabChange("history")}
+                type="button"
+              >
+                <History className="w-3.5 h-3.5" />
+                <span>Standing</span>
+              </button>
+
+              {isOfficer && (
+                <button
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer min-h-[40px] flex items-center gap-2 shrink-0 ${
+                    activeTab === "audit"
+                      ? "bg-[#174C37] text-white shadow-xs border-0"
+                      : "bg-transparent border-0 text-[#5C4638] hover:text-[#174C37]"
+                  }`}
+                  onClick={() => handleTabChange("audit")}
+                  type="button"
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>Audit Log</span>
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="p-8 text-center space-y-2 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
+            <Calendar className="w-8 h-8 text-[#7A685D] mx-auto opacity-60" />
+            <h2 className="text-base font-bold text-[#3D291F]">
+              No Meetings Scheduled Yet
+            </h2>
+            <p className="text-xs text-[#5C4638] max-w-sm mx-auto">
+              Meetings created by the Secretariat will appear here for check-in
+              and minutes.
+            </p>
           </div>
         )}
       </section>
@@ -870,9 +733,9 @@ export function AttendanceHubView({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5DDD3]">
               <div>
                 <h2 className="text-base font-extrabold text-[#3D291F]">
-                  Personal Attendance Ledger
+                  Attendance History
                 </h2>
-                <p className="text-xs text-[#7A685D]">
+                <p className="text-xs text-[#7A685D] mt-0.5">
                   Member:{" "}
                   <strong className="text-[#3D291F]">
                     {currentUser.fullName}
@@ -958,11 +821,11 @@ export function AttendanceHubView({
               <div className="p-8 text-center space-y-2">
                 <Calendar className="w-8 h-8 text-[#7A685D] mx-auto opacity-60" />
                 <h3 className="text-sm font-bold text-[#3D291F]">
-                  No Recorded Past Meetings Yet
+                  No Recorded Meetings Yet
                 </h3>
                 <p className="text-xs text-[#5C4638] max-w-sm mx-auto">
-                  Your attendance standing will appear here as soon as you check
-                  in to club assemblies.
+                  Your attendance history will appear here as you check in to
+                  club meetings.
                 </p>
               </div>
             )}
@@ -993,6 +856,189 @@ export function AttendanceHubView({
           )}
         </div>
       )}
+
+      {/* All Meetings Directory */}
+      <section className="bg-white rounded-2xl border border-[#E5DDD3] p-5 sm:p-7 shadow-xs space-y-4">
+        <div className="border-b border-[#E5DDD3] pb-3">
+          <h2 className="text-base sm:text-lg font-extrabold text-[#3D291F]">
+            All Meetings Directory
+          </h2>
+          <p className="text-xs text-[#7A685D] mt-0.5">
+            Upcoming schedules, past meeting minutes, and archived sessions
+          </p>
+        </div>
+
+        {/* 3 Collapsible Meeting Sections */}
+        <div className="space-y-4">
+          {/* SECTION 1: Upcoming Meetings (Open by default) */}
+          <div className="bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-hidden">
+            <button
+              aria-controls="upcoming-meetings-panel"
+              aria-expanded={upcomingOpen}
+              className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-[#F5EFE6] transition-colors cursor-pointer"
+              onClick={() => setUpcomingOpen((prev) => !prev)}
+              type="button"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#174C37]/10 flex items-center justify-center shrink-0">
+                  <Calendar className="w-4 h-4 text-[#174C37]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
+                      Upcoming Meetings
+                    </h3>
+                    <span className="text-xs font-mono font-medium text-[#7A685D]">
+                      ({upcomingMeetings.length})
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#7A685D] mt-0.5">
+                    Scheduled general and executive meetings
+                  </p>
+                </div>
+              </div>
+              <div className="p-1 rounded-lg text-[#7A685D]">
+                {upcomingOpen ? (
+                  <ChevronUp className="w-5 h-5 text-[#174C37]" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-[#7A685D]" />
+                )}
+              </div>
+            </button>
+
+            {upcomingOpen && (
+              <div
+                className="p-4 sm:p-5 pt-0 border-t border-[#E5DDD3] space-y-3"
+                id="upcoming-meetings-panel"
+              >
+                {upcomingMeetings.length > 0 ? (
+                  upcomingMeetings.map((evt) => renderMeetingCard(evt))
+                ) : (
+                  <div className="p-5 text-center space-y-1 bg-white rounded-xl border border-[#E5DDD3]">
+                    <p className="text-xs font-bold text-[#3D291F]">
+                      No upcoming meetings currently scheduled
+                    </p>
+                    <p className="text-[11px] text-[#7A685D]">
+                      Use the New Meeting button to schedule a General House
+                      meeting.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* SECTION 2: Past Meetings (Collapsed by default) */}
+          <div className="bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-hidden">
+            <button
+              aria-controls="past-meetings-panel"
+              aria-expanded={pastOpen}
+              className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-[#F5EFE6] transition-colors cursor-pointer"
+              onClick={() => setPastOpen((prev) => !prev)}
+              type="button"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white border border-[#E5DDD3] flex items-center justify-center shrink-0">
+                  <History className="w-4 h-4 text-[#7A685D]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
+                      Past Meetings
+                    </h3>
+                    <span className="text-xs font-mono font-medium text-[#7A685D]">
+                      ({pastMeetings.length})
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#7A685D] mt-0.5">
+                    Past meetings, attendance, and minutes
+                  </p>
+                </div>
+              </div>
+              <div className="p-1 rounded-lg text-[#7A685D]">
+                {pastOpen ? (
+                  <ChevronUp className="w-5 h-5 text-[#174C37]" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-[#7A685D]" />
+                )}
+              </div>
+            </button>
+
+            {pastOpen && (
+              <div
+                className="p-4 sm:p-5 pt-0 border-t border-[#E5DDD3] space-y-3"
+                id="past-meetings-panel"
+              >
+                {pastMeetings.length > 0 ? (
+                  pastMeetings.map((evt) => renderMeetingCard(evt))
+                ) : (
+                  <div className="p-5 text-center space-y-1 bg-white rounded-xl border border-[#E5DDD3]">
+                    <p className="text-xs font-bold text-[#3D291F]">
+                      No past meetings on record
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* SECTION 3: Cancelled / Archived Meetings (Collapsed by default) */}
+          <div className="bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-hidden">
+            <button
+              aria-controls="archived-meetings-panel"
+              aria-expanded={archivedOpen}
+              className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-[#F5EFE6] transition-colors cursor-pointer"
+              onClick={() => setArchivedOpen((prev) => !prev)}
+              type="button"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white border border-[#E5DDD3] flex items-center justify-center shrink-0">
+                  <Shield className="w-4 h-4 text-[#7A685D]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
+                      Cancelled / Archived Meetings
+                    </h3>
+                    <span className="text-xs font-mono font-medium text-[#7A685D]">
+                      ({cancelledOrArchivedMeetings.length})
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#7A685D] mt-0.5">
+                    Cancelled and archived meetings
+                  </p>
+                </div>
+              </div>
+              <div className="p-1 rounded-lg text-[#7A685D]">
+                {archivedOpen ? (
+                  <ChevronUp className="w-5 h-5 text-[#174C37]" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-[#7A685D]" />
+                )}
+              </div>
+            </button>
+
+            {archivedOpen && (
+              <div
+                className="p-4 sm:p-5 pt-0 border-t border-[#E5DDD3] space-y-3"
+                id="archived-meetings-panel"
+              >
+                {cancelledOrArchivedMeetings.length > 0 ? (
+                  cancelledOrArchivedMeetings.map((evt) =>
+                    renderMeetingCard(evt),
+                  )
+                ) : (
+                  <div className="p-5 text-center space-y-1 bg-white rounded-xl border border-[#E5DDD3]">
+                    <p className="text-xs font-bold text-[#3D291F]">
+                      No cancelled or archived meetings
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
 
       {/* New Meeting Modal */}
       {canCreate && (

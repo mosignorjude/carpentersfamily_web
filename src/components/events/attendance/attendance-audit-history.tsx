@@ -36,20 +36,15 @@ export function AttendanceAuditHistory({
               >
                 Officer Audit History
               </h2>
-              <span className="text-xs font-mono font-bold text-[#174C37] bg-[#FAF6F0] px-2.5 py-0.5 rounded-full border border-[#E5DDD3]">
-                {audits.length} Audited Events
+              <span className="text-xs font-mono font-medium text-[#7A685D]">
+                ({audits.length})
               </span>
             </div>
-            <p className="text-xs text-[#7A685D]">
-              Immutable ledger of secretarial changes, status corrections, and
-              session timing
+            <p className="text-xs text-[#7A685D] mt-0.5">
+              Log of session updates, status corrections, and timing changes
             </p>
           </div>
         </div>
-
-        <span className="text-xs text-[#7A685D] font-mono hidden sm:inline">
-          Retained for Permanent Compliance
-        </span>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-[#E5DDD3]">

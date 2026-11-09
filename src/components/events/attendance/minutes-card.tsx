@@ -46,8 +46,8 @@ export function MinutesCard({
                 Meeting Minutes
               </h2>
             </div>
-            <p className="text-xs text-[#7A685D]">
-              Official proceedings transcribed for the General Meeting
+            <p className="text-xs text-[#7A685D] mt-0.5">
+              Official notes and summary of discussions
             </p>
           </div>
         </div>
@@ -102,7 +102,6 @@ export function MinutesCard({
                 {watShortDateTime.format(new Date(minutes.updated_at))} WAT
               </span>
             </span>
-            <span className="font-mono">Secretariat Approved</span>
           </div>
         </div>
       ) : (

@@ -48,20 +48,14 @@ export function OfficerSessionControls({
             <Sliders className="w-5 h-5 text-[#D6A23A]" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h2
-                className="text-base font-extrabold text-[#3D291F]"
-                id="officer-controls-heading"
-              >
-                Officer Attendance Desk
-              </h2>
-              <span className="text-[10px] font-mono font-bold text-[#174C37] bg-[#FAF6F0] px-2 py-0.5 rounded border border-[#E5DDD3]">
-                Admin / Executive
-              </span>
-            </div>
-            <p className="text-xs text-[#7A685D]">
-              Manage check-in session timing, issue live 90s QR tokens, and
-              configure late arrival policies
+            <h2
+              className="text-base font-extrabold text-[#3D291F]"
+              id="officer-controls-heading"
+            >
+              Officer Attendance Desk
+            </h2>
+            <p className="text-xs text-[#7A685D] mt-0.5">
+              Manage check-in timing and live hall QR codes
             </p>
           </div>
         </div>

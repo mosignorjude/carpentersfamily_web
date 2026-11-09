@@ -84,26 +84,20 @@ export function AttendanceRosterTable({
             <Users className="w-5 h-5 text-[#D6A23A]" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h2
-                className="text-base font-extrabold text-[#3D291F]"
-                id="attendance-roster-heading"
-              >
-                Attendance List
-              </h2>
-              <span className="text-xs font-mono font-bold text-[#174C37] bg-[#FAF6F0] px-2.5 py-0.5 rounded-full border border-[#E5DDD3]">
-                {attendance.length} Records
+            <h2
+              className="text-base font-extrabold text-[#3D291F]"
+              id="attendance-roster-heading"
+            >
+              Attendance List{" "}
+              <span className="text-xs font-mono font-medium text-[#7A685D]">
+                ({attendance.length})
               </span>
-            </div>
-            <p className="text-xs text-[#7A685D]">
-              Member check-ins and officer updates
+            </h2>
+            <p className="text-xs text-[#7A685D] mt-0.5">
+              Member check-ins and attendance updates
             </p>
           </div>
         </div>
-
-        <span className="text-xs text-[#7A685D] hidden sm:inline">
-          Official Quorum Record
-        </span>
       </div>
 
       {/* Filter and Search Bar */}

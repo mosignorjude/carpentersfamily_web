@@ -126,20 +126,26 @@ export function CheckinCard({
         </div>
       ) : (
         <div className="space-y-4">
-          <p className="text-xs text-[#5C4638] leading-relaxed">
-            {sessionOpen && isMutable
-              ? "Check-in is open. Tap below to record your attendance."
-              : "Check-in is currently inactive. An Executive or Club Admin must open the attendance session."}
-          </p>
-
-          <div className="pt-1">
-            <AttendanceCheckIn
-              alreadyCheckedIn={Boolean(ownAttendance)}
-              eventId={eventId}
-              returnTo={returnTo}
-              sessionOpen={sessionOpen && isMutable}
-            />
-          </div>
+          {sessionOpen && isMutable ? (
+            <>
+              <p className="text-xs text-[#5C4638] leading-relaxed">
+                The session is open. Tap below to record your attendance.
+              </p>
+              <div className="pt-1">
+                <AttendanceCheckIn
+                  alreadyCheckedIn={Boolean(ownAttendance)}
+                  eventId={eventId}
+                  returnTo={returnTo}
+                  sessionOpen={sessionOpen && isMutable}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#7A685D] leading-relaxed">
+              Check-in has not opened yet. An executive or club admin will
+              activate recording when the meeting starts.
+            </div>
+          )}
         </div>
       )}
     </section>
