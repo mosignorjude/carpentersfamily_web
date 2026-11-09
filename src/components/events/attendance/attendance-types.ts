@@ -1,6 +1,7 @@
 export interface EventRow {
   id: string;
   title: string;
+  description?: string;
   event_type?: string;
   location?: string;
   starts_at: string;
