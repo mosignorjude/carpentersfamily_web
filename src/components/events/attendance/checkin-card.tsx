@@ -86,50 +86,60 @@ export function CheckinCard({
 
         {currentStatus ? (
           <span
-            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${currentStatus.badge}`}
+            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${currentStatus.badge}`}
           >
             {currentStatus.label}
           </span>
         ) : (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-[#7A685D] bg-[#FAF6F0] border border-[#E5DDD3]">
+          <span
+            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${
+              sessionOpen
+                ? "bg-[#EAF4ED] text-[#174C37] border-[#A8D5BC]"
+                : "bg-[#FAF6F0] text-[#7A685D] border-[#E5DDD3]"
+            }`}
+          >
             {sessionOpen ? "Check-In Open" : "Check-In Closed"}
           </span>
         )}
       </div>
 
       {ownAttendance ? (
-        <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-2 text-xs">
+        <div className="p-4 rounded-xl bg-[#EAF4ED] border border-[#A8D5BC] space-y-2 text-xs">
           <div className="flex items-center gap-2 font-bold text-[#174C37]">
             <CheckCircle2 className="w-4 h-4 text-[#174C37]" />
-            <span>Checked In</span>
+            <span>You are checked in</span>
           </div>
-          <p className="text-[#5C4638]">{currentStatus?.desc}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-[#E5DDD3] text-[#7A685D] font-mono text-[11px]">
-            <div>
+          <p className="text-[#2C483A]">
+            {currentStatus?.desc ??
+              "Your attendance was verified for this meeting."}
+          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#A8D5BC]/60 text-[#174C37] font-mono text-[11px]">
+            <span>
               Method:{" "}
-              <strong className="text-[#3D291F]">
+              <strong className="text-[#174C37]">
                 {ownAttendance.check_in_method === "qr"
                   ? "QR Scan"
-                  : "Member Portal"}
+                  : "Web Portal"}
               </strong>
-            </div>
+            </span>
             {ownAttendance.checked_in_at && (
-              <div>
+              <span>
                 Time:{" "}
-                <strong className="text-[#3D291F]">
+                <strong className="text-[#174C37]">
                   {watDateTime.format(new Date(ownAttendance.checked_in_at))}{" "}
                   WAT
                 </strong>
-              </div>
+              </span>
             )}
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {sessionOpen && isMutable ? (
             <>
               <p className="text-xs text-[#5C4638] leading-relaxed">
-                The session is open. Tap below to record your attendance.
+                The session is now live. Tap below or scan the hall QR screen to
+                record your attendance.
               </p>
               <div className="pt-1">
                 <AttendanceCheckIn

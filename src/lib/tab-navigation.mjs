@@ -1,14 +1,24 @@
-export const ATTENDANCE_TABS = ["session", "minutes", "history", "audit"];
+export const ATTENDANCE_TABS = [
+  "session",
+  "minutes",
+  "history",
+  "audit",
+  "roster",
+  "desk",
+];
 
 /**
  * @param {string | null | undefined} value
- * @returns {"session" | "minutes" | "history" | "audit"}
+ * @returns {"session" | "minutes" | "history" | "audit" | "roster" | "desk"}
  */
 export function parseAttendanceTab(value) {
   if (typeof value !== "string") return "session";
   const normalized = value.trim().toLowerCase();
+  if (normalized === "desk") return "audit";
   return ATTENDANCE_TABS.includes(normalized)
-    ? /** @type {"session" | "minutes" | "history" | "audit"} */ (normalized)
+    ? /** @type {"session" | "minutes" | "history" | "audit" | "roster" | "desk"} */ (
+        normalized
+      )
     : "session";
 }
 

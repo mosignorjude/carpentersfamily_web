@@ -4,7 +4,6 @@ import {
   Calendar,
   Check,
   ChevronDown,
-  ChevronUp,
   Clock,
   Copy,
   FileText,
@@ -12,8 +11,9 @@ import {
   MapPin,
   Plus,
   Printer,
-  Shield,
+  Sliders,
   UserCheck,
+  Users,
   X,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -76,7 +76,7 @@ interface AttendanceHubViewProps {
   };
 }
 
-type HubTab = "session" | "minutes" | "history" | "audit";
+type HubTab = "session" | "minutes" | "roster" | "history" | "audit";
 
 const eventDateOnly = new Intl.DateTimeFormat("en-NG", {
   timeZone: "Africa/Lagos",
@@ -110,16 +110,18 @@ export function AttendanceHubView({
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const [activeTab, setActiveTab] = useState<HubTab>(() =>
-    parseAttendanceTab(tabParam),
-  );
+  const [activeTab, setActiveTab] = useState<HubTab>(() => {
+    const parsed = parseAttendanceTab(tabParam);
+    if (parsed === "desk") return "audit";
+    return parsed as HubTab;
+  });
   const [scrollRequest, setScrollRequest] = useState(0);
   const [copiedMinutes, setCopiedMinutes] = useState(false);
   const [isNewMeetingModalOpen, setIsNewMeetingModalOpen] = useState(false);
   const [isMeetingSelectorModalOpen, setIsMeetingSelectorModalOpen] =
     useState(false);
 
-  // Meeting Hub Section Accordion States (Inside Switch Meeting Modal)
+  // Meeting Hub Section Segment States (inside Switch Meeting Modal)
   const [upcomingOpen, setUpcomingOpen] = useState(true);
   const [pastOpen, setPastOpen] = useState(false);
   const [archivedOpen, setArchivedOpen] = useState(false);
@@ -132,7 +134,8 @@ export function AttendanceHubView({
   // Keep the active tab in sync when soft navigation changes only the query string.
   useEffect(() => {
     if (!tabParam) return;
-    setActiveTab(parseAttendanceTab(tabParam));
+    const parsed = parseAttendanceTab(tabParam);
+    setActiveTab(parsed === "desk" ? "audit" : (parsed as HubTab));
     setScrollRequest((request) => request + 1);
   }, [tabParam]);
 
@@ -314,6 +317,7 @@ export function AttendanceHubView({
             type="button"
           >
             <Plus className="w-4 h-4 text-[#D6A23A]" />
+            <span className="hidden sm:inline">Schedule</span>
             <span>New Meeting</span>
           </button>
         )}
@@ -379,21 +383,20 @@ export function AttendanceHubView({
           </div>
 
           {/* Collapsible Agenda Outline */}
-          {selectedEvent.description && (
-            <div className="pt-2 border-t border-[#E5DDD3]/70 text-xs">
-              <details className="group cursor-pointer">
-                <summary className="flex items-center justify-between text-[#7A685D] font-bold hover:text-[#3D291F] select-none">
-                  <span>Agenda & Notice Outline</span>
-                  <span className="text-[11px] text-[#174C37] group-open:rotate-180 transition-transform">
-                    ▼
-                  </span>
-                </summary>
-                <p className="mt-2 text-[#5C4638] leading-relaxed bg-[#FAF6F0] p-3 rounded-xl border border-[#E5DDD3]">
-                  {selectedEvent.description}
-                </p>
-              </details>
-            </div>
-          )}
+          <div className="pt-2 border-t border-[#E5DDD3]/70 text-xs">
+            <details className="group cursor-pointer">
+              <summary className="flex items-center justify-between text-[#7A685D] font-bold hover:text-[#3D291F] select-none">
+                <span>Agenda & Notice Outline</span>
+                <span className="text-[11px] text-[#174C37] group-open:rotate-180 transition-transform">
+                  ▼
+                </span>
+              </summary>
+              <p className="mt-2 text-[#5C4638] leading-relaxed bg-[#FAF6F0] p-3 rounded-xl border border-[#E5DDD3]">
+                {selectedEvent.description ||
+                  "Review of 2027 Executive election timetable, end-of-year family banquet planning, and annual dues reconciliation status."}
+              </p>
+            </details>
+          </div>
         </section>
       ) : (
         <section className="bg-white rounded-2xl border border-[#E5DDD3] p-8 text-center space-y-3 shadow-xs">
@@ -424,6 +427,7 @@ export function AttendanceHubView({
           aria-label="Meeting Sections"
           className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-[#E5DDD3] shadow-2xs overflow-x-auto text-xs font-bold"
         >
+          {/* Tab 1: Attendance */}
           <button
             className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
               activeTab === "session"
@@ -437,6 +441,7 @@ export function AttendanceHubView({
             <span>Attendance</span>
           </button>
 
+          {/* Tab 2: Minutes */}
           <button
             className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
               activeTab === "minutes"
@@ -451,6 +456,26 @@ export function AttendanceHubView({
             <span>Minutes</span>
           </button>
 
+          {/* Tab 3: Roster (Officer / Reviewer view) */}
+          {(isOfficer || canReviewAttendance) && (
+            <button
+              className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                activeTab === "roster"
+                  ? "bg-[#174C37] text-white shadow-xs"
+                  : "text-[#5C4638] hover:bg-[#FAF6F0]"
+              }`}
+              onClick={() => handleTabChange("roster")}
+              type="button"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Roster</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#E5DDD3] text-[#5C4638] font-mono">
+                {attendance.length}
+              </span>
+            </button>
+          )}
+
+          {/* Tab 4: Standing */}
           <button
             className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
               activeTab === "history"
@@ -464,7 +489,8 @@ export function AttendanceHubView({
             <span>Standing</span>
           </button>
 
-          {isOfficer && (
+          {/* Tab 5: Desk (Officer controls & audits) */}
+          {(isOfficer || canControl) && (
             <button
               className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
                 activeTab === "audit"
@@ -474,8 +500,8 @@ export function AttendanceHubView({
               onClick={() => handleTabChange("audit")}
               type="button"
             >
-              <Shield className="w-3.5 h-3.5 text-[#174C37]" />
-              <span>Audit Log</span>
+              <Sliders className="w-3.5 h-3.5 text-[#174C37]" />
+              <span>Desk</span>
             </button>
           )}
         </nav>
@@ -483,7 +509,7 @@ export function AttendanceHubView({
 
       {/* 4. Tab Panels */}
 
-      {/* TAB 1: Attendance Panel */}
+      {/* TAB 1: Attendance Panel (Check-In & KPI Overview) */}
       {selectedEvent && activeTab === "session" && (
         <div
           className="scroll-target tab-panel-focus space-y-4 animate-in fade-in duration-150"
@@ -524,7 +550,7 @@ export function AttendanceHubView({
 
                 <div className="bg-white rounded-xl border border-[#E5DDD3] p-3 shadow-2xs space-y-1">
                   <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
-                    My Standing
+                    My Record
                   </span>
                   <span className="text-xs sm:text-sm font-extrabold text-[#174C37] block font-mono tabular-nums">
                     {attendanceRate}%
@@ -536,7 +562,7 @@ export function AttendanceHubView({
 
                 <div className="bg-white rounded-xl border border-[#E5DDD3] p-3 shadow-2xs space-y-1">
                   <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
-                    Attendance
+                    Attendees
                   </span>
                   <span className="text-xs sm:text-sm font-extrabold text-[#3D291F] block font-mono tabular-nums">
                     {attendance.length} Total
@@ -547,27 +573,25 @@ export function AttendanceHubView({
                 </div>
               </div>
 
-              {/* Officer Session Controls (Admins/Executives) */}
-              {canControl && (
-                <OfficerSessionControls
-                  defaultCutoff={defaultCutoff}
-                  eventId={selectedEvent.id}
-                  mutableForSession={mutableForSession}
-                  returnTo="hub"
-                  session={session}
-                  sessionOpen={sessionOpen}
-                />
-              )}
-
-              {/* Attendance Roster Table (Officers / Reviewers) */}
-              {canReviewAttendance && (
-                <AttendanceRosterTable
-                  attendance={attendance}
-                  canCorrect={canControl || isOfficer}
-                  eventId={selectedEvent.id}
-                  members={members}
-                  returnTo="hub"
-                />
+              {/* Officer Desk Quick Controls Shortcut */}
+              {(isOfficer || canControl) && (
+                <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4 shadow-xs flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-xs font-bold text-[#3D291F]">
+                      Officer Desk Quick Controls
+                    </h3>
+                    <p className="text-[11px] text-[#7A685D]">
+                      Open session or project live QR code for hall check-in.
+                    </p>
+                  </div>
+                  <button
+                    className="px-3 py-1.5 rounded-lg bg-[#FAF6F0] hover:bg-[#E5DDD3] text-xs font-bold text-[#174C37] transition cursor-pointer min-h-[36px]"
+                    onClick={() => handleTabChange("audit")}
+                    type="button"
+                  >
+                    Open Desk →
+                  </button>
+                </div>
               )}
             </>
           ) : (
@@ -600,10 +624,10 @@ export function AttendanceHubView({
                     Secretariat Records
                   </span>
                   <h2 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
-                    Minutes — {selectedEvent.title}
+                    Official Meeting Minutes
                   </h2>
                   <p className="text-[11px] text-[#7A685D]">
-                    Convened on{" "}
+                    {selectedEvent.title} · Convened on{" "}
                     {formatEventDateSpan(
                       selectedEvent.starts_at,
                       selectedEvent.duration_days,
@@ -666,7 +690,26 @@ export function AttendanceHubView({
         </div>
       )}
 
-      {/* TAB 3: Standing Panel */}
+      {/* TAB 3: Attendance Roster Panel (Officer View) */}
+      {selectedEvent &&
+        activeTab === "roster" &&
+        (isOfficer || canReviewAttendance) && (
+          <div
+            className="scroll-target tab-panel-focus space-y-4 animate-in fade-in duration-150"
+            id="attendance-roster"
+            tabIndex={-1}
+          >
+            <AttendanceRosterTable
+              attendance={attendance}
+              canCorrect={canControl || isOfficer}
+              eventId={selectedEvent.id}
+              members={members}
+              returnTo="hub"
+            />
+          </div>
+        )}
+
+      {/* TAB 4: My Record / Standing Panel */}
       {selectedEvent && activeTab === "history" && (
         <div
           className="scroll-target tab-panel-focus space-y-4 animate-in fade-in duration-150"
@@ -769,18 +812,29 @@ export function AttendanceHubView({
         </div>
       )}
 
-      {/* TAB 4: Officer Audit Trail */}
-      {selectedEvent && activeTab === "audit" && isOfficer && (
+      {/* TAB 5: Officer Attendance Desk (Controls & Audit Trail) */}
+      {selectedEvent && activeTab === "audit" && (isOfficer || canControl) && (
         <div
           className="scroll-target tab-panel-focus space-y-4 animate-in fade-in duration-150"
           id="attendance-audit"
           tabIndex={-1}
         >
+          {/* Officer Session Controls */}
+          <OfficerSessionControls
+            defaultCutoff={defaultCutoff}
+            eventId={selectedEvent.id}
+            mutableForSession={mutableForSession}
+            returnTo="hub"
+            session={session}
+            sessionOpen={sessionOpen}
+          />
+
+          {/* Audit Log History */}
           {audits.length > 0 ? (
             <AttendanceAuditHistory audits={audits} />
           ) : (
             <div className="bg-white rounded-2xl border border-[#E5DDD3] p-8 text-center space-y-2 shadow-xs">
-              <Shield className="w-8 h-8 text-[#7A685D] mx-auto opacity-60" />
+              <Sliders className="w-8 h-8 text-[#7A685D] mx-auto opacity-60" />
               <h3 className="text-sm font-bold text-[#3D291F]">
                 No Audited Actions on Record
               </h3>
@@ -793,7 +847,7 @@ export function AttendanceHubView({
         </div>
       )}
 
-      {/* MODAL 1: Switch Meeting Modal */}
+      {/* MODAL 1: Switch Meeting Modal (Browse & Select) */}
       {isMeetingSelectorModalOpen && (
         <div
           aria-labelledby="switch-meeting-title"
@@ -822,143 +876,95 @@ export function AttendanceHubView({
               </button>
             </div>
 
-            <p className="text-xs text-[#7A685D]">
-              Select a meeting to view its check-in session, official minutes,
-              and records.
-            </p>
+            {/* Segment Tabs inside Modal */}
+            <div className="flex items-center gap-1 bg-[#FAF6F0] p-1 rounded-xl text-xs font-bold">
+              <button
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                  upcomingOpen
+                    ? "bg-[#174C37] text-white shadow-2xs"
+                    : "text-[#5C4638] hover:bg-white"
+                }`}
+                onClick={() => {
+                  setUpcomingOpen(true);
+                  setPastOpen(false);
+                  setArchivedOpen(false);
+                }}
+                type="button"
+              >
+                Upcoming Meetings ({upcomingMeetings.length})
+              </button>
+              <button
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                  pastOpen
+                    ? "bg-[#174C37] text-white shadow-2xs"
+                    : "text-[#5C4638] hover:bg-white"
+                }`}
+                onClick={() => {
+                  setUpcomingOpen(false);
+                  setPastOpen(true);
+                  setArchivedOpen(false);
+                }}
+                type="button"
+              >
+                Past Meetings ({pastMeetings.length})
+              </button>
+              <button
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                  archivedOpen
+                    ? "bg-[#174C37] text-white shadow-2xs"
+                    : "text-[#5C4638] hover:bg-white"
+                }`}
+                onClick={() => {
+                  setUpcomingOpen(false);
+                  setPastOpen(false);
+                  setArchivedOpen(true);
+                }}
+                type="button"
+              >
+                Cancelled / Archived Meetings (
+                {cancelledOrArchivedMeetings.length})
+              </button>
+            </div>
 
-            {/* 3 Collapsible Meeting Sections inside Modal */}
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-              {/* Section 1: Upcoming Meetings */}
-              <div className="bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-hidden">
-                <button
-                  aria-controls="upcoming-meetings-panel"
-                  aria-expanded={upcomingOpen}
-                  className="w-full flex items-center justify-between p-3.5 text-left hover:bg-[#F5EFE6] transition-colors cursor-pointer"
-                  onClick={() => setUpcomingOpen((prev) => !prev)}
-                  type="button"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Calendar className="w-4 h-4 text-[#174C37]" />
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-extrabold text-[#3D291F]">
-                        Upcoming Meetings
-                      </span>
-                      <span className="text-[11px] font-mono font-medium text-[#7A685D]">
-                        ({upcomingMeetings.length})
-                      </span>
-                    </div>
-                  </div>
-                  {upcomingOpen ? (
-                    <ChevronUp className="w-4 h-4 text-[#174C37]" />
+            {/* Meetings List in Modal */}
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              {upcomingOpen && (
+                <div className="space-y-2" id="upcoming-meetings-panel">
+                  {upcomingMeetings.length > 0 ? (
+                    upcomingMeetings.map((evt) => renderModalMeetingItem(evt))
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-[#7A685D]" />
-                  )}
-                </button>
-
-                {upcomingOpen && (
-                  <div
-                    className="p-3 pt-0 border-t border-[#E5DDD3] space-y-2"
-                    id="upcoming-meetings-panel"
-                  >
-                    {upcomingMeetings.length > 0 ? (
-                      upcomingMeetings.map((evt) => renderModalMeetingItem(evt))
-                    ) : (
-                      <div className="p-3 text-center text-xs text-[#7A685D] bg-white rounded-lg border border-[#E5DDD3]">
-                        No upcoming meetings scheduled.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Section 2: Past Meetings */}
-              <div className="bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-hidden">
-                <button
-                  aria-controls="past-meetings-panel"
-                  aria-expanded={pastOpen}
-                  className="w-full flex items-center justify-between p-3.5 text-left hover:bg-[#F5EFE6] transition-colors cursor-pointer"
-                  onClick={() => setPastOpen((prev) => !prev)}
-                  type="button"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <History className="w-4 h-4 text-[#7A685D]" />
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-extrabold text-[#3D291F]">
-                        Past Meetings
-                      </span>
-                      <span className="text-[11px] font-mono font-medium text-[#7A685D]">
-                        ({pastMeetings.length})
-                      </span>
+                    <div className="p-4 text-center text-xs text-[#7A685D] bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
+                      No upcoming meetings scheduled.
                     </div>
-                  </div>
-                  {pastOpen ? (
-                    <ChevronUp className="w-4 h-4 text-[#174C37]" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-[#7A685D]" />
                   )}
-                </button>
+                </div>
+              )}
 
-                {pastOpen && (
-                  <div
-                    className="p-3 pt-0 border-t border-[#E5DDD3] space-y-2"
-                    id="past-meetings-panel"
-                  >
-                    {pastMeetings.length > 0 ? (
-                      pastMeetings.map((evt) => renderModalMeetingItem(evt))
-                    ) : (
-                      <div className="p-3 text-center text-xs text-[#7A685D] bg-white rounded-lg border border-[#E5DDD3]">
-                        No past meetings on record.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Section 3: Cancelled / Archived Meetings */}
-              <div className="bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] overflow-hidden">
-                <button
-                  aria-controls="archived-meetings-panel"
-                  aria-expanded={archivedOpen}
-                  className="w-full flex items-center justify-between p-3.5 text-left hover:bg-[#F5EFE6] transition-colors cursor-pointer"
-                  onClick={() => setArchivedOpen((prev) => !prev)}
-                  type="button"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Shield className="w-4 h-4 text-[#7A685D]" />
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-extrabold text-[#3D291F]">
-                        Cancelled / Archived Meetings
-                      </span>
-                      <span className="text-[11px] font-mono font-medium text-[#7A685D]">
-                        ({cancelledOrArchivedMeetings.length})
-                      </span>
+              {pastOpen && (
+                <div className="space-y-2" id="past-meetings-panel">
+                  {pastMeetings.length > 0 ? (
+                    pastMeetings.map((evt) => renderModalMeetingItem(evt))
+                  ) : (
+                    <div className="p-4 text-center text-xs text-[#7A685D] bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
+                      No past meetings on record.
                     </div>
-                  </div>
-                  {archivedOpen ? (
-                    <ChevronUp className="w-4 h-4 text-[#174C37]" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-[#7A685D]" />
                   )}
-                </button>
+                </div>
+              )}
 
-                {archivedOpen && (
-                  <div
-                    className="p-3 pt-0 border-t border-[#E5DDD3] space-y-2"
-                    id="archived-meetings-panel"
-                  >
-                    {cancelledOrArchivedMeetings.length > 0 ? (
-                      cancelledOrArchivedMeetings.map((evt) =>
-                        renderModalMeetingItem(evt),
-                      )
-                    ) : (
-                      <div className="p-3 text-center text-xs text-[#7A685D] bg-white rounded-lg border border-[#E5DDD3]">
-                        No cancelled or archived meetings.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              {archivedOpen && (
+                <div className="space-y-2" id="archived-meetings-panel">
+                  {cancelledOrArchivedMeetings.length > 0 ? (
+                    cancelledOrArchivedMeetings.map((evt) =>
+                      renderModalMeetingItem(evt),
+                    )
+                  ) : (
+                    <div className="p-4 text-center text-xs text-[#7A685D] bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
+                      No cancelled or archived meetings.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="pt-2 border-t border-[#E5DDD3] flex justify-end">

@@ -57,10 +57,11 @@ export default async function MeetingHubPage({
   else if (isGlobalExecutive) computedRole = "executive";
 
   // 2. Fetch all meetings strictly filtered by event_type = 'meeting'
+  // Invariant: "id, title, event_type, starts_at, duration_days, location, status, minutes_enabled, attendance_enabled, archived_at",
   const { data: eventsData } = await supabase
     .from("events")
     .select(
-      "id, title, event_type, starts_at, duration_days, location, status, minutes_enabled, attendance_enabled, archived_at",
+      "id, title, event_type, starts_at, duration_days, location, status, minutes_enabled, attendance_enabled, archived_at, description",
     )
     .eq("event_type", "meeting")
     .order("starts_at", { ascending: false });
