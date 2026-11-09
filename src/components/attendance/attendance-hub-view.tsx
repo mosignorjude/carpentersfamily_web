@@ -423,98 +423,104 @@ export function AttendanceHubView({
 
       {/* 3. Workspace Tabs Navigation Bar */}
       {selectedEvent && (
-        <nav
-          aria-label="Meeting Sections"
-          className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-[#E5DDD3] shadow-2xs overflow-x-auto text-xs font-bold"
-        >
-          {/* Tab 1: Check-In */}
-          <button
-            className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
-              activeTab === "session"
-                ? "bg-[#174C37] text-white shadow-xs"
-                : "text-[#5C4638] hover:bg-[#FAF6F0]"
-            }`}
-            onClick={() => handleTabChange("session")}
-            type="button"
+        <div className="space-y-1">
+          <div className="sm:hidden flex items-center justify-end gap-1 text-[11px] text-[#7A685D] px-1 select-none font-medium">
+            <span>Swipe for more</span>
+            <span aria-hidden="true">→</span>
+          </div>
+          <nav
+            aria-label="Meeting Sections"
+            className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-[#E5DDD3] shadow-2xs overflow-x-auto text-xs font-bold"
           >
-            <UserCheck className="w-3.5 h-3.5" />
-            <span>Check-In</span>
-          </button>
-
-          {/* Tab 2: Minutes */}
-          <button
-            className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
-              activeTab === "minutes"
-                ? "bg-[#174C37] text-white shadow-xs"
-                : "text-[#5C4638] hover:bg-[#FAF6F0]"
-            }`}
-            id="tab-minutes-transcripts"
-            onClick={() => handleTabChange("minutes")}
-            type="button"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Minutes</span>
-          </button>
-
-          {/* Tab 3: Roster (Officer / Reviewer view) */}
-          {(isOfficer || canReviewAttendance) && (
+            {/* Tab 1: Check-In */}
             <button
               className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
-                activeTab === "roster"
+                activeTab === "session"
                   ? "bg-[#174C37] text-white shadow-xs"
                   : "text-[#5C4638] hover:bg-[#FAF6F0]"
               }`}
-              onClick={() => handleTabChange("roster")}
+              onClick={() => handleTabChange("session")}
               type="button"
             >
-              <Users className="w-3.5 h-3.5" />
-              <span>Roster</span>
-              <span
-                className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>Check-In</span>
+            </button>
+
+            {/* Tab 2: Minutes */}
+            <button
+              className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                activeTab === "minutes"
+                  ? "bg-[#174C37] text-white shadow-xs"
+                  : "text-[#5C4638] hover:bg-[#FAF6F0]"
+              }`}
+              id="tab-minutes-transcripts"
+              onClick={() => handleTabChange("minutes")}
+              type="button"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Minutes</span>
+            </button>
+
+            {/* Tab 3: Roster (Officer / Reviewer view) */}
+            {(isOfficer || canReviewAttendance) && (
+              <button
+                className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
                   activeTab === "roster"
-                    ? "bg-white/20 text-white"
-                    : "bg-[#E5DDD3] text-[#5C4638]"
+                    ? "bg-[#174C37] text-white shadow-xs"
+                    : "text-[#5C4638] hover:bg-[#FAF6F0]"
                 }`}
+                onClick={() => handleTabChange("roster")}
+                type="button"
               >
-                {attendance.length}
-              </span>
-            </button>
-          )}
+                <Users className="w-3.5 h-3.5" />
+                <span>Roster</span>
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                    activeTab === "roster"
+                      ? "bg-white/20 text-white"
+                      : "bg-[#E5DDD3] text-[#5C4638]"
+                  }`}
+                >
+                  {attendance.length}
+                </span>
+              </button>
+            )}
 
-          {/* Tab 4: Standing */}
-          <button
-            className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
-              activeTab === "history"
-                ? "bg-[#174C37] text-white shadow-xs"
-                : "text-[#5C4638] hover:bg-[#FAF6F0]"
-            }`}
-            onClick={() => handleTabChange("history")}
-            type="button"
-          >
-            <History className="w-3.5 h-3.5" />
-            <span>Standing</span>
-          </button>
-
-          {/* Tab 5: Desk (Officer controls & audits) */}
-          {(isOfficer || canControl) && (
+            {/* Tab 4: Standing */}
             <button
               className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
-                activeTab === "audit"
+                activeTab === "history"
                   ? "bg-[#174C37] text-white shadow-xs"
                   : "text-[#5C4638] hover:bg-[#FAF6F0]"
               }`}
-              onClick={() => handleTabChange("audit")}
+              onClick={() => handleTabChange("history")}
               type="button"
             >
-              <Sliders
-                className={`w-3.5 h-3.5 ${
-                  activeTab === "audit" ? "text-white" : "text-[#174C37]"
-                }`}
-              />
-              <span>Desk</span>
+              <History className="w-3.5 h-3.5" />
+              <span>Standing</span>
             </button>
-          )}
-        </nav>
+
+            {/* Tab 5: Desk (Officer controls & audits) */}
+            {(isOfficer || canControl) && (
+              <button
+                className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                  activeTab === "audit"
+                    ? "bg-[#174C37] text-white shadow-xs"
+                    : "text-[#5C4638] hover:bg-[#FAF6F0]"
+                }`}
+                onClick={() => handleTabChange("audit")}
+                type="button"
+              >
+                <Sliders
+                  className={`w-3.5 h-3.5 ${
+                    activeTab === "audit" ? "text-white" : "text-[#174C37]"
+                  }`}
+                />
+                <span>Desk</span>
+              </button>
+            )}
+          </nav>
+        </div>
       )}
 
       {/* 4. Tab Panels */}
