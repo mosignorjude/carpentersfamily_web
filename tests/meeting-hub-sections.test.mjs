@@ -201,10 +201,10 @@ describe("Meeting Hub Standalone Migration (Stage 4)", () => {
   });
 
   describe("Shortened Tab Headings", () => {
-    it("shortens tab labels to Attendance, Minutes, and Standing", () => {
+    it("shortens tab labels to Check-In, Minutes, and Standing", () => {
       assert.match(
         meetingHubViewSource,
-        /<UserCheck[^>]*\/>[\s\S]*?<span>Attendance<\/span>/,
+        /<UserCheck[^>]*\/>[\s\S]*?<span>(?:Attendance|Check-In)<\/span>/,
       );
       assert.match(
         meetingHubViewSource,

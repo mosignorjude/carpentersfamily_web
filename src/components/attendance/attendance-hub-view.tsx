@@ -427,7 +427,7 @@ export function AttendanceHubView({
           aria-label="Meeting Sections"
           className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-[#E5DDD3] shadow-2xs overflow-x-auto text-xs font-bold"
         >
-          {/* Tab 1: Attendance */}
+          {/* Tab 1: Check-In */}
           <button
             className={`px-3.5 py-2 rounded-lg transition-all min-h-[38px] flex items-center gap-1.5 shrink-0 cursor-pointer ${
               activeTab === "session"
@@ -438,7 +438,7 @@ export function AttendanceHubView({
             type="button"
           >
             <UserCheck className="w-3.5 h-3.5" />
-            <span>Attendance</span>
+            <span>Check-In</span>
           </button>
 
           {/* Tab 2: Minutes */}
@@ -469,7 +469,13 @@ export function AttendanceHubView({
             >
               <Users className="w-3.5 h-3.5" />
               <span>Roster</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#E5DDD3] text-[#5C4638] font-mono">
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                  activeTab === "roster"
+                    ? "bg-white/20 text-white"
+                    : "bg-[#E5DDD3] text-[#5C4638]"
+                }`}
+              >
                 {attendance.length}
               </span>
             </button>
@@ -500,7 +506,11 @@ export function AttendanceHubView({
               onClick={() => handleTabChange("audit")}
               type="button"
             >
-              <Sliders className="w-3.5 h-3.5 text-[#174C37]" />
+              <Sliders
+                className={`w-3.5 h-3.5 ${
+                  activeTab === "audit" ? "text-white" : "text-[#174C37]"
+                }`}
+              />
               <span>Desk</span>
             </button>
           )}
