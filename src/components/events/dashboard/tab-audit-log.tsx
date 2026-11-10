@@ -7,6 +7,7 @@ import { EmptyStateCard } from "@/components/ui/state-screen";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { downloadLedgerCSV, formatNaira } from "@/lib/format";
 import type { ActivityLogItem, DashboardTransaction } from "./dashboard-types";
+import { EventAuditTrailList } from "./event-audit-trail-list";
 
 interface TabAuditLogProps {
   transactions: DashboardTransaction[];
@@ -573,39 +574,7 @@ export function TabAuditLog({
           </span>
         </div>
 
-        {activityLogs.length === 0 ? (
-          <p className="text-xs text-[#7A685D] py-6 text-center">
-            No audit activity recorded yet.
-          </p>
-        ) : (
-          <div className="divide-y divide-[#E5DDD3]">
-            {activityLogs.map((log) => (
-              <div
-                className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
-                key={log.id}
-              >
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-[#3D291F]">
-                      {log.action}
-                    </span>
-                    <span className="text-[10px] uppercase font-semibold text-[#174C37] bg-[#174C37]/10 px-2 py-0.5 rounded-full">
-                      {log.category}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#5C4638]">{log.details}</p>
-                  <span className="text-[11px] text-[#7A685D]">
-                    Authorized by: <strong>{log.user}</strong> ({log.userRole})
-                  </span>
-                </div>
-
-                <span className="font-mono text-[11px] text-[#7A685D] shrink-0 self-end sm:self-center">
-                  {log.timestamp}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
+        <EventAuditTrailList activityLogs={activityLogs} />
       </section>
     </div>
   );

@@ -32,11 +32,11 @@ const attendanceRoster = readFileSync(
 );
 
 describe("Phase 3: Table-to-Card Responsive Transformation & Tap Floors", () => {
-  it("event-domain-ledger implements mobile transaction cards and desktop table", () => {
-    assert.match(domainLedger, /md:hidden\s+divide-y/);
-    assert.match(domainLedger, /hidden\s+md:block/);
-    assert.match(domainLedger, /<TableScroll[^>]*label="Ledger transactions"/);
-    assert.match(domainLedger, /min-h-\[38px\]/);
+  it("event-domain-ledger uses shared 2-line LedgerTransactionCard across mobile and desktop with >=44px tap targets", () => {
+    assert.match(domainLedger, /LedgerTransactionCard/);
+    assert.doesNotMatch(domainLedger, /hidden\s+md:block/);
+    assert.doesNotMatch(domainLedger, /<table\b/);
+    assert.match(domainLedger, /min-h-\[44px\]/);
   });
 
   it("tab-tickets implements mobile admission tier cards and desktop table", () => {

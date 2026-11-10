@@ -35,8 +35,9 @@ describe("Ticket Sales Ledger Channels Requirements", () => {
     assert.doesNotMatch(ledgerSource, /\(From Box office\)/i);
   });
 
-  it("renders Channel as column header for tickets domain instead of Category", () => {
-    assert.match(ledgerSource, /domain\s*===\s*"tickets"\s*\?\s*"Channel"\s*:\s*"Category"/);
+  it("renders channel and category metadata via LedgerTransactionCard on both mobile and desktop", () => {
+    assert.match(ledgerSource, /<LedgerTransactionCard/);
+    assert.doesNotMatch(ledgerSource, /<table\b/);
   });
 
   it("provides channel segment filter buttons for tickets domain", () => {
