@@ -24,6 +24,7 @@ import {
   FormSubmitButton,
 } from "@/components/ui";
 import { formatNaira, formatPercent } from "@/lib/format";
+import { percentWidthClass } from "@/lib/percent-width-class";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 import type {
   DashboardCostCenter,
@@ -247,6 +248,48 @@ export function EventCategoryManagementModal({
           {/* ========================================================= */}
           {isBudgetAllocationMode ? (
             <div className="space-y-6">
+              {/* Dynamic Headroom Bar */}
+              {budgetCeiling > 0 && (
+                <div className="space-y-1.5 p-3.5 rounded-xl bg-white border border-[#E5DDD3] shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1">
+                    <span className="font-semibold text-[#3D291F]">
+                      Allocated:{" "}
+                      <span className="font-mono text-[#174C37]">
+                        {formatNaira(currentTotalAllocated)}
+                      </span>{" "}
+                      (
+                      {Math.min(
+                        100,
+                        (currentTotalAllocated / budgetCeiling) * 100,
+                      ).toFixed(1)}
+                      %)
+                    </span>
+                    <span className="font-semibold text-[#7A685D]">
+                      Unallocated Reserve:{" "}
+                      <span className="font-mono text-[#174C37]">
+                        {formatNaira(remainingHeadroom)}
+                      </span>{" "}
+                      ({remainingPercent.toFixed(1)}%)
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-[#E5DDD3] overflow-hidden flex">
+                    <div
+                      className={`h-full bg-[#174C37] transition-all duration-300 ${percentWidthClass(
+                        Math.min(
+                          100,
+                          (currentTotalAllocated / budgetCeiling) * 100,
+                        ),
+                      )}`}
+                    />
+                    <div
+                      className={`h-full bg-[#D6A23A] transition-all duration-300 ${percentWidthClass(
+                        remainingPercent,
+                      )}`}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Form to Add / Allocate Category */}
               {canManage ? (
                 <div className="bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] p-4 space-y-4">

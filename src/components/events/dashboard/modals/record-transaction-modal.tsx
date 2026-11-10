@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Plus, Ticket, X } from "lucide-react";
+import { Loader2, Paperclip, Plus, Ticket, X } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { FormattedAmountInput } from "@/components/formatted-amount-input";
@@ -662,26 +662,51 @@ export function RecordTransactionModal({
                     Transfer Receipt / Screenshot{" "}
                     <span className="text-[#BA3C2A]">*</span>
                   </label>
-                  <input
-                    aria-describedby={
-                      fieldErrors.receiptFile
-                        ? "error-ticket-receipt"
-                        : undefined
-                    }
-                    aria-invalid={fieldErrors.receiptFile ? "true" : undefined}
-                    id="ticket-receipt-file"
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                    onChange={(e) => {
-                      setReceiptFile(e.target.files?.[0] || null);
-                      clearFieldError("receiptFile");
-                    }}
-                    className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
-                      fieldErrors.receiptFile
-                        ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
-                        : "border-[#E5DDD3] focus:ring-[#174C37]"
-                    }`}
-                  />
+                  {receiptFile ? (
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <Paperclip className="w-4 h-4 text-[#174C37] shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-[#3D291F] truncate" title={receiptFile.name}>
+                            {receiptFile.name}
+                          </p>
+                          <p className="text-[10px] text-[#7A685D]">
+                            {(receiptFile.size / 1024).toFixed(0)} KB
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setReceiptFile(null)}
+                        className="p-1 rounded-lg text-[#7A685D] hover:text-[#BA3C2A] hover:bg-white transition-colors cursor-pointer"
+                        title="Remove attached receipt"
+                        aria-label="Remove attached receipt"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <input
+                      aria-describedby={
+                        fieldErrors.receiptFile
+                          ? "error-ticket-receipt"
+                          : undefined
+                      }
+                      aria-invalid={fieldErrors.receiptFile ? "true" : undefined}
+                      id="ticket-receipt-file"
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                      onChange={(e) => {
+                        setReceiptFile(e.target.files?.[0] || null);
+                        clearFieldError("receiptFile");
+                      }}
+                      className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
+                        fieldErrors.receiptFile
+                          ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                          : "border-[#E5DDD3] focus:ring-[#174C37]"
+                      }`}
+                    />
+                  )}
                   <FormFieldError
                     id="error-ticket-receipt"
                     message={fieldErrors.receiptFile}
@@ -992,28 +1017,53 @@ export function RecordTransactionModal({
                     >
                       Receipt <span className="text-[#BA3C2A]">*</span>
                     </label>
-                    <input
-                      aria-describedby={
-                        fieldErrors.receiptFile
-                          ? "error-receipt-file"
-                          : undefined
-                      }
-                      aria-invalid={
-                        fieldErrors.receiptFile ? "true" : undefined
-                      }
-                      id="txn-receipt-file"
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                      onChange={(e) => {
-                        setReceiptFile(e.target.files?.[0] || null);
-                        clearFieldError("receiptFile");
-                      }}
-                      className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
-                        fieldErrors.receiptFile
-                          ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
-                          : "border-[#E5DDD3] focus:ring-[#174C37]"
-                      }`}
-                    />
+                    {receiptFile ? (
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <Paperclip className="w-4 h-4 text-[#174C37] shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-[#3D291F] truncate" title={receiptFile.name}>
+                              {receiptFile.name}
+                            </p>
+                            <p className="text-[10px] text-[#7A685D]">
+                              {(receiptFile.size / 1024).toFixed(0)} KB
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setReceiptFile(null)}
+                          className="p-1 rounded-lg text-[#7A685D] hover:text-[#BA3C2A] hover:bg-white transition-colors cursor-pointer"
+                          title="Remove attached receipt"
+                          aria-label="Remove attached receipt"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        aria-describedby={
+                          fieldErrors.receiptFile
+                            ? "error-receipt-file"
+                            : undefined
+                        }
+                        aria-invalid={
+                          fieldErrors.receiptFile ? "true" : undefined
+                        }
+                        id="txn-receipt-file"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                        onChange={(e) => {
+                          setReceiptFile(e.target.files?.[0] || null);
+                          clearFieldError("receiptFile");
+                        }}
+                        className={`w-full h-10 px-3 text-xs bg-white border rounded-xl text-[#3D291F] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#174C37] file:text-white hover:file:bg-[#103D2B] cursor-pointer ${
+                          fieldErrors.receiptFile
+                            ? "border-[#BA3C2A] focus:ring-[#BA3C2A]"
+                            : "border-[#E5DDD3] focus:ring-[#174C37]"
+                        }`}
+                      />
+                    )}
                     <FormFieldError
                       id="error-receipt-file"
                       message={fieldErrors.receiptFile}
