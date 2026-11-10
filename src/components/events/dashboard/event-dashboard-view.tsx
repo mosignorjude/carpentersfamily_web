@@ -26,11 +26,11 @@ import {
   voidRecordAction,
 } from "@/app/actions";
 import { VoidRecordModal } from "@/components/common/void-record-modal";
-import {
-  EventLifecycleModal,
-  type EventLifecycleAction,
-} from "@/components/events/event-lifecycle-modal";
 import { EventEditModal } from "@/components/events/event-edit-modal";
+import {
+  type EventLifecycleAction,
+  EventLifecycleModal,
+} from "@/components/events/event-lifecycle-modal";
 import type { EventRow } from "@/components/events/event-types";
 import {
   dispatchActionStatusToast,
@@ -56,7 +56,6 @@ import type {
   TransactionType,
   VoidableRecord,
 } from "./dashboard-types";
-import { toVoidableRecord } from "./dashboard-types";
 import { EventDomainLedger } from "./event-domain-ledger";
 import { DownloadReportModal } from "./modals/download-report-modal";
 import { EventBudgetCeilingModal } from "./modals/event-budget-ceiling-modal";
@@ -96,6 +95,14 @@ function mapDbPaymentMethod(label: string): string {
   }
   if (normalized.includes("mobile")) return "mobile_money";
   return "other";
+}
+
+function mapInitialTab(tab: DashboardTab): DashboardTab {
+  if (tab === "expenses" || tab === "revenue") return "budget";
+  if (tab === "reports" || tab === "team_roles" || tab === "audit_log") {
+    return "statement";
+  }
+  return tab;
 }
 
 interface EventDashboardViewProps {
@@ -146,14 +153,6 @@ export function EventDashboardView({
   canManageTeamRoles = false,
   notice: _notice,
 }: EventDashboardViewProps) {
-  const mapInitialTab = (tab: DashboardTab): DashboardTab => {
-    if (tab === "expenses" || tab === "revenue") return "budget";
-    if (tab === "reports" || tab === "team_roles" || tab === "audit_log") {
-      return "statement";
-    }
-    return tab;
-  };
-
   const [activeTab, setActiveTab] = useState<DashboardTab>(() =>
     mapInitialTab(initialTab),
   );
@@ -951,10 +950,14 @@ export function EventDashboardView({
                     />
                   ) : null}
                   {tab.alert && (
-                    <span
-                      aria-label="Over budget alert"
-                      className="w-2 h-2 rounded-full bg-[#BA3C2A] animate-ping"
-                    />
+                    <>
+                      <span
+                        aria-hidden="true"
+                        className="w-2 h-2 rounded-full bg-[#BA3C2A] animate-ping"
+                        title="Over budget alert"
+                      />
+                      <span className="sr-only"> (Over budget alert)</span>
+                    </>
                   )}
                 </button>
               );
@@ -1128,9 +1131,7 @@ export function EventDashboardView({
               setTeamModalMode("assign");
               setIsTeamModalOpen(true);
             }}
-            onOpenDownloadReportModal={() =>
-              setIsDownloadReportModalOpen(true)
-            }
+            onOpenDownloadReportModal={() => setIsDownloadReportModalOpen(true)}
             onOpenRevokeTeamModal={(member) => {
               setSelectedTeamMember(member);
               setTeamModalMode("revoke");

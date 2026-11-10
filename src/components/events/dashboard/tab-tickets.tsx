@@ -44,7 +44,9 @@ export function TabTickets({
     null,
   );
 
-  const activeTiers = tiers.filter((t) => !t.retiredAt && t.status !== "retired");
+  const activeTiers = tiers.filter(
+    (t) => !t.retiredAt && t.status !== "retired",
+  );
   const totalSold = tiers.reduce((acc, t) => acc + t.sold, 0);
   const totalCapacity = activeTiers.reduce((acc, t) => acc + t.capacity, 0);
   const totalGross = tiers.reduce((acc, t) => acc + t.sold * t.price, 0);
@@ -157,7 +159,8 @@ export function TabTickets({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {tiers.map((tier) => {
-            const isRetired = Boolean(tier.retiredAt) || tier.status === "retired";
+            const isRetired =
+              Boolean(tier.retiredAt) || tier.status === "retired";
             const tierRev = tier.sold * tier.price;
             const pct =
               tier.capacity > 0
@@ -165,7 +168,8 @@ export function TabTickets({
                 : 0;
             const remaining = Math.max(0, tier.capacity - tier.sold);
             const isSoldOut =
-              !isRetired && (tier.status === "sold_out" || tier.sold >= tier.capacity);
+              !isRetired &&
+              (tier.status === "sold_out" || tier.sold >= tier.capacity);
             const isLimited = !isRetired && !isSoldOut && remaining <= 10;
 
             const badge = isRetired

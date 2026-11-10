@@ -119,15 +119,17 @@ export function TabReports({
                   <span className="px-2 py-0.5 rounded-full bg-[#174C37]/10 text-[#174C37] text-[10px] font-semibold">
                     Active
                   </span>
-                  {canManageTeamRoles && onOpenRevokeTeamModal && m.memberId && (
-                    <button
-                      className="px-2.5 py-1.5 min-h-[44px] rounded-lg border border-[#BA3C2A]/30 bg-white text-[#BA3C2A] hover:bg-[#FDF0EE] text-[11px] font-semibold cursor-pointer transition-colors"
-                      onClick={() => onOpenRevokeTeamModal(m)}
-                      type="button"
-                    >
-                      Remove
-                    </button>
-                  )}
+                  {canManageTeamRoles &&
+                    onOpenRevokeTeamModal &&
+                    m.memberId && (
+                      <button
+                        className="px-2.5 py-1.5 min-h-[44px] rounded-lg border border-[#BA3C2A]/30 bg-white text-[#BA3C2A] hover:bg-[#FDF0EE] text-[11px] font-semibold cursor-pointer transition-colors"
+                        onClick={() => onOpenRevokeTeamModal(m)}
+                        type="button"
+                      >
+                        Remove
+                      </button>
+                    )}
                 </div>
               </div>
             ))}
@@ -150,9 +152,7 @@ export function TabReports({
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             <button
               className="px-3.5 py-2 min-h-[44px] rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] hover:border-[#174C37] text-xs font-semibold text-[#3D291F] flex items-center gap-1.5 cursor-pointer transition-colors"
-              onClick={
-                onOpenDownloadReportModal ?? (() => window.print())
-              }
+              onClick={onOpenDownloadReportModal ?? (() => window.print())}
               type="button"
             >
               <Printer className="w-3.5 h-3.5 text-[#174C37]" />
@@ -212,9 +212,7 @@ export function TabReports({
             <div className="text-base sm:text-lg font-bold text-[#174C37] mt-0.5 font-mono tabular-nums">
               {formatNaira(totalRevenue)}
             </div>
-            <span className="text-[10px] text-[#7A685D]">
-              Verified Inflows
-            </span>
+            <span className="text-[10px] text-[#7A685D]">Verified Inflows</span>
           </div>
 
           <div className="p-3 rounded-xl border border-[#E5DDD3]">

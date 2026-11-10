@@ -100,8 +100,11 @@ export function EventDomainLedger({
     setCurrentPage(1);
   }, [initialCategoryFilter]);
 
-  const resolveStatus = (txn: DashboardTransaction) =>
-    txn.status === "voided" ? "rejected" : txn.verificationStatus || "approved";
+  const resolveStatus = (txn: DashboardTransaction) => {
+    if (txn.verificationStatus === "cancelled") return "cancelled";
+    if (txn.status === "voided") return "rejected";
+    return txn.verificationStatus || "approved";
+  };
 
   const categoryGroups = useMemo(() => {
     const tierOptions = Array.from(
@@ -140,6 +143,8 @@ export function EventDomainLedger({
     const status = resolveStatus(txn);
     if (statusFilter === "voided") {
       if (status !== "rejected" && status !== "cancelled") return false;
+    } else if (statusFilter === "cancelled") {
+      if (status !== "cancelled") return false;
     } else if (statusFilter !== "all" && status !== statusFilter) {
       return false;
     }
@@ -215,6 +220,9 @@ export function EventDomainLedger({
   const approvedCount = transactions.filter(
     (t) => resolveStatus(t) === "approved",
   ).length;
+  const cancelledCount = transactions.filter(
+    (t) => resolveStatus(t) === "cancelled",
+  ).length;
   const voidedCount = transactions.filter((t) => {
     const s = resolveStatus(t);
     return s === "rejected" || s === "cancelled";
@@ -230,7 +238,10 @@ export function EventDomainLedger({
 
   const verifiedFilteredNet = filtered.reduce((acc, txn) => {
     const s = resolveStatus(txn);
-    if (s !== "approved") return acc;
+    const isRejected = s === "rejected";
+    const isCancelled = s === "cancelled";
+    const isNotCounted = isRejected || isCancelled;
+    if (isNotCounted || s !== "approved") return acc;
     if (txn.type === "expense") return acc - txn.amount;
     return acc + txn.amount;
   }, 0);
@@ -265,7 +276,7 @@ export function EventDomainLedger({
       onExportCsv();
       return;
     }
-    downloadLedgerCSV(filtered, `event-${domain}-ledger.csv`);
+    downloadLedgerCSV(filtered);
   };
 
   return (
@@ -400,7 +411,9 @@ export function EventDomainLedger({
                 </button>
               )}
             </div>
-            {(searchQuery || statusFilter !== "all" || channelFilter !== "all") && (
+            {(searchQuery ||
+              statusFilter !== "all" ||
+              channelFilter !== "all") && (
               <button
                 className="shrink-0 px-3 py-2 min-h-[44px] rounded-xl bg-[#E5DDD3]/60 hover:bg-[#E5DDD3] text-xs font-semibold text-[#3D291F] cursor-pointer transition-colors"
                 onClick={handleResetFilters}
@@ -416,9 +429,15 @@ export function EventDomainLedger({
         {domain === "all" && (
           <div className="flex items-center gap-1.5 overflow-x-auto pt-1">
             {[
-              { id: "all" as const, label: `All Domains (${transactions.length})` },
+              {
+                id: "all" as const,
+                label: `All Domains (${transactions.length})`,
+              },
               { id: "tickets" as const, label: `Tickets (${ticketsCount})` },
-              { id: "revenue" as const, label: `Other Revenue (${revenueCount})` },
+              {
+                id: "revenue" as const,
+                label: `Other Revenue (${revenueCount})`,
+              },
               { id: "expenses" as const, label: `Expenses (${expensesCount})` },
             ].map((pill) => (
               <button
@@ -441,15 +460,25 @@ export function EventDomainLedger({
         )}
 
         {/* Sales Channel Filter Bar */}
-        {(domain === "tickets" || (domain === "all" && typeFilter === "tickets")) && (
+        {(domain === "tickets" ||
+          (domain === "all" && typeFilter === "tickets")) && (
           <div className="flex items-center gap-1.5 overflow-x-auto pt-1 border-t border-[#E5DDD3]/70">
             <span className="text-[11px] font-bold text-[#7A685D] uppercase tracking-wider mr-1 shrink-0">
               Channel:
             </span>
             {[
-              { id: "all" as const, label: `All Channels (${ticketScoped.length})` },
-              { id: "member" as const, label: `Member Sales (${memberChannelCount})` },
-              { id: "online" as const, label: `Online Sales (${onlineChannelCount})` },
+              {
+                id: "all" as const,
+                label: `All Channels (${ticketScoped.length})`,
+              },
+              {
+                id: "member" as const,
+                label: `Member Sales (${memberChannelCount})`,
+              },
+              {
+                id: "online" as const,
+                label: `Online Sales (${onlineChannelCount})`,
+              },
             ].map((ch) => (
               <button
                 className={`shrink-0 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
@@ -473,15 +502,28 @@ export function EventDomainLedger({
         {/* Status Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pt-2 border-t border-[#E5DDD3]/70">
           {[
-            { id: "all" as const, label: `All Status (${transactions.length})` },
+            {
+              id: "all" as const,
+              label: `All Status (${transactions.length})`,
+            },
             { id: "approved" as const, label: `Approved (${approvedCount})` },
             { id: "recorded" as const, label: `Pending (${pendingCount})` },
-            { id: "voided" as const, label: `Reversed / Voided (${voidedCount})` },
+            ...(cancelledCount > 0
+              ? [
+                  {
+                    id: "cancelled" as const,
+                    label: `Cancelled (${cancelledCount})`,
+                  },
+                ]
+              : []),
+            {
+              id: "voided" as const,
+              label: `Reversed / Voided (${voidedCount})`,
+            },
           ].map((pill) => {
             const isActive =
               statusFilter === pill.id ||
-              (pill.id === "voided" &&
-                (statusFilter === "rejected" || statusFilter === "cancelled"));
+              (pill.id === "voided" && statusFilter === "rejected");
             return (
               <button
                 className={`shrink-0 px-3 py-2 min-h-[44px] rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${

@@ -18,9 +18,11 @@ export function LedgerTransactionCard({
   userRole,
 }: LedgerTransactionCardProps) {
   const effectiveStatus =
-    transaction.status === "voided"
-      ? "rejected"
-      : transaction.verificationStatus || "approved";
+    transaction.verificationStatus === "cancelled"
+      ? "cancelled"
+      : transaction.status === "voided"
+        ? "rejected"
+        : transaction.verificationStatus || "approved";
 
   const isVoided =
     effectiveStatus === "rejected" || effectiveStatus === "cancelled";
@@ -138,7 +140,9 @@ export function LedgerTransactionCard({
               Needs Another Officer's Review
             </span>
           ) : (
-            <span className={`font-bold ${statusTextColor}`}>{statusLabel}</span>
+            <span className={`font-bold ${statusTextColor}`}>
+              {statusLabel}
+            </span>
           )}
         </div>
       </div>

@@ -110,7 +110,9 @@ export function TabOverview({
       if (b.spent !== a.spent) return b.spent - a.spent;
       const timeA = a.latestInputAt ? Date.parse(a.latestInputAt) : 0;
       const timeB = b.latestInputAt ? Date.parse(b.latestInputAt) : 0;
-      return (Number.isNaN(timeB) ? 0 : timeB) - (Number.isNaN(timeA) ? 0 : timeA);
+      return (
+        (Number.isNaN(timeB) ? 0 : timeB) - (Number.isNaN(timeA) ? 0 : timeA)
+      );
     })
     .slice(0, 4);
 
@@ -199,8 +201,8 @@ export function TabOverview({
             </div>
             <div className="text-xs text-[#5C4638] mt-1 flex items-center justify-between gap-1">
               <span className="truncate">
-                <strong className="text-[#3D291F]">{totalTicketsSold}</strong> of{" "}
-                {totalTicketsCapacity} sold
+                <strong className="text-[#3D291F]">{totalTicketsSold}</strong>{" "}
+                of {totalTicketsCapacity} sold
               </span>
               <span className="text-[11px] text-[#174C37] font-semibold shrink-0">
                 Tiers &rarr;
@@ -344,7 +346,9 @@ export function TabOverview({
                   </span>
                   <span
                     className={`font-semibold font-mono ${
-                      remainingCeiling >= 0 ? "text-[#174C37]" : "text-[#BA3C2A]"
+                      remainingCeiling >= 0
+                        ? "text-[#174C37]"
+                        : "text-[#BA3C2A]"
                     }`}
                   >
                     {remainingCeiling >= 0
@@ -439,7 +443,10 @@ export function TabOverview({
                 {activeCostCenters.map((cc) => {
                   const pct =
                     cc.allocated > 0
-                      ? Math.min(100, Math.round((cc.spent / cc.allocated) * 100))
+                      ? Math.min(
+                          100,
+                          Math.round((cc.spent / cc.allocated) * 100),
+                        )
                       : 0;
                   const isOver = cc.allocated > 0 && cc.spent > cc.allocated;
                   return (

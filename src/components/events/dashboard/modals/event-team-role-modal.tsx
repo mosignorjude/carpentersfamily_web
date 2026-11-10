@@ -98,9 +98,7 @@ export function EventTeamRoleModal({
           <div className="flex items-center gap-2.5">
             <div
               className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                isRevoke
-                  ? "bg-[#BA3C2A] text-white"
-                  : "bg-[#174C37] text-white"
+                isRevoke ? "bg-[#BA3C2A] text-white" : "bg-[#174C37] text-white"
               }`}
             >
               {isRevoke ? (
@@ -149,7 +147,9 @@ export function EventTeamRoleModal({
           }}
         >
           <input name="event_id" type="hidden" value={eventId} />
-          {returnTo && <input name="return_to" type="hidden" value={returnTo} />}
+          {returnTo && (
+            <input name="return_to" type="hidden" value={returnTo} />
+          )}
 
           {isRevoke && targetMember ? (
             <>
@@ -168,8 +168,8 @@ export function EventTeamRoleModal({
                       : ""}
                   </span>
                   <span className="text-[11px] block mt-0.5">
-                    Current role: <strong>{targetMember.role}</strong>. They will
-                    no longer be able to coordinate event tasks under this
+                    Current role: <strong>{targetMember.role}</strong>. They
+                    will no longer be able to coordinate event tasks under this
                     assignment.
                   </span>
                 </div>
@@ -187,7 +187,9 @@ export function EventTeamRoleModal({
                 {effectiveMembers.length === 0 ? (
                   <div className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#7A685D] flex items-center gap-2">
                     <Users className="w-4 h-4 shrink-0" />
-                    <span>All active club members already have roles here.</span>
+                    <span>
+                      All active club members already have roles here.
+                    </span>
                   </div>
                 ) : (
                   <select

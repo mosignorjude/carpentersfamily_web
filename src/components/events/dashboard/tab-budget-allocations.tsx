@@ -92,7 +92,8 @@ export function TabBudgetAllocations({
               Budget Allocations &amp; Revenue Streams
             </h2>
             <p className="text-xs text-[#5C4638]">
-              Category spending limits, revenue targets, and net cash flow health
+              Category spending limits, revenue targets, and net cash flow
+              health
             </p>
           </div>
 
@@ -342,7 +343,9 @@ export function TabBudgetAllocations({
                   <table className="w-full min-w-[580px] text-left border-collapse text-xs">
                     <thead>
                       <tr className="border-b border-[#E5DDD3] text-[11px] uppercase tracking-wider text-[#7A685D] bg-[#FAF6F0]">
-                        <th className="py-2.5 px-3 rounded-tl-lg">Cost Center</th>
+                        <th className="py-2.5 px-3 rounded-tl-lg">
+                          Cost Center
+                        </th>
                         <th className="py-2.5 px-3 text-right">Allocated</th>
                         <th className="py-2.5 px-3 text-right">Share</th>
                         <th className="py-2.5 px-3 text-right">Spent</th>
