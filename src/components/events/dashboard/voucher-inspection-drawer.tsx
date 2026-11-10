@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   verifyEventFinancialTransactionAction,
@@ -49,6 +50,7 @@ export function VoucherInspectionDrawer({
   onVoid,
 }: VoucherInspectionDrawerProps) {
   useModalHygiene({ isOpen, onClose });
+  const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVoidModalOpen, setIsVoidModalOpen] = useState(false);
@@ -75,6 +77,7 @@ export function VoucherInspectionDrawer({
     userRole === "event_lead";
 
   const isExecutiveSelfReview =
+    isPending &&
     userRole === "executive" &&
     Boolean(currentUserId) &&
     Boolean(transaction.createdBy) &&
@@ -103,6 +106,12 @@ export function VoucherInspectionDrawer({
     if (!res.success) {
       setErrorMessage(res.error || "Approval failed.");
     } else {
+      dispatchFlashCard({
+        type: "success",
+        title: "Record Approved",
+        message: `${transaction.description} has been approved and posted to realized totals.`,
+      });
+      router.refresh();
       onClose();
     }
   }

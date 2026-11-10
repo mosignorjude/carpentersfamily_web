@@ -26,9 +26,12 @@ describe("VoucherInspectionDrawer Component", () => {
     assert.match(voidModal, /Confirm Void/);
   });
 
-  it("enforces segregation of duties for executive users", () => {
-    assert.match(source, /isExecutiveSelfReview/i);
+  it("enforces segregation of duties only while pending and refreshes + notifies on approval", () => {
+    assert.match(source, /isExecutiveSelfReview\s*=\s*isPending\s*&&/i);
     assert.match(source, /Needs Another Officer's Review/i);
+    assert.match(source, /useRouter\(\)/);
+    assert.match(source, /router\.refresh\(\)/);
+    assert.match(source, /dispatchFlashCard\(\{[\s\S]*Record Approved/);
   });
 
   it("renders inline PDF and image receipt preview via shared ReceiptPreview and displays Recorded By", () => {

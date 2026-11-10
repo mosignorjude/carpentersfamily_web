@@ -444,11 +444,24 @@ export default async function EventDashboardPage({
   // Raw financial transactions
   const rawTxns = transactionsResult.data ?? [];
   const unvoidedExpenses = rawTxns.filter(
-    (t) => t.kind === "expense" && !t.voided_at,
+    (t) =>
+      t.kind === "expense" &&
+      !t.voided_at &&
+      t.verification_status !== "rejected",
   );
   const unvoidedIncomes = rawTxns.filter(
-    (t) => t.kind === "income" && !t.voided_at,
+    (t) =>
+      t.kind === "income" &&
+      !t.voided_at &&
+      t.verification_status !== "rejected",
   );
+  const isTxnApproved = (t: (typeof rawTxns)[number]) =>
+    (t.verification_status ?? "approved") === "approved";
+  const isExpenseSettled = (e: (typeof unvoidedExpenses)[number]) =>
+    isTxnApproved(e) &&
+    (e.payment_status === "paid" ||
+      e.payment_status === "deposit" ||
+      !e.payment_status);
 
   // Cost Centers / Budget Allocations (strictly from real database allocations & expenses)
   const categoryNameById = new Map<string, string>();
@@ -501,14 +514,10 @@ export default async function EventDashboardPage({
     const centerKey = (a.category_id ||
       a.allocation_name.toLowerCase().replace(/\s+/g, "_")) as ExpenseCategory;
     const spent = matchingExpenses
-      .filter(
-        (e) => e.payment_status === "paid" || e.payment_status === "deposit",
-      )
+      .filter((e) => isExpenseSettled(e))
       .reduce((sum, e) => sum + e.amount_ngn, 0);
     const committed = matchingExpenses
-      .filter(
-        (e) => e.payment_status === "pending" || e.payment_status === "unpaid",
-      )
+      .filter((e) => !isExpenseSettled(e))
       .reduce((sum, e) => sum + e.amount_ngn, 0);
 
     const percentage =
@@ -547,14 +556,10 @@ export default async function EventDashboardPage({
     expenses: list,
   } of costCenterPartition.unmatched) {
     const spent = list
-      .filter(
-        (e) => e.payment_status === "paid" || e.payment_status === "deposit",
-      )
+      .filter((e) => isExpenseSettled(e))
       .reduce((sum, e) => sum + e.amount_ngn, 0);
     const committed = list
-      .filter(
-        (e) => e.payment_status === "pending" || e.payment_status === "unpaid",
-      )
+      .filter((e) => !isExpenseSettled(e))
       .reduce((sum, e) => sum + e.amount_ngn, 0);
     const allocated = spent + committed;
     const percentage =
@@ -617,10 +622,14 @@ export default async function EventDashboardPage({
   }
   for (const [catName, list] of incomeByCategory.entries()) {
     const actual = list
-      .filter((i) => i.payment_status === "paid")
+      .filter(
+        (i) => isTxnApproved(i) && (i.payment_status ?? "paid") === "paid",
+      )
       .reduce((sum, i) => sum + i.amount_ngn, 0);
     const pending = list
-      .filter((i) => i.payment_status !== "paid")
+      .filter(
+        (i) => !isTxnApproved(i) || (i.payment_status ?? "paid") !== "paid",
+      )
       .reduce((sum, i) => sum + i.amount_ngn, 0);
     revenueStreams.push({
       id: catName.toLowerCase().replace(/\s+/g, "_") as RevenueCategory,

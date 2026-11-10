@@ -168,6 +168,13 @@ export function ReceiptPreview({
         if (!ctx) return;
 
         renderTask = page.render({ canvasContext: ctx, viewport });
+        renderTask.promise?.catch((err: unknown) => {
+          const isRenderCancelled =
+            err instanceof Error && err.name === "RenderingCancelledException";
+          if (!cancelled && !isRenderCancelled) {
+            setError("Unable to render PDF page.");
+          }
+        });
       })
       .catch(() => {
         if (!cancelled) {

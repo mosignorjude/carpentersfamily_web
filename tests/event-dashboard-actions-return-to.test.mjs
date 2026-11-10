@@ -181,4 +181,15 @@ test("dashboard/page.tsx and dashboard-types.ts expose sha256, tierName, eventRo
       `dashboardNoticeMap must include ${noticeKey}`,
     );
   }
+
+  assert.match(
+    pageSource,
+    /t\.verification_status\s*!==\s*"rejected"/,
+    "page.tsx must exclude rejected transactions from unvoidedExpenses and unvoidedIncomes",
+  );
+  assert.match(
+    pageSource,
+    /const\s+isTxnApproved\s*=[\s\S]*verification_status[\s\S]*approved/,
+    "page.tsx cost-center spent and income actual aggregates must require verification approval",
+  );
 });

@@ -557,7 +557,7 @@ export function TabAuditLog({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-[#E5DDD3]">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-[#174C37]/10 text-[#174C37] flex items-center justify-center">
-              <Shield className="w-4 h-4 text-[#D6A23A]" />
+              <Shield className="w-4 h-4 text-[#174C37]" />
             </div>
             <div>
               <h4 className="text-base font-bold text-[#3D291F]">
