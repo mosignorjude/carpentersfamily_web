@@ -771,48 +771,58 @@ export function EventDomainLedger({
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                      <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            className="px-2.5 py-1 text-[11px] font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-lg transition-colors flex items-center gap-1 min-h-[30px] cursor-pointer"
-                            onClick={() => onInspect?.(txn)}
-                            type="button"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>Inspect</span>
-                          </button>
-
-                          {/* Quick Approve / Reject for Officers */}
                           {isOfficer &&
-                            isPending &&
-                            (isExecutive && isSelfReview ? (
-                              <span className="text-[10px] font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-2 py-1 rounded-lg">
-                                Needs Another Officer's Review
-                              </span>
-                            ) : (
-                              <>
-                                {onApprove && (
-                                  <button
-                                    className="p-1 text-[#174C37] hover:bg-[#E9F4EE] rounded-lg transition-colors border border-[#174C37]/30 cursor-pointer"
-                                    onClick={() => onApprove(txn)}
-                                    title="Quick Approve Record"
-                                    type="button"
-                                  >
-                                    <Check className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                                {onReject && (
-                                  <button
-                                    className="p-1 text-[#BA3C2A] hover:bg-[#FDF0EE] rounded-lg transition-colors border border-[#BA3C2A]/30 cursor-pointer"
-                                    onClick={() => onReject(txn)}
-                                    title="Reject and Reverse Transaction"
-                                    type="button"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                              </>
-                            ))}
+                          isPending &&
+                          isExecutive &&
+                          isSelfReview ? (
+                            <button
+                              className="text-[10px] font-semibold text-[#B27D16] bg-[#FFF4E5] hover:bg-[#FFEECB] border border-[#F8D8A7] px-2 py-1 rounded-lg text-center whitespace-normal max-w-[130px] leading-tight cursor-pointer transition-colors"
+                              onClick={() => onInspect?.(txn)}
+                              title="Click to view voucher and transaction details"
+                              type="button"
+                            >
+                              Needs Another Officer's Review
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                className="px-2.5 py-1 text-[11px] font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-lg transition-colors flex items-center gap-1 min-h-[30px] cursor-pointer whitespace-nowrap"
+                                onClick={() => onInspect?.(txn)}
+                                type="button"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>Inspect</span>
+                              </button>
+
+                              {/* Quick Approve / Reject for Officers */}
+                              {isOfficer && isPending && (
+                                <>
+                                  {onApprove && (
+                                    <button
+                                      className="p-1 text-[#174C37] hover:bg-[#E9F4EE] rounded-lg transition-colors border border-[#174C37]/30 cursor-pointer"
+                                      onClick={() => onApprove(txn)}
+                                      title="Quick Approve Record"
+                                      type="button"
+                                    >
+                                      <Check className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                  {onReject && (
+                                    <button
+                                      className="p-1 text-[#BA3C2A] hover:bg-[#FDF0EE] rounded-lg transition-colors border border-[#BA3C2A]/30 cursor-pointer"
+                                      onClick={() => onReject(txn)}
+                                      title="Reject and Reverse Transaction"
+                                      type="button"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </>
+                              )}
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

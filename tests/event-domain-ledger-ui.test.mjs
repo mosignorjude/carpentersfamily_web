@@ -28,4 +28,12 @@ describe("EventDomainLedger UI Component", () => {
     assert.match(source, /txn\.createdBy\s*===\s*currentUserId/);
     assert.match(source, /Needs Another Officer's Review/i);
   });
+
+  it("hides inspect button and wraps Needs Another Officer's Review badge when entry needs another officer's review", () => {
+    // When isNeedsAnotherReview is true, inspect button is hidden and badge wraps without pushing table
+    assert.match(
+      source,
+      /isOfficer\s*&&\s*isPending\s*&&\s*isExecutive\s*&&\s*isSelfReview\s*\?\s*\(\s*<button[^>]*whitespace-normal/s,
+    );
+  });
 });
