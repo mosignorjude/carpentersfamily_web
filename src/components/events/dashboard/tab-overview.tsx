@@ -1,10 +1,12 @@
 "use client";
 
 import {
+  AlertTriangle,
   ArrowUpRight,
   BarChart3,
   CheckCircle2,
   FileText,
+  Paperclip,
   PiggyBank,
   Plus,
   Ticket,
@@ -71,6 +73,22 @@ export function TabOverview({
   const revenueAgainstBudget =
     budgetCeiling > 0 ? (totalRevenue / safeBudget) * 100 : 0;
 
+  const totalAllocated = costCenters.reduce(
+    (sum, c) => sum + (c.allocated || 0),
+    0,
+  );
+  const unallocatedReserve = Math.max(0, budgetCeiling - totalAllocated);
+  const allocatedPercent =
+    budgetCeiling > 0
+      ? Math.min(100, Math.round((totalAllocated / safeBudget) * 100))
+      : 0;
+  const isOverBudget = budgetCeiling > 0 && totalExpenses > budgetCeiling;
+  const overBudgetDeficit = Math.max(0, totalExpenses - budgetCeiling);
+
+  const pendingTransactions = transactions.filter(
+    (t) => t.status === "pending" || t.status === "unverified",
+  );
+
   const expensePercent =
     budgetCeiling > 0
       ? Math.min(100, Math.max(0, (totalExpenses / safeBudget) * 100))
@@ -95,57 +113,72 @@ export function TabOverview({
 
   return (
     <div className="space-y-6 min-w-0">
-      {/* Page Heading & Status */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 sm:border-b border-[#E5DDD3]">
-        <div>
-          <span className="text-[12px] sm:text-xs font-bold sm:font-semibold text-[#2B4C3B] sm:text-[#174C37] uppercase tracking-[0.08em] sm:tracking-wider">
-            Financial Overview
-          </span>
-          <h2 className="mt-1 text-[22px] sm:text-3xl leading-snug font-bold text-[#231F1D] sm:text-[#3D291F] tracking-[-0.015em] sm:tracking-tight">
-            Event Finance Overview
-          </h2>
-          <p className="mt-1.5 text-[14.5px] sm:text-sm leading-[1.5] text-[#68736C] sm:text-[#7A685D]">
-            Live summary of ticket sales, revenue, expenses, and budget.
-          </p>
+      {/* Over-budget Deficit Warning Callout */}
+      {isOverBudget && (
+        <div className="bg-[#FDF2F0] border border-[#BA3C2A]/30 rounded-2xl p-4 text-[#BA3C2A] flex items-start justify-between gap-3 shadow-xs">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+            <div>
+              <strong className="font-bold text-sm block">
+                Budget Ceiling Exceeded!
+              </strong>
+              <p className="text-xs text-[#7A271A] mt-0.5">
+                Total event expenditures have exceeded the approved ceiling by{" "}
+                <strong className="font-mono font-bold">
+                  {formatNaira(overBudgetDeficit)}
+                </strong>
+                . Submit an executive ceiling revision or reallocate departmental funds.
+              </p>
+            </div>
+          </div>
+          {canManageCategories && onOpenBudgetCeilingModal && (
+            <button
+              className="px-3 py-1.5 rounded-xl bg-[#BA3C2A] text-white text-xs font-bold shrink-0 hover:bg-[#9B3222] transition-colors cursor-pointer"
+              onClick={onOpenBudgetCeilingModal}
+              type="button"
+            >
+              Revise Ceiling
+            </button>
+          )}
         </div>
+      )}
 
-        {/* Budget Target Capsule */}
-        <div className="mt-2 sm:mt-0 rounded-[18px] sm:rounded-2xl border border-[#E5DDD3] bg-white p-4 sm:p-3.5 sm:text-right shadow-[0_1px_2px_rgba(0,0,0,0.02)] shrink-0">
-          <div className="flex items-center justify-between sm:justify-end gap-3">
-            <span className="text-[13.5px] sm:text-xs text-[#68736C] sm:text-[#7A685D] block">
-              Approved Budget
+      {/* Pending Officer Verification Alert */}
+      {pendingTransactions.length > 0 && (
+        <div className="bg-[#FAF6F0] border border-[#D6A23A]/50 rounded-2xl p-3.5 sm:p-4 text-[#3D291F] flex items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#D6A23A] shrink-0" />
+            <span className="text-xs font-medium">
+              <strong className="font-bold text-[#174C37]">
+                {pendingTransactions.length} pending transactions
+              </strong>{" "}
+              awaiting officer review and receipt verification.
             </span>
-            {canManageCategories && onOpenBudgetCeilingModal && (
-              <button
-                className="text-[13.5px] sm:text-[11px] font-semibold text-[#174C37] hover:underline cursor-pointer"
-                id="btn-overview-budget-ceiling"
-                onClick={onOpenBudgetCeilingModal}
-                type="button"
-              >
-                {budgetCeiling > 0 ? "Edit Ceiling" : "Set Ceiling"}
-              </button>
-            )}
           </div>
-          <span className="text-[28px] sm:text-2xl font-bold text-[#231F1D] sm:text-[#3D291F] tabular-nums font-mono block mt-2 sm:mt-0">
-            {formatNaira(budgetCeiling)}
-          </span>
-          <div className="flex items-center gap-2 text-[13.5px] sm:text-xs text-[#3B4A41] sm:text-[#174C37] font-medium justify-start sm:justify-end mt-2.5 sm:mt-0.5">
-            <CheckCircle2 className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-[#174C37] shrink-0" />
-            <span>Approved club budget ceiling</span>
-          </div>
+          <button
+            className="text-xs font-bold text-[#174C37] hover:underline shrink-0 cursor-pointer"
+            onClick={() => onNavigateTab("ledger")}
+            type="button"
+          >
+            Review Ledger &rarr;
+          </button>
         </div>
-      </div>
+      )}
 
       {/* 4-Metric Financial Overview Cards: 2x2 grid on mobile, 4-col on desktop */}
       <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-4">
-        {/* 1. Ticket Sales (Prominently Featured) */}
-        <div className="bg-white rounded-2xl border border-[#174C37] p-3.5 sm:p-5 shadow-xs relative overflow-hidden">
+        {/* 1. Ticket Sales (Deep links to Tickets tab) */}
+        <button
+          className="text-left bg-white rounded-2xl border border-[#174C37] p-3.5 sm:p-5 shadow-xs relative overflow-hidden hover:border-[#174C37] hover:shadow-md transition-all cursor-pointer group"
+          onClick={() => onNavigateTab("tickets")}
+          type="button"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[11px] sm:text-xs font-semibold text-[#174C37] uppercase tracking-wide truncate max-w-[110px] sm:max-w-none">
               Ticket Sales
             </span>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#174C37] shrink-0">
-              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8D5B0E]" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#174C37] shrink-0 group-hover:bg-[#174C37] group-hover:text-white transition-colors">
+              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8D5B0E] group-hover:text-white" />
             </div>
           </div>
 
@@ -167,15 +200,19 @@ export function TabOverview({
               {formatPercent(ticketPercentageOfRevenue)}
             </span>
           </div>
-        </div>
+        </button>
 
-        {/* 2. Total Gross Revenue */}
-        <div className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-5 shadow-xs">
+        {/* 2. Total Gross Revenue (Deep links to Budget/Revenue) */}
+        <button
+          className="text-left bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-5 shadow-xs hover:border-[#174C37]/50 hover:shadow-md transition-all cursor-pointer group"
+          onClick={() => onNavigateTab("budget")}
+          type="button"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[11px] sm:text-xs font-semibold text-[#6B5D53] uppercase tracking-wide truncate max-w-[110px] sm:max-w-none">
               Total Revenue
             </span>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#174C37] shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#174C37] shrink-0 group-hover:bg-[#174C37] group-hover:text-white transition-colors">
               <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
@@ -198,15 +235,19 @@ export function TabOverview({
             <span className="text-[#6B5D53]">Status</span>
             <span className="font-semibold text-[#3D291F]">Verified</span>
           </div>
-        </div>
+        </button>
 
-        {/* 3. Total Expenses */}
-        <div className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-5 shadow-xs">
+        {/* 3. Total Expenses (Deep links to Budget/Expenses) */}
+        <button
+          className="text-left bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-5 shadow-xs hover:border-[#BA3C2A]/50 hover:shadow-md transition-all cursor-pointer group"
+          onClick={() => onNavigateTab("budget")}
+          type="button"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[11px] sm:text-xs font-semibold text-[#6B5D53] uppercase tracking-wide truncate max-w-[110px] sm:max-w-none">
               Total Expenses
             </span>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#BA3C2A] shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF6F0] flex items-center justify-center text-[#BA3C2A] shrink-0 group-hover:bg-[#BA3C2A] group-hover:text-white transition-colors">
               <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
@@ -231,10 +272,14 @@ export function TabOverview({
               {formatNaira(committedExpenses)}
             </span>
           </div>
-        </div>
+        </button>
 
-        {/* 4. Net Operating Margin / Remaining Buffer */}
-        <div className="bg-[#0C3325] text-white rounded-2xl border border-[#174C37] p-3.5 sm:p-5 shadow-xs">
+        {/* 4. Net Operating Margin / Remaining Buffer (Deep links to Statement) */}
+        <button
+          className="text-left bg-[#0C3325] text-white rounded-2xl border border-[#174C37] p-3.5 sm:p-5 shadow-xs hover:border-[#D6A23A]/60 hover:shadow-md transition-all cursor-pointer group"
+          onClick={() => onNavigateTab("statement")}
+          type="button"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[11px] sm:text-xs font-semibold text-[#D6A23A] uppercase tracking-wide truncate max-w-[110px] sm:max-w-none">
               Net Surplus
@@ -264,56 +309,107 @@ export function TabOverview({
               {formatNaira(remainingBudget)}
             </span>
           </div>
-        </div>
+        </button>
       </div>
 
-      {/* Budget Burn & Allocation Progress Bar (CSP Compliant with percentWidthClass) */}
-      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+      {/* Approved Budget Ceiling & Headroom Card */}
+      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-5 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E5DDD3]">
           <div>
-            <h3 className="text-sm font-semibold text-[#3D291F]">
-              Budget Usage ({formatNaira(budgetCeiling)})
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-[#174C37] uppercase tracking-wider">
+                Approved Budget Ceiling
+              </span>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#174C37] bg-[#174C37]/10 px-2 py-0.5 rounded-full">
+                <CheckCircle2 className="w-3 h-3 text-[#174C37]" />
+                Reconciled
+              </span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold text-[#3D291F] font-mono tabular-nums mt-1">
+              {formatNaira(budgetCeiling)}
             </h3>
-            <p className="text-xs text-[#7A685D]">
-              Spent and pending expenses against the approved event budget.
+            <p className="text-xs text-[#7A685D] mt-0.5">
+              Authorized club expenditure limit for this event.
             </p>
           </div>
-          <div className="text-xs font-medium text-[#174C37] sm:text-right">
-            <span className="tabular-nums font-mono font-bold">
-              {formatNaira(remainingBudget)}
-            </span>{" "}
-            remaining (
-            {budgetCeiling > 0
-              ? formatPercent((remainingBudget / safeBudget) * 100)
-              : "0.0%"}
-            )
+
+          <div className="flex items-center gap-2">
+            {canManageCategories && onOpenBudgetCeilingModal && (
+              <button
+                className="px-3 py-1.5 text-xs font-semibold text-[#174C37] bg-[#FAF6F0] hover:bg-[#EEEADD] border border-[#E5DDD3] rounded-xl transition-colors cursor-pointer min-h-[38px]"
+                id="btn-overview-budget-ceiling"
+                onClick={onOpenBudgetCeilingModal}
+                type="button"
+              >
+                {budgetCeiling > 0 ? "Edit Ceiling" : "Set Ceiling"}
+              </button>
+            )}
+            <button
+              className="px-3 py-1.5 text-xs font-semibold text-[#3D291F] bg-white hover:bg-stone-50 border border-[#E5DDD3] rounded-xl transition-colors cursor-pointer min-h-[38px]"
+              onClick={() => onNavigateTab("budget")}
+              type="button"
+            >
+              Manage Allocations &rarr;
+            </button>
           </div>
         </div>
 
-        {/* Progress Bar Container */}
-        <div className="w-full bg-[#FAF6F0] rounded-full h-3 overflow-hidden flex border border-[#E5DDD3]">
-          <div
-            className={`bg-[#174C37] h-full transition-all duration-500 ${percentWidthClass(expensePercent)}`}
-            title={`Spent: ${formatNaira(totalExpenses)}`}
-          />
-          <div
-            className={`bg-[#D6A23A] h-full transition-all duration-500 ${percentWidthClass(committedPercent)}`}
-            title={`Pending: ${formatNaira(committedExpenses)}`}
-          />
-        </div>
+        {/* Headroom utilization progress */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-[#5C4638] font-medium">
+              Allocated:{" "}
+              <strong className="text-[#3D291F] font-mono font-bold">
+                {formatNaira(totalAllocated)}
+              </strong>{" "}
+              ({allocatedPercent}% of ceiling)
+            </span>
+            <span className="text-[#7A685D] font-mono">
+              Unallocated Headroom:{" "}
+              <strong className="text-[#174C37] font-bold">
+                {formatNaira(unallocatedReserve)}
+              </strong>
+            </span>
+          </div>
 
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 text-xs text-[#7A685D]">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-xs bg-[#174C37]" />
-            <span>Spent ({formatNaira(totalExpenses)})</span>
+          <div className="w-full bg-[#FAF6F0] rounded-full h-3 overflow-hidden flex border border-[#E5DDD3]">
+            <div
+              className={`bg-[#174C37] h-full transition-all duration-500 ${percentWidthClass(allocatedPercent)}`}
+              title={`Allocated: ${formatNaira(totalAllocated)}`}
+            />
+            <div
+              className={`bg-[#FAF6F0] h-full transition-all duration-500 ${percentWidthClass(100 - allocatedPercent)}`}
+              title={`Unallocated Headroom: ${formatNaira(unallocatedReserve)}`}
+            />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-xs bg-[#D6A23A]" />
-            <span>Pending ({formatNaira(committedExpenses)})</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-xs bg-[#FAF6F0] border border-[#E5DDD3]" />
-            <span>Remaining ({formatNaira(remainingBudget)})</span>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-xs">
+            <div className="bg-[#FAF6F0] p-2.5 rounded-xl border border-[#E5DDD3]">
+              <span className="text-[11px] text-[#7A685D] block">
+                Allocated to Desks
+              </span>
+              <span className="font-mono font-bold text-[#3D291F]">
+                {formatNaira(totalAllocated)}
+              </span>
+            </div>
+            <div className="bg-[#FAF6F0] p-2.5 rounded-xl border border-[#E5DDD3]">
+              <span className="text-[11px] text-[#7A685D] block">
+                Unallocated Buffer
+              </span>
+              <span className="font-mono font-bold text-[#174C37]">
+                {formatNaira(unallocatedReserve)}
+              </span>
+            </div>
+            <div className="col-span-2 sm:col-span-1 bg-[#FAF6F0] p-2.5 rounded-xl border border-[#E5DDD3]">
+              <span className="text-[11px] text-[#7A685D] block">
+                Actual Spent
+              </span>
+              <span
+                className={`font-mono font-bold ${isOverBudget ? "text-[#BA3C2A]" : "text-[#3D291F]"}`}
+              >
+                {formatNaira(totalExpenses)}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -326,7 +422,7 @@ export function TabOverview({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-[#174C37]/10 text-[#174C37] flex items-center justify-center">
-                  <Ticket className="w-4 h-4 text-[#D6A23A]" />
+                  <Ticket className="w-4 h-4 text-[#8D5B0E]" />
                 </div>
                 <div>
                   <h4 className="font-bold text-sm text-[#3D291F]">
@@ -375,7 +471,7 @@ export function TabOverview({
               onClick={() => onOpenRecordModal("ticket")}
               type="button"
             >
-              <Plus className="w-3.5 h-3.5 text-[#D6A23A]" />
+              <Plus className="w-3.5 h-3.5 text-[#85B89A]" />
               <span>Record Ticket Sale</span>
             </button>
           )}
@@ -402,7 +498,7 @@ export function TabOverview({
               </div>
               <button
                 className="text-xs text-[#174C37] bg-transparent border-0 font-semibold hover:underline cursor-pointer"
-                onClick={() => onNavigateTab("expenses")}
+                onClick={() => onNavigateTab("budget")}
                 type="button"
               >
                 View All &rarr;
@@ -463,7 +559,7 @@ export function TabOverview({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-[#174C37]/10 text-[#174C37] flex items-center justify-center">
-                  <BarChart3 className="w-4 h-4 text-[#D6A23A]" />
+                  <BarChart3 className="w-4 h-4 text-[#174C37]" />
                 </div>
                 <div>
                   <h4 className="font-bold text-sm text-[#3D291F]">
@@ -477,7 +573,7 @@ export function TabOverview({
               </div>
               <button
                 className="text-xs text-[#174C37] bg-transparent border-0 font-semibold hover:underline cursor-pointer"
-                onClick={() => onNavigateTab("reports")}
+                onClick={() => onNavigateTab("statement")}
                 type="button"
               >
                 View Report &rarr;
@@ -508,7 +604,7 @@ export function TabOverview({
 
           <button
             className="w-full py-2 bg-[#FAF6F0] text-[#174C37] border border-[#174C37]/30 rounded-xl text-xs font-semibold hover:bg-[#174C37] hover:text-white transition-colors flex items-center justify-center gap-1.5 min-h-[38px] cursor-pointer"
-            onClick={() => onNavigateTab("reports")}
+            onClick={() => onNavigateTab("statement")}
             type="button"
           >
             <FileText className="w-3.5 h-3.5" />
@@ -518,23 +614,23 @@ export function TabOverview({
       </div>
 
       {/* Recent Audit Ledger Preview */}
-      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-6 space-y-4">
+      <div className="bg-white rounded-2xl border border-[#E5DDD3] p-5 sm:p-6 space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD3]">
           <div>
             <h4 className="font-bold text-base text-[#3D291F]">
               Recent Transactions
             </h4>
             <p className="text-xs text-[#7A685D]">
-              Latest recorded event transactions.
+              Latest recorded event transactions across all categories.
             </p>
           </div>
 
           <button
             className="text-xs text-[#174C37] bg-transparent border-0 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
-            onClick={() => onNavigateTab("audit_log")}
+            onClick={() => onNavigateTab("ledger")}
             type="button"
           >
-            <span>Audit Log ({transactions.length})</span>
+            <span>Master Ledger ({transactions.length})</span>
             <span>&rarr;</span>
           </button>
         </div>
@@ -561,12 +657,16 @@ export function TabOverview({
                     {txn.type === "revenue" ? "+" : "-"}
                   </span>
                   <div>
-                    <span className="font-semibold text-[#3D291F] block">
-                      {txn.description}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold text-[#3D291F]">
+                        {txn.description}
+                      </span>
+                      {txn.receiptUrl && (
+                        <Paperclip className="w-3 h-3 text-[#7A685D]" />
+                      )}
+                    </div>
                     <span className="text-[#7A685D] text-[11px]">
-                      {txn.categoryLabel} · {txn.payerPayee} · Ref:{" "}
-                      {txn.paymentRef}
+                      {txn.categoryLabel} · {txn.payerPayee}
                     </span>
                   </div>
                 </div>
