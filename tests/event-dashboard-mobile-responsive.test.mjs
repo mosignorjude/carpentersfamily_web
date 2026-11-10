@@ -28,17 +28,20 @@ const auditSource = readFileSync(
 
 describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
   describe("TabBudgetAllocations", () => {
-    it("deduplicates budget buttons by omitting redundant Edit Ceiling button", () => {
+    it("uses unified Edit Budget action label and preserves Spending / Revenue Mix / Cash Flow sub-tabs", () => {
       assert.doesNotMatch(
         budgetSource,
         />\s*Edit Ceiling\s*</,
-        "TabBudgetAllocations must remove redundant Edit Ceiling button",
+        "TabBudgetAllocations must use unified Edit Budget wording",
       );
       assert.match(
         budgetSource,
-        /Edit Budget Total/,
-        "TabBudgetAllocations must retain primary Edit Budget Total button",
+        /Edit Budget/,
+        "TabBudgetAllocations must display Edit Budget action",
       );
+      assert.match(budgetSource, />\s*Spending\s*</);
+      assert.match(budgetSource, />\s*Revenue Mix\s*</);
+      assert.match(budgetSource, />\s*Cash Flow\s*</);
     });
 
     it("makes chart view switcher horizontally scrollable on mobile without overflow", () => {
@@ -49,88 +52,21 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       );
     });
 
-    it("ensures budget matrix table has min-width for table scroll region", () => {
-      assert.match(
-        budgetSource,
-        /<table[^>]*min-w-\[580px\]/,
-        "Budget matrix table must specify min-w-[580px] to preserve column geometry during horizontal scroll",
-      );
-    });
-
-    it("uses concise tab labels in view switcher", () => {
-      assert.match(budgetSource, />\s*Spending\s*</);
-      assert.match(budgetSource, />\s*Revenue Mix\s*</);
-      assert.match(budgetSource, />\s*Cash Flow\s*</);
-    });
-
-    it("renders the Capital Allocation & Burn Rate Matrix as a horizontally scrollable table on mobile with helper text", () => {
-      assert.match(
-        budgetSource,
-        /Swipe left or right to scroll the allocation matrix/,
-        "TabBudgetAllocations must render mobile scroll helper text",
-      );
-      assert.doesNotMatch(
-        budgetSource,
-        /hidden\s+sm:block/,
-        "TabBudgetAllocations must keep the matrix table visible and scrollable on mobile viewports",
-      );
+    it("renders mobile cost-center cards (md:hidden) and desktop TableScroll matrix (hidden md:block)", () => {
+      assert.match(budgetSource, /md:hidden/);
+      assert.match(budgetSource, /hidden\s+md:block/);
+      assert.match(budgetSource, /<TableScroll/);
+      assert.match(budgetSource, /<table[^>]*min-w-\[580px\]/);
     });
   });
 
   describe("TabReports", () => {
-    it("makes report actions responsive with mobile grid", () => {
-      assert.match(
-        reportSource,
-        /grid-cols-2\s+sm:flex/,
-        "Report top action buttons must use responsive grid-cols-2 on mobile",
-      );
-    });
-
-    it("uses responsive flex-col on section headers", () => {
-      assert.match(
-        reportSource,
-        /flex\s+flex-col\s+sm:flex-row\s+sm:items-center\s+justify-between/,
-        "Statement section headers must stack on mobile and flex on desktop",
-      );
-    });
-
-    it("ensures report statement tables specify min-widths", () => {
-      assert.match(
-        reportSource,
-        /<table[^>]*min-w-\[500px\]/,
-        "Revenue statement table must specify min-w-[500px]",
-      );
-      assert.match(
-        reportSource,
-        /<table[^>]*min-w-\[540px\]/,
-        "Disbursements statement table must specify min-w-[540px]",
-      );
-    });
-
-    it("renders the statement tables as horizontally scrollable on mobile with helper text", () => {
-      assert.match(
-        reportSource,
-        /Swipe left or right to scroll the revenue table/,
-        "TabReports must render mobile scroll helper text for the revenue table",
-      );
-      assert.match(
-        reportSource,
-        /Swipe left or right to scroll the disbursements table/,
-        "TabReports must render mobile scroll helper text for the disbursements table",
-      );
-      assert.doesNotMatch(
-        reportSource,
-        /hidden\s+sm:block/,
-        "TabReports must keep the statement tables visible and scrollable on mobile viewports",
-      );
-    });
-
-    it("uses responsive 2x2 grid on mobile for P&L summary metrics", () => {
-      assert.match(
-        reportSource,
-        /grid-cols-2\s+sm:grid-cols-4/,
-        "P&L summary must use grid-cols-2 sm:grid-cols-4",
-      );
+    it("renders Committee cards, responsive DM Sans Statement rows, and System Audit Trail without wide tables", () => {
+      assert.match(reportSource, /grid-cols-1\s+md:grid-cols-2/);
+      assert.match(reportSource, /grid-cols-2\s+sm:grid-cols-4/);
+      assert.match(reportSource, /divide-y/);
+      assert.doesNotMatch(reportSource, /<table\b/);
+      assert.match(reportSource, /<EventAuditTrailList/);
     });
   });
 

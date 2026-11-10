@@ -82,6 +82,7 @@ const PHASE1_CONTROL_FILES = [
 const PHASE1_CLOSE_BUTTON_FILES = [
   "src/components/common/void-record-modal.tsx",
   "src/components/dues/pay-dues-modal.tsx",
+  "src/components/events/dashboard/modals/event-team-role-modal.tsx",
   "src/components/finances/category-management-modal.tsx",
   "src/components/finances/correct-transaction-modal.tsx",
   "src/components/finances/receipt-modal.tsx",

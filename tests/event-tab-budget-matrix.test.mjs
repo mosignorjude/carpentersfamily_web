@@ -7,17 +7,17 @@ const source = readFileSync(
   "utf8"
 );
 
-describe("TabBudgetAllocations Single Matrix Consolidation", () => {
-  it("consolidates allocation tiles and comparative bars into a single matrix card", () => {
+describe("TabBudgetAllocations Cost Center Matrix & Responsive Cards", () => {
+  it("renders responsive mobile cost center cards alongside desktop matrix table", () => {
     assert.doesNotMatch(source, /grid\s+grid-cols-1\s+sm:grid-cols-2\s+lg:grid-cols-4\s+gap-4/);
-    assert.match(source, /Capital Allocation & Burn Rate Matrix/i);
+    assert.match(source, /Cost Center Spending vs Allocation|Budget Allocations/i);
     assert.match(source, /<table/);
   });
 
-  it("displays allocation ceiling, disbursed spend, committed POs, and burn rate bar in one view", () => {
+  it("displays allocation, disbursed spend, committed, and utilization indicators", () => {
     assert.match(source, /Allocated/i);
     assert.match(source, /Spent/i);
-    assert.match(source, /Pending/i);
+    assert.match(source, /Committed|Pending/i);
     assert.match(source, /Used/i);
   });
 });

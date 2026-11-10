@@ -53,10 +53,10 @@ describe("Sprint 1 Mobile Safety & Space Reclamation", () => {
     assert.match(duesPageView, /<p className="hidden sm:block text-xs/);
   });
 
-  it("converts overview financial metric cards to 2x2 grid on mobile", () => {
+  it("uses prototype 2x2 KPI grid inside 7/5 top split on overview", () => {
     assert.match(
       tabOverview,
-      /grid\s+grid-cols-2\s+md:grid-cols-2\s+xl:grid-cols-4\s+gap-2\.5/
+      /lg:col-span-7\s+grid\s+grid-cols-2\s+gap-2\.5/,
     );
   });
 });

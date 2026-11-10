@@ -39,11 +39,11 @@ describe("Phase 3: Table-to-Card Responsive Transformation & Tap Floors", () => 
     assert.match(domainLedger, /min-h-\[44px\]/);
   });
 
-  it("tab-tickets implements mobile admission tier cards and desktop table", () => {
-    assert.match(tabTickets, /sm:hidden\s+space-y-3/);
-    assert.match(tabTickets, /hidden\s+sm:block/);
-    assert.match(tabTickets, /<TableScroll[^>]*label="Ticket sales"/);
-    assert.match(tabTickets, /btn-mobile-edit-tier-/);
+  it("tab-tickets renders responsive tier cards and 2-line ledger records without tables", () => {
+    assert.match(tabTickets, /grid-cols-1\s+md:grid-cols-2\s+lg:grid-cols-3/);
+    assert.doesNotMatch(tabTickets, /<table\b/);
+    assert.match(tabTickets, /<EventDomainLedger[\s\S]*domain="tickets"/);
+    assert.match(tabTickets, /btn-edit-tier-/);
   });
 
   it("tab-revenue implements mobile stream cards and desktop table", () => {

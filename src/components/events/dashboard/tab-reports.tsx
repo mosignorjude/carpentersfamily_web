@@ -1,15 +1,24 @@
 "use client";
 
-import { Download, Printer, Users } from "lucide-react";
-import { TableScroll } from "@/components/ui/table-scroll";
+import {
+  ChevronDown,
+  Download,
+  Printer,
+  Shield,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import { useState } from "react";
 import { downloadLedgerCSV, formatNaira, formatPercent } from "@/lib/format";
 import type {
+  ActivityLogItem,
   DashboardCostCenter,
   DashboardEventInfo,
   DashboardRevenueStream,
   DashboardTeamMember,
   DashboardTransaction,
 } from "./dashboard-types";
+import { EventAuditTrailList } from "./event-audit-trail-list";
 
 interface TabReportsProps {
   event: DashboardEventInfo;
@@ -17,10 +26,15 @@ interface TabReportsProps {
   costCenters: DashboardCostCenter[];
   transactions: DashboardTransaction[];
   teamMembers?: DashboardTeamMember[];
+  activityLogs?: ActivityLogItem[];
   totalRevenue: number;
   totalExpenses: number;
   budgetCeiling: number;
+  pendingTransactionsCount?: number;
+  canManageTeamRoles?: boolean;
   onOpenDownloadReportModal?: () => void;
+  onOpenAssignTeamModal?: () => void;
+  onOpenRevokeTeamModal?: (member: DashboardTeamMember) => void;
 }
 
 export function TabReports({
@@ -29,360 +43,435 @@ export function TabReports({
   costCenters,
   transactions,
   teamMembers = [],
+  activityLogs = [],
   totalRevenue,
   totalExpenses,
   budgetCeiling,
+  pendingTransactionsCount = 0,
+  canManageTeamRoles = false,
   onOpenDownloadReportModal,
+  onOpenAssignTeamModal,
+  onOpenRevokeTeamModal,
 }: TabReportsProps) {
+  const [auditExpanded, setAuditExpanded] = useState(false);
   const netSurplus = totalRevenue - totalExpenses;
   const safeBudget = budgetCeiling || 1;
+  const isFullyReconciled = pendingTransactionsCount === 0;
 
   return (
-    <div className="space-y-6 min-w-0 max-w-full overflow-hidden">
-      {/* Top Actions Bar for Reports */}
-      <div className="bg-white sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 sm:border-b border-[#E5DDD3] p-4 sm:p-0 sm:pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
-        <div className="min-w-0">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#174C37] block">
-            Financial Report
-          </span>
-          <h3 className="text-xl font-bold text-[#3D291F] break-words">
-            {event.title} — Income Statement
-          </h3>
-          <p className="text-xs text-[#7A685D]">
-            Official income and expense statement.
-          </p>
-        </div>
-
-        <div className="w-full sm:w-auto grid grid-cols-2 sm:flex items-center gap-2">
-          <button
-            className="px-3.5 py-2 text-xs font-medium text-[#3D291F] bg-white border border-[#E5DDD3] rounded-xl hover:bg-[#FAF6F0] min-h-[40px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-            onClick={() => window.print()}
-            type="button"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print</span>
-          </button>
-
-          <button
-            className="px-4 py-2 text-xs font-semibold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl min-h-[40px] flex items-center justify-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-            onClick={
-              onOpenDownloadReportModal
-                ? onOpenDownloadReportModal
-                : () => downloadLedgerCSV(transactions)
-            }
-            type="button"
-          >
-            <Download className="w-3.5 h-3.5 text-white" />
-            <span>Export CSV</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Section A: Event Committee & Officers */}
-      {teamMembers && teamMembers.length > 0 && (
-        <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-5 shadow-xs space-y-3">
-          <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD3]">
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-[#174C37]" />
-              <h4 className="text-base font-bold text-[#3D291F]">
-                Event Committee &amp; Officers
-              </h4>
-            </div>
-            <span className="text-[#174C37] font-semibold font-mono text-xs bg-[#FAF6F0] px-2.5 py-1 rounded-lg border border-[#E5DDD3]">
-              {teamMembers.length} Assigned
-            </span>
+    <div className="space-y-4 min-w-0 max-w-full overflow-hidden">
+      {/* Section A: Event Committee & Leads */}
+      <div className="bg-white border border-[#E5DDD3] rounded-2xl p-4 shadow-2xs space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-bold text-[#3D291F] flex items-center gap-2">
+              <Users className="w-4 h-4 text-[#174C37]" />
+              <span>Event Committee &amp; Leads</span>
+            </h2>
+            <p className="text-xs text-[#5C4638]">
+              Members authorized to coordinate operations and record ledger
+              entries
+            </p>
           </div>
+          {canManageTeamRoles && onOpenAssignTeamModal && (
+            <button
+              className="px-3.5 py-2 min-h-[44px] rounded-xl bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+              onClick={onOpenAssignTeamModal}
+              type="button"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>+ Assign Team Member</span>
+            </button>
+          )}
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {teamMembers.length === 0 ? (
+          <div className="p-6 text-center text-xs text-[#7A685D] bg-[#FAF6F0] rounded-xl border border-dashed border-[#E5DDD3]">
+            No committee members assigned yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             {teamMembers.map((m) => (
               <div
-                className="p-3 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0]/60 flex items-center justify-between text-xs"
+                className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] flex items-center justify-between gap-3"
                 key={m.id}
               >
-                <div>
-                  <h5 className="font-bold text-[#3D291F] text-sm">{m.name}</h5>
-                  <span className="text-[11px] text-[#7A685D]">
-                    Committee Member
-                  </span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-[#174C37] text-white font-bold text-sm flex items-center justify-center shrink-0">
+                    {m.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-[#3D291F] truncate">
+                      {m.name}{" "}
+                      {m.username && (
+                        <span className="font-mono font-normal text-[#7A685D]">
+                          @{m.username}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] font-semibold text-[#174C37]">
+                      {m.role}
+                    </div>
+                  </div>
                 </div>
-                <span className="font-semibold text-[11px] text-[#174C37] bg-[#174C37]/10 px-2 py-0.5 rounded-md">
-                  {m.role}
-                </span>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="px-2 py-0.5 rounded-full bg-[#174C37]/10 text-[#174C37] text-[10px] font-semibold">
+                    Active
+                  </span>
+                  {canManageTeamRoles && onOpenRevokeTeamModal && m.memberId && (
+                    <button
+                      className="px-2.5 py-1.5 min-h-[44px] rounded-lg border border-[#BA3C2A]/30 bg-white text-[#BA3C2A] hover:bg-[#FDF0EE] text-[11px] font-semibold cursor-pointer transition-colors"
+                      onClick={() => onOpenRevokeTeamModal(m)}
+                      type="button"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Embedded Official Financial Statement */}
-      <div className="bg-white sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 border-[#E5DDD3] p-4 sm:p-0 space-y-6 text-xs text-[#3D291F] min-w-0 max-w-full overflow-hidden">
-        {/* Letterhead */}
-        <div className="border-b-2 border-[#174C37] pb-5 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 sm:gap-4 min-w-0">
+      {/* Section B: Official Reconciled Income Statement */}
+      <div className="bg-white border border-[#E5DDD3] rounded-2xl p-4 sm:p-6 shadow-2xs space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#E5DDD3]">
           <div className="min-w-0">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-[#8D5B0E] block">
-              Accounting Statement
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#7A685D] block">
+              Official Financial Report
             </span>
-            <h2 className="text-xl sm:text-2xl font-bold text-[#0C3325] uppercase tracking-tight mt-0.5 break-words">
-              Carpenters Family Social Club
+            <h2 className="text-lg sm:text-xl font-bold text-[#3D291F] break-words">
+              {event.title} — Income Statement
             </h2>
-            <p className="text-xs text-[#7A685D]">
-              Asaba, Delta State · Est. 1988
-            </p>
           </div>
 
-          <div className="text-left sm:text-right font-mono text-[11px] text-[#7A685D] space-y-0.5 min-w-0">
-            <div className="truncate">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              className="px-3.5 py-2 min-h-[44px] rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] hover:border-[#174C37] text-xs font-semibold text-[#3D291F] flex items-center gap-1.5 cursor-pointer transition-colors"
+              onClick={
+                onOpenDownloadReportModal ?? (() => window.print())
+              }
+              type="button"
+            >
+              <Printer className="w-3.5 h-3.5 text-[#174C37]" />
+              <span>Print / PDF</span>
+            </button>
+
+            <button
+              className="px-3.5 py-2 min-h-[44px] rounded-xl bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+              onClick={() => downloadLedgerCSV(transactions)}
+              type="button"
+            >
+              <Download className="w-3.5 h-3.5 text-white" />
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Club Letterhead */}
+        <div className="bg-[#FAF6F0] rounded-xl p-4 border border-[#E5DDD3] flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-[#174C37]">
+              Accounting Statement
+            </div>
+            <div className="text-base sm:text-lg font-bold text-[#3D291F] mt-0.5 uppercase">
+              Carpenters Family Social Club
+            </div>
+            <div className="text-xs text-[#5C4638]">
+              Asaba, Delta State · Est. 1988
+            </div>
+          </div>
+          <div className="text-xs font-mono space-y-0.5 text-[#5C4638]">
+            <div>
               Ref:{" "}
-              <strong>CFSC-{event.id.slice(0, 6).toUpperCase()}-FIN-01</strong>
+              <strong className="text-[#3D291F]">
+                CFSC-{event.id.slice(0, 6).toUpperCase()}-FIN-01
+              </strong>
             </div>
-            <div>
-              Standard: <strong>Reconciled Ledger</strong>
-            </div>
-            <div>
-              Status:{" "}
-              <span className="text-[#174C37] font-bold">Reconciled</span>
+            <div>Standard: Reconciled Ledger</div>
+            <div
+              className={`font-semibold ${
+                isFullyReconciled ? "text-[#174C37]" : "text-[#8D5B0E]"
+              }`}
+            >
+              {isFullyReconciled
+                ? "Status: Reconciled"
+                : `Status: ${pendingTransactionsCount} Pending Verification`}
             </div>
           </div>
         </div>
 
-        {/* P&L Executive Summary Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 p-3.5 sm:p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
-          <div className="min-w-0">
-            <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
+        {/* 4-Metric Summary Strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="p-3 rounded-xl border border-[#E5DDD3]">
+            <span className="text-[10px] font-semibold uppercase text-[#7A685D] block">
               Revenue
             </span>
-            <span className="text-sm sm:text-lg font-bold font-mono text-[#174C37] block mt-0.5 tabular-nums leading-tight">
+            <div className="text-base sm:text-lg font-bold text-[#174C37] mt-0.5 font-mono tabular-nums">
               {formatNaira(totalRevenue)}
-            </span>
-            <span className="text-[10px] text-[#7A685D] block truncate">
-              {budgetCeiling > 0
-                ? `${formatPercent((totalRevenue / safeBudget) * 100)} of Target`
-                : "Approved revenue"}
+            </div>
+            <span className="text-[10px] text-[#7A685D]">
+              Verified Inflows
             </span>
           </div>
 
-          <div className="min-w-0">
-            <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
+          <div className="p-3 rounded-xl border border-[#E5DDD3]">
+            <span className="text-[10px] font-semibold uppercase text-[#7A685D] block">
               Expenses
             </span>
-            <span className="text-sm sm:text-lg font-bold font-mono text-[#BA3C2A] block mt-0.5 tabular-nums leading-tight">
+            <div className="text-base sm:text-lg font-bold text-[#BA3C2A] mt-0.5 font-mono tabular-nums">
               {formatNaira(totalExpenses)}
-            </span>
-            <span className="text-[10px] text-[#7A685D] block truncate">
-              {budgetCeiling > 0
-                ? `${formatPercent((totalExpenses / safeBudget) * 100)} of Ceiling`
-                : "Approved expenses"}
+            </div>
+            <span className="text-[10px] text-[#7A685D]">
+              Verified Outflows
             </span>
           </div>
 
-          <div className="min-w-0">
-            <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
-              Net Surplus
+          <div className="p-3 rounded-xl border border-[#E5DDD3]">
+            <span className="text-[10px] font-semibold uppercase text-[#7A685D] block">
+              Net Balance
             </span>
-            <span className="text-sm sm:text-lg font-bold font-mono text-[#174C37] block mt-0.5 tabular-nums leading-tight">
-              {formatNaira(netSurplus)}
-            </span>
-            <span className="text-[10px] text-[#174C37] font-semibold block truncate">
-              {netSurplus >= 0 ? "Surplus" : "Net Deficit"}
+            <div
+              className={`text-base sm:text-lg font-bold mt-0.5 font-mono tabular-nums ${
+                netSurplus >= 0 ? "text-[#174C37]" : "text-[#BA3C2A]"
+              }`}
+            >
+              {netSurplus >= 0 ? "+" : "-"}
+              {formatNaira(Math.abs(netSurplus))}
+            </div>
+            <span className="text-[10px] text-[#7A685D]">
+              {isFullyReconciled ? "Reconciled" : "Verified only"}
             </span>
           </div>
 
-          <div className="min-w-0">
-            <span className="text-[10px] uppercase font-bold text-[#7A685D] block">
+          <div className="p-3 rounded-xl border border-[#E5DDD3]">
+            <span className="text-[10px] font-semibold uppercase text-[#7A685D] block">
               Net Margin
             </span>
-            <span className="text-base sm:text-lg font-bold font-mono text-[#3D291F] block mt-0.5 tabular-nums truncate">
+            <div className="text-base sm:text-lg font-bold text-[#3D291F] mt-0.5 font-mono tabular-nums">
               {totalRevenue > 0
                 ? formatPercent((netSurplus / totalRevenue) * 100)
-                : "0.0%"}
-            </span>
-            <span className="text-[10px] text-[#7A685D] block truncate">
-              Club event
-            </span>
+                : budgetCeiling > 0
+                  ? `${formatPercent((totalExpenses / safeBudget) * 100)} used`
+                  : "0.0%"}
+            </div>
+            <span className="text-[10px] text-[#7A685D]">Club event</span>
           </div>
         </div>
 
-        {/* Statement of Revenues Table */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-bold text-[#0C3325] uppercase tracking-wider border-b border-[#E5DDD3] pb-1.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
-            <span>1. Revenue ({revenueStreams.length} Streams)</span>
-            <span className="font-mono text-xs text-[#174C37] font-bold">
+        {/* 1. Revenue Breakdown (Clean 2-Line Rows) */}
+        <div>
+          <div className="flex items-center justify-between pb-2 border-b border-[#E5DDD3]">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#3D291F]">
+              1. Revenue ({revenueStreams.length} Streams)
+            </h3>
+            <span className="font-mono text-xs font-bold text-[#174C37]">
               {formatNaira(totalRevenue)}
             </span>
-          </h4>
-
-          {/* Revenue Table (Tabular & Horizontally Scrollable on Mobile and Desktop) */}
-          <div className="space-y-1.5">
-            <p className="text-[11px] text-[#7A685D] sm:hidden">
-              Swipe left or right to scroll the revenue table
-            </p>
-            <TableScroll label="Financial report">
-              <table className="w-full text-left min-w-[500px]">
-                <thead>
-                  <tr className="border-b border-[#E5DDD3] text-[10px] text-[#7A685D] uppercase tracking-wider">
-                    <th className="py-2">Category</th>
-                    <th className="py-2 text-right">Target (₦)</th>
-                    <th className="py-2 text-right">Actual (₦)</th>
-                    <th className="py-2 text-right">Variance</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E5DDD3]">
-                  {revenueStreams.length === 0 ? (
-                    <tr>
-                      <td
-                        className="py-4 text-center text-[#7A685D]"
-                        colSpan={4}
-                      >
-                        No revenue streams recorded for this event yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    revenueStreams.map((s) => {
-                      const variance = s.actual - s.target;
-                      return (
-                        <tr key={s.id}>
-                          <td className="py-2.5">
-                            <span className="font-bold text-[#3D291F] block">
-                              {s.name}
-                            </span>
-                            <span className="text-[11px] text-[#7A685D]">
-                              {s.description}
-                            </span>
-                          </td>
-                          <td className="py-2.5 text-right font-mono text-[#5C4638]">
-                            {formatNaira(s.target)}
-                          </td>
-                          <td className="py-2.5 text-right font-mono font-bold text-[#174C37]">
-                            {formatNaira(s.actual)}
-                          </td>
-                          <td
-                            className={`py-2.5 text-right font-mono font-semibold ${
-                              variance >= 0
-                                ? "text-[#174C37]"
-                                : "text-[#BA3C2A]"
-                            }`}
-                          >
-                            {variance >= 0
-                              ? `+${formatNaira(variance)}`
-                              : `-${formatNaira(Math.abs(variance))}`}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </TableScroll>
           </div>
+          {revenueStreams.length === 0 ? (
+            <p className="text-xs text-[#7A685D] py-4 text-center">
+              No revenue streams recorded for this event yet.
+            </p>
+          ) : (
+            <div className="divide-y divide-[#E5DDD3]/60 mt-1">
+              {revenueStreams.map((rs) => {
+                const variance = rs.actual - rs.target;
+                return (
+                  <div
+                    className="py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs"
+                    key={rs.id}
+                  >
+                    <div>
+                      <span className="font-bold text-[#3D291F] block">
+                        {rs.name}
+                      </span>
+                      <span className="text-[11px] text-[#7A685D]">
+                        {rs.target > 0 ? (
+                          <>
+                            Target:{" "}
+                            <span className="font-mono">
+                              {formatNaira(rs.target)}
+                            </span>
+                          </>
+                        ) : rs.pending > 0 ? (
+                          <>
+                            Pending:{" "}
+                            <span className="font-mono">
+                              {formatNaira(rs.pending)}
+                            </span>
+                          </>
+                        ) : (
+                          "Direct inflow"
+                        )}
+                      </span>
+                    </div>
+                    <div className="text-right font-mono">
+                      <span className="font-bold text-[#174C37] block">
+                        {formatNaira(rs.actual)}
+                      </span>
+                      {rs.target > 0 && (
+                        <span
+                          className={`text-[10px] ${
+                            variance >= 0 ? "text-[#174C37]" : "text-[#BA3C2A]"
+                          }`}
+                        >
+                          Var: {variance >= 0 ? "+" : "-"}
+                          {formatNaira(Math.abs(variance))}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Statement of Expenses Table */}
-        <div className="space-y-3 pt-2">
-          <h4 className="text-sm font-bold text-[#0C3325] uppercase tracking-wider border-b border-[#E5DDD3] pb-1.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
-            <span>2. Expenses ({costCenters.length} Categories)</span>
-            <span className="font-mono text-xs text-[#BA3C2A] font-bold">
+        {/* 2. Expenses Breakdown (Clean 2-Line Rows) */}
+        <div>
+          <div className="flex items-center justify-between pb-2 border-b border-[#E5DDD3]">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#3D291F]">
+              2. Expenses ({costCenters.length} Categories)
+            </h3>
+            <span className="font-mono text-xs font-bold text-[#BA3C2A]">
               {formatNaira(totalExpenses)}
             </span>
-          </h4>
-
-          {/* Disbursements Table (Tabular & Horizontally Scrollable on Mobile and Desktop) */}
-          <div className="space-y-1.5">
-            <p className="text-[11px] text-[#7A685D] sm:hidden">
-              Swipe left or right to scroll the disbursements table
+          </div>
+          {costCenters.length === 0 ? (
+            <p className="text-xs text-[#7A685D] py-4 text-center">
+              No cost center disbursements recorded yet.
             </p>
-            <TableScroll label="Report summary">
-              <table className="w-full text-left min-w-[540px]">
-                <thead>
-                  <tr className="border-b border-[#E5DDD3] text-[10px] text-[#7A685D] uppercase tracking-wider">
-                    <th className="py-2">Cost Center</th>
-                    <th className="py-2 text-right">Allocated (₦)</th>
-                    <th className="py-2 text-right">Spent (₦)</th>
-                    <th className="py-2 text-right">Committed (₦)</th>
-                    <th className="py-2 text-right">Remaining (₦)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E5DDD3]">
-                  {costCenters.length === 0 ? (
-                    <tr>
-                      <td
-                        className="py-4 text-center text-[#7A685D]"
-                        colSpan={5}
+          ) : (
+            <div className="divide-y divide-[#E5DDD3]/60 mt-1">
+              {costCenters.map((cc) => {
+                const left = cc.allocated - cc.spent;
+                return (
+                  <div
+                    className="py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs"
+                    key={cc.id}
+                  >
+                    <div>
+                      <span className="font-bold text-[#3D291F] block">
+                        {cc.name}
+                      </span>
+                      <span className="text-[11px] text-[#7A685D]">
+                        Allocated:{" "}
+                        <span className="font-mono">
+                          {formatNaira(cc.allocated)}
+                        </span>{" "}
+                        ({cc.items.length} item
+                        {cc.items.length === 1 ? "" : "s"}
+                        {cc.committed > 0
+                          ? ` · Pending: ${formatNaira(cc.committed)}`
+                          : ""}
+                        )
+                      </span>
+                    </div>
+                    <div className="text-right font-mono">
+                      <span className="font-bold text-[#BA3C2A] block">
+                        {formatNaira(cc.spent)}
+                      </span>
+                      <span
+                        className={`text-[10px] ${
+                          left >= 0 ? "text-[#174C37]" : "text-[#BA3C2A]"
+                        }`}
                       >
-                        No expenses recorded for this event yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    costCenters.map((c) => {
-                      const remaining = c.allocated - (c.spent + c.committed);
-                      return (
-                        <tr key={c.id}>
-                          <td className="py-2.5">
-                            <span className="font-bold text-[#3D291F] block">
-                              {c.name}
-                            </span>
-                            <span className="text-[11px] text-[#7A685D]">
-                              {c.items.length} itemized entry
-                              {c.items.length === 1 ? "" : "s"}
-                            </span>
-                          </td>
-                          <td className="py-2.5 text-right font-mono text-[#5C4638]">
-                            {formatNaira(c.allocated)}
-                          </td>
-                          <td className="py-2.5 text-right font-mono font-bold text-[#BA3C2A]">
-                            {formatNaira(c.spent)}
-                          </td>
-                          <td className="py-2.5 text-right font-mono text-[#8D5B0E]">
-                            {formatNaira(c.committed)}
-                          </td>
-                          <td
-                            className={`py-2.5 text-right font-mono font-semibold ${
-                              remaining >= 0
-                                ? "text-[#174C37]"
-                                : "text-[#BA3C2A]"
-                            }`}
-                          >
-                            {formatNaira(remaining)}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </TableScroll>
-          </div>
+                        Left: {left >= 0 ? "" : "-"}
+                        {formatNaira(Math.abs(left))}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Auditor Sign-off */}
-        <div className="pt-6 border-t border-[#E5DDD3] space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-2 text-xs">
-            <div className="border-t border-[#3D291F] pt-2">
-              <span className="font-bold text-[#3D291F] block">Treasury</span>
-              <span className="text-[#7A685D]">Treasurer</span>
-              <span className="text-[10px] text-[#174C37] block mt-0.5 font-mono">
-                Sign-off: Verified
-              </span>
-            </div>
+        {/* Governance Verification Status Summary (Derived Strictly From Real Telemetry) */}
+        <div className="pt-3 border-t border-[#E5DDD3] grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+          <div className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
+            <span className="font-bold text-[#3D291F] block">
+              Ledger Verification
+            </span>
+            <span className="text-[11px] text-[#7A685D] block">
+              Transactions checked
+            </span>
+            <span
+              className={`mt-1 inline-block text-[11px] font-semibold ${
+                isFullyReconciled ? "text-[#174C37]" : "text-[#8D5B0E]"
+              }`}
+            >
+              {isFullyReconciled
+                ? "All entries verified"
+                : `${pendingTransactionsCount} awaiting review`}
+            </span>
+          </div>
 
-            <div className="border-t border-[#3D291F] pt-2">
-              <span className="font-bold text-[#3D291F] block">Event Lead</span>
-              <span className="text-[#7A685D]">Event Director</span>
-              <span className="text-[10px] text-[#174C37] block mt-0.5 font-mono">
-                Sign-off: Approved
-              </span>
-            </div>
+          <div className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
+            <span className="font-bold text-[#3D291F] block">Event Leads</span>
+            <span className="text-[11px] text-[#7A685D] block">
+              Assigned coordinators
+            </span>
+            <span className="mt-1 inline-block text-[11px] font-semibold text-[#174C37]">
+              {teamMembers.length} active role
+              {teamMembers.length === 1 ? "" : "s"}
+            </span>
+          </div>
 
-            <div className="border-t border-[#3D291F] pt-2">
-              <span className="font-bold text-[#3D291F] block">
-                Audit Committee
-              </span>
-              <span className="text-[#7A685D]">Compliance</span>
-              <span className="text-[10px] text-[#174C37] block mt-0.5 font-mono">
-                Sign-off: Verified
-              </span>
-            </div>
+          <div className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
+            <span className="font-bold text-[#3D291F] block">Event Record</span>
+            <span className="text-[11px] text-[#7A685D] block">
+              Lifecycle state
+            </span>
+            <span className="mt-1 inline-block text-[11px] font-semibold text-[#3D291F] capitalize">
+              {event.archivedAt ? "Archived" : event.status}
+            </span>
           </div>
         </div>
+      </div>
+
+      {/* Section C: Collapsible System Audit Trail */}
+      <div className="bg-white border border-[#E5DDD3] rounded-2xl p-4 shadow-2xs space-y-3">
+        <button
+          aria-expanded={auditExpanded}
+          className="w-full flex items-center justify-between gap-2 text-left min-h-[44px] cursor-pointer"
+          onClick={() => setAuditExpanded((v) => !v)}
+          type="button"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-[#174C37]/10 text-[#174C37] flex items-center justify-center shrink-0">
+              <Shield className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-[#3D291F]">
+                System Audit Trail
+              </h3>
+              <p className="text-xs text-[#7A685D]">
+                Permanent log of officer actions on this event
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs font-mono font-bold text-[#174C37] bg-[#FAF6F0] px-2.5 py-1 rounded-xl border border-[#E5DDD3]">
+              {activityLogs.length} Events
+            </span>
+            <ChevronDown
+              className={`w-4 h-4 text-[#5C4638] transition-transform ${
+                auditExpanded ? "rotate-180" : ""
+              }`}
+            />
+          </div>
+        </button>
+
+        {auditExpanded && (
+          <div className="pt-2 border-t border-[#E5DDD3] text-xs">
+            <EventAuditTrailList activityLogs={activityLogs} />
+          </div>
+        )}
       </div>
     </div>
   );

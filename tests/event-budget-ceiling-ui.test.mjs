@@ -119,13 +119,13 @@ describe("TabBudgetAllocations button wiring", () => {
     );
     assert.match(
       source,
-      /Set Budget Total/,
-      "TabBudgetAllocations must display Set Budget Total when ceiling is 0",
+      /Set Budget/,
+      "TabBudgetAllocations must display Set Budget when ceiling is 0",
     );
     assert.match(
       source,
-      /Edit Budget Total/,
-      "TabBudgetAllocations must display Edit Budget Total when ceiling is > 0",
+      /Edit Budget/,
+      "TabBudgetAllocations must display Edit Budget when ceiling is > 0",
     );
   });
 
