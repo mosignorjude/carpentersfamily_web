@@ -471,6 +471,14 @@ describe("form control baseline", () => {
     assert.match(button, /CfFilterPill[\s\S]*h-\[34px\]/);
   });
 
+  it("renders icon+label JSX children directly inside CfButton flex row without an unflexed span wrapper", () => {
+    assert.doesNotMatch(
+      button,
+      /\{children\s*&&\s*<span>\{children\}<\/span>\}/,
+      "wrapping JSX children in a bare inline <span> causes Tailwind block <svg> icons to stack vertically above text",
+    );
+  });
+
   it("gives every hand-rolled control in the Phase-1 dialogs an explicit floor", () => {
     const tally = new Map();
     const offenders = [];

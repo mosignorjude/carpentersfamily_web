@@ -83,12 +83,12 @@ export const CfButton = forwardRef<HTMLButtonElement, CfButtonProps>(
         {loading ? (
           <>
             <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0 text-current" />
-            <span>{loadingText ?? children}</span>
+            {loadingText ? <span>{loadingText}</span> : children}
           </>
         ) : (
           <>
             {LeftIcon && <LeftIcon className="w-4 h-4 shrink-0" />}
-            {children && <span>{children}</span>}
+            {children}
             {RightIcon && <RightIcon className="w-4 h-4 shrink-0" />}
           </>
         )}
