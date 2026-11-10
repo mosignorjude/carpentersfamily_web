@@ -14,10 +14,13 @@ import type {
   FinanceCategory,
   FinanceTransaction,
 } from "@/app/(member)/finances/finance-forms";
+import { voidRecordAction } from "@/app/actions";
 import {
   ClubBankSettingsCard,
   type ClubPaymentSettings,
 } from "@/components/admin/club-bank-settings-card";
+import { VoidRecordModal } from "@/components/common/void-record-modal";
+import { dispatchFlashCard } from "@/components/ui/flash-card";
 import { useSuccessNotice } from "@/components/ui/use-success-notice";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 import { CategoryManagementModal } from "./category-management-modal";
@@ -37,8 +40,6 @@ import {
   OpeningBalanceEntryCard,
   type OpeningBalanceTransaction,
 } from "./opening-balance-entry-card";
-import { voidRecordAction } from "@/app/actions";
-import { VoidRecordModal } from "@/components/common/void-record-modal";
 import { type FinanceReceipt, ReceiptModal } from "./receipt-modal";
 import { RecordExpenseModal } from "./record-expense-modal";
 import { RecordIncomeModal } from "./record-income-modal";
@@ -455,6 +456,11 @@ export function FinancesPageView({
           if (res && !res.success) {
             return res;
           }
+          dispatchFlashCard({
+            type: "success",
+            title: "Transaction Voided",
+            message: `${record.title} has been voided from the club ledger.`,
+          });
           setVoidingTransaction(null);
           return { success: true };
         }}

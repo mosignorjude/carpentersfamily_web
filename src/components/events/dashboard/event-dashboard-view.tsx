@@ -21,16 +21,17 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import {
   recordEventFinancialTransactionAction,
   recordEventTicketSaleAction,
-  refundEventTicketSaleAction,
-  voidEventFinancialTransactionAction,
+  voidRecordAction,
 } from "@/app/actions";
-import { dispatchActionStatusToast } from "@/components/ui/flash-card";
+import { VoidRecordModal } from "@/components/common/void-record-modal";
+import {
+  dispatchActionStatusToast,
+  dispatchFlashCard,
+} from "@/components/ui/flash-card";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { useSuccessNotice } from "@/components/ui/use-success-notice";
 import { downloadLedgerCSV } from "@/lib/format";
 import { getScrollBehavior } from "@/lib/tab-navigation.mjs";
-import { voidRecordAction } from "@/app/actions";
-import { VoidRecordModal } from "@/components/common/void-record-modal";
 import type {
   ActivityLogItem,
   DashboardCostCenter,
@@ -476,30 +477,45 @@ export function EventDashboardView({
     });
   };
 
-  const handleConfirmVoid = async (
-    record: VoidableRecord,
-    reason: string,
-  ) => {
-    dispatchActionStatusToast({
-      title: "Voiding Record…",
-      message: `Voiding ${record.title} with audit trail.`,
-    });
+  const handleConfirmVoid = async (record: VoidableRecord, reason: string) => {
+    const fd = new FormData();
+    fd.set("event_id", event.id);
+    fd.set("return_tab", activeTab);
+    fd.set("reason", reason);
+    fd.set("entity_type", record.entityType);
+    fd.set("record_id", record.id);
 
-    const res = await voidRecordAction({
-      entityType: record.entityType,
-      recordId: record.id,
-      eventId: event.id,
-      reason,
-    });
+    if (
+      record.entityType === "ticket_sale" &&
+      record.verificationStatus === "approved"
+    ) {
+      dispatchActionStatusToast({
+        title: "Refunding Ticket Sale…",
+        message: `Voiding ticket sale ${record.id} and restoring tier capacity.`,
+      });
+    } else {
+      dispatchActionStatusToast({
+        title: "Voiding Ledger Record…",
+        message: `Voiding ${record.title} with audit trail.`,
+      });
+    }
+
+    const res = await voidRecordAction(fd);
 
     if (res && !res.success) {
-      dispatchActionStatusToast({
+      dispatchFlashCard({
+        type: "error",
         title: "Void Failed",
         message: res.error || "Could not void record.",
       });
       return res;
     }
 
+    dispatchFlashCard({
+      type: "success",
+      title: "Record Voided",
+      message: `${record.title} has been voided and recorded in the audit log.`,
+    });
     setIsVoidModalOpen(false);
     setRecordToVoid(null);
     return { success: true };

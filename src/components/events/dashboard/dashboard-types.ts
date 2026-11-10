@@ -208,9 +208,7 @@ export function toVoidableRecord(
     : "event_transaction";
 
   const rawStatus =
-    txn.status === "voided"
-      ? "rejected"
-      : (txn.verificationStatus || "approved");
+    txn.status === "voided" ? "rejected" : txn.verificationStatus || "approved";
 
   return {
     id: txn.id,

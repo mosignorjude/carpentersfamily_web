@@ -4,6 +4,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import QRCode from "qrcode";
+import type { VoidEntityType } from "@/components/events/dashboard/dashboard-types";
 import type {
   TicketLookupState,
   TicketOrderStatus,
@@ -31,7 +32,6 @@ import {
   notifyTicketOrderReceived,
   notifyTicketOrderReviewed,
 } from "@/lib/email/notifications";
-import type { VoidEntityType } from "@/components/events/dashboard/dashboard-types";
 import {
   buildEventFinanceNoticeUrl,
   normalizeEventFinanceTab,
@@ -4409,13 +4409,14 @@ export async function voidRecordAction(
 
     revalidatePath("/finances");
   } else {
-    return { success: false, error: "Unsupported entity type for void action." };
+    return {
+      success: false,
+      error: "Unsupported entity type for void action.",
+    };
   }
 
   if (returnUrl) {
-    redirect(
-      `${returnUrl}${returnUrl.includes("?") ? "&" : "?"}notice=voided`,
-    );
+    redirect(`${returnUrl}${returnUrl.includes("?") ? "&" : "?"}notice=voided`);
   }
 
   return { success: true };

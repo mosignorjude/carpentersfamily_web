@@ -14,23 +14,32 @@ const ACTIONS = readFileSync(
   "src/app/(member)/events/[eventId]/dashboard/actions.ts",
   "utf8",
 );
+const ROOT_ACTIONS = readFileSync("src/app/actions.ts", "utf8");
 const TYPES = readFileSync(
   "src/components/events/dashboard/dashboard-types.ts",
   "utf8",
 );
 
-test("an officer can cancel a guest order with a reason", () => {
+test("an officer can cancel a guest order with a reason via unified void action", () => {
   assert.match(ACTIONS, /"approved" \| "rejected" \| "cancelled"/);
   assert.match(
     ACTIONS,
     /params.decision === "rejected" \|\| params.decision === "cancelled"/,
   );
-  assert.match(DRAWER, /decision: "cancelled"/);
-  assert.match(DRAWER, /handleCancel/);
+  assert.match(
+    ROOT_ACTIONS,
+    /sale\.source === "online"\s*\?\s*"cancelled"\s*:\s*"rejected"/,
+  );
+  assert.match(DRAWER, /VoidRecordModal/);
+  assert.match(DRAWER, /handleInitiateVoid/);
 });
 
 test("cancel is offered for ticket sales only, and only before review", () => {
-  assert.match(DRAWER, /isTicketSale && isPending/);
+  assert.match(ROOT_ACTIONS, /entityType === "ticket_sale"/);
+  assert.doesNotMatch(
+    ROOT_ACTIONS,
+    /verify_event_financial_transaction[^}]*cancelled/,
+  );
   assert.doesNotMatch(
     DRAWER,
     /verifyEventFinancialTransactionAction\(\{[^}]*decision: "cancelled"/,

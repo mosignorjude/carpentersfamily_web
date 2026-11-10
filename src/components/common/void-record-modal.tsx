@@ -3,9 +3,9 @@
 import { AlertTriangle, Loader2, ShieldAlert, X } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
+import type { VoidableRecord } from "@/components/events/dashboard/dashboard-types";
 import { formatNaira } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
-import type { VoidableRecord } from "@/components/events/dashboard/dashboard-types";
 
 interface VoidRecordModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ interface VoidRecordModalProps {
   onConfirmVoid: (
     record: VoidableRecord,
     reason: string,
-  ) => void | Promise<{ success: boolean; error?: string }>;
+  ) => undefined | Promise<{ success: boolean; error?: string }>;
 }
 
 export function VoidRecordModal({
@@ -29,6 +29,9 @@ export function VoidRecordModal({
 }: VoidRecordModalProps) {
   const [reason, setReason] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const isBusy = isPending || isSubmitting;
 
   useModalHygiene({ isOpen, onClose });
 
@@ -36,6 +39,7 @@ export function VoidRecordModal({
     if (!isOpen) {
       setReason("");
       setError("");
+      setIsSubmitting(false);
     }
   }, [isOpen]);
 
@@ -104,7 +108,7 @@ export function VoidRecordModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isPending || isActionBlocked) return;
+    if (isBusy || isActionBlocked) return;
 
     const trimmed = reason.trim();
     if (!trimmed || trimmed.length < 5) {
@@ -114,6 +118,7 @@ export function VoidRecordModal({
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const res = await onConfirmVoid(record, trimmed);
       if (res && typeof res === "object" && !res.success && res.error) {
@@ -122,6 +127,8 @@ export function VoidRecordModal({
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to void record";
       setError(msg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -232,7 +239,7 @@ export function VoidRecordModal({
             </label>
             <textarea
               className="w-full h-24 p-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#7A685D] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A] resize-none disabled:bg-[#FAF6F0] disabled:cursor-not-allowed"
-              disabled={isPending || isActionBlocked}
+              disabled={isBusy || isActionBlocked}
               id="void-record-reason-input"
               onChange={(e) => {
                 setReason(e.target.value);
@@ -253,7 +260,7 @@ export function VoidRecordModal({
           <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#E5DDD3]">
             <button
               className="px-4 py-2.5 text-xs font-semibold text-[#5C4638] bg-[#FAF6F0] hover:bg-[#E5DDD3]/60 rounded-xl transition-colors min-h-[44px] disabled:opacity-50 cursor-pointer"
-              disabled={isPending}
+              disabled={isBusy}
               onClick={onClose}
               type="button"
             >
@@ -261,10 +268,10 @@ export function VoidRecordModal({
             </button>
             <button
               className="px-5 py-2.5 text-xs font-semibold text-white bg-[#BA3C2A] hover:bg-[#8E2A1C] rounded-xl transition-colors min-h-[44px] shadow-xs flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              disabled={isPending || isActionBlocked || reason.trim().length < 5}
+              disabled={isBusy || isActionBlocked || reason.trim().length < 5}
               type="submit"
             >
-              {isPending ? (
+              {isBusy ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Voiding Record…</span>

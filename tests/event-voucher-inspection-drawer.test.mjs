@@ -6,6 +6,10 @@ const source = readFileSync(
   new URL("../src/components/events/dashboard/voucher-inspection-drawer.tsx", import.meta.url),
   "utf8"
 );
+const voidModal = readFileSync(
+  new URL("../src/components/common/void-record-modal.tsx", import.meta.url),
+  "utf8"
+);
 
 describe("VoucherInspectionDrawer Component", () => {
   it("renders split-view layout with transaction metadata and voucher document preview", () => {
@@ -14,10 +18,12 @@ describe("VoucherInspectionDrawer Component", () => {
     assert.match(source, /Receipt/i);
   });
 
-  it("requires mandatory rejection reason before submitting rejection", () => {
-    assert.match(source, /rejectionReason/i);
-    assert.match(source, /(rejectionReason|reason)\.trim\(\)/);
-    assert.match(source, /Reject/i);
+  it("requires mandatory void audit reason before submitting void", () => {
+    assert.match(source, /VoidRecordModal/);
+    assert.match(source, /handleInitiateVoid/);
+    assert.match(voidModal, /reason\.trim\(\)/);
+    assert.match(voidModal, /reason\.trim\(\)\.length < 5/);
+    assert.match(voidModal, /Confirm Void/);
   });
 
   it("enforces segregation of duties for executive users", () => {

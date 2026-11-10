@@ -2,7 +2,6 @@
 
 import {
   AlertTriangle,
-  Ban,
   CheckCircle2,
   Download,
   ExternalLink,
@@ -11,21 +10,21 @@ import {
   ShieldAlert,
   ShieldCheck,
   X,
-  XCircle,
 } from "lucide-react";
 import { useState } from "react";
-import { voidRecordAction } from "@/app/actions";
 import {
   verifyEventFinancialTransactionAction,
   verifyEventTicketSaleAction,
 } from "@/app/(member)/events/[eventId]/dashboard/actions";
+import { voidRecordAction } from "@/app/actions";
 import { VoidRecordModal } from "@/components/common/void-record-modal";
+import { dispatchFlashCard } from "@/components/ui/flash-card";
 import { formatNaira } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 import {
   type DashboardTransaction,
-  type VoidableRecord,
   toVoidableRecord,
+  type VoidableRecord,
 } from "./dashboard-types";
 
 interface VoucherInspectionDrawerProps {
@@ -489,6 +488,11 @@ export function VoucherInspectionDrawer({
             if (res && !res.success) {
               return res;
             }
+            dispatchFlashCard({
+              type: "success",
+              title: "Record Voided",
+              message: `${record.title} has been voided and recorded in the audit trail.`,
+            });
             setIsVoidModalOpen(false);
             onClose();
             return { success: true };
