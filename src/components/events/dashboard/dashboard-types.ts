@@ -177,3 +177,23 @@ export interface EventFinanceCategoryItem {
   created_at: string;
   retired_at: string | null;
 }
+
+export type VoidEntityType =
+  | "ticket_sale"
+  | "event_transaction"
+  | "club_transaction";
+
+export interface VoidableRecord {
+  id: string;
+  entityType: VoidEntityType;
+  title: string;
+  description?: string;
+  amountNgn?: number;
+  reference?: string;
+  party?: string;
+  source?: "manual" | "online";
+  verificationStatus?: "recorded" | "approved" | "rejected" | "cancelled";
+  paymentStatus?: "paid" | "pending" | "unpaid" | "deposit";
+  paymentMethod?: "bank_transfer" | "cash";
+  eventId?: string;
+}
