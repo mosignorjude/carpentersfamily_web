@@ -3,8 +3,10 @@ import type React from "react";
 export type DashboardTab =
   | "overview"
   | "tickets"
-  | "expenses"
   | "budget"
+  | "ledger"
+  | "statement"
+  | "expenses"
   | "revenue"
   | "reports"
   | "team_roles"

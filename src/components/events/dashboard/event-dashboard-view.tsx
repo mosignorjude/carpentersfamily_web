@@ -55,6 +55,7 @@ import {
 } from "./modals/record-transaction-modal";
 import { TransactionDetailModal } from "./modals/transaction-detail-modal";
 import { VoidTransactionModal } from "./modals/void-transaction-modal";
+import { EventDomainLedger } from "./event-domain-ledger";
 import { TabAuditLog } from "./tab-audit-log";
 import { TabBudgetAllocations } from "./tab-budget-allocations";
 import { TabExpenses } from "./tab-expenses";
@@ -221,7 +222,15 @@ export function EventDashboardView({
   useEffect(() => {
     if (initialTab === lastInitialTab.current) return;
     lastInitialTab.current = initialTab;
-    setActiveTab(initialTab);
+    let mapped = initialTab;
+    if (mapped === "expenses" || mapped === "revenue") mapped = "budget";
+    if (
+      mapped === "reports" ||
+      mapped === "team_roles" ||
+      mapped === "audit_log"
+    )
+      mapped = "statement";
+    setActiveTab(mapped);
     setScrollRequest((request) => request + 1);
   }, [initialTab]);
 
@@ -236,15 +245,25 @@ export function EventDashboardView({
         [
           "overview",
           "tickets",
-          "expenses",
           "budget",
+          "ledger",
+          "statement",
+          "expenses",
           "revenue",
           "reports",
           "team_roles",
           "audit_log",
         ].includes(tabName)
       ) {
-        setActiveTab(tabName as DashboardTab);
+        let mapped = tabName as DashboardTab;
+        if (mapped === "expenses" || mapped === "revenue") mapped = "budget";
+        if (
+          mapped === "reports" ||
+          mapped === "team_roles" ||
+          mapped === "audit_log"
+        )
+          mapped = "statement";
+        setActiveTab(mapped);
         setScrollRequest((request) => request + 1);
       }
     };
@@ -258,10 +277,18 @@ export function EventDashboardView({
   }, []);
 
   const selectTab = (tabId: DashboardTab) => {
-    setActiveTab(tabId);
+    let target = tabId;
+    if (tabId === "expenses" || tabId === "revenue") target = "budget";
+    if (
+      tabId === "reports" ||
+      tabId === "team_roles" ||
+      tabId === "audit_log"
+    )
+      target = "statement";
+    setActiveTab(target);
     const searchParams = new URLSearchParams(window.location.search);
-    searchParams.set("tab", tabId);
-    const newRelativePathQuery = `${window.location.pathname}?${searchParams.toString()}#event-finance-${tabId}`;
+    searchParams.set("tab", target);
+    const newRelativePathQuery = `${window.location.pathname}?${searchParams.toString()}#event-finance-${target}`;
     window.history.replaceState(null, "", newRelativePathQuery);
     setScrollRequest((request) => request + 1);
   };
@@ -452,7 +479,7 @@ export function EventDashboardView({
     }
   };
 
-  // 8 Exact Tabs Configuration (User requested separate Expenses from Budget & Allocations)
+  // 5 Unified Primary Tabs Configuration
   const tabs: MobileTabItem[] = [
     {
       id: "overview",
@@ -467,52 +494,24 @@ export function EventDashboardView({
       icon: Ticket,
     },
     {
-      id: "expenses",
-      label: "Expenses",
-      subtitle: "Operational cost centers & vendor receipts",
+      id: "budget",
+      label: "Budget & Revenue",
+      subtitle: "Departmental allocations, revenue streams & cash flow",
+      icon: BarChart3,
+    },
+    {
+      id: "ledger",
+      label: "Ledger",
+      subtitle: "Master transaction journal across all domains",
       icon: Wallet,
     },
     {
-      id: "budget",
-      label: "Budget",
-      subtitle: "Departmental limits & statutory caps",
-      icon: BarChart3,
-    },
-    {
-      id: "revenue",
-      label: "Revenue",
-      subtitle: "Sponsorships, donations & external inflows",
-      icon: DollarSign,
-    },
-    {
-      id: "reports",
-      label: "Reports",
-      subtitle: "Financial statements, P&L & PDF export",
-      icon: BarChart3,
-    },
-    {
-      id: "team_roles",
-      label: "Team",
-      subtitle: "Committee desks & authorized officers",
-      icon: Users,
-    },
-    {
-      id: "audit_log",
-      label: "Audit Log",
-      subtitle: "Immutable transaction journal & void logs",
-      icon: Shield,
+      id: "statement",
+      label: "Statement & Team",
+      subtitle: "Official P&L statement, export & committee desks",
+      icon: FileText,
     },
   ];
-
-  const moreTabs = tabs.filter((t) =>
-    ["budget", "reports", "team_roles", "audit_log"].includes(t.id),
-  );
-  const isMoreActive = [
-    "budget",
-    "reports",
-    "team_roles",
-    "audit_log",
-  ].includes(activeTab);
 
   const statusBadgeClass = event.archivedAt
     ? "text-[#7A685D] bg-[#FAF6F0] border-[#E5DDD3]"
@@ -751,257 +750,167 @@ export function EventDashboardView({
       </section>
 
       {/* 2. Joined Content Card: Tab Navigation & Active Tab Content */}
-      <section className="bg-transparent sm:bg-white border-0 sm:border border-[#E5DDD3] rounded-none sm:rounded-[20px] p-0 sm:p-6 sm:shadow-xs relative">
+      <section className="bg-white rounded-[20px] border border-[#E5DDD3] p-4 sm:p-6 shadow-xs relative">
         <nav aria-label="Event Sections" className="relative">
           {/* Mobile 5-Tab Bar (sm:hidden) */}
-          <div className="sm:hidden grid grid-cols-5 items-start gap-1 bg-white rounded-2xl border border-[#E5DDD3] p-1.5 shadow-xs mb-4">
-            {/* Tab 1: Overview */}
-            <button
-              aria-controls="tab-content"
-              aria-selected={activeTab === "overview"}
-              className="group flex flex-col items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] cursor-pointer min-h-[48px]"
-              id="tab-btn-overview"
-              onClick={() => {
-                selectTab("overview");
-                setIsMoreOpen(false);
-              }}
-              role="tab"
-              type="button"
+          <div className="sm:hidden mb-4">
+            <div
+              className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1.5 px-0.5"
+              role="tablist"
             >
-              <div
-                className={`w-full py-2.5 px-1 rounded-[14px] flex flex-col items-center justify-center gap-1.5 transition-colors ${
+              {/* Tab 1: Overview */}
+              <button
+                id="tab-btn-overview"
+                aria-controls="tab-content"
+                aria-selected={activeTab === "overview"}
+                role="tab"
+                type="button"
+                onClick={() => selectTab("overview")}
+                className={`group flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] cursor-pointer min-h-[48px] px-3.5 py-2.5 shrink-0 transition-colors ${
                   activeTab === "overview"
                     ? "bg-[#EEEADD] text-[#174C37] font-semibold"
-                    : "bg-transparent text-[#231F1D] font-medium hover:bg-stone-100/70"
+                    : "bg-white text-[#231F1D] font-medium border border-[#E5DDD3] hover:bg-stone-50"
                 }`}
               >
-                <Gauge className="w-[22px] h-[22px] text-[#174C37]" />
-                <span className="text-[12.5px] leading-none tracking-[-0.01em]">
-                  Overview
-                </span>
-              </div>
-              <span
-                className={`mt-1.5 w-3.5 h-[4.5px] rounded-full bg-[#174C37] transition-opacity ${
-                  activeTab === "overview" ? "opacity-100" : "opacity-0"
-                }`}
-              />
-            </button>
-
-            {/* Tab 2: Tickets */}
-            <button
-              aria-controls="tab-content"
-              aria-selected={activeTab === "tickets"}
-              className="group flex flex-col items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] cursor-pointer min-h-[48px]"
-              id="tab-btn-tickets"
-              onClick={() => {
-                selectTab("tickets");
-                setIsMoreOpen(false);
-              }}
-              role="tab"
-              type="button"
-            >
-              <div
-                className={`w-full py-2.5 px-1 rounded-[14px] flex flex-col items-center justify-center gap-1.5 transition-colors ${
-                  activeTab === "tickets"
-                    ? "bg-[#EEEADD] text-[#174C37] font-semibold"
-                    : "bg-transparent text-[#231F1D] font-medium hover:bg-stone-100/70"
-                }`}
-              >
-                <Ticket className="w-[22px] h-[22px] text-[#174C37]" />
-                <span className="text-[12.5px] leading-none tracking-[-0.01em]">
-                  Tickets
-                </span>
-              </div>
-              <span
-                className={`mt-1.5 w-3.5 h-[4.5px] rounded-full bg-[#174C37] transition-opacity ${
-                  activeTab === "tickets" ? "opacity-100" : "opacity-0"
-                }`}
-              />
-            </button>
-
-            {/* Tab 3: Expense */}
-            <button
-              aria-controls="tab-content"
-              aria-selected={activeTab === "expenses"}
-              className="group flex flex-col items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] cursor-pointer min-h-[48px]"
-              id="tab-btn-expenses"
-              onClick={() => {
-                selectTab("expenses");
-                setIsMoreOpen(false);
-              }}
-              role="tab"
-              type="button"
-            >
-              <div
-                className={`w-full py-2.5 px-1 rounded-[14px] flex flex-col items-center justify-center gap-1.5 transition-colors ${
-                  activeTab === "expenses"
-                    ? "bg-[#EEEADD] text-[#174C37] font-semibold"
-                    : "bg-transparent text-[#231F1D] font-medium hover:bg-stone-100/70"
-                }`}
-              >
-                <Wallet className="w-[22px] h-[22px] text-[#174C37]" />
-                <span className="text-[12.5px] leading-none tracking-[-0.01em]">
-                  Expenses
-                </span>
-              </div>
-              <span
-                className={`mt-1.5 w-3.5 h-[4.5px] rounded-full bg-[#174C37] transition-opacity ${
-                  activeTab === "expenses" ? "opacity-100" : "opacity-0"
-                }`}
-              />
-            </button>
-
-            {/* Tab 4: Revenue */}
-            <button
-              aria-controls="tab-content"
-              aria-selected={activeTab === "revenue"}
-              className="group flex flex-col items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] cursor-pointer min-h-[48px]"
-              id="tab-btn-revenue"
-              onClick={() => {
-                selectTab("revenue");
-                setIsMoreOpen(false);
-              }}
-              role="tab"
-              type="button"
-            >
-              <div
-                className={`w-full py-2.5 px-1 rounded-[14px] flex flex-col items-center justify-center gap-1.5 transition-colors ${
-                  activeTab === "revenue"
-                    ? "bg-[#EEEADD] text-[#174C37] font-semibold"
-                    : "bg-transparent text-[#231F1D] font-medium hover:bg-stone-100/70"
-                }`}
-              >
-                <BarChart3 className="w-[22px] h-[22px] text-[#174C37]" />
-                <span className="text-[12.5px] leading-none tracking-[-0.01em]">
-                  Revenue
-                </span>
-              </div>
-              <span
-                className={`mt-1.5 w-3.5 h-[4.5px] rounded-full bg-[#174C37] transition-opacity ${
-                  activeTab === "revenue" ? "opacity-100" : "opacity-0"
-                }`}
-              />
-            </button>
-
-            {/* Tab 5: More ⌄ */}
-            <div
-              className="relative flex flex-col items-center"
-              ref={moreMenuRef}
-            >
-              <button
-                aria-controls="moreDropdown"
-                aria-expanded={isMoreOpen}
-                aria-haspopup="menu"
-                className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] flex flex-col items-center cursor-pointer min-h-[48px]"
-                id="tab-btn-more"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsMoreOpen((prev) => !prev);
-                }}
-                type="button"
-              >
-                <div
-                  className={`w-full h-[64px] px-1 rounded-[14px] flex items-center justify-center gap-1 pt-2 transition-colors ${
-                    isMoreActive
-                      ? "bg-[#EEEADD] text-[#174C37] font-semibold"
-                      : "bg-transparent text-[#231F1D] font-medium hover:bg-stone-100/70"
-                  }`}
-                >
-                  <span className="text-[13px] leading-none">More</span>
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform duration-200 mt-0.5 ${
-                      isMoreOpen ? "rotate-180" : ""
-                    } ${isMoreActive ? "text-[#174C37]" : "text-[#231F1D]"}`}
-                  />
-                </div>
-                <span
-                  className={`mt-1.5 w-3.5 h-[4.5px] rounded-full bg-[#174C37] transition-opacity ${
-                    isMoreActive ? "opacity-100" : "opacity-0"
-                  }`}
-                />
+                <Gauge className="w-4 h-4 text-[#174C37]" />
+                <span className="text-[13px] whitespace-nowrap">Overview</span>
               </button>
 
-              {/* Dropdown Menu for Remaining 4 of 8 Sections */}
-              {isMoreOpen && (
-                <div
-                  className="absolute right-0 top-[72px] w-56 bg-white rounded-2xl border border-[#E5DDD3] shadow-lg py-1.5 z-40 animate-in fade-in zoom-in-95 duration-100"
-                  id="moreDropdown"
-                  role="menu"
-                >
-                  <div className="px-3.5 py-2 text-[11px] font-bold uppercase tracking-wider text-[#7A685D] border-b border-[#E5DDD3]">
-                    More Sections
-                  </div>
-                  {moreTabs.map((tab) => {
-                    const isTabActive = activeTab === tab.id;
-                    const Icon = tab.icon;
-                    return (
-                      <button
-                        className={`w-full px-3.5 py-2.5 text-left text-[13.5px] min-h-[44px] flex items-center justify-between transition-colors cursor-pointer ${
-                          isTabActive
-                            ? "bg-[#EEEADD] text-[#174C37] font-semibold"
-                            : "text-[#231F1D] font-medium hover:bg-[#FAF6F0]"
-                        }`}
-                        key={tab.id}
-                        onClick={() => {
-                          selectTab(tab.id);
-                          setIsMoreOpen(false);
-                        }}
-                        role="menuitem"
-                        type="button"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Icon
-                            className={`w-4 h-4 ${
-                              isTabActive ? "text-[#174C37]" : "text-[#7A685D]"
-                            }`}
-                          />
-                          <span>{tab.label}</span>
-                        </div>
-                        {isTabActive && (
-                          <span className="w-2 h-2 rounded-full bg-[#174C37] shrink-0" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+              {/* Tab 2: Tickets */}
+              <button
+                id="tab-btn-tickets"
+                aria-controls="tab-content"
+                aria-selected={activeTab === "tickets"}
+                role="tab"
+                type="button"
+                onClick={() => selectTab("tickets")}
+                className={`group flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] cursor-pointer min-h-[48px] px-3.5 py-2.5 shrink-0 transition-colors ${
+                  activeTab === "tickets"
+                    ? "bg-[#EEEADD] text-[#174C37] font-semibold"
+                    : "bg-white text-[#231F1D] font-medium border border-[#E5DDD3] hover:bg-stone-50"
+                }`}
+              >
+                <Ticket className="w-4 h-4 text-[#174C37]" />
+                <span className="text-[13px] whitespace-nowrap">Tickets</span>
+              </button>
+
+              {/* Tab 3: Budget & Revenue */}
+              <button
+                id="tab-btn-budget"
+                aria-controls="tab-content"
+                aria-selected={
+                  activeTab === "budget" ||
+                  activeTab === "expenses" ||
+                  activeTab === "revenue"
+                }
+                role="tab"
+                type="button"
+                onClick={() => selectTab("budget")}
+                className={`group flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] cursor-pointer min-h-[48px] px-3.5 py-2.5 shrink-0 transition-colors ${
+                  activeTab === "budget" ||
+                  activeTab === "expenses" ||
+                  activeTab === "revenue"
+                    ? "bg-[#EEEADD] text-[#174C37] font-semibold"
+                    : "bg-white text-[#231F1D] font-medium border border-[#E5DDD3] hover:bg-stone-50"
+                }`}
+              >
+                <BarChart3 className="w-4 h-4 text-[#174C37]" />
+                <span className="text-[13px] whitespace-nowrap">
+                  Budget & Streams
+                </span>
+              </button>
+
+              {/* Tab 4: Ledger */}
+              <button
+                id="tab-btn-ledger"
+                aria-controls="tab-content"
+                aria-selected={activeTab === "ledger"}
+                role="tab"
+                type="button"
+                onClick={() => selectTab("ledger")}
+                className={`group flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] cursor-pointer min-h-[48px] px-3.5 py-2.5 shrink-0 transition-colors ${
+                  activeTab === "ledger"
+                    ? "bg-[#EEEADD] text-[#174C37] font-semibold"
+                    : "bg-white text-[#231F1D] font-medium border border-[#E5DDD3] hover:bg-stone-50"
+                }`}
+              >
+                <Wallet className="w-4 h-4 text-[#174C37]" />
+                <span className="text-[13px] whitespace-nowrap">Ledger</span>
+              </button>
+
+              {/* Tab 5: Statement & Team */}
+              <button
+                id="tab-btn-statement"
+                aria-controls="tab-content"
+                aria-selected={
+                  activeTab === "statement" ||
+                  activeTab === "reports" ||
+                  activeTab === "team_roles" ||
+                  activeTab === "audit_log"
+                }
+                role="tab"
+                type="button"
+                onClick={() => selectTab("statement")}
+                className={`group flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-2 rounded-[14px] cursor-pointer min-h-[48px] px-3.5 py-2.5 shrink-0 transition-colors ${
+                  activeTab === "statement" ||
+                  activeTab === "reports" ||
+                  activeTab === "team_roles" ||
+                  activeTab === "audit_log"
+                    ? "bg-[#EEEADD] text-[#174C37] font-semibold"
+                    : "bg-white text-[#231F1D] font-medium border border-[#E5DDD3] hover:bg-stone-50"
+                }`}
+              >
+                <FileText className="w-4 h-4 text-[#174C37]" />
+                <span className="text-[13px] whitespace-nowrap">
+                  Statement & Team
+                </span>
+              </button>
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-[#7A685D] px-1 pt-1 font-medium">
+              <span>5 Sections</span>
+              <span className="text-[#174C37]">Swipe for more →</span>
             </div>
           </div>
 
-          {/* Desktop 8-Pill Tab Bar (hidden sm:block) */}
+          {/* Desktop 5-Pill Tab Bar (hidden sm:block) */}
           <div className="hidden sm:block">
-            <TableScroll className="rounded-xl" label="Dashboard sections">
-              <div className="flex w-max items-center gap-2 p-1.5 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === tab.id;
+            <div className="flex w-max items-center gap-2 p-1.5 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive =
+                  activeTab === tab.id ||
+                  (tab.id === "budget" &&
+                    (activeTab === "expenses" || activeTab === "revenue")) ||
+                  (tab.id === "statement" &&
+                    (activeTab === "reports" ||
+                      activeTab === "team_roles" ||
+                      activeTab === "audit_log"));
 
-                  return (
-                    <button
-                      aria-current={isActive ? "page" : undefined}
-                      className={`px-2.5 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex items-center gap-1.5 min-h-[48px] cursor-pointer border-0 ${
-                        isActive
-                          ? "bg-[#174C37] text-white shadow-xs font-semibold"
-                          : "bg-transparent text-[#5C4638] hover:text-[#174C37] hover:bg-white/80"
+                return (
+                  <button
+                    aria-current={isActive ? "page" : undefined}
+                    aria-selected={isActive}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex items-center gap-2 min-h-[44px] cursor-pointer border-0 ${
+                      isActive
+                        ? "bg-[#174C37] text-white shadow-xs font-semibold"
+                        : "bg-transparent text-[#5C4638] hover:text-[#174C37] hover:bg-white/80"
+                    }`}
+                    id={`tab-btn-${tab.id}-desktop`}
+                    key={tab.id}
+                    onClick={() => selectTab(tab.id)}
+                    role="tab"
+                    type="button"
+                  >
+                    <Icon
+                      className={`w-4 h-4 ${
+                        isActive ? "text-[#D6A23A]" : "text-[#7A685D]"
                       }`}
-                      key={tab.id}
-                      onClick={() => selectTab(tab.id)}
-                      type="button"
-                    >
-                      <Icon
-                        className={`w-4 h-4 ${
-                          isActive ? "text-[#D6A23A]" : "text-[#7A685D]"
-                        }`}
-                      />
-                      <span>{tab.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </TableScroll>
-            <p className="mt-1.5 text-xs text-[#7A685D] lg:hidden">
-              Swipe left for more sections
-            </p>
+                    />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Subtle horizontal divider separating the tab bar from the active tab content on desktop */}
@@ -1084,6 +993,20 @@ export function EventDashboardView({
             />
           )}
 
+          {activeTab === "budget" && (
+            <TabBudgetAllocations
+              budgetCeiling={event.budgetCeiling}
+              canManageCategories={canManageCategories}
+              costCenters={costCenters}
+              onManageCategories={() => {
+                setCategoryModalType("budget_allocation");
+                setIsCategoryModalOpen(true);
+              }}
+              onOpenBudgetCeilingModal={() => setIsBudgetCeilingModalOpen(true)}
+              revenueStreams={revenueStreams}
+            />
+          )}
+
           {activeTab === "expenses" && (
             <TabExpenses
               budgetCeiling={event.budgetCeiling}
@@ -1100,20 +1023,6 @@ export function EventDashboardView({
                 setIsRecordModalOpen(true);
               }}
               userRole={userRole}
-            />
-          )}
-
-          {activeTab === "budget" && (
-            <TabBudgetAllocations
-              budgetCeiling={event.budgetCeiling}
-              canManageCategories={canManageCategories}
-              costCenters={costCenters}
-              onManageCategories={() => {
-                setCategoryModalType("budget_allocation");
-                setIsCategoryModalOpen(true);
-              }}
-              onOpenBudgetCeilingModal={() => setIsBudgetCeilingModalOpen(true)}
-              revenueStreams={revenueStreams}
             />
           )}
 
@@ -1140,7 +1049,36 @@ export function EventDashboardView({
             />
           )}
 
-          {activeTab === "reports" && (
+          {activeTab === "ledger" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD3]">
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-[#3D291F]">
+                    Master Event Financial Ledger
+                  </h3>
+                  <p className="text-xs text-[#7A685D]">
+                    Real-time transaction register across all ticket sales, revenue inflows, and expense disbursements.
+                  </p>
+                </div>
+              </div>
+              <EventDomainLedger
+                canRecord={canRecord}
+                categories={categories}
+                currentUserId={currentUserId}
+                domain="all"
+                eventId={event.id}
+                onRecordTransaction={() => {
+                  setRecordInitialType("expense");
+                  setRecordInitialCategory(undefined);
+                  setIsRecordModalOpen(true);
+                }}
+                transactions={transactions}
+                userRole={userRole}
+              />
+            </div>
+          )}
+
+          {(activeTab === "statement" || activeTab === "reports") && (
             <TabReports
               budgetCeiling={event.budgetCeiling}
               costCenters={costCenters}

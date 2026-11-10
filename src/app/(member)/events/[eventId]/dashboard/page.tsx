@@ -776,22 +776,25 @@ export default async function EventDashboardPage({
   const categories: EventFinanceCategoryItem[] = (categoriesResult.data ??
     []) as EventFinanceCategoryItem[];
 
-  // Validate requested tab
-  const validTabs: DashboardTab[] = [
-    "overview",
-    "tickets",
-    "expenses",
-    "budget",
-    "revenue",
-    "reports",
-    "team_roles",
-    "audit_log",
-  ];
-  const initialTab: DashboardTab = validTabs.includes(
-    query.tab?.toLowerCase() as DashboardTab,
-  )
-    ? (query.tab?.toLowerCase() as DashboardTab)
-    : "overview";
+  // Validate requested tab and map legacy query parameters to unified 5 tabs
+  const rawTab = (query.tab?.toLowerCase() || "overview") as DashboardTab;
+  let initialTab: DashboardTab = "overview";
+  if (rawTab === "tickets") {
+    initialTab = "tickets";
+  } else if (rawTab === "budget" || rawTab === "expenses" || rawTab === "revenue") {
+    initialTab = "budget";
+  } else if (rawTab === "ledger") {
+    initialTab = "ledger";
+  } else if (
+    rawTab === "statement" ||
+    rawTab === "reports" ||
+    rawTab === "team_roles" ||
+    rawTab === "audit_log"
+  ) {
+    initialTab = "statement";
+  } else if (rawTab === "overview") {
+    initialTab = "overview";
+  }
 
   return (
     <div className="min-h-full p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
