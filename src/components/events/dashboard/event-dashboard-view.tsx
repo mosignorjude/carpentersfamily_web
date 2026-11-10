@@ -176,6 +176,9 @@ export function EventDashboardView({
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
+  // Spotlight header metadata disclosure
+  const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
+
   useEffect(() => {
     function handleDismiss(event: Event) {
       if (
@@ -521,122 +524,199 @@ export function EventDashboardView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
-      {/* Top Scoped Header Card */}
-      <section className="bg-white rounded-[20px] sm:rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-4">
-        {/* Navigation Breadcrumb & Back Link */}
-        <div className="flex items-center justify-between gap-2 sm:gap-4 pb-3.5 border-b border-[#E5DDD3]">
-          <Link
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#174C37] hover:underline min-h-[44px]"
-            href="/events"
-          >
-            <ArrowLeft className="w-4 h-4 text-[#174C37] shrink-0" />
-            <span>Back to Events</span>
-          </Link>
+      {/* Top Scoped Header Card with brand accent line */}
+      <section className="bg-white rounded-[20px] sm:rounded-2xl border border-[#E5DDD3] shadow-xs overflow-hidden">
+        {/* Forest Green Top Brand Accent */}
+        <div className="h-1 bg-[#174C37] w-full" />
 
-          <div className="flex items-center gap-2">
-            {event.type !== "party" &&
-              (event.attendanceEnabled || event.minutesEnabled) && (
-                <Link
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] hover:border-[#174C37]/40 text-xs font-semibold text-[#174C37] transition-colors min-h-[44px]"
-                  href={`/meeting-hub?event=${encodeURIComponent(event.id)}`}
-                >
-                  <FileText className="w-3.5 h-3.5 text-[#174C37]" />
-                  <span>Meeting Hub</span>
-                </Link>
-              )}
-            <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize border ${statusBadgeClass}`}
+        <div className="p-4 sm:p-6 space-y-4">
+          {/* Navigation Breadcrumb & Back Link */}
+          <div className="flex items-center justify-between gap-2 sm:gap-4 pb-3.5 border-b border-[#E5DDD3]">
+            <Link
+              className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#174C37] hover:underline min-h-[44px]"
+              href="/events"
             >
-              {event.archivedAt ? "Archived" : event.status}
-            </span>
-          </div>
-        </div>
+              <ArrowLeft className="w-4 h-4 text-[#174C37] shrink-0" />
+              <span>Back to Events</span>
+            </Link>
 
-        {/* Title & Metadata */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
-            <div className="hidden sm:flex items-center gap-2 text-xs text-[#7A685D] mb-1">
-              <span className="font-bold text-[#174C37] uppercase">
-                {event.type} Event Dashboard
-              </span>
-              <span aria-hidden="true">·</span>
-              <span className="font-semibold text-[#3D291F] capitalize">
-                Status: {event.status}
+            <div className="flex items-center gap-2">
+              {event.type !== "party" &&
+                (event.attendanceEnabled || event.minutesEnabled) && (
+                  <Link
+                    className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] hover:border-[#174C37]/40 text-xs font-semibold text-[#174C37] transition-colors min-h-[44px]"
+                    href={`/meeting-hub?event=${encodeURIComponent(event.id)}`}
+                    title="Open Meeting Hub for minutes and roll call"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-[#174C37]" />
+                    <span>Meeting Hub</span>
+                  </Link>
+                )}
+              <span
+                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize border ${statusBadgeClass}`}
+              >
+                {event.archivedAt ? "Archived" : event.status}
               </span>
             </div>
+          </div>
 
-            <h1 className="text-[26px] sm:text-3xl font-extrabold sm:font-bold text-[#231F1D] sm:text-[#3D291F] tracking-tight leading-tight">
-              {event.title}
-            </h1>
-
-            {/* Date & Time Row */}
-            <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[14.5px] sm:text-xs text-[#4A524D] sm:text-[#5C4638] font-medium sm:font-normal">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-[#174C37] shrink-0" />
-                <span>{event.dateFormatted}</span>
+          {/* Title & Metadata */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-xs text-[#7A685D]">
+                <span className="font-bold text-[#174C37] uppercase tracking-wider text-[11px]">
+                  {event.type} Event Dashboard
+                </span>
+                <span aria-hidden="true">·</span>
+                <span className="font-semibold text-[#3D291F] capitalize text-[11px]">
+                  Status: {event.status}
+                </span>
               </div>
-              <span
-                aria-hidden="true"
-                className="text-stone-300 select-none sm:text-[#E5DDD3]"
+
+              <h1 className="text-[26px] sm:text-3xl font-extrabold sm:font-bold text-[#231F1D] sm:text-[#3D291F] tracking-tight leading-tight">
+                {event.title}
+              </h1>
+
+              {/* Date, Time & Location Row with Details Disclosure Toggle */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[14px] sm:text-xs text-[#4A524D] sm:text-[#5C4638]">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-[#174C37] shrink-0" />
+                  <span>{event.dateFormatted}</span>
+                </div>
+                <span aria-hidden="true" className="text-[#E5DDD3]">
+                  •
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-[#174C37] shrink-0" />
+                  <span className="font-mono">{event.timeWAT}</span>
+                </div>
+                <span aria-hidden="true" className="text-[#E5DDD3]">
+                  •
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-[#174C37] shrink-0" />
+                  <span className="truncate max-w-[200px] sm:max-w-xs">{event.location}</span>
+                </div>
+                {/* On-demand Details Disclosure Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsHeaderExpanded((prev) => !prev)}
+                  aria-expanded={isHeaderExpanded}
+                  aria-controls="event-header-details"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-[#174C37] hover:text-[#0C3325] px-2 py-1 rounded-lg hover:bg-[#FAF6F0] transition-colors ml-auto sm:ml-2 min-h-[36px] cursor-pointer"
+                >
+                  <span>{isHeaderExpanded ? "Hide info" : "Details"}</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      isHeaderExpanded ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Actions (Desktop View) */}
+            <div className="hidden sm:flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                className="px-3.5 py-2 text-xs font-semibold text-[#231F1D] bg-white border border-[#CFD5D0] rounded-xl hover:bg-[#FAF6F0] min-h-[44px] flex items-center gap-1.5 transition-colors cursor-pointer"
+                id="btn-export-report-desktop"
+                onClick={() => setIsDownloadReportModalOpen(true)}
+                title="Download Report (PDF / CSV)"
+                type="button"
               >
-                •
-              </span>
-              <div className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-[#174C37] shrink-0" />
-                <span className="font-mono">{event.timeWAT}</span>
-              </div>
-              {event.durationLabel && (
+                <Download className="w-3.5 h-3.5 text-[#174C37]" />
+                <span>Download Report</span>
+              </button>
+
+              {canRecord && (
                 <>
-                  <span
-                    aria-hidden="true"
-                    className="text-stone-300 select-none sm:text-[#E5DDD3]"
+                  <button
+                    className="px-3.5 py-2 text-xs font-semibold text-[#174C37] bg-[#174C37]/10 hover:bg-[#174C37]/20 border border-[#174C37]/30 rounded-xl min-h-[44px] flex items-center gap-1.5 transition-colors cursor-pointer"
+                    id="btn-record-ticket-sale"
+                    onClick={() => {
+                      setRecordInitialType("revenue");
+                      setRecordInitialCategory("ticket_sales");
+                      setIsRecordModalOpen(true);
+                    }}
+                    type="button"
                   >
-                    •
-                  </span>
-                  <span>{event.durationLabel}</span>
+                    <Ticket className="w-4 h-4 text-[#D6A23A]" />
+                    <span>Record Ticket Sale</span>
+                  </button>
+
+                  <button
+                    className="px-4 py-2 text-xs font-semibold text-white bg-[#174C37] hover:bg-[#103D2B] border border-[#174C37] rounded-xl min-h-[44px] flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                    id="btn-record-transaction"
+                    onClick={() => {
+                      setRecordInitialType("revenue");
+                      setRecordInitialCategory(undefined);
+                      setIsRecordModalOpen(true);
+                    }}
+                    type="button"
+                  >
+                    <Plus className="w-4 h-4 text-[#D6A23A]" />
+                    <span>Record Transaction</span>
+                  </button>
                 </>
               )}
             </div>
-
-            {/* Location Row */}
-            <div className="mt-1.5 flex items-center gap-2 text-[14.5px] sm:text-xs text-[#4A524D] sm:text-[#5C4638] font-medium sm:font-normal">
-              <MapPin className="w-4 h-4 text-[#174C37] shrink-0" />
-              <span className="truncate">{event.location}</span>
-            </div>
           </div>
 
-          {/* Quick Actions (Desktop View) */}
-          <div className="hidden sm:flex flex-wrap items-center gap-2 shrink-0">
-            <button
-              className="px-3.5 py-2 text-xs font-semibold text-[#231F1D] bg-white border border-[#CFD5D0] rounded-xl hover:bg-[#FAF6F0] min-h-[44px] flex items-center gap-1.5 transition-colors cursor-pointer"
-              id="btn-export-report-desktop"
-              onClick={() => setIsDownloadReportModalOpen(true)}
-              title="Download Report (PDF / CSV)"
-              type="button"
+          {/* Collapsible Metadata Drawer */}
+          {isHeaderExpanded && (
+            <div
+              id="event-header-details"
+              className="pt-3.5 border-t border-[#E5DDD3] space-y-3 text-xs animate-in fade-in slide-in-from-top-1 duration-150"
             >
-              <Download className="w-3.5 h-3.5 text-[#174C37]" />
-              <span>Download Report</span>
-            </button>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-[#FAF6F0] p-3 rounded-xl border border-[#E5DDD3]">
+                <div>
+                  <span className="text-[#6B5D53] block text-[11px]">Financial Reference</span>
+                  <span className="font-mono font-bold text-[#3D291F]">
+                    EVT-{event.id.slice(0, 8).toUpperCase()}-FIN
+                  </span>
+                </div>
+                {event.durationLabel && (
+                  <div>
+                    <span className="text-[#6B5D53] block text-[11px]">Scheduled Duration</span>
+                    <span className="font-semibold text-[#3D291F]">{event.durationLabel}</span>
+                  </div>
+                )}
+                <div>
+                  <span className="text-[#6B5D53] block text-[11px]">Meeting Hub Context</span>
+                  <span className="text-[#3D291F]">
+                    Minutes and attendance roll calls are maintained in the separate Meeting Hub.
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
-            {canRecord && (
-              <>
-                <button
-                  className="px-3.5 py-2 text-xs font-semibold text-[#174C37] bg-[#174C37]/10 hover:bg-[#174C37]/20 border border-[#174C37]/30 rounded-xl min-h-[44px] flex items-center gap-1.5 transition-colors cursor-pointer"
-                  id="btn-record-ticket-sale"
-                  onClick={() => {
-                    setRecordInitialType("revenue");
-                    setRecordInitialCategory("ticket_sales");
-                    setIsRecordModalOpen(true);
-                  }}
-                  type="button"
-                >
-                  <Ticket className="w-4 h-4 text-[#D6A23A]" />
-                  <span>Record Ticket Sale</span>
-                </button>
+          {/* Quick Action Section (Mobile View: 1 or 2-Button Grid) */}
+          <div className="sm:hidden pt-1">
+            <h2 className="text-[15px] font-semibold text-[#231F1D] mb-2.5">
+              Quick Actions
+            </h2>
+            <div
+              className={
+                canRecord
+                  ? "grid grid-cols-2 gap-2.5"
+                  : "grid grid-cols-1 gap-2.5"
+              }
+            >
+              <button
+                className="w-full py-3 px-3 min-h-[48px] rounded-[14px] bg-white border border-[#CFD5D0] text-[#231F1D] font-semibold text-[14px] flex items-center justify-center gap-2 hover:bg-stone-50 active:scale-[0.98] transition shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer"
+                id="btn-download-report-mobile"
+                onClick={() => setIsDownloadReportModalOpen(true)}
+                type="button"
+              >
+                <Download className="w-[17px] h-[17px] text-[#174C37] shrink-0" />
+                <span className="truncate">Download Report</span>
+              </button>
 
+              {canRecord && (
                 <button
-                  className="px-4 py-2 text-xs font-semibold text-white bg-[#174C37] hover:bg-[#103D2B] border border-[#174C37] rounded-xl min-h-[44px] flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-                  id="btn-record-transaction"
+                  className="w-full py-3 px-3 min-h-[48px] rounded-[14px] bg-[#174C37] text-white font-semibold text-[14px] flex items-center justify-center gap-2 hover:bg-[#103D2B] active:scale-[0.98] transition shadow-xs cursor-pointer"
+                  id="btn-record-transaction-mobile"
                   onClick={() => {
                     setRecordInitialType("revenue");
                     setRecordInitialCategory(undefined);
@@ -644,70 +724,30 @@ export function EventDashboardView({
                   }}
                   type="button"
                 >
-                  <Plus className="w-4 h-4 text-[#D6A23A]" />
-                  <span>Record Transaction</span>
+                  <Plus className="w-[17px] h-[17px] text-[#85B89A] shrink-0" />
+                  <span className="truncate">Record Transaction</span>
                 </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Quick Action Section (Mobile View: 1 or 2-Button Grid) */}
-        <div className="sm:hidden pt-1">
-          <h2 className="text-[15px] font-semibold text-[#231F1D] mb-2.5">
-            Quick Actions
-          </h2>
-          <div
-            className={
-              canRecord
-                ? "grid grid-cols-2 gap-2.5"
-                : "grid grid-cols-1 gap-2.5"
-            }
-          >
-            <button
-              className="w-full py-3 px-3 min-h-[48px] rounded-[14px] bg-white border border-[#CFD5D0] text-[#231F1D] font-semibold text-[14px] flex items-center justify-center gap-2 hover:bg-stone-50 active:scale-[0.98] transition shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer"
-              id="btn-download-report-mobile"
-              onClick={() => setIsDownloadReportModalOpen(true)}
-              type="button"
-            >
-              <Download className="w-[17px] h-[17px] text-[#174C37] shrink-0" />
-              <span className="truncate">Download Report</span>
-            </button>
-
-            {canRecord && (
-              <button
-                className="w-full py-3 px-3 min-h-[48px] rounded-[14px] bg-[#174C37] text-white font-semibold text-[14px] flex items-center justify-center gap-2 hover:bg-[#103D2B] active:scale-[0.98] transition shadow-xs cursor-pointer"
-                id="btn-record-transaction-mobile"
-                onClick={() => {
-                  setRecordInitialType("revenue");
-                  setRecordInitialCategory(undefined);
-                  setIsRecordModalOpen(true);
-                }}
-                type="button"
-              >
-                <Plus className="w-[17px] h-[17px] text-[#85B89A] shrink-0" />
-                <span className="truncate">Record Transaction</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Lock Notice if completed or cancelled */}
-        {isLocked && (
-          <div className="p-3.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#5C4638] flex items-center gap-2">
-            <Lock className="w-4 h-4 text-[#7A685D] shrink-0" />
-            <div>
-              <span className="font-semibold text-[#3D291F]">
-                Planning is locked for this event.{" "}
-              </span>
-              <span>
-                {event.archivedAt
-                  ? "Retained indefinitely for permanent reporting and audit. Records are read-only."
-                  : "Only an Admin or President can reopen completed or cancelled records."}
-              </span>
+              )}
             </div>
           </div>
-        )}
+
+          {/* Lock Notice if completed or cancelled */}
+          {isLocked && (
+            <div className="p-3.5 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs text-[#5C4638] flex items-center gap-2">
+              <Lock className="w-4 h-4 text-[#7A685D] shrink-0" />
+              <div>
+                <span className="font-semibold text-[#3D291F]">
+                  Planning is locked for this event.{" "}
+                </span>
+                <span>
+                  {event.archivedAt
+                    ? "Retained indefinitely for permanent reporting and audit. Records are read-only."
+                    : "Only an Admin or President can reopen completed or cancelled records."}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
       </section>
 
       {/* 2. Joined Content Card: Tab Navigation & Active Tab Content */}
