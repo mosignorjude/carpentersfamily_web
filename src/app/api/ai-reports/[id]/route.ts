@@ -98,6 +98,7 @@ export async function PATCH(
     from: row.period_start === "1900-01-01" ? null : row.period_start,
     to: row.period_end === "9999-12-31" ? null : row.period_end,
     period: scopePeriod,
+    customSpec: parsed.customSpec,
   });
 
   if (factsCtx.kind !== "ok") {

@@ -1,23 +1,59 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
-import { describe, it } from "node:test";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { after, describe, it } from "node:test";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
 
+const projectRoot = fileURLToPath(new URL("..", import.meta.url));
+let tempDir = null;
+
 async function loadApiSchemas() {
-  const source = await readFile(
-    new URL("../src/lib/ai/api-schemas.ts", import.meta.url),
-    "utf8",
-  );
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-  }).outputText;
-  return import(
-    `data:text/javascript;base64,${Buffer.from(compiled).toString("base64")}`
-  );
+  if (!tempDir) {
+    const cacheParent = path.join(projectRoot, "node_modules");
+    await mkdir(cacheParent, { recursive: true });
+    tempDir = await mkdtemp(path.join(cacheParent, ".tmp-ai-api-"));
+    await writeFile(
+      path.join(tempDir, "package.json"),
+      JSON.stringify({ type: "module" }),
+    );
+    for (const file of [
+      "facts.ts",
+      "report-spec.ts",
+      "request-guard.ts",
+      "api-schemas.ts",
+    ]) {
+      const source = await readFile(
+        path.join(projectRoot, "src", "lib", "ai", file),
+        "utf8",
+      );
+      const compiled = ts.transpileModule(source, {
+        compilerOptions: {
+          module: ts.ModuleKind.ESNext,
+          target: ts.ScriptTarget.ES2022,
+        },
+      }).outputText
+        .replace(/from\s+["']\.\/facts["']/g, 'from "./facts.js"')
+        .replace(/from\s+["']\.\/report-spec["']/g, 'from "./report-spec.js"')
+        .replace(
+          /from\s+["']\.\/request-guard["']/g,
+          'from "./request-guard.js"',
+        );
+      await writeFile(
+        path.join(tempDir, file.replace(/\.ts$/, ".js")),
+        compiled,
+        "utf8",
+      );
+    }
+  }
+  return import(pathToFileURL(path.join(tempDir, "api-schemas.js")).href);
 }
+
+after(async () => {
+  if (tempDir) {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
 
 describe("AI report API schemas and route contracts", () => {
   it("validates generate request payloads strictly by reportType", async () => {

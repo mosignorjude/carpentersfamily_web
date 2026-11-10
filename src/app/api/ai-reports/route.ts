@@ -28,7 +28,7 @@ const RESPONSE_HEADERS = {
   Vary: "Cookie",
 };
 
-const MAX_REQUEST_BYTES = 2048;
+const MAX_REQUEST_BYTES = 4096;
 
 function jsonError(status: number, message: string) {
   return Response.json(

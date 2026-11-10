@@ -1,12 +1,14 @@
 "use client";
 
-import { Download, FileSpreadsheet, FileText, Sparkles } from "lucide-react";
+import { FileSpreadsheet, FileText, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CfFilterPill } from "@/components/ui";
+import type { CustomReportMetadata } from "@/lib/ai/report-spec";
 import { formatNaira } from "@/lib/format";
 import type { OverviewPeriod } from "@/lib/reports/period";
 import { AiSummaryPanel, type ClientNarrativeDto } from "./ai-summary-panel";
+import { CustomReportBuilder } from "./custom-report-builder";
 
 export interface ClubOverviewFactsView {
   period_label: string;
@@ -58,6 +60,7 @@ export function ClubOverviewClient({
   facts,
   aiEnabled,
   initialNarrative,
+  customMetadata,
 }: {
   period: OverviewPeriod;
   currentMonthParam: string;
@@ -66,6 +69,7 @@ export function ClubOverviewClient({
   facts: ClubOverviewFactsView | null;
   aiEnabled: boolean;
   initialNarrative: ClientNarrativeDto | null;
+  customMetadata: CustomReportMetadata;
 }) {
   const router = useRouter();
   const [includeAi, setIncludeAi] = useState(true);
@@ -323,17 +327,14 @@ export function ClubOverviewClient({
         </>
       )}
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-        <div className="rounded-2xl border border-dashed border-[#E5DDD3] bg-[#FAF6F0] p-4 space-y-1">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#3D291F]">
-            <Download className="w-3.5 h-3.5 text-[#174C37]" />
-            <span>Phase 2: Custom Plain-English Reports (Planned)</span>
-          </div>
-          <p className="text-xs text-[#5C4638]">
-            Ask questions like &ldquo;Q3 event spending by category&rdquo; to
-            generate verified custom tables and PDFs.
-          </p>
-        </div>
+      <CustomReportBuilder
+        aiEnabled={aiEnabled}
+        defaultFrom={period.periodStart}
+        defaultTo={period.periodEnd}
+        initialMetadata={customMetadata}
+      />
+
+      <section className="pt-2">
         <div className="rounded-2xl border border-dashed border-[#E5DDD3] bg-[#FAF6F0] p-4 space-y-1">
           <div className="flex items-center gap-2 text-xs font-bold text-[#3D291F]">
             <Sparkles className="w-3.5 h-3.5 text-[#174C37]" />

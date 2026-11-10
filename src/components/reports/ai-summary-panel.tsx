@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CfButton } from "@/components/ui";
 import type { AiReportType } from "@/lib/ai/facts";
 import type { AiNarrativeContent } from "@/lib/ai/grounding";
+import type { ReportSpec } from "@/lib/ai/report-spec";
 
 export interface ClientNarrativeDto {
   id: string;
@@ -34,9 +35,11 @@ export interface AiSummaryPanelProps {
   period?: string;
   from?: string;
   to?: string;
+  customSpec?: ReportSpec;
   aiEnabled: boolean;
   initialNarrative?: ClientNarrativeDto | null;
   title?: string;
+  onNarrativeChange?: (narrative: ClientNarrativeDto | null) => void;
 }
 
 function splitLines(text: string): string[] {
@@ -68,9 +71,11 @@ export function AiSummaryPanel({
   period,
   from,
   to,
+  customSpec,
   aiEnabled,
   initialNarrative = null,
   title = "AI Report Summary",
+  onNarrativeChange,
 }: AiSummaryPanelProps) {
   const [narrative, setNarrative] = useState<ClientNarrativeDto | null>(
     initialNarrative,
@@ -104,7 +109,7 @@ export function AiSummaryPanel({
       syncEditFields(initialNarrative);
       return;
     }
-    if (!aiEnabled) {
+    if (!aiEnabled || reportType === "custom") {
       setLoadingInitial(false);
       return;
     }
@@ -162,6 +167,7 @@ export function AiSummaryPanel({
           ...(period ? { period } : {}),
           ...(from ? { from } : {}),
           ...(to ? { to } : {}),
+          ...(customSpec ? { customSpec } : {}),
         }),
       });
       const payload = (await response.json()) as {
@@ -176,6 +182,7 @@ export function AiSummaryPanel({
         return;
       }
       setNarrative(payload.narrative);
+      onNarrativeChange?.(payload.narrative);
       syncEditFields(payload.narrative);
       setIsEditing(false);
     } catch {
@@ -194,7 +201,15 @@ export function AiSummaryPanel({
     try {
       const response = await fetch(
         `/api/ai-reports/${encodeURIComponent(narrative.id)}/approve`,
-        { method: "POST" },
+        {
+          method: "POST",
+          ...(customSpec
+            ? {
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ customSpec }),
+              }
+            : {}),
+        },
       );
       const payload = (await response.json()) as {
         narrative?: ClientNarrativeDto | null;
@@ -205,6 +220,7 @@ export function AiSummaryPanel({
         return;
       }
       setNarrative(payload.narrative);
+      onNarrativeChange?.(payload.narrative);
       syncEditFields(payload.narrative);
     } catch {
       setErrorMsg("Could not approve this summary.");
@@ -220,7 +236,15 @@ export function AiSummaryPanel({
     try {
       const response = await fetch(
         `/api/ai-reports/${encodeURIComponent(narrative.id)}/regenerate`,
-        { method: "POST" },
+        {
+          method: "POST",
+          ...(customSpec
+            ? {
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ customSpec }),
+              }
+            : {}),
+        },
       );
       const payload = (await response.json()) as {
         narrative?: ClientNarrativeDto | null;
@@ -231,6 +255,7 @@ export function AiSummaryPanel({
         return;
       }
       setNarrative(payload.narrative);
+      onNarrativeChange?.(payload.narrative);
       syncEditFields(payload.narrative);
       setIsEditing(false);
     } catch {
@@ -257,6 +282,7 @@ export function AiSummaryPanel({
               risks: splitLines(editRisks),
               recommendations: splitLines(editRecommendations),
             },
+            ...(customSpec ? { customSpec } : {}),
           }),
         },
       );
@@ -269,6 +295,7 @@ export function AiSummaryPanel({
         return;
       }
       setNarrative(payload.narrative);
+      onNarrativeChange?.(payload.narrative);
       syncEditFields(payload.narrative);
       setIsEditing(false);
     } catch {

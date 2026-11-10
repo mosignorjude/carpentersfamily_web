@@ -1,5 +1,7 @@
 import type { AiReportType } from "./facts";
 import type { AiNarrativeContent } from "./grounding";
+import { parseAndNormalizeReportSpec, type ReportSpec } from "./report-spec";
+import { readBoundedJsonBody } from "./request-guard";
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -28,6 +30,7 @@ export type ParsedGenerateRequest =
       from: string | null;
       to: string | null;
       period: string | null;
+      customSpec: ReportSpec | null;
     }
   | { ok: false; error: string };
 
@@ -42,7 +45,8 @@ export function parseGenerateRequest(raw: unknown): ParsedGenerateRequest {
     reportType !== "club_finance" &&
     reportType !== "dues" &&
     reportType !== "event_finance" &&
-    reportType !== "club_overview"
+    reportType !== "club_overview" &&
+    reportType !== "custom"
   ) {
     return { ok: false, error: "Unsupported report type." };
   }
@@ -51,6 +55,7 @@ export function parseGenerateRequest(raw: unknown): ParsedGenerateRequest {
   let from: string | null = null;
   let to: string | null = null;
   let period: string | null = null;
+  let customSpec: ReportSpec | null = null;
 
   if (reportType === "event_finance") {
     if (!isUuid(obj.eventId)) {
@@ -86,14 +91,27 @@ export function parseGenerateRequest(raw: unknown): ParsedGenerateRequest {
       }
       period = obj.period;
     }
+  } else if (reportType === "custom") {
+    const specRes = parseAndNormalizeReportSpec(obj.customSpec);
+    if (!specRes.ok) {
+      return { ok: false, error: specRes.error };
+    }
+    customSpec = specRes.spec;
+    eventId = specRes.spec.eventId ?? null;
+    from = specRes.spec.period.from;
+    to = specRes.spec.period.to;
   }
 
-  return { ok: true, reportType, eventId, from, to, period };
+  return { ok: true, reportType, eventId, from, to, period, customSpec };
 }
 
-export function parsePatchNarrativeBody(
-  raw: unknown,
-): { ok: true; content: AiNarrativeContent } | { ok: false; error: string } {
+export function parsePatchNarrativeBody(raw: unknown):
+  | {
+      ok: true;
+      content: AiNarrativeContent;
+      customSpec: ReportSpec | null;
+    }
+  | { ok: false; error: string } {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
     return { ok: false, error: "Invalid narrative payload." };
   }
@@ -119,6 +137,14 @@ export function parsePatchNarrativeBody(
         "Narrative content requires headline, highlights, risks, and recommendations.",
     };
   }
+  let customSpec: ReportSpec | null = null;
+  if (obj.customSpec !== undefined && obj.customSpec !== null) {
+    const parsedSpec = parseAndNormalizeReportSpec(obj.customSpec);
+    if (!parsedSpec.ok) {
+      return { ok: false, error: parsedSpec.error };
+    }
+    customSpec = parsedSpec.spec;
+  }
   return {
     ok: true,
     content: {
@@ -131,5 +157,46 @@ export function parsePatchNarrativeBody(
         (x): x is string => typeof x === "string",
       ),
     },
+    customSpec,
   };
+}
+
+export function parseCustomSpecBody(
+  raw: unknown,
+): { ok: true; customSpec: ReportSpec } | { ok: false; error: string } {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    return { ok: false, error: "Custom report spec body is required." };
+  }
+  const obj = raw as Record<string, unknown>;
+  const spec = parseAndNormalizeReportSpec(obj.customSpec ?? obj.spec);
+  if (!spec.ok) return spec;
+  return { ok: true, customSpec: spec.spec };
+}
+
+export async function resolveCustomSpecFromRequest(
+  request: Request,
+  reportType: string,
+): Promise<
+  | { ok: true; customSpec: ReportSpec | null }
+  | { ok: false; status: 400 | 413; error: string }
+> {
+  if (reportType !== "custom") {
+    return { ok: true, customSpec: null };
+  }
+  const bodyRes = await readBoundedJsonBody(request, 4096);
+  if (bodyRes.kind === "too-large") {
+    return { ok: false, status: 413, error: "Request payload is too large." };
+  }
+  if (bodyRes.kind !== "ok") {
+    return {
+      ok: false,
+      status: 400,
+      error: "Custom report specification is required.",
+    };
+  }
+  const specParsed = parseCustomSpecBody(bodyRes.data);
+  if (!specParsed.ok) {
+    return { ok: false, status: 400, error: specParsed.error };
+  }
+  return { ok: true, customSpec: specParsed.customSpec };
 }

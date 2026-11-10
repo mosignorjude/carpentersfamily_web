@@ -542,3 +542,120 @@ export function ClubOverviewPdfDocument(props: ClubOverviewPdfProps) {
     </Document>
   );
 }
+
+export interface CustomReportPdfProps {
+  title: string;
+  subtitle: string;
+  periodLabel: string;
+  generatedDate: string;
+  isMonetary: boolean;
+  metricLabel: string;
+  totalCount: number;
+  totalAmountNgn: number | null;
+  averageAmountNgn: number | null;
+  rows: Array<{
+    groupLabel: string;
+    count: number;
+    totalAmountNgn: number | null;
+    averageAmountNgn: number | null;
+    sharePct: number;
+  }>;
+  narrative: PdfNarrativeSummary | null;
+}
+
+const CUSTOM_MONETARY_COLUMNS: readonly DataTableColumn[] = [
+  { key: "group", label: "Group", width: "36%" },
+  { key: "count", label: "Count", width: "12%", align: "right" },
+  { key: "total", label: "Total", width: "20%", align: "right" },
+  { key: "average", label: "Average", width: "18%", align: "right" },
+  { key: "share", label: "Share", width: "14%", align: "right" },
+];
+
+const CUSTOM_COUNT_COLUMNS: readonly DataTableColumn[] = [
+  { key: "group", label: "Group", width: "60%" },
+  { key: "count", label: "Count", width: "20%", align: "right" },
+  { key: "share", label: "Share", width: "20%", align: "right" },
+];
+
+export function CustomReportPdfDocument(props: CustomReportPdfProps) {
+  const topGroup = props.rows[0];
+  const cards = props.isMonetary
+    ? [
+        {
+          label: "Total Amount",
+          value: formatMoneyLabel(props.totalAmountNgn ?? 0),
+          tone: "positive" as const,
+        },
+        {
+          label: "Records Matched",
+          value: String(props.totalCount),
+        },
+        {
+          label: "Average Amount",
+          value: formatMoneyLabel(props.averageAmountNgn ?? 0),
+        },
+        ...(topGroup
+          ? [
+              {
+                label: "Leading Group",
+                value: `${topGroup.groupLabel} (${topGroup.sharePct}%)`,
+                tone: "accent" as const,
+              },
+            ]
+          : []),
+      ]
+    : [
+        {
+          label: "Records Matched",
+          value: String(props.totalCount),
+          tone: "positive" as const,
+        },
+        ...(topGroup
+          ? [
+              {
+                label: "Leading Group",
+                value: `${topGroup.groupLabel} (${topGroup.count})`,
+                tone: "accent" as const,
+              },
+            ]
+          : []),
+      ];
+
+  return (
+    <Document
+      author={clubBrand.name}
+      creator={clubBrand.name}
+      title={`${clubBrand.name} | ${props.title}`}
+    >
+      <ReportShell
+        generatedDate={props.generatedDate}
+        periodLabel={props.periodLabel}
+        reportTitle={props.title}
+        subtitle={props.subtitle}
+      >
+        <SummaryCards items={cards} />
+
+        {props.narrative ? (
+          <AiSummarySection narrative={props.narrative} />
+        ) : null}
+
+        <Text style={pdfStyles.sectionTitle}>
+          Breakdown ({props.metricLabel} · {props.rows.length} groups)
+        </Text>
+        <DataTable
+          columns={
+            props.isMonetary ? CUSTOM_MONETARY_COLUMNS : CUSTOM_COUNT_COLUMNS
+          }
+          emptyMessage="No matching records were found for the selected period and filters."
+          rows={props.rows.map((row) => ({
+            group: row.groupLabel,
+            count: String(row.count),
+            total: formatMoneyLabel(row.totalAmountNgn ?? 0),
+            average: formatMoneyLabel(row.averageAmountNgn ?? 0),
+            share: `${row.sharePct}%`,
+          }))}
+        />
+      </ReportShell>
+    </Document>
+  );
+}

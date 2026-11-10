@@ -1,4 +1,4 @@
-import { isUuid } from "@/lib/ai/api-schemas";
+import { isUuid, resolveCustomSpecFromRequest } from "@/lib/ai/api-schemas";
 import type { AiReportType } from "@/lib/ai/facts";
 import { requireOfficer } from "@/lib/ai/officer.server";
 import {
@@ -98,6 +98,14 @@ export async function POST(
     return jsonError(404, "AI narrative was not found.");
   }
 
+  const customSpecRes = await resolveCustomSpecFromRequest(
+    request,
+    row.report_type,
+  );
+  if (!customSpecRes.ok) {
+    return jsonError(customSpecRes.status, customSpecRes.error);
+  }
+
   const scopePeriod = periodParamForRow(
     row.report_type,
     row.period_start,
@@ -109,6 +117,7 @@ export async function POST(
     from: row.period_start === "1900-01-01" ? null : row.period_start,
     to: row.period_end === "9999-12-31" ? null : row.period_end,
     period: scopePeriod,
+    customSpec: customSpecRes.customSpec,
   });
 
   if (factsCtx.kind !== "ok") {

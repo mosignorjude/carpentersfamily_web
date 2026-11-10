@@ -11,6 +11,7 @@ import {
   factsFingerprint,
 } from "@/lib/ai/facts";
 import type { AiNarrativeContent } from "@/lib/ai/grounding";
+import type { ReportSpec } from "@/lib/ai/report-spec";
 import type { PdfNarrativeSummary } from "@/lib/pdf/components";
 import { getWATDate, MAX_REPORT_ROWS, wholeNgn } from "@/lib/report-export";
 import {
@@ -19,6 +20,7 @@ import {
   type OverviewPeriod,
   parseOverviewPeriod,
 } from "./period";
+import { executeCustomReportSpec } from "./spec-executor.server";
 
 export type ClubFinanceTxnRow = {
   id: string;
@@ -521,9 +523,28 @@ export async function loadFactsContextForScope(
     from?: string | null;
     to?: string | null;
     period?: string | null;
+    customSpec?: ReportSpec | null;
   },
 ) {
   const year = Number(getWATDate().slice(0, 4));
+  if (params.reportType === "custom") {
+    if (!params.customSpec) return { kind: "unavailable" as const };
+    const execRes = await executeCustomReportSpec(supabase, params.customSpec);
+    if (execRes.kind !== "ok") {
+      return execRes.kind === "too-large"
+        ? { kind: "too-large" as const }
+        : { kind: "unavailable" as const };
+    }
+    return {
+      kind: "ok" as const,
+      reportType: "custom" as const,
+      scopeId: execRes.result.scopeId,
+      periodStart: execRes.result.periodStart,
+      periodEnd: execRes.result.periodEnd,
+      facts: execRes.result.facts,
+      fingerprint: execRes.result.fingerprint,
+    };
+  }
   if (params.reportType === "club_finance") {
     const snap = await loadClubFinanceSnapshot(supabase, year);
     if (snap.kind !== "ok") return snap;

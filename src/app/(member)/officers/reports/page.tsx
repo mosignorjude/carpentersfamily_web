@@ -12,6 +12,7 @@ import {
   parseOverviewPeriod,
   previousMonthPeriodWAT,
 } from "@/lib/reports/period";
+import { loadCustomReportMetadata } from "@/lib/reports/spec-executor.server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function OfficerReportsPage({
@@ -94,7 +95,10 @@ export default async function OfficerReportsPage({
 
   const selectedPeriod = parseOverviewPeriod(params.period) ?? currentMonth;
 
-  const snap = await loadClubOverviewSnapshot(supabase, selectedPeriod);
+  const [snap, customMetadata] = await Promise.all([
+    loadClubOverviewSnapshot(supabase, selectedPeriod),
+    loadCustomReportMetadata(supabase),
+  ]);
   const initialNarrative =
     snap.kind === "ok"
       ? await loadActiveOfficerNarrative(supabase, {
@@ -111,6 +115,7 @@ export default async function OfficerReportsPage({
       aiEnabled={isAiReportsEnabled()}
       currentMonthParam={currentMonth.periodParam}
       currentYearParam={currentYear.periodParam}
+      customMetadata={customMetadata}
       facts={snap.kind === "ok" ? snap.facts : null}
       initialNarrative={initialNarrative}
       period={selectedPeriod}

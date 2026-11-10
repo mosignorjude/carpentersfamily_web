@@ -4,7 +4,8 @@ export type AiReportType =
   | "club_finance"
   | "dues"
   | "event_finance"
-  | "club_overview";
+  | "club_overview"
+  | "custom";
 
 export interface ClubFinanceSummaryInput {
   dues_income: string | number;

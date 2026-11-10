@@ -45,6 +45,8 @@ const REPORT_INSTRUCTIONS: Record<AiReportType, string> = {
     "Focus on net event result, verified revenue vs actual and committed expenses, ticket tier performance, and any pending ticket orders awaiting officer confirmation.",
   club_overview:
     "Focus on the club's period-wide summary across club treasury cashflows, dues collection health, event financial results, and meeting attendance.",
+  custom:
+    "Summarize the custom report results strictly from FACTS: highlight total count, total or average amounts (if monetary), the leading groups or categories, and any notable anomalies or zeros.",
 };
 
 export function buildNarrativePrompt(
