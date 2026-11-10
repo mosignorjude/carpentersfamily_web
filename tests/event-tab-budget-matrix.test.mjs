@@ -24,6 +24,21 @@ describe("TabBudgetAllocations Cost Center Matrix & Responsive Cards", () => {
   it("uses CfButton for budget CTAs and CfFilterPill for chart sub-tabs", () => {
     assert.match(source, /<CfButton[\s\S]*btn-set-budget-total/);
     assert.match(source, /<CfButton[\s\S]*btn-manage-budget-categories/);
+    assert.match(source, /<CfButton[\s\S]*btn-manage-revenue-categories/);
+    assert.match(source, /Revenue Categories/);
     assert.match(source, /<CfFilterPill[\s\S]*Spending/);
+  });
+
+  it("provides Revenue Categories trigger independently of sub-tab and in Revenue Mix empty state", () => {
+    assert.match(source, /onManageRevenueCategories/);
+    assert.match(source, /Manage Revenue Categories/);
+    const recordModalSource = readFileSync(
+      new URL(
+        "../src/components/events/dashboard/modals/record-transaction-modal.tsx",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    assert.doesNotMatch(recordModalSource, /onManageRevenueCategories/);
   });
 });

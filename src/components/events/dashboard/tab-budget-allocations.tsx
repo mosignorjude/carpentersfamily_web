@@ -124,16 +124,25 @@ export function TabBudgetAllocations({
               <CfButton
                 className="text-[#174C37]"
                 id="btn-manage-budget-categories"
-                onClick={
-                  activeChartTab === "revenue_mix" && onManageRevenueCategories
-                    ? onManageRevenueCategories
-                    : onManageCategories
-                }
+                onClick={onManageCategories}
                 size="compact"
                 variant="secondary"
               >
                 <Tags className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
-                <span>Manage Categories</span>
+                <span>Budget Categories</span>
+              </CfButton>
+            )}
+
+            {canManageCategories && onManageRevenueCategories && (
+              <CfButton
+                className="text-[#174C37]"
+                id="btn-manage-revenue-categories"
+                onClick={onManageRevenueCategories}
+                size="compact"
+                variant="secondary"
+              >
+                <Tags className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
+                <span>Revenue Categories</span>
               </CfButton>
             )}
 
@@ -467,9 +476,18 @@ export function TabBudgetAllocations({
           </div>
 
           {revenueStreams.length === 0 ? (
-            <div className="bg-white border border-[#E5DDD3] rounded-2xl p-6 text-center text-xs text-[#7A685D]">
-              No revenue streams recorded yet.
-            </div>
+            <EmptyStateCard
+              className="my-2"
+              description="Configure revenue categories or record non-ticket inflows such as sponsorships, donations, or vendor fees."
+              icon={Tags}
+              title="No Revenue Streams Recorded Yet"
+              {...(canManageCategories && onManageRevenueCategories
+                ? {
+                    actionLabel: "Manage Revenue Categories",
+                    onAction: onManageRevenueCategories,
+                  }
+                : {})}
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {revenueStreams.map((rs) => {
