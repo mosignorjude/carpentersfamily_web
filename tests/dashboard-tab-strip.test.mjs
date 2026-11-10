@@ -306,8 +306,13 @@ describe("dashboard tab strip", () => {
       targets.push({ tag, element: match[1], line: lineAt(match.index) });
     }
     assert.ok(
-      targets.length >= 6,
-      `expected the header card's interactive targets, found ${targets.length}`,
+      targets.length >= 4,
+      `expected the header card's navigation/tab interactive targets, found ${targets.length}`,
+    );
+    assert.match(
+      source,
+      /<CfButton/,
+      "dashboard actions should use the shared CfButton hierarchy primitive",
     );
     for (const target of targets) {
       const className = classListOf(target.tag);

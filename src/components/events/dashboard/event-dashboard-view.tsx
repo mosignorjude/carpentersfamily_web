@@ -7,7 +7,6 @@ import {
   ClipboardCheck,
   Clock,
   Download,
-  Edit3,
   ExternalLink,
   FileText,
   Layers,
@@ -32,6 +31,7 @@ import {
   EventLifecycleModal,
 } from "@/components/events/event-lifecycle-modal";
 import type { EventRow } from "@/components/events/event-types";
+import { CfButton } from "@/components/ui";
 import {
   dispatchActionStatusToast,
   dispatchFlashCard,
@@ -103,6 +103,20 @@ function mapInitialTab(tab: DashboardTab): DashboardTab {
     return "statement";
   }
   return tab;
+}
+
+const historyDateFormatter = new Intl.DateTimeFormat("en-NG", {
+  timeZone: "Africa/Lagos",
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
+
+function formatHistoryDate(iso?: string | null): string | null {
+  if (!iso) return null;
+  const parsed = Date.parse(iso);
+  if (Number.isNaN(parsed)) return null;
+  return historyDateFormatter.format(new Date(parsed));
 }
 
 interface EventDashboardViewProps {
@@ -637,6 +651,33 @@ export function EventDashboardView({
     .map((m) => m.memberId)
     .filter((id): id is string => Boolean(id));
 
+  const effectiveEventType = eventRow?.event_type ?? event.type;
+  const activeEventFeatures: string[] = [];
+  if (
+    effectiveEventType !== "party" &&
+    (eventRow?.minutes_enabled ?? event.minutesEnabled)
+  ) {
+    activeEventFeatures.push("Meeting Minutes");
+  }
+  if (
+    effectiveEventType !== "party" &&
+    (eventRow?.attendance_enabled ?? event.attendanceEnabled)
+  ) {
+    activeEventFeatures.push("Attendance Tracking");
+  }
+  if (eventRow?.ticketing_enabled ?? event.ticketingEnabled) {
+    activeEventFeatures.push("Ticketing Passes");
+  }
+  if (eventRow?.budget_enabled) activeEventFeatures.push("Budget System");
+  if (eventRow?.income_enabled) activeEventFeatures.push("Revenue Streams");
+  if (eventRow?.expenses_enabled) activeEventFeatures.push("Disbursements");
+
+  const createdAtLabel = formatHistoryDate(eventRow?.created_at);
+  const updatedAtLabel = formatHistoryDate(
+    eventRow?.status_changed_at || eventRow?.updated_at,
+  );
+  const archivedAtLabel = formatHistoryDate(eventRow?.archived_at);
+
   return (
     <div className="space-y-4 animate-in fade-in duration-150">
       {/* Compact Spotlight Event Header Card */}
@@ -666,20 +707,21 @@ export function EventDashboardView({
                 <span>{event.archivedAt ? "Archived" : event.status}</span>
               </span>
 
-              <button
+              <CfButton
                 aria-controls="event-header-details"
                 aria-expanded={isHeaderExpanded}
-                className="inline-flex items-center gap-1 px-2.5 py-2 min-h-[44px] rounded-xl text-xs font-medium text-[#5C4638] bg-[#FAF6F0] border border-[#E5DDD3] hover:border-[#174C37] cursor-pointer transition-colors"
+                className="text-[#5C4638]"
                 onClick={() => setIsHeaderExpanded((prev) => !prev)}
-                type="button"
+                size="compact"
+                variant="secondary"
               >
                 <span>{isHeaderExpanded ? "Hide info" : "Event info"}</span>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
                     isHeaderExpanded ? "rotate-180" : ""
                   }`}
                 />
-              </button>
+              </CfButton>
             </div>
           </div>
 
@@ -715,39 +757,28 @@ export function EventDashboardView({
 
             {/* Unified Action Bar */}
             <div className="flex flex-wrap items-center gap-2 shrink-0">
-              <button
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl bg-[#FAF6F0] hover:bg-[#E5DDD3]/60 text-[#3D291F] border border-[#E5DDD3] font-bold text-xs transition-colors cursor-pointer"
+              <CfButton
+                className="flex-1 sm:flex-initial"
                 id="btn-export-report"
                 onClick={() => setIsDownloadReportModalOpen(true)}
-                type="button"
+                size="compact"
+                variant="secondary"
               >
                 <Download className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
                 <span>Download Report</span>
-              </button>
+              </CfButton>
 
               {canRecord && (
-                <button
-                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-xl bg-[#174C37] hover:bg-[#103D2B] text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
+                <CfButton
+                  className="flex-1 sm:flex-initial"
                   id="btn-record-transaction"
                   onClick={openContextualRecordModal}
-                  type="button"
+                  size="default"
+                  variant="primary"
                 >
-                  <Plus className="w-3.5 h-3.5 text-[#F0C768] shrink-0" />
-                  <span>+ Record Entry</span>
-                </button>
-              )}
-
-              {canEditEvent && eventRow && (
-                <button
-                  aria-label="Edit Event Settings"
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl bg-[#FAF6F0] hover:bg-[#E5DDD3]/60 text-[#5C4638] border border-[#E5DDD3] text-xs font-semibold transition-colors cursor-pointer"
-                  onClick={() => setIsEditEventModalOpen(true)}
-                  title="Edit Event Details"
-                  type="button"
-                >
-                  <Edit3 className="w-3.5 h-3.5 shrink-0" />
-                  <span className="hidden sm:inline">Edit</span>
-                </button>
+                  <Plus className="w-4 h-4 text-[#F0C768] shrink-0" />
+                  <span>Record Entry</span>
+                </CfButton>
               )}
             </div>
           </div>
@@ -755,121 +786,161 @@ export function EventDashboardView({
           {/* Collapsible Event Info Drawer */}
           {isHeaderExpanded && (
             <div
-              className="mt-2 pt-3 border-t border-[#E5DDD3] bg-[#FAF6F0]/80 rounded-xl p-3.5 text-xs space-y-2.5 animate-in fade-in duration-150"
+              className="mt-2 pt-3 border-t border-[#E5DDD3] bg-[#FAF6F0]/80 rounded-xl p-3.5 text-xs space-y-3 animate-in fade-in duration-150"
               id="event-header-details"
             >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <span className="text-[#7A685D] block text-[11px]">
-                    Official Accounting Ref:
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {/* 1. Event History & Timeline */}
+                <div className="space-y-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A685D] block">
+                    Event History &amp; Timeline
                   </span>
-                  <span className="font-mono font-semibold text-[#3D291F]">
-                    EVT-{event.id.slice(0, 8).toUpperCase()}-FIN
-                  </span>
-                </div>
-
-                <div>
-                  <span className="text-[#7A685D] block text-[11px]">
-                    Duration &amp; Timezone:
-                  </span>
-                  <span className="font-medium text-[#3D291F]">
-                    {event.durationLabel || "1 day"} (Africa/Lagos WAT)
-                  </span>
-                </div>
-
-                {event.ticketingEnabled && (
-                  <div>
-                    <span className="text-[#7A685D] block text-[11px]">
-                      Public Box Office:
-                    </span>
-                    <Link
-                      className="text-[#174C37] font-semibold underline inline-flex items-center gap-1 min-h-[44px]"
-                      href="/tickets?view=public"
-                    >
-                      <span>Open Ticket Storefront</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </Link>
+                  <div className="space-y-0.5 text-[#3D291F]">
+                    <p className="font-medium">
+                      Scheduled {event.dateFormatted} ·{" "}
+                      <span className="font-mono">{event.timeWAT}</span> (
+                      {event.durationLabel || "1 day"})
+                    </p>
+                    {createdAtLabel && (
+                      <p className="text-[#5C4638]">Created {createdAtLabel}</p>
+                    )}
+                    {updatedAtLabel && (
+                      <p className="text-[#7A685D]">
+                        Last updated {updatedAtLabel}
+                      </p>
+                    )}
+                    {archivedAtLabel && (
+                      <p className="text-[#BA3C2A] font-semibold">
+                        Archived {archivedAtLabel}
+                      </p>
+                    )}
                   </div>
-                )}
+                </div>
 
-                {event.type !== "party" &&
-                  (event.attendanceEnabled || event.minutesEnabled) && (
-                    <div>
-                      <span className="text-[#7A685D] block text-[11px]">
-                        Meeting Hub:
-                      </span>
-                      <Link
-                        className="text-[#174C37] font-semibold underline inline-flex items-center gap-1 min-h-[44px]"
-                        href={`/meeting-hub?event=${encodeURIComponent(event.id)}`}
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        <span>Minutes &amp; Attendance</span>
-                      </Link>
+                {/* 2. Event Features */}
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A685D] block">
+                    Event Features
+                  </span>
+                  {activeEventFeatures.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {activeEventFeatures.map((feat) => (
+                        <span
+                          className="px-2 py-0.5 rounded-md bg-white border border-[#E5DDD3] text-[#174C37] font-semibold text-[11px]"
+                          key={feat}
+                        >
+                          {feat}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[#7A685D] italic">Standard Event</p>
+                  )}
+
+                  {(event.ticketingEnabled ||
+                    (effectiveEventType !== "party" &&
+                      (event.attendanceEnabled || event.minutesEnabled))) && (
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-0.5">
+                      {event.ticketingEnabled && (
+                        <Link
+                          className="text-[#174C37] font-semibold underline inline-flex items-center gap-1 min-h-[44px]"
+                          href="/tickets?view=public"
+                        >
+                          <span>Open Ticket Storefront</span>
+                          <ExternalLink className="w-3 h-3 shrink-0" />
+                        </Link>
+                      )}
+                      {effectiveEventType !== "party" &&
+                        (event.attendanceEnabled || event.minutesEnabled) && (
+                          <Link
+                            className="text-[#174C37] font-semibold underline inline-flex items-center gap-1 min-h-[44px]"
+                            href={`/meeting-hub?event=${encodeURIComponent(event.id)}`}
+                          >
+                            <FileText className="w-3.5 h-3.5 shrink-0" />
+                            <span>Minutes &amp; Attendance</span>
+                          </Link>
+                        )}
                     </div>
                   )}
+                </div>
               </div>
 
-              {event.details && (
-                <p className="text-[#5C4638] leading-relaxed">
-                  {event.details}
-                </p>
-              )}
+              {/* 3. Event Description */}
+              <div className="pt-2.5 border-t border-[#E5DDD3]/80">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A685D] block mb-1">
+                  Event Description
+                </span>
+                {event.details ? (
+                  <p className="text-[#5C4638] leading-relaxed whitespace-pre-wrap">
+                    {event.details}
+                  </p>
+                ) : (
+                  <p className="text-[#7A685D] italic">
+                    No description recorded for this event.
+                  </p>
+                )}
+              </div>
 
               {(canEditEvent || canManageLifecycle) && eventRow && (
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#E5DDD3]/80">
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-[#E5DDD3]/80">
                   <div className="flex flex-wrap items-center gap-2">
                     {canSetEventStatus && !isLocked && (
                       <>
-                        <button
-                          className="px-3 py-1.5 min-h-[44px] rounded-xl border border-[#174C37]/30 bg-white text-[#174C37] text-xs font-semibold hover:bg-[#174C37]/10 cursor-pointer"
+                        <CfButton
+                          className="border-[#174C37]/30 bg-white text-[#174C37] hover:bg-[#174C37]/10"
                           onClick={() => setLifecycleAction("complete")}
-                          type="button"
+                          size="compact"
+                          variant="secondary"
                         >
                           Mark Completed
-                        </button>
-                        <button
-                          className="px-3 py-1.5 min-h-[44px] rounded-xl border border-[#BA3C2A]/30 bg-white text-[#BA3C2A] text-xs font-semibold hover:bg-[#FDF0EE] cursor-pointer"
+                        </CfButton>
+                        <CfButton
+                          className="border-[#BA3C2A]/30 bg-white text-[#BA3C2A] hover:bg-[#FDF0EE] hover:border-[#BA3C2A]/50"
                           onClick={() => setLifecycleAction("cancel")}
-                          type="button"
+                          size="compact"
+                          variant="secondary"
                         >
                           Cancel Event
-                        </button>
+                        </CfButton>
                       </>
                     )}
                     {canReopenEvent &&
                       !event.archivedAt &&
                       (event.status === "completed" ||
                         event.status === "cancelled") && (
-                        <button
-                          className="px-3 py-1.5 min-h-[44px] rounded-xl border border-[#174C37]/30 bg-white text-[#174C37] text-xs font-semibold hover:bg-[#174C37]/10 cursor-pointer"
+                        <CfButton
+                          className="border-[#174C37]/30 bg-white text-[#174C37] hover:bg-[#174C37]/10"
                           onClick={() => setLifecycleAction("reopen")}
-                          type="button"
+                          size="compact"
+                          variant="secondary"
                         >
                           Reopen Planning
-                        </button>
+                        </CfButton>
                       )}
                     {isAdminOrPresident &&
                       !event.archivedAt &&
                       (event.status === "completed" ||
                         event.status === "cancelled") && (
-                        <button
-                          className="px-3 py-1.5 min-h-[44px] rounded-xl border border-[#E5DDD3] bg-white text-[#5C4638] text-xs font-semibold hover:bg-[#FAF6F0] cursor-pointer"
+                        <CfButton
+                          className="bg-white text-[#5C4638]"
                           onClick={() => setLifecycleAction("archive")}
-                          type="button"
+                          size="compact"
+                          variant="secondary"
                         >
                           Archive Record
-                        </button>
+                        </CfButton>
                       )}
                   </div>
 
                   {canEditEvent && (
-                    <button
-                      className="text-xs font-semibold text-[#174C37] hover:underline cursor-pointer min-h-[44px] inline-flex items-center"
+                    <CfButton
+                      className="bg-white border-[#174C37]/30 text-[#174C37] hover:bg-[#174C37]/10"
                       onClick={() => setIsEditEventModalOpen(true)}
-                      type="button"
+                      size="compact"
+                      variant="secondary"
                     >
-                      Edit Event Details &rarr;
-                    </button>
+                      Edit Event Details
+                    </CfButton>
                   )}
                 </div>
               )}

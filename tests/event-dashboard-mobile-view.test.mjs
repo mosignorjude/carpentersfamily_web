@@ -21,13 +21,23 @@ describe("Event Dashboard Mobile & Desktop Layout", () => {
   it("renders unified spotlight header actions without duplicating mobile quick actions", () => {
     assert.match(
       viewSource,
-      /Download Report/,
-      "Header must render Download Report action",
+      /<CfButton[\s\S]*Download Report/,
+      "Header must render Download Report action via CfButton",
     );
     assert.match(
       viewSource,
-      /Record Entry/,
-      "Header must render + Record Entry action",
+      /<CfButton[\s\S]*Record Entry/,
+      "Header must render Record Entry action via CfButton",
+    );
+    assert.doesNotMatch(
+      viewSource,
+      /\+\s*Record Entry/,
+      "Record Entry must not render a duplicate literal + next to its Plus icon",
+    );
+    assert.doesNotMatch(
+      viewSource,
+      /Edit Event Settings/,
+      "Header card must not render a duplicate Edit button alongside the dropdown Edit Event Details button",
     );
     assert.doesNotMatch(
       viewSource,

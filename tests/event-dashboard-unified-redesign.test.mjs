@@ -98,11 +98,22 @@ describe("Spotlight Header & Collapsible Metadata", () => {
     );
   });
 
-  it("renders reference code, duration, public ticket link, and meeting hub note inside disclosure", () => {
+  it("shows only Event History & Timeline, Event Features, Event Description, plus retained lifecycle and Edit Details controls", () => {
+    assert.doesNotMatch(
+      viewSource,
+      /Official Accounting Ref|EVT-/,
+      "Event info dropdown must omit accounting ref noise",
+    );
+    assert.match(viewSource, /Event History &amp; Timeline|Event History & Timeline/);
+    assert.match(viewSource, /Event Features/);
+    assert.match(viewSource, /Event Description/);
+    assert.match(viewSource, /Mark Completed/);
+    assert.match(viewSource, /Cancel Event/);
+    assert.match(viewSource, /Edit Event Details/);
     assert.match(
       viewSource,
-      /EVT-|Reference|meeting hub|Meeting Hub/i,
-      "Event details must include reference code or meeting hub context",
+      /Minutes &amp; Attendance|Minutes & Attendance/i,
+      "Event Features must retain contextual Meeting Hub link",
     );
   });
 });
