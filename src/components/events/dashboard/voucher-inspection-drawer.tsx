@@ -14,13 +14,19 @@ import {
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
+import { voidRecordAction } from "@/app/actions";
 import {
   verifyEventFinancialTransactionAction,
   verifyEventTicketSaleAction,
 } from "@/app/(member)/events/[eventId]/dashboard/actions";
+import { VoidRecordModal } from "@/components/common/void-record-modal";
 import { formatNaira } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
-import type { DashboardTransaction } from "./dashboard-types";
+import {
+  type DashboardTransaction,
+  type VoidableRecord,
+  toVoidableRecord,
+} from "./dashboard-types";
 
 interface VoucherInspectionDrawerProps {
   isOpen: boolean;
@@ -29,6 +35,8 @@ interface VoucherInspectionDrawerProps {
   eventId: string;
   currentUserId?: string;
   userRole?: string;
+  onVoidRecord?: (record: VoidableRecord) => void;
+  onVoid?: (record: VoidableRecord) => void;
 }
 
 export function VoucherInspectionDrawer({
@@ -38,14 +46,13 @@ export function VoucherInspectionDrawer({
   eventId,
   currentUserId,
   userRole,
+  onVoidRecord,
+  onVoid,
 }: VoucherInspectionDrawerProps) {
   useModalHygiene({ isOpen, onClose });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showRejectInput, setShowRejectInput] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState("");
-  const [showCancelInput, setShowCancelInput] = useState(false);
-  const [cancellationReason, setCancellationReason] = useState("");
+  const [isVoidModalOpen, setIsVoidModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!isOpen || !transaction) return null;
@@ -101,70 +108,17 @@ export function VoucherInspectionDrawer({
     }
   }
 
-  async function handleReject() {
+  function handleInitiateVoid() {
     if (!transaction) return;
-    const trimmed = rejectionReason.trim();
-    if (trimmed.length < 5) {
-      setErrorMessage(
-        "Please enter an explanation of at least 5 characters to reject/reverse.",
-      );
-      return;
-    }
-
-    setIsSubmitting(true);
-    setErrorMessage(null);
-
-    const res = isTicketSale
-      ? await verifyEventTicketSaleAction({
-          eventId,
-          saleId: transaction.id,
-          decision: "rejected",
-          reason: trimmed,
-        })
-      : await verifyEventFinancialTransactionAction({
-          eventId,
-          transactionId: transaction.id,
-          decision: "rejected",
-          reason: trimmed,
-        });
-
-    setIsSubmitting(false);
-    if (!res.success) {
-      setErrorMessage(res.error || "Reversal failed.");
-    } else {
-      setShowRejectInput(false);
-      setRejectionReason("");
+    const voidable = toVoidableRecord(transaction, eventId);
+    if (onVoidRecord) {
+      onVoidRecord(voidable);
       onClose();
-    }
-  }
-
-  async function handleCancel() {
-    if (!transaction || !isTicketSale) return;
-    const trimmed = cancellationReason.trim();
-    if (trimmed.length < 5) {
-      setErrorMessage(
-        "Please say why this order is being cancelled (at least 5 characters).",
-      );
-      return;
-    }
-
-    setIsSubmitting(true);
-    setErrorMessage(null);
-
-    const res = await verifyEventTicketSaleAction({
-      eventId,
-      saleId: transaction.id,
-      decision: "cancelled",
-      reason: trimmed,
-    });
-
-    setIsSubmitting(false);
-    if (!res.success) {
-      setErrorMessage(res.error || "Cancellation failed.");
-    } else {
-      setShowCancelInput(false);
-      setCancellationReason("");
+    } else if (onVoid) {
+      onVoid(voidable);
       onClose();
+    } else {
+      setIsVoidModalOpen(true);
     }
   }
 
@@ -430,8 +384,8 @@ export function VoucherInspectionDrawer({
                       <strong className="text-[#174C37] font-mono">
                         {formatNaira(transaction.amount)}
                       </strong>
-                      . If there is a mismatch or missing proof, reverse the
-                      record below.
+                      . If there is a mismatch or missing proof, void the record
+                      below.
                     </span>
                   </div>
                 </div>
@@ -450,97 +404,6 @@ export function VoucherInspectionDrawer({
               )}
             </div>
           </div>
-
-          {/* Rejection Input Section */}
-          {showRejectInput && (
-            <div className="p-4 rounded-2xl bg-[#FDF0EE] border border-[#F5C7C0] space-y-3 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#BA3C2A] flex items-center gap-1.5">
-                  <XCircle className="w-4 h-4" />
-                  Reason for Reversal
-                </span>
-                <button
-                  className="text-xs text-[#7A685D] hover:underline cursor-pointer"
-                  onClick={() => setShowRejectInput(false)}
-                  type="button"
-                >
-                  Cancel
-                </button>
-              </div>
-              <textarea
-                className="w-full text-xs p-3 bg-white border border-[#F5C7C0] rounded-xl text-[#3D291F] placeholder-[#7A685D] focus:outline-hidden focus:ring-2 focus:ring-[#BA3C2A]"
-                onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="State why this record is being reversed (e.g., Receipt amount is ₦10,000 but claimed ₦100,000; or invalid vendor voucher)..."
-                rows={3}
-                value={rejectionReason}
-              />
-              <div className="flex items-center justify-end gap-2">
-                <button
-                  className="px-3 py-1.5 text-xs text-[#5C4638] hover:bg-white rounded-lg transition-colors cursor-pointer min-h-[44px] flex items-center justify-center"
-                  onClick={() => setShowRejectInput(false)}
-                  type="button"
-                >
-                  Back
-                </button>
-                <button
-                  className="px-4 py-2 bg-[#BA3C2A] text-white rounded-xl text-xs font-bold hover:bg-[#8E2A1C] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 min-h-[44px]"
-                  disabled={isSubmitting || rejectionReason.trim().length < 5}
-                  onClick={handleReject}
-                  type="button"
-                >
-                  <X className="w-4 h-4" />
-                  <span>Confirm Reversal</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Cancellation Input Section */}
-          {showCancelInput && (
-            <div className="p-4 rounded-2xl bg-[#FAF6F0] border border-[#E5DDD3] space-y-3 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#5C4638] flex items-center gap-1.5">
-                  <Ban className="w-4 h-4" />
-                  Why is this order being cancelled? (e.g. Buyer said they did
-                  not transfer; order duplicated)
-                </span>
-                <button
-                  className="text-xs text-[#7A685D] hover:underline cursor-pointer"
-                  onClick={() => setShowCancelInput(false)}
-                  type="button"
-                >
-                  Cancel
-                </button>
-              </div>
-              <textarea
-                className="w-full text-xs p-3 bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#7A685D] focus:outline-hidden focus:ring-2 focus:ring-[#5C4638]"
-                onChange={(e) => setCancellationReason(e.target.value)}
-                placeholder="State why this order is being cancelled..."
-                rows={3}
-                value={cancellationReason}
-              />
-              <div className="flex items-center justify-end gap-2">
-                <button
-                  className="px-3 py-1.5 text-xs text-[#5C4638] hover:bg-white rounded-lg transition-colors cursor-pointer min-h-[44px] flex items-center justify-center"
-                  onClick={() => setShowCancelInput(false)}
-                  type="button"
-                >
-                  Back
-                </button>
-                <button
-                  className="px-4 py-2 bg-[#5C4638] text-white rounded-xl text-xs font-bold hover:bg-[#3D291F] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 min-h-[44px]"
-                  disabled={
-                    isSubmitting || cancellationReason.trim().length < 5
-                  }
-                  onClick={handleCancel}
-                  type="button"
-                >
-                  <Ban className="w-4 h-4" />
-                  <span>Cancel this order</span>
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Drawer Footer Controls */}
@@ -548,12 +411,11 @@ export function VoucherInspectionDrawer({
           <div className="text-xs text-[#7A685D]">
             {isCancelled ? (
               <span className="text-[#5C4638] font-medium">
-                This order was cancelled and never counted as revenue.
+                This order was voided and never counted as revenue.
               </span>
             ) : isRejected ? (
               <span className="text-[#BA3C2A] font-medium">
-                This transaction has been permanently reversed. Re-approval is
-                forbidden.
+                This record has been voided. Re-approval is forbidden.
               </span>
             ) : isOfficer ? (
               isExecutiveSelfReview ? (
@@ -586,29 +448,15 @@ export function VoucherInspectionDrawer({
                 </span>
               ) : (
                 <>
-                  {isTicketSale && isPending && !showCancelInput && (
-                    <button
-                      className="px-4 py-2 bg-white text-[#5C4638] border border-[#E5DDD3] rounded-xl text-xs font-bold hover:bg-[#FAF6F0] transition-colors cursor-pointer flex items-center gap-1.5 min-h-[44px]"
-                      disabled={isSubmitting}
-                      onClick={() => setShowCancelInput(true)}
-                      type="button"
-                    >
-                      <Ban className="w-4 h-4" />
-                      <span>Cancel order</span>
-                    </button>
-                  )}
-
-                  {!showRejectInput && (
-                    <button
-                      className="px-4 py-2 bg-white text-[#BA3C2A] border border-[#BA3C2A]/40 rounded-xl text-xs font-bold hover:bg-[#FDF0EE] transition-colors cursor-pointer flex items-center gap-1.5 min-h-[44px]"
-                      disabled={isSubmitting}
-                      onClick={() => setShowRejectInput(true)}
-                      type="button"
-                    >
-                      <X className="w-4 h-4" />
-                      <span>Reject / Reverse</span>
-                    </button>
-                  )}
+                  <button
+                    className="px-4 py-2 bg-white text-[#BA3C2A] border border-[#BA3C2A]/40 rounded-xl text-xs font-bold hover:bg-[#FDF0EE] transition-colors cursor-pointer flex items-center gap-1.5 min-h-[44px]"
+                    disabled={isSubmitting}
+                    onClick={handleInitiateVoid}
+                    type="button"
+                  >
+                    <ShieldAlert className="w-4 h-4" />
+                    <span>Void</span>
+                  </button>
 
                   {!isApproved && (
                     <button
@@ -626,6 +474,29 @@ export function VoucherInspectionDrawer({
           </div>
         </div>
       </div>
+
+      {transaction && (
+        <VoidRecordModal
+          isOpen={isVoidModalOpen}
+          onClose={() => setIsVoidModalOpen(false)}
+          onConfirmVoid={async (record, reason) => {
+            const res = await voidRecordAction({
+              entityType: record.entityType,
+              recordId: record.id,
+              eventId: record.eventId,
+              reason,
+            });
+            if (res && !res.success) {
+              return res;
+            }
+            setIsVoidModalOpen(false);
+            onClose();
+            return { success: true };
+          }}
+          record={toVoidableRecord(transaction, eventId)}
+          userRoles={userRole ? [userRole] : []}
+        />
+      )}
     </div>
   );
 }

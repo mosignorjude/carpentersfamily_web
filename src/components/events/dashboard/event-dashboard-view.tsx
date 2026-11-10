@@ -29,6 +29,8 @@ import { TableScroll } from "@/components/ui/table-scroll";
 import { useSuccessNotice } from "@/components/ui/use-success-notice";
 import { downloadLedgerCSV } from "@/lib/format";
 import { getScrollBehavior } from "@/lib/tab-navigation.mjs";
+import { voidRecordAction } from "@/app/actions";
+import { VoidRecordModal } from "@/components/common/void-record-modal";
 import type {
   ActivityLogItem,
   DashboardCostCenter,
@@ -42,7 +44,9 @@ import type {
   EventFinanceCategoryItem,
   MobileTabItem,
   TransactionType,
+  VoidableRecord,
 } from "./dashboard-types";
+import { toVoidableRecord } from "./dashboard-types";
 import { EventDomainLedger } from "./event-domain-ledger";
 import { DownloadReportModal } from "./modals/download-report-modal";
 import { EventBudgetCeilingModal } from "./modals/event-budget-ceiling-modal";
@@ -53,7 +57,6 @@ import {
   RecordTransactionModal,
 } from "./modals/record-transaction-modal";
 import { TransactionDetailModal } from "./modals/transaction-detail-modal";
-import { VoidTransactionModal } from "./modals/void-transaction-modal";
 import { TabAuditLog } from "./tab-audit-log";
 import { TabBudgetAllocations } from "./tab-budget-allocations";
 import { TabExpenses } from "./tab-expenses";
@@ -143,8 +146,7 @@ export function EventDashboardView({
   >();
 
   const [isVoidModalOpen, setIsVoidModalOpen] = useState(false);
-  const [transactionToVoid, setTransactionToVoid] =
-    useState<DashboardTransaction | null>(null);
+  const [recordToVoid, setRecordToVoid] = useState<VoidableRecord | null>(null);
 
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
@@ -238,7 +240,7 @@ export function EventDashboardView({
   useSuccessNotice(() => {
     setIsRecordModalOpen(false);
     setIsVoidModalOpen(false);
-    setTransactionToVoid(null);
+    setRecordToVoid(null);
     setIsBudgetCeilingModalOpen(false);
     setIsTierModalOpen(false);
     setSelectedTierForEdit(null);
@@ -474,39 +476,33 @@ export function EventDashboardView({
     });
   };
 
-  const handleConfirmVoid = (txnId: string, reason: string) => {
-    const targetTxn = transactions.find((t) => t.id === txnId);
+  const handleConfirmVoid = async (
+    record: VoidableRecord,
+    reason: string,
+  ) => {
+    dispatchActionStatusToast({
+      title: "Voiding Record…",
+      message: `Voiding ${record.title} with audit trail.`,
+    });
 
-    // Persist in Supabase via server actions; server revalidates on success
-    if (
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        txnId,
-      )
-    ) {
-      const fd = new FormData();
-      fd.set("event_id", event.id);
-      fd.set("return_tab", activeTab);
-      fd.set("reason", reason.slice(0, 500));
-      if (targetTxn?.category === "ticket_sales") {
-        fd.set("sale_id", txnId);
-        dispatchActionStatusToast({
-          title: "Refunding Ticket Sale…",
-          message: `Reversing ticket sale ${txnId} and restoring tier capacity.`,
-        });
-        startTransition(() => {
-          void refundEventTicketSaleAction(fd);
-        });
-      } else {
-        fd.set("transaction_id", txnId);
-        dispatchActionStatusToast({
-          title: "Voiding Ledger Record…",
-          message: `Reversing transaction ${txnId} with audit trail.`,
-        });
-        startTransition(() => {
-          void voidEventFinancialTransactionAction(fd);
-        });
-      }
+    const res = await voidRecordAction({
+      entityType: record.entityType,
+      recordId: record.id,
+      eventId: event.id,
+      reason,
+    });
+
+    if (res && !res.success) {
+      dispatchActionStatusToast({
+        title: "Void Failed",
+        message: res.error || "Could not void record.",
+      });
+      return res;
     }
+
+    setIsVoidModalOpen(false);
+    setRecordToVoid(null);
+    return { success: true };
   };
 
   // 5 Unified Primary Tabs Configuration
@@ -1211,7 +1207,7 @@ export function EventDashboardView({
             <TabAuditLog
               activityLogs={activityLogs}
               onInitiateVoid={(txn) => {
-                setTransactionToVoid(txn);
+                setRecordToVoid(toVoidableRecord(txn, event.id));
                 setIsVoidModalOpen(true);
               }}
               onViewTransaction={(txn) => {
@@ -1242,17 +1238,18 @@ export function EventDashboardView({
         userRole={userRole}
       />
 
-      <VoidTransactionModal
+      <VoidRecordModal
         isOpen={isVoidModalOpen}
         isPending={isPending}
         onClose={() => {
           if (!isPending) {
             setIsVoidModalOpen(false);
-            setTransactionToVoid(null);
+            setRecordToVoid(null);
           }
         }}
         onConfirmVoid={handleConfirmVoid}
-        transaction={transactionToVoid}
+        record={recordToVoid}
+        userRoles={userRole ? [userRole] : []}
       />
 
       <TransactionDetailModal
@@ -1269,6 +1266,10 @@ export function EventDashboardView({
         eventId={event.id}
         isOpen={Boolean(selectedTxnForVoucher)}
         onClose={() => setSelectedTxnForVoucher(null)}
+        onVoidRecord={(record) => {
+          setRecordToVoid(record);
+          setIsVoidModalOpen(true);
+        }}
         transaction={selectedTxnForVoucher}
         userRole={userRole}
       />

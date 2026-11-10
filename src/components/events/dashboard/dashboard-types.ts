@@ -197,3 +197,41 @@ export interface VoidableRecord {
   paymentMethod?: "bank_transfer" | "cash";
   eventId?: string;
 }
+
+export function toVoidableRecord(
+  txn: DashboardTransaction,
+  eventId?: string,
+): VoidableRecord {
+  const isTicket = txn.category === "ticket_sales";
+  const entityType: VoidEntityType = isTicket
+    ? "ticket_sale"
+    : "event_transaction";
+
+  const rawStatus =
+    txn.status === "voided"
+      ? "rejected"
+      : (txn.verificationStatus || "approved");
+
+  return {
+    id: txn.id,
+    entityType,
+    title:
+      txn.description ||
+      txn.categoryLabel ||
+      (isTicket ? "Ticket Sale" : "Transaction"),
+    description: txn.description,
+    amountNgn: txn.amount,
+    reference: txn.paymentRef || txn.id.slice(0, 8),
+    party: txn.payerPayee,
+    source:
+      txn.channel === "online" || txn.categoryLabel === "Online Sales"
+        ? "online"
+        : "manual",
+    verificationStatus: rawStatus as
+      | "recorded"
+      | "approved"
+      | "rejected"
+      | "cancelled",
+    eventId,
+  };
+}

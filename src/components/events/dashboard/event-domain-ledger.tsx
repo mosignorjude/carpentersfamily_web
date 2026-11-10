@@ -2,6 +2,7 @@
 
 import {
   AlertCircle,
+  Ban,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -41,6 +42,7 @@ interface EventDomainLedgerProps {
   onInspect?: (transaction: DashboardTransaction) => void;
   onApprove?: (transaction: DashboardTransaction) => void;
   onReject?: (transaction: DashboardTransaction) => void;
+  onVoid?: (transaction: DashboardTransaction) => void;
 }
 
 const PAGE_SIZE = 20;
@@ -57,6 +59,7 @@ export function EventDomainLedger({
   onInspect,
   onApprove,
   onReject,
+  onVoid,
 }: EventDomainLedgerProps) {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>(initialCategoryFilter);
@@ -420,7 +423,7 @@ export function EventDomainLedger({
             type="button"
           >
             <span className="w-2 h-2 rounded-full bg-[#BA3C2A]" />
-            Rejected ({rejectedCount})
+            Voided ({rejectedCount})
           </button>
           <button
             className={`px-3.5 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] flex items-center gap-1.5 ${
@@ -498,9 +501,7 @@ export function EventDomainLedger({
               ? "Approved"
               : isPending
                 ? "Pending"
-                : isRejected
-                  ? "Reversed"
-                  : "Cancelled";
+                : "Voided";
             const hasReceipt = Boolean(
               txn.receipt ||
                 (txn.paymentMethod === "paystack" &&
@@ -724,12 +725,12 @@ export function EventDomainLedger({
                         </span>
                         {isRejected && (
                           <span className="block text-[10px] font-bold uppercase text-[#BA3C2A]">
-                            Reversed
+                            Voided
                           </span>
                         )}
                         {isCancelled && (
                           <span className="block text-[10px] font-bold uppercase text-[#5C4638]">
-                            Cancelled
+                            Voided
                           </span>
                         )}
                       </td>
@@ -760,12 +761,12 @@ export function EventDomainLedger({
                         )}
                         {isRejected && (
                           <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
-                            Rejected
+                            Voided
                           </span>
                         )}
                         {isCancelled && (
                           <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3]">
-                            Cancelled
+                            Voided
                           </span>
                         )}
                       </td>
@@ -796,7 +797,7 @@ export function EventDomainLedger({
                                 <span>Inspect</span>
                               </button>
 
-                              {/* Quick Approve / Reject for Officers */}
+                              {/* Quick Approve / Void for Officers */}
                               {isOfficer && isPending && (
                                 <>
                                   {onApprove && (
@@ -809,14 +810,16 @@ export function EventDomainLedger({
                                       <Check className="w-3.5 h-3.5" />
                                     </button>
                                   )}
-                                  {onReject && (
+                                  {(onVoid || onReject) && (
                                     <button
                                       className="p-1 text-[#BA3C2A] hover:bg-[#FDF0EE] rounded-lg transition-colors border border-[#BA3C2A]/30 cursor-pointer"
-                                      onClick={() => onReject(txn)}
-                                      title="Reject and Reverse Transaction"
+                                      onClick={() =>
+                                        onVoid ? onVoid(txn) : onReject?.(txn)
+                                      }
+                                      title="Void Record"
                                       type="button"
                                     >
-                                      <X className="w-3.5 h-3.5" />
+                                      <Ban className="w-3.5 h-3.5" />
                                     </button>
                                   )}
                                 </>

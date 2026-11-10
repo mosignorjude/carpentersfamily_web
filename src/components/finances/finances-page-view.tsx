@@ -37,10 +37,11 @@ import {
   OpeningBalanceEntryCard,
   type OpeningBalanceTransaction,
 } from "./opening-balance-entry-card";
+import { voidRecordAction } from "@/app/actions";
+import { VoidRecordModal } from "@/components/common/void-record-modal";
 import { type FinanceReceipt, ReceiptModal } from "./receipt-modal";
 import { RecordExpenseModal } from "./record-expense-modal";
 import { RecordIncomeModal } from "./record-income-modal";
-import { VoidTransactionModal } from "./void-transaction-modal";
 
 interface FinancesPageViewProps {
   isAdmin?: boolean;
@@ -442,10 +443,40 @@ export function FinancesPageView({
         transaction={correctingTransaction}
       />
 
-      <VoidTransactionModal
+      <VoidRecordModal
         isOpen={Boolean(voidingTransaction)}
         onClose={() => setVoidingTransaction(null)}
-        transaction={voidingTransaction}
+        onConfirmVoid={async (record, reason) => {
+          const res = await voidRecordAction({
+            entityType: "club_transaction",
+            recordId: record.id,
+            reason,
+          });
+          if (res && !res.success) {
+            return res;
+          }
+          setVoidingTransaction(null);
+          return { success: true };
+        }}
+        record={
+          voidingTransaction
+            ? {
+                id: voidingTransaction.id,
+                entityType: "club_transaction",
+                title:
+                  voidingTransaction.description ||
+                  voidingTransaction.category_name_snapshot ||
+                  "Club Transaction",
+                amountNgn: Number(voidingTransaction.amount_ngn) || 0,
+                reference: voidingTransaction.id.slice(0, 8),
+                party: voidingTransaction.payer_payee || undefined,
+                verificationStatus: voidingTransaction.voided_at
+                  ? "cancelled"
+                  : "approved",
+              }
+            : null
+        }
+        userRoles={isAdmin ? ["admin"] : isOfficer ? ["officer"] : []}
       />
 
       <ReceiptModal
