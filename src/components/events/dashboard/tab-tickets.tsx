@@ -2,6 +2,7 @@
 
 import { Pencil, Plus, Ticket, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { CfButton } from "@/components/ui";
 import { EmptyStateCard } from "@/components/ui/state-screen";
 import { formatNaira, formatPercent } from "@/lib/format";
 import { percentWidthClass } from "@/lib/percent-width-class";
@@ -68,27 +69,27 @@ export function TabTickets({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {canManage && onOpenCreateTierModal && (
-              <button
-                className="px-3.5 py-2 min-h-[44px] rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] hover:border-[#174C37] text-xs font-bold text-[#3D291F] flex items-center gap-1.5 cursor-pointer transition-colors"
+              <CfButton
                 id="btn-add-ticket-tier"
                 onClick={onOpenCreateTierModal}
-                type="button"
+                size="compact"
+                variant="secondary"
               >
-                <Plus className="w-4 h-4 text-[#174C37]" />
+                <Plus className="w-4 h-4 text-[#174C37] shrink-0" />
                 <span>Add Ticket Tier</span>
-              </button>
+              </CfButton>
             )}
 
             {onOpenRecordTicketModal && (
-              <button
-                className="px-3.5 py-2 min-h-[44px] rounded-xl bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+              <CfButton
                 id="btn-record-ticket-sale"
                 onClick={() => onOpenRecordTicketModal()}
-                type="button"
+                size="default"
+                variant="primary"
               >
-                <Ticket className="w-4 h-4 text-[#F0C768]" />
+                <Ticket className="w-4 h-4 text-[#F0C768] shrink-0" />
                 <span>Record Ticket Sale</span>
-              </button>
+              </CfButton>
             )}
           </div>
         </div>
@@ -144,15 +145,15 @@ export function TabTickets({
           />
           {canManage && onOpenCreateTierModal && (
             <div className="text-center">
-              <button
-                className="px-4 py-2.5 min-h-[44px] bg-[#174C37] text-white rounded-xl font-semibold hover:bg-[#103D2B] transition-colors inline-flex items-center gap-2 shadow-xs cursor-pointer"
+              <CfButton
                 id="btn-create-tier-empty"
                 onClick={onOpenCreateTierModal}
-                type="button"
+                size="default"
+                variant="primary"
               >
-                <Plus className="w-4 h-4 text-[#F0C768]" />
+                <Plus className="w-4 h-4 text-[#F0C768] shrink-0" />
                 <span>Add Ticket Tier</span>
-              </button>
+              </CfButton>
             </div>
           )}
         </div>
@@ -258,26 +259,28 @@ export function TabTickets({
                   {canManage && !isRetired && (
                     <div className="flex items-center gap-1.5">
                       {onOpenEditTierModal && (
-                        <button
-                          className="px-3 py-2 min-h-[44px] rounded-xl bg-[#FAF6F0] hover:border-[#174C37] text-xs font-semibold text-[#174C37] border border-[#E5DDD3] inline-flex items-center gap-1 cursor-pointer transition-colors"
+                        <CfButton
+                          className="text-[#174C37]"
                           id={`btn-edit-tier-${tier.id}`}
                           onClick={() => onOpenEditTierModal(tier)}
-                          type="button"
+                          size="compact"
+                          variant="secondary"
                         >
-                          <Pencil className="w-3.5 h-3.5" />
+                          <Pencil className="w-3.5 h-3.5 shrink-0" />
                           <span>Edit</span>
-                        </button>
+                        </CfButton>
                       )}
                       {onOpenRetireTierModal && (
-                        <button
-                          className="px-3 py-2 min-h-[44px] rounded-xl bg-[#FAF6F0] hover:border-[#BA3C2A] text-xs font-semibold text-[#BA3C2A] border border-[#E5DDD3] inline-flex items-center gap-1 cursor-pointer transition-colors"
+                        <CfButton
+                          className="text-[#BA3C2A] hover:border-[#BA3C2A]"
                           id={`btn-retire-tier-${tier.id}`}
                           onClick={() => onOpenRetireTierModal(tier)}
-                          type="button"
+                          size="compact"
+                          variant="secondary"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5 shrink-0" />
                           <span>Retire</span>
-                        </button>
+                        </CfButton>
                       )}
                     </div>
                   )}

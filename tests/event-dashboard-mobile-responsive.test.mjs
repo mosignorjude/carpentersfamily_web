@@ -67,6 +67,9 @@ describe("Event Dashboard Mobile Responsiveness and Deduplication", () => {
       assert.match(reportSource, /divide-y/);
       assert.doesNotMatch(reportSource, /<table\b/);
       assert.match(reportSource, /<EventAuditTrailList/);
+      assert.match(reportSource, /<CfButton/);
+      assert.match(reportSource, /Assign Team Member/);
+      assert.doesNotMatch(reportSource, /\+\s*Assign Team Member/);
     });
   });
 

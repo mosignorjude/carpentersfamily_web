@@ -20,4 +20,10 @@ describe("TabBudgetAllocations Cost Center Matrix & Responsive Cards", () => {
     assert.match(source, /Committed|Pending/i);
     assert.match(source, /Used/i);
   });
+
+  it("uses CfButton for budget CTAs and CfFilterPill for chart sub-tabs", () => {
+    assert.match(source, /<CfButton[\s\S]*btn-set-budget-total/);
+    assert.match(source, /<CfButton[\s\S]*btn-manage-budget-categories/);
+    assert.match(source, /<CfFilterPill[\s\S]*Spending/);
+  });
 });

@@ -9,6 +9,7 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
+import { CfButton } from "@/components/ui";
 import { downloadLedgerCSV, formatNaira, formatPercent } from "@/lib/format";
 import type {
   ActivityLogItem,
@@ -74,14 +75,14 @@ export function TabReports({
             </p>
           </div>
           {canManageTeamRoles && onOpenAssignTeamModal && (
-            <button
-              className="px-3.5 py-2 min-h-[44px] rounded-xl bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+            <CfButton
               onClick={onOpenAssignTeamModal}
-              type="button"
+              size="default"
+              variant="primary"
             >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>+ Assign Team Member</span>
-            </button>
+              <UserPlus className="w-4 h-4 text-[#F0C768] shrink-0" />
+              <span>Assign Team Member</span>
+            </CfButton>
           )}
         </div>
 
@@ -122,13 +123,14 @@ export function TabReports({
                   {canManageTeamRoles &&
                     onOpenRevokeTeamModal &&
                     m.memberId && (
-                      <button
-                        className="px-2.5 py-1.5 min-h-[44px] rounded-lg border border-[#BA3C2A]/30 bg-white text-[#BA3C2A] hover:bg-[#FDF0EE] text-[11px] font-semibold cursor-pointer transition-colors"
+                      <CfButton
+                        className="border-[#BA3C2A]/30 bg-white text-[#BA3C2A] hover:bg-[#FDF0EE] hover:border-[#BA3C2A]/50"
                         onClick={() => onOpenRevokeTeamModal(m)}
-                        type="button"
+                        size="compact"
+                        variant="secondary"
                       >
                         Remove
-                      </button>
+                      </CfButton>
                     )}
                 </div>
               </div>
@@ -150,23 +152,23 @@ export function TabReports({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <button
-              className="px-3.5 py-2 min-h-[44px] rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] hover:border-[#174C37] text-xs font-semibold text-[#3D291F] flex items-center gap-1.5 cursor-pointer transition-colors"
+            <CfButton
               onClick={onOpenDownloadReportModal ?? (() => window.print())}
-              type="button"
+              size="compact"
+              variant="secondary"
             >
-              <Printer className="w-3.5 h-3.5 text-[#174C37]" />
+              <Printer className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
               <span>Print / PDF</span>
-            </button>
+            </CfButton>
 
-            <button
-              className="px-3.5 py-2 min-h-[44px] rounded-xl bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+            <CfButton
               onClick={() => downloadLedgerCSV(transactions)}
-              type="button"
+              size="compact"
+              variant="secondary"
             >
-              <Download className="w-3.5 h-3.5 text-white" />
+              <Download className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
               <span>Export CSV</span>
-            </button>
+            </CfButton>
           </div>
         </div>
 

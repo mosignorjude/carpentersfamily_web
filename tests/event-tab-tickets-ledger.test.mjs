@@ -17,6 +17,8 @@ describe("TabTickets Prototype Tier Cards & 2-Line Ledger Integration", () => {
   it("features single primary Record Ticket Sale button and omits per-tier Sales (N) buttons", () => {
     assert.match(source, /id="btn-record-ticket-sale"/);
     assert.match(source, /Record Ticket Sale/);
+    assert.match(source, /<CfButton[^>]*id="btn-record-ticket-sale"/);
+    assert.match(source, /<CfButton[^>]*id="btn-add-ticket-tier"/);
     assert.doesNotMatch(source, />\s*Sales\s*\(/i);
     assert.doesNotMatch(source, /<button[^>]*>Record Sale<\/button>/i);
   });

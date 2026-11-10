@@ -2,6 +2,7 @@
 
 import { Banknote, ChevronRight, Pencil, Plus, Tags } from "lucide-react";
 import { useEffect, useState } from "react";
+import { CfButton, CfFilterPill } from "@/components/ui";
 import { EmptyStateCard } from "@/components/ui/state-screen";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { formatNaira, formatPercent } from "@/lib/format";
@@ -99,99 +100,88 @@ export function TabBudgetAllocations({
 
           <div className="flex flex-wrap items-center gap-2">
             {canManageCategories && onOpenBudgetCeilingModal && (
-              <button
-                className="px-3 py-2 min-h-[44px] rounded-xl bg-[#FAF6F0] hover:border-[#174C37] border border-[#E5DDD3] text-xs font-bold text-[#3D291F] flex items-center gap-1.5 cursor-pointer transition-colors"
+              <CfButton
                 id="btn-set-budget-total"
                 onClick={onOpenBudgetCeilingModal}
-                type="button"
+                size="compact"
+                variant="secondary"
               >
                 {budgetCeiling > 0 ? (
                   <>
-                    <Pencil className="w-3.5 h-3.5 text-[#174C37]" />
+                    <Pencil className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
                     <span>Edit Budget</span>
                   </>
                 ) : (
                   <>
-                    <Plus className="w-3.5 h-3.5 text-[#174C37]" />
+                    <Plus className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
                     <span>Set Budget</span>
                   </>
                 )}
-              </button>
+              </CfButton>
             )}
 
             {canManageCategories && onManageCategories && (
-              <button
-                className="px-3 py-2 min-h-[44px] rounded-xl bg-[#FAF6F0] hover:border-[#174C37] border border-[#E5DDD3] text-xs font-bold text-[#174C37] flex items-center gap-1.5 cursor-pointer transition-colors"
+              <CfButton
+                className="text-[#174C37]"
                 id="btn-manage-budget-categories"
                 onClick={
                   activeChartTab === "revenue_mix" && onManageRevenueCategories
                     ? onManageRevenueCategories
                     : onManageCategories
                 }
-                type="button"
+                size="compact"
+                variant="secondary"
               >
-                <Tags className="w-3.5 h-3.5 text-[#174C37]" />
+                <Tags className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
                 <span>Manage Categories</span>
-              </button>
+              </CfButton>
             )}
 
             {canRecord && onOpenRecordModal && (
-              <button
-                className="px-3.5 py-2 min-h-[44px] rounded-xl bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+              <CfButton
                 onClick={() =>
                   onOpenRecordModal(
                     activeChartTab === "revenue_mix" ? "revenue" : "expense",
                   )
                 }
-                type="button"
+                size="default"
+                variant="primary"
               >
-                <Plus className="w-3.5 h-3.5 text-[#F0C768]" />
+                <Plus className="w-4 h-4 text-[#F0C768] shrink-0" />
                 <span>
                   {activeChartTab === "revenue_mix"
                     ? "Record Revenue"
                     : "Record Expense"}
                 </span>
-              </button>
+              </CfButton>
             )}
           </div>
         </div>
 
         {/* Sub-tab Pills + Allocation Headroom Readout */}
         <div className="pt-3 border-t border-[#E5DDD3] flex flex-wrap items-center justify-between gap-2.5">
-          <div className="flex items-center gap-1 bg-[#FAF6F0] p-1 rounded-xl border border-[#E5DDD3] overflow-x-auto max-w-full">
-            <button
-              className={`px-3 py-2 min-h-[44px] rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                activeChartTab === "allocation"
-                  ? "bg-[#174C37] text-white shadow-2xs"
-                  : "text-[#5C4638] hover:text-[#3D291F]"
-              }`}
+          <div className="flex items-center gap-1.5 overflow-x-auto max-w-full">
+            <CfFilterPill
+              active={activeChartTab === "allocation"}
               onClick={() => setActiveChartTab("allocation")}
-              type="button"
+              tone="forest"
             >
               Spending
-            </button>
-            <button
-              className={`px-3 py-2 min-h-[44px] rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                activeChartTab === "revenue_mix"
-                  ? "bg-[#174C37] text-white shadow-2xs"
-                  : "text-[#5C4638] hover:text-[#3D291F]"
-              }`}
+            </CfFilterPill>
+            <CfFilterPill
+              active={activeChartTab === "revenue_mix"}
               onClick={() => setActiveChartTab("revenue_mix")}
-              type="button"
+              tone="forest"
             >
               Revenue Mix
-            </button>
-            <button
-              className={`px-3 py-2 min-h-[44px] rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                activeChartTab === "cash_velocity"
-                  ? "bg-[#174C37] text-white shadow-2xs"
-                  : "text-[#5C4638] hover:text-[#3D291F]"
-              }`}
+            </CfFilterPill>
+            <CfFilterPill
+              active={activeChartTab === "cash_velocity"}
               onClick={() => setActiveChartTab("cash_velocity")}
-              type="button"
+              tone="forest"
             >
               Cash Flow
-            </button>
+            </CfFilterPill>
           </div>
 
           <div className="text-xs text-[#5C4638] font-mono">
