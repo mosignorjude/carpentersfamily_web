@@ -30,4 +30,12 @@ describe("VoucherInspectionDrawer Component", () => {
     assert.match(source, /isExecutiveSelfReview/i);
     assert.match(source, /Needs Another Officer's Review/i);
   });
+
+  it("renders inline PDF and image receipt preview via shared ReceiptPreview and displays Recorded By", () => {
+    assert.match(source, /<ReceiptPreview/);
+    assert.doesNotMatch(source, /Open PDF in New Tab/);
+    assert.doesNotMatch(source, /<img[\s\S]*src=\{receiptUrl\}/);
+    assert.match(source, /Recorded By/);
+    assert.match(source, /authorizedBy/);
+  });
 });

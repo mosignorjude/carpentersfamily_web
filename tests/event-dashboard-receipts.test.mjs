@@ -19,6 +19,16 @@ const auditLogSource = readFileSync(
   "utf8",
 );
 
+const receiptPreviewPath = new URL(
+  "../src/components/finances/receipt-preview.tsx",
+  import.meta.url,
+);
+
+const receiptViewerSource = readFileSync(
+  new URL("../src/components/finances/receipt-viewer.tsx", import.meta.url),
+  "utf8",
+);
+
 describe("Event Dashboard Receipts Integration", () => {
   it("queries finance_receipts for event_transaction_id in page.tsx", () => {
     assert.match(
@@ -85,5 +95,21 @@ describe("Event Dashboard Receipts Integration", () => {
       hasReceipt: true,
     });
     assert.equal(state, "view_download");
+  });
+
+  it("extracts CSP-safe ReceiptPreview using local pdfjs worker and Uint8Array fetch", () => {
+    const previewSource = readFileSync(receiptPreviewPath, "utf8");
+    assert.match(previewSource, /export function ReceiptPreview/);
+    assert.match(previewSource, /fetch\(/);
+    assert.match(previewSource, /new Uint8Array\(/);
+    assert.match(previewSource, /pdfjs\.getDocument\(\{\s*data\s*\}\)/);
+    assert.match(previewSource, /pdfjs-dist\/build\/pdf\.worker\.min\.mjs/);
+    assert.doesNotMatch(previewSource, /unpkg\.com/);
+    assert.doesNotMatch(previewSource, /<iframe/);
+    assert.match(previewSource, /URL\.createObjectURL/);
+    assert.match(previewSource, /URL\.revokeObjectURL/);
+    assert.match(previewSource, /min-h-\[44px\]/);
+    assert.match(receiptViewerSource, /ReceiptPreview/);
+    assert.match(receiptViewerSource, /aria-label="Close receipt viewer"/);
   });
 });

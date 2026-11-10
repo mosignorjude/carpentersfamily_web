@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Download,
-  ExternalLink,
   FileText,
   Paperclip,
   ShieldAlert,
@@ -18,6 +17,7 @@ import {
 } from "@/app/(member)/events/[eventId]/dashboard/actions";
 import { voidRecordAction } from "@/app/actions";
 import { VoidRecordModal } from "@/components/common/void-record-modal";
+import { ReceiptPreview } from "@/components/finances/receipt-preview";
 import { dispatchFlashCard } from "@/components/ui/flash-card";
 import { formatNaira } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
@@ -240,10 +240,12 @@ export function VoucherInspectionDrawer({
                   </div>
                   <div>
                     <span className="text-[#7A685D] block text-[11px]">
-                      Category
+                      {isTicketSale ? "Sales Channel" : "Category"}
                     </span>
                     <p className="font-medium text-[#3D291F] mt-0.5">
-                      {transaction.categoryLabel || "General"}
+                      {isTicketSale && transaction.tierName
+                        ? `${transaction.tierName} · ${transaction.categoryLabel || "General"}`
+                        : transaction.categoryLabel || "General"}
                     </p>
                   </div>
                 </div>
@@ -259,30 +261,37 @@ export function VoucherInspectionDrawer({
                   </div>
                   <div>
                     <span className="text-[#7A685D] block text-[11px]">
-                      Status
+                      Recorded By
                     </span>
-                    <div className="mt-0.5">
-                      {isPending && (
-                        <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
-                          Pending
-                        </span>
-                      )}
-                      {isApproved && (
-                        <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
-                          Approved & Active
-                        </span>
-                      )}
-                      {isRejected && (
-                        <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
-                          Rejected / Reversed
-                        </span>
-                      )}
-                      {isCancelled && (
-                        <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3]">
-                          Cancelled — no payment verified
-                        </span>
-                      )}
-                    </div>
+                    <p className="font-mono font-semibold text-[#3D291F] mt-0.5 truncate">
+                      {transaction.authorizedBy || "@secretariat"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-[#E5DDD3]/60 flex items-center justify-between gap-2">
+                  <span className="text-[#7A685D] text-[11px]">Status</span>
+                  <div>
+                    {isPending && (
+                      <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FFF4E5] text-[#8D5B0E] border border-[#F8D8A7]">
+                        Pending
+                      </span>
+                    )}
+                    {isApproved && (
+                      <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
+                        Approved
+                      </span>
+                    )}
+                    {isRejected && (
+                      <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
+                        Reversed / Rejected
+                      </span>
+                    )}
+                    {isCancelled && (
+                      <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3]">
+                        Cancelled
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -327,11 +336,9 @@ export function VoucherInspectionDrawer({
 
                     {receiptUrl && (
                       <a
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-[#174C37] bg-white border border-[#174C37]/30 rounded-lg hover:bg-[#174C37] hover:text-white transition-colors"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[44px] text-[11px] font-semibold text-[#174C37] bg-white border border-[#174C37]/30 rounded-lg hover:bg-[#174C37] hover:text-white transition-colors"
                         download={transaction.receipt.filename}
                         href={receiptUrl}
-                        target="_blank"
-                        rel="noreferrer"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>Download</span>
@@ -339,41 +346,14 @@ export function VoucherInspectionDrawer({
                     )}
                   </div>
 
-                  {/* Document Preview Box */}
-                  <div className="rounded-xl border border-[#E5DDD3] bg-white overflow-hidden min-h-[220px] max-h-[340px] flex items-center justify-center p-2">
-                    {transaction.receipt.contentType.startsWith("image/") &&
-                    receiptUrl ? (
-                      /* biome-ignore lint/performance/noImgElement: dynamic user-uploaded receipt evidence loaded via authorized API */
-                      <img
-                        alt="Receipt Voucher Evidence"
-                        className="max-h-[320px] max-w-full object-contain mx-auto rounded-lg shadow-xs"
-                        src={receiptUrl}
-                      />
-                    ) : (
-                      <div className="text-center p-6 space-y-3">
-                        <FileText className="w-10 h-10 mx-auto text-[#174C37]/60" />
-                        <div>
-                          <p className="text-xs font-semibold text-[#3D291F]">
-                            PDF Voucher Document Attached
-                          </p>
-                          <p className="text-[11px] text-[#7A685D] mt-0.5">
-                            {transaction.receipt.filename}
-                          </p>
-                        </div>
-                        {receiptUrl && (
-                          <a
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#174C37] text-white rounded-xl text-xs font-semibold hover:bg-[#103D2B] transition-colors"
-                            href={receiptUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            <span>Open PDF in New Tab</span>
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  {/* Inline Image & Multi-Page PDF Receipt Preview */}
+                  <ReceiptPreview
+                    compact
+                    contentType={transaction.receipt.contentType}
+                    fileName={transaction.receipt.filename}
+                    receiptId={transaction.receipt.id}
+                    sha256={transaction.receipt.sha256}
+                  />
 
                   {/* Discrepancy comparison prompt */}
                   <div className="text-[11px] text-[#5C4638] bg-white border border-[#E5DDD3] rounded-xl p-3 flex items-start gap-2">
@@ -389,8 +369,8 @@ export function VoucherInspectionDrawer({
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-[#D6A23A]/40 bg-[#FFF9F0] p-6 text-center space-y-3">
-                  <ShieldAlert className="w-8 h-8 mx-auto text-[#D6A23A]" />
+                <div className="rounded-2xl border border-[#8D5B0E]/30 bg-[#FFF9F0] p-6 text-center space-y-3">
+                  <ShieldAlert className="w-8 h-8 mx-auto text-[#8D5B0E]" />
                   <div>
                     <h5 className="text-sm font-bold text-[#3D291F]">
                       No Receipt Attached
@@ -418,7 +398,7 @@ export function VoucherInspectionDrawer({
               </span>
             ) : isOfficer ? (
               isExecutiveSelfReview ? (
-                <span className="text-[#B27D16] font-semibold flex items-center gap-1">
+                <span className="text-[#8D5B0E] font-semibold flex items-center gap-1">
                   <ShieldAlert className="w-3.5 h-3.5" />
                   Needs Another Officer's Review: You entered this claim.
                 </span>
@@ -430,7 +410,7 @@ export function VoucherInspectionDrawer({
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               className="px-4 py-2 bg-white text-[#3D291F] border border-[#E5DDD3] rounded-xl text-xs font-semibold hover:bg-[#FAF6F0] transition-colors cursor-pointer min-h-[44px] flex items-center justify-center"
               onClick={onClose}
@@ -442,7 +422,7 @@ export function VoucherInspectionDrawer({
             {isOfficer &&
               !isNotCounted &&
               (isExecutiveSelfReview ? (
-                <span className="text-xs font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-3 py-2 rounded-xl">
+                <span className="text-xs font-semibold text-[#8D5B0E] bg-[#FFF4E5] border border-[#F8D8A7] px-3 py-2 rounded-xl">
                   Needs Another Officer's Review
                 </span>
               ) : (
@@ -454,7 +434,7 @@ export function VoucherInspectionDrawer({
                     type="button"
                   >
                     <ShieldAlert className="w-4 h-4" />
-                    <span>Void</span>
+                    <span>Reverse / Void</span>
                   </button>
 
                   {!isApproved && (
@@ -464,7 +444,7 @@ export function VoucherInspectionDrawer({
                       onClick={handleApprove}
                       type="button"
                     >
-                      <CheckCircle2 className="w-4 h-4 text-[#D6A23A]" />
+                      <CheckCircle2 className="w-4 h-4 text-[#F0C768]" />
                       <span>Approve Record</span>
                     </button>
                   )}
