@@ -34,6 +34,11 @@ export function TabBudgetAllocations({
 
   const totalRevenue = revenueStreams.reduce((acc, s) => acc + s.actual, 0);
   const totalExpenses = costCenters.reduce((acc, c) => acc + c.spent, 0);
+  const totalAllocated = costCenters.reduce(
+    (sum, c) => sum + (c.allocated || 0),
+    0,
+  );
+  const unallocatedBuffer = Math.max(0, budgetCeiling - totalAllocated);
 
   // Cash flow summary
   const cashTimeline = [
@@ -196,7 +201,7 @@ export function TabBudgetAllocations({
                     Allocated budget, actual spending, and pending commitments.
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3 w-full sm:w-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3 w-full sm:w-auto">
                   <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
                     <span className="text-[11px] text-[#7A685D] block">
                       Ceiling
@@ -206,6 +211,14 @@ export function TabBudgetAllocations({
                     </span>
                   </div>
                   <div className="bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
+                    <span className="text-[11px] text-[#7A685D] block">
+                      Allocated
+                    </span>
+                    <span className="font-bold text-[#3D291F] text-sm tabular-nums font-mono">
+                      {formatNaira(totalAllocated)}
+                    </span>
+                  </div>
+                  <div className="col-span-2 sm:col-span-1 bg-[#FAF6F0] px-3.5 py-2 rounded-xl border border-[#E5DDD3] text-right">
                     <span className="text-[11px] text-[#7A685D] block">
                       Used
                     </span>
