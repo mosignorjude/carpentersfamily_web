@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#174c37" />
+    <title>Event dashboard · Carpenters Family prototype</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <div class="prototype-bar" aria-label="Prototype controls">
+      <div class="prototype-mark"><span class="prototype-dot"></span><span><strong>Prototype</strong><span class="prototype-subtitle">Sample data · changes stay in this tab</span></span></div>
+      <div class="prototype-controls">
+        <label>Preview access
+          <select id="role-preview" aria-label="Preview access role">
+            <option value="member">Member</option>
+            <option value="committee">Committee</option>
+            <option value="assistant">Event assistant</option>
+            <option value="lead" selected>Event lead</option>
+            <option value="executive">Executive</option>
+            <option value="admin">Admin / President</option>
+          </select>
+        </label>
+        <label>Scenario
+          <select id="scenario-preview" aria-label="Choose sample scenario">
+            <option value="active" selected>Upcoming event</option>
+            <option value="pressure">Budget pressure</option>
+            <option value="empty">New event · no records</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="app-layout">
+      <aside class="sidebar" aria-label="Main navigation">
+        <a class="brand" href="#top" aria-label="Carpenters Family home">
+          <span class="brand-mark">CF</span><span class="brand-name">Carpenters<br />Family</span>
+        </a>
+        <div class="sidebar-label">WORKSPACE</div>
+        <nav class="main-nav">
+          <a href="#home" data-outside="Home"><span class="nav-icon">⌂</span><span>Home</span></a>
+          <a href="#events" class="active" aria-current="page"><span class="nav-icon">▦</span><span>Events</span></a>
+          <a href="#tickets" data-outside="Tickets"><span class="nav-icon">◇</span><span>Tickets</span></a>
+          <a href="#meeting-hub" data-outside="Meeting Hub"><span class="nav-icon">▤</span><span>Meeting Hub</span></a>
+          <a href="#dues" data-outside="Dues"><span class="nav-icon">₦</span><span>Dues</span></a>
+          <a href="#finances" data-outside="Finances"><span class="nav-icon">◷</span><span>Finances</span></a>
+        </nav>
+        <div class="sidebar-bottom"><span class="avatar avatar-small">CF</span><span><strong>Sample workspace</strong><small>Preview only</small></span></div>
+      </aside>
+
+      <div class="main-column" id="top">
+        <header class="mobile-topbar">
+          <a class="brand brand-mobile" href="#top"><span class="brand-mark">CF</span><span class="brand-name">Carpenters Family</span></a>
+          <button class="icon-button" type="button" id="mobile-nav-open" aria-label="Open main menu" aria-haspopup="dialog">☰</button>
+        </header>
+
+        <main class="page-content">
+          <div class="breadcrumbs"><a href="#events" data-outside="Events">Events</a><span aria-hidden="true">/</span><span id="breadcrumb-event">Community Heritage Night</span></div>
+
+          <header class="event-header">
+            <div class="event-heading">
+              <div class="event-title-line"><span class="status-pill" id="event-status">Scheduled</span><span class="event-code" id="event-code">CF · DEMO 001</span></div>
+              <h1 id="event-title">Community Heritage Night</h1>
+              <p class="event-meta"><span id="event-date">Sat, 12 Dec 2026</span><span class="meta-separator">·</span><span id="event-time">5:00 PM</span><span class="meta-separator">·</span><span id="event-venue">Family Centre, Lagos</span></p>
+              <p class="event-description" id="event-description">An evening for members and guests to celebrate our community.</p>
+            </div>
+            <div class="event-actions">
+              <div class="action-menu-wrap">
+                <button class="button button-secondary" type="button" id="event-menu-button" aria-expanded="false" aria-haspopup="true">Event actions <span aria-hidden="true">⌄</span></button>
+                <div class="action-menu" id="event-menu" hidden>
+                  <button type="button" data-action="edit-event">Edit event details</button>
+                  <button type="button" data-action="budget-settings">Set budget ceiling</button>
+                  <button type="button" data-action="export-csv">Download transactions (CSV)</button>
+                  <button type="button" data-action="print-report">Print report / save as PDF</button>
+                </div>
+              </div>
+              <button class="button button-primary" type="button" data-action="open-record" data-record-type="expense"><span aria-hidden="true">＋</span> Record transaction</button>
+            </div>
+          </header>
+
+          <div class="role-note" id="role-note" hidden>Read-only view. Event actions depend on your role.</div>
+
+          <nav class="section-nav" role="tablist" aria-label="Event dashboard sections">
+            <button type="button" role="tab" id="tab-overview" aria-controls="panel-overview" aria-selected="true" tabindex="0" data-tab="overview">Overview</button>
+            <button type="button" role="tab" id="tab-tickets" aria-controls="panel-tickets" aria-selected="false" tabindex="-1" data-tab="tickets">Tickets</button>
+            <button type="button" role="tab" id="tab-budget" aria-controls="panel-budget" aria-selected="false" tabindex="-1" data-tab="budget">Budget</button>
+            <button type="button" role="tab" id="tab-transactions" aria-controls="panel-transactions" aria-selected="false" tabindex="-1" data-tab="transactions">Transactions</button>
+            <button type="button" role="tab" id="tab-team" aria-controls="panel-team" aria-selected="false" tabindex="-1" data-tab="team">Team</button>
+            <button type="button" role="tab" id="tab-reports" aria-controls="panel-reports" aria-selected="false" tabindex="-1" data-tab="reports">Reports</button>
+          </nav>
+
+          <section class="view-panel" role="tabpanel" id="panel-overview" aria-labelledby="tab-overview" data-panel="overview">
+            <div class="section-heading"><div><p class="eyebrow">EVENT AT A GLANCE</p><h2>Overview</h2></div><button class="text-button" type="button" data-go-tab="transactions">View all transactions <span aria-hidden="true">→</span></button></div>
+            <div class="metric-grid" id="overview-metrics"></div>
+            <div class="overview-grid">
+              <article class="card budget-overview-card">
+                <div class="card-heading"><div><p class="eyebrow">SPENDING</p><h3>Budget used</h3></div><button class="text-button" type="button" data-go-tab="budget">View budget <span aria-hidden="true">→</span></button></div>
+                <div class="budget-summary-line"><strong id="overview-spent">₦0</strong><span>of <span id="overview-ceiling">₦0</span> approved</span></div>
+                <div class="progress-track" aria-hidden="true"><span id="overview-budget-bar"></span></div>
+                <div class="budget-foot"><span id="overview-budget-percent">0% used</span><span id="overview-pending-amount">₦0 pending</span></div>
+                <p class="helper-copy" id="budget-health-copy">Paid and deposit expenses are counted as spent.</p>
+              </article>
+              <article class="card ticket-overview-card">
+                <div class="card-heading"><div><p class="eyebrow">ADMISSION</p><h3>Ticket sales</h3></div><button class="text-button" type="button" data-go-tab="tickets">Manage tickets <span aria-hidden="true">→</span></button></div>
+                <div class="ticket-overview-numbers"><strong id="overview-tickets-sold">0</strong><span>tickets sold</span></div>
+                <div class="ticket-overview-detail"><span><strong id="overview-ticket-revenue">₦0</strong><small>Ticket income</small></span><span><strong id="overview-ticket-capacity">0</strong><small>Total capacity</small></span></div>
+              </article>
+              <article class="card recent-card">
+                <div class="card-heading"><div><p class="eyebrow">LATEST ACTIVITY</p><h3>Recent transactions</h3></div><button class="text-button" type="button" data-go-tab="transactions">See all <span aria-hidden="true">→</span></button></div>
+                <div id="recent-transactions"></div>
+              </article>
+              <article class="card team-overview-card">
+                <div class="card-heading"><div><p class="eyebrow">PEOPLE</p><h3>Event team</h3></div><button class="text-button" type="button" data-go-tab="team">View team <span aria-hidden="true">→</span></button></div>
+                <div id="overview-team"></div>
+                <p class="helper-copy team-helper">Role assignments are managed in Member Administration.</p>
+              </article>
+            </div>
+          </section>
+
+          <section class="view-panel" role="tabpanel" id="panel-tickets" aria-labelledby="tab-tickets" data-panel="tickets" hidden>
+            <div class="section-heading"><div><p class="eyebrow">ADMISSION</p><h2>Tickets</h2><p class="section-description">Set up ticket types and keep an eye on sales and capacity.</p></div><div class="section-actions"><button class="button button-secondary manage-ticket-button" type="button" data-action="manage-tiers">Manage ticket types</button><button class="button button-primary record-ticket-button" type="button" data-action="open-record" data-record-type="ticket">＋ Record a sale</button></div></div>
+            <div class="metric-grid metric-grid-three" id="ticket-metrics"></div>
+            <div class="card"><div class="card-heading"><div><p class="eyebrow">SETUP</p><h3>Ticket types</h3></div><span class="subtle-count" id="tier-count">0 types</span></div><div class="tier-grid" id="tier-list"></div></div>
+            <div class="inline-callout"><span class="callout-icon">i</span><span>Ticket sales also appear in the full <button class="inline-link" type="button" data-go-tab="transactions" data-transaction-filter="ticket">transaction list</button>.</span></div>
+          </section>
+
+          <section class="view-panel" role="tabpanel" id="panel-budget" aria-labelledby="tab-budget" data-panel="budget" hidden>
+            <div class="section-heading"><div><p class="eyebrow">PLAN AND TRACK</p><h2>Budget</h2><p class="section-description">See what is approved, spent and still committed.</p></div><div class="section-actions"><button class="button button-secondary budget-settings-button" type="button" data-action="budget-settings">Change budget ceiling</button><button class="button button-secondary category-settings-button" type="button" data-action="manage-categories">Manage categories</button></div></div>
+            <div class="budget-total-card" id="budget-total-card"></div>
+            <div class="card"><div class="card-heading"><div><p class="eyebrow">EXPENSE PLAN</p><h3>Budget by category</h3></div><span class="subtle-count" id="budget-allocation-total"></span></div><div class="allocation-table" id="allocation-list"></div></div>
+            <div class="inline-callout"><span class="callout-icon">i</span><span>Pending and unpaid expenses are commitments; paid and deposit amounts count as spent.</span></div>
+          </section>
+
+          <section class="view-panel" role="tabpanel" id="panel-transactions" aria-labelledby="tab-transactions" data-panel="transactions" hidden>
+            <div class="section-heading"><div><p class="eyebrow">INCOME AND SPENDING</p><h2>Transactions</h2><p class="section-description">Search and review income, expenses and ticket sales in one list.</p></div><div class="section-actions"><button class="button button-secondary" type="button" data-action="manage-income-categories">Manage income categories</button><button class="button button-primary" type="button" data-action="open-record" data-record-type="expense">＋ Record transaction</button></div></div>
+            <div class="filter-bar card">
+              <label class="search-field"><span class="sr-only">Search transactions</span><span aria-hidden="true">⌕</span><input id="transaction-search" type="search" placeholder="Search name, note or reference" autocomplete="off" /></label>
+              <label>Type<select id="transaction-type-filter"><option value="all">All types</option><option value="expense">Expenses</option><option value="income">Income</option><option value="ticket">Ticket sales</option></select></label>
+              <label>Status<select id="transaction-status-filter"><option value="all">All statuses</option><option value="Approved">Approved</option><option value="Pending">Pending review</option><option value="Rejected">Rejected</option><option value="Voided">Voided</option></select></label>
+              <button type="button" class="button button-tertiary clear-filters" data-action="clear-filters">Clear</button>
+            </div>
+            <div class="results-line"><span id="transaction-result-count">0 transactions</span><button class="text-button" type="button" data-action="export-csv">Download CSV <span aria-hidden="true">↓</span></button></div>
+            <div class="card table-card"><div class="table-scroll"><table class="data-table"><thead><tr><th scope="col">Transaction</th><th scope="col">Date</th><th scope="col">Category</th><th scope="col">Status</th><th scope="col" class="amount-col">Amount</th><th scope="col"><span class="sr-only">Details</span></th></tr></thead><tbody id="transaction-rows"></tbody></table></div><div class="transaction-cards" id="transaction-cards"></div><div class="empty-state" id="transaction-empty" hidden><span class="empty-icon">⌕</span><h3>No transactions found</h3><p>Try changing your search or filters.</p></div></div>
+          </section>
+
+          <section class="view-panel" role="tabpanel" id="panel-team" aria-labelledby="tab-team" data-panel="team" hidden>
+            <div class="section-heading"><div><p class="eyebrow">PEOPLE AND RESPONSIBILITIES</p><h2>Event team</h2><p class="section-description">The people assigned to support this event.</p></div><button class="button button-secondary" type="button" data-action="member-admin">Manage assignments</button></div>
+            <div class="team-grid" id="team-list"></div>
+            <div class="inline-callout"><span class="callout-icon">i</span><span>Assignments are managed in Member Administration. This dashboard keeps the team list read-only.</span></div>
+          </section>
+
+          <section class="view-panel" role="tabpanel" id="panel-reports" aria-labelledby="tab-reports" data-panel="reports" hidden>
+            <div class="section-heading"><div><p class="eyebrow">EVENT RECORDS</p><h2>Reports</h2><p class="section-description">Review the event summary or see what changed.</p></div><div class="section-actions"><button class="button button-secondary" type="button" data-action="export-csv">Download CSV</button><button class="button button-primary" type="button" data-action="print-report">Print / save as PDF</button></div></div>
+            <div class="report-subnav" role="tablist" aria-label="Report sections"><button type="button" role="tab" aria-selected="true" id="report-tab-summary" aria-controls="report-panel-summary" data-report-tab="summary">Financial summary</button><button type="button" role="tab" aria-selected="false" id="report-tab-activity" aria-controls="report-panel-activity" data-report-tab="activity">Change history <span class="count-dot" id="activity-count">0</span></button></div>
+            <div class="report-panel" role="tabpanel" id="report-panel-summary" aria-labelledby="report-tab-summary" data-report-panel="summary"><div class="report-paper" id="financial-report"></div></div>
+            <div class="report-panel" role="tabpanel" id="report-panel-activity" aria-labelledby="report-tab-activity" data-report-panel="activity" hidden><div class="activity-filter-row"><p>Actions recorded in this preview.</p><label>Show<select id="activity-filter"><option value="all">All activity</option><option value="transaction">Transactions</option><option value="event">Event details</option><option value="budget">Budget and categories</option><option value="tickets">Tickets</option></select></label></div><div class="card activity-card" id="activity-list"></div></div>
+          </section>
+
+          <footer class="page-footer"><span>Carpenters Family · Event dashboard</span><span>Sample workspace</span></footer>
+        </main>
+      </div>
+    </div>
+
+    <dialog class="modal" id="record-dialog" aria-labelledby="record-dialog-title">
+      <form id="record-form" novalidate>
+        <div class="modal-header"><div><p class="eyebrow">ADD TO EVENT RECORDS</p><h2 id="record-dialog-title">Record transaction</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
+        <div class="form-grid">
+          <label class="field field-full">Record type<select id="record-kind" name="kind"><option value="expense">Expense</option><option value="income">Income</option><option value="ticket">Ticket sale</option></select></label>
+          <label class="field field-full">Description<input name="description" id="record-description" required maxlength="120" placeholder="What was this for?" /></label>
+          <label class="field" id="record-amount-wrap">Amount (₦)<input name="amount" id="record-amount" inputmode="decimal" type="number" min="1" step="1" required placeholder="0" /></label>
+          <label class="field">Date<input name="date" id="record-date" type="date" required /></label>
+          <label class="field field-full" id="record-category-wrap">Category<select name="category" id="record-category"></select></label>
+          <label class="field field-full" id="record-tier-wrap" hidden>Ticket type<select name="tier" id="record-tier"></select></label>
+          <label class="field" id="record-quantity-wrap" hidden>Quantity<input name="quantity" id="record-quantity" type="number" min="1" step="1" value="1" /></label>
+          <label class="field" id="record-party-wrap">Paid to / received from<input name="party" id="record-party" maxlength="80" placeholder="Optional" /></label>
+          <label class="field" id="record-method-wrap">Payment method<select name="method" id="record-method"><option>Bank transfer</option><option>Cash</option><option>Other</option></select></label>
+          <label class="field field-full" id="record-payment-wrap">Payment status<select name="paymentStatus" id="record-payment-status"><option>Paid</option><option>Deposit</option><option>Pending</option><option>Unpaid</option></select><span class="field-hint">Pending and unpaid expenses are tracked as commitments.</span></label>
+          <label class="field field-full file-field">Receipt <input name="receipt" id="record-receipt" type="file" accept="image/*,.pdf" /><span class="field-hint" id="receipt-file-note">Optional. This preview does not upload files.</span></label>
+          <p class="form-error field-full" id="record-error" role="alert" hidden></p>
+        </div>
+        <div class="modal-actions"><button class="button button-secondary" type="button" data-close-dialog>Cancel</button><button class="button button-primary" type="submit">Save transaction</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="tier-dialog" aria-labelledby="tier-dialog-title">
+      <form id="tier-form" novalidate>
+        <div class="modal-header"><div><p class="eyebrow">TICKET SETUP</p><h2 id="tier-dialog-title">Add ticket type</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
+        <div class="form-grid"><label class="field field-full">Name<input name="name" id="tier-name" required maxlength="50" placeholder="e.g. Standard" /></label><label class="field">Price (₦)<input name="price" id="tier-price" type="number" min="0" step="1" required /></label><label class="field">Capacity<input name="capacity" id="tier-capacity" type="number" min="1" step="1" required /></label><label class="field field-full">Description <span class="optional-label">Optional</span><input name="description" id="tier-description" maxlength="100" placeholder="What this ticket includes" /></label><p class="form-error field-full" id="tier-error" role="alert" hidden></p></div>
+        <div class="modal-actions"><button class="button button-secondary" type="button" data-close-dialog>Cancel</button><button class="button button-primary" type="submit">Save ticket type</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="budget-dialog" aria-labelledby="budget-dialog-title">
+      <form id="budget-form" novalidate>
+        <div class="modal-header"><div><p class="eyebrow">APPROVED EVENT BUDGET</p><h2 id="budget-dialog-title">Change budget ceiling</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
+        <div class="form-grid"><label class="field field-full">New ceiling (₦)<input id="budget-ceiling-input" type="number" min="0" step="1" required /></label><label class="field field-full">Reason<input id="budget-reason-input" maxlength="160" required placeholder="Why is the approved amount changing?" /></label><p class="form-error field-full" id="budget-error" role="alert" hidden></p></div>
+        <div class="modal-actions"><button class="button button-secondary" type="button" data-close-dialog>Cancel</button><button class="button button-primary" type="submit">Save budget</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="modal modal-wide" id="category-dialog" aria-labelledby="category-dialog-title">
+      <form id="category-form" novalidate>
+        <div class="modal-header"><div><p class="eyebrow">EXPENSE CATEGORIES</p><h2 id="category-dialog-title">Manage budget categories</h2><p class="modal-description">Set each category's share of the approved budget.</p></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
+        <div class="category-edit-list" id="category-edit-list"></div>
+        <div class="add-category-row"><label class="field">New category<input id="new-category-name" maxlength="50" placeholder="Category name" /></label><label class="field">Share (%)<input id="new-category-share" type="number" min="0" max="100" step="1" placeholder="0" /></label><button type="button" class="button button-secondary" data-action="add-category">Add category</button></div>
+        <p class="field-hint category-total-note" id="category-total-note"></p><p class="form-error" id="category-error" role="alert" hidden></p>
+        <div class="modal-actions"><button class="button button-secondary" type="button" data-close-dialog>Cancel</button><button class="button button-primary" type="submit">Save categories</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="income-category-dialog" aria-labelledby="income-category-title"><form id="income-category-form" novalidate><div class="modal-header"><div><p class="eyebrow">INCOME CATEGORIES</p><h2 id="income-category-title">Manage income categories</h2><p class="modal-description">Keep income labels clear and consistent.</p></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div><div class="income-category-list" id="income-category-list"></div><label class="field field-full">Add a category<input id="new-income-category" maxlength="50" placeholder="e.g. Event contribution" /></label><p class="form-error" id="income-category-error" role="alert" hidden></p><div class="modal-actions"><button class="button button-secondary" type="button" data-close-dialog>Done</button><button class="button button-primary" type="submit">Add category</button></div></form></dialog>
+
+    <dialog class="modal" id="event-dialog" aria-labelledby="event-dialog-title">
+      <form id="event-form" novalidate>
+        <div class="modal-header"><div><p class="eyebrow">EVENT DETAILS</p><h2 id="event-dialog-title">Edit event details</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
+        <div class="form-grid"><label class="field field-full">Event name<input id="event-name-input" maxlength="90" required /></label><label class="field">Date<input id="event-date-input" type="date" required /></label><label class="field">Time<input id="event-time-input" type="time" required /></label><label class="field field-full">Venue<input id="event-venue-input" maxlength="100" required /></label><label class="field field-full">Status<select id="event-status-input"><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></label><label class="field field-full" id="event-reason-wrap" hidden>Reason for status change<input id="event-reason-input" maxlength="160" placeholder="Required when changing status" /></label><p class="form-error field-full" id="event-error" role="alert" hidden></p></div>
+        <div class="modal-actions"><button class="button button-secondary" type="button" data-close-dialog>Cancel</button><button class="button button-primary" type="submit">Save event details</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="modal modal-drawer" id="detail-dialog" aria-labelledby="detail-title">
+      <div class="drawer-content"><div class="modal-header"><div><p class="eyebrow">TRANSACTION DETAILS</p><h2 id="detail-title">Transaction</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div><div id="detail-body"></div><div class="detail-actions" id="detail-actions"></div><form id="detail-action-form" hidden novalidate><div class="form-grid"><label class="field field-full" id="detail-amount-wrap" hidden>Corrected amount (₦)<input id="detail-corrected-amount" type="number" min="1" step="1" /></label><label class="field field-full" id="detail-reason-wrap">Reason<input id="detail-reason" maxlength="160" required placeholder="Enter a reason" /></label><p class="form-error field-full" id="detail-error" role="alert" hidden></p></div><div class="modal-actions"><button class="button button-secondary" type="button" data-action="cancel-detail-action">Cancel</button><button class="button button-primary" id="detail-action-submit" type="submit">Save</button></div></form></div>
+    </dialog>
+
+    <dialog class="modal small-modal" id="notice-dialog" aria-labelledby="notice-title"><div class="modal-header"><div><p class="eyebrow">CARPENTERS FAMILY</p><h2 id="notice-title">Outside this prototype</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div><p class="notice-body" id="notice-body"></p><div class="modal-actions"><button class="button button-primary" type="button" data-close-dialog>Close</button></div></dialog>
+
+    <dialog class="modal small-modal" id="confirm-dialog" aria-labelledby="confirm-title"><div class="modal-header"><div><p class="eyebrow">PLEASE CONFIRM</p><h2 id="confirm-title">Continue?</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div><p class="notice-body" id="confirm-message"></p><div class="modal-actions"><button class="button button-secondary" type="button" data-close-dialog>Cancel</button><button class="button button-primary" id="confirm-submit" type="button" data-action="confirm-pending">Continue</button></div></dialog>
+
+    <dialog class="modal mobile-nav-dialog" id="mobile-nav-dialog" aria-labelledby="mobile-nav-title"><div class="modal-header"><h2 id="mobile-nav-title">Main menu</h2><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div><nav class="mobile-nav-list"><a href="#home" data-outside="Home">Home</a><a href="#events" class="active">Events</a><a href="#tickets" data-outside="Tickets">Tickets</a><a href="#meeting-hub" data-outside="Meeting Hub">Meeting Hub</a><a href="#dues" data-outside="Dues">Dues</a><a href="#finances" data-outside="Finances">Finances</a></nav></dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+    <div class="print-only" id="print-report"></div>
+  </body>
+</html>
