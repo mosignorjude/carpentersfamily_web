@@ -125,13 +125,8 @@ test("Mobile Shell Semantics: Mobile tab buttons include role=tab, aria-selected
   );
   assert.match(
     content,
-    /aria-haspopup="menu"/,
-    "Mobile more tab must declare aria-haspopup=menu",
-  );
-  assert.match(
-    content,
-    /aria-expanded=\{isMoreOpen\}/,
-    "Mobile more tab must declare aria-expanded state",
+    /aria-expanded=/,
+    "Header disclosure or collapsible controls must declare aria-expanded state",
   );
 });
 

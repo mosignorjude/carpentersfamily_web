@@ -44,31 +44,26 @@ describe("Event Dashboard Mobile & Desktop Layout", () => {
     );
     assert.match(
       viewSource,
-      /id="tab-btn-expenses"/,
-      "Mobile tab bar must have Expense tab button",
+      /id="tab-btn-budget"/,
+      "Mobile tab bar must have Budget tab button",
     );
     assert.match(
       viewSource,
-      /id="tab-btn-revenue"/,
-      "Mobile tab bar must have Revenue tab button",
+      /id="tab-btn-ledger"/,
+      "Mobile tab bar must have Ledger tab button",
     );
     assert.match(
       viewSource,
-      /id="tab-btn-more"/,
-      "Mobile tab bar must have 'more' tab dropdown button",
+      /id="tab-btn-statement"/,
+      "Mobile tab bar must have Statement tab button",
     );
   });
 
-  it("renders the 'more' dropdown menu containing the remaining 4 sections", () => {
+  it("renders mobile swipe helper text for the horizontally scrollable tabs", () => {
     assert.match(
       viewSource,
-      /id="moreDropdown"/,
-      "Mobile view must contain moreDropdown menu",
-    );
-    assert.match(
-      viewSource,
-      /\["budget",\s*"reports",\s*"team_roles",\s*"audit_log"\]/,
-      "moreTabs must include budget, reports, team_roles, and audit_log",
+      /Swipe for more/,
+      "Mobile view must show 'Swipe for more' helper text",
     );
   });
 
