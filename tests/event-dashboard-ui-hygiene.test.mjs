@@ -95,33 +95,38 @@ test("Modal Hygiene & Dialog Semantics: All active modals declare role=dialog an
   }
 });
 
-test("Mobile Shell Semantics: Mobile tab buttons include role=tab, aria-selected, and focus-visible rings", () => {
+test("Tab Strip Semantics: Unified tab buttons include role=tab, aria-selected, aria-current, and focus-visible rings", () => {
   const content = fs.readFileSync(
     "src/components/events/dashboard/event-dashboard-view.tsx",
     "utf8",
   );
 
-  const overviewBtnIdx = content.indexOf('id="tab-btn-overview"');
-  assert.ok(overviewBtnIdx !== -1, "Overview tab button must exist");
+  const tabBtnIdx = content.indexOf("id={`tab-btn-${tab.id}`}");
+  assert.ok(tabBtnIdx !== -1, "Unified tab button id={`tab-btn-${tab.id}`} must exist");
   const buttonChunk = content.slice(
-    Math.max(0, overviewBtnIdx - 500),
-    overviewBtnIdx + 500,
+    Math.max(0, tabBtnIdx - 700),
+    tabBtnIdx + 700,
   );
 
   assert.match(
     buttonChunk,
     /role="tab"/,
-    "Overview tab button must have role=tab",
+    "Unified tab button must have role=tab",
   );
   assert.match(
     buttonChunk,
-    /aria-selected=\{activeTab === "overview"\}/,
-    "Overview tab button must declare aria-selected",
+    /aria-selected=\{isActive\}/,
+    "Unified tab button must declare aria-selected={isActive}",
+  );
+  assert.match(
+    buttonChunk,
+    /aria-current=\{isActive \? "page" : undefined\}/,
+    "Unified tab button must declare aria-current",
   );
   assert.match(
     content,
     /focus-visible:ring-2/,
-    "Mobile tab buttons must provide focus-visible rings for accessibility",
+    "Tab buttons must provide focus-visible rings for accessibility",
   );
   assert.match(
     content,

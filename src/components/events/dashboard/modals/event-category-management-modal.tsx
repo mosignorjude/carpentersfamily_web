@@ -35,6 +35,9 @@ interface EventCategoryManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
   categoryType: "expense" | "budget_allocation" | "revenue";
+  onSwitchCategoryType?: (
+    nextType: "expense" | "budget_allocation" | "revenue",
+  ) => void;
   eventId: string;
   categories: EventFinanceCategoryItem[];
   canManage: boolean;
@@ -68,6 +71,7 @@ export function EventCategoryManagementModal({
   isOpen,
   onClose,
   categoryType,
+  onSwitchCategoryType,
   eventId,
   categories,
   canManage,
@@ -240,6 +244,31 @@ export function EventCategoryManagementModal({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {onSwitchCategoryType && (
+          <div className="px-5 py-2.5 bg-[#FAF6F0] border-b border-[#E5DDD3] flex items-center gap-1.5 overflow-x-auto shrink-0">
+            {(
+              [
+                { id: "budget_allocation", label: "Budget Allocations" },
+                { id: "revenue", label: "Revenue Categories" },
+                { id: "expense", label: "Expense Categories" },
+              ] as const
+            ).map((opt) => (
+              <button
+                className={`px-3 py-1.5 min-h-[44px] rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
+                  categoryType === opt.id
+                    ? "bg-[#174C37] text-white"
+                    : "bg-white text-[#5C4638] border border-[#E5DDD3] hover:border-[#174C37]"
+                }`}
+                key={opt.id}
+                onClick={() => onSwitchCategoryType(opt.id)}
+                type="button"
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Modal Content */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1 min-h-0">

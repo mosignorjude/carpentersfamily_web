@@ -19,6 +19,8 @@ interface TabBudgetAllocationsProps {
   canManageCategories?: boolean;
   canRecord?: boolean;
   verifiedTicketRevenue?: number;
+  verifiedRevenue?: number;
+  verifiedExpenses?: number;
   pendingRevenue?: number;
   committedExpenses?: number;
   onManageCategories?: () => void;
@@ -40,6 +42,8 @@ export function TabBudgetAllocations({
   canManageCategories = false,
   canRecord = false,
   verifiedTicketRevenue,
+  verifiedRevenue,
+  verifiedExpenses,
   pendingRevenue,
   committedExpenses,
   onManageCategories,
@@ -56,10 +60,12 @@ export function TabBudgetAllocations({
     setActiveChartTab(initialSubTab);
   }, [initialSubTab]);
 
-  const totalRevenue = revenueStreams.reduce((acc, s) => acc + s.actual, 0);
+  const totalRevenue =
+    verifiedRevenue ?? revenueStreams.reduce((acc, s) => acc + s.actual, 0);
   const totalPendingInflows =
     pendingRevenue ?? revenueStreams.reduce((acc, s) => acc + s.pending, 0);
-  const totalExpenses = costCenters.reduce((acc, c) => acc + c.spent, 0);
+  const totalExpenses =
+    verifiedExpenses ?? costCenters.reduce((acc, c) => acc + c.spent, 0);
   const totalCommitted =
     committedExpenses ??
     costCenters.reduce((acc, c) => acc + (c.committed || 0), 0);

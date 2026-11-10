@@ -18,65 +18,37 @@ const apiRoutePath = new URL(
 describe("Event Dashboard Mobile & Desktop Layout", () => {
   const viewSource = readFileSync(viewPath, "utf8");
 
-  it("renders a 2-column Quick Action grid on mobile with Download Report and Record Transaction", () => {
+  it("renders unified spotlight header actions without duplicating mobile quick actions", () => {
     assert.match(
       viewSource,
-      /id="btn-download-report-mobile"/,
-      "Mobile view must render Download Report quick action button",
+      /Download Report/,
+      "Header must render Download Report action",
     );
     assert.match(
       viewSource,
-      /id="btn-record-transaction-mobile"/,
-      "Mobile view must render Record Transaction quick action button",
+      /Record Entry/,
+      "Header must render + Record Entry action",
     );
-  });
-
-  it("renders the 5-item mobile tab bar joined at the top of the content card", () => {
-    assert.match(
+    assert.doesNotMatch(
       viewSource,
-      /id="tab-btn-overview"/,
-      "Mobile tab bar must have Overview tab button",
-    );
-    assert.match(
-      viewSource,
-      /id="tab-btn-tickets"/,
-      "Mobile tab bar must have Tickets tab button",
-    );
-    assert.match(
-      viewSource,
-      /id="tab-btn-budget"/,
-      "Mobile tab bar must have Budget tab button",
-    );
-    assert.match(
-      viewSource,
-      /id="tab-btn-ledger"/,
-      "Mobile tab bar must have Ledger tab button",
-    );
-    assert.match(
-      viewSource,
-      /id="tab-btn-statement"/,
-      "Mobile tab bar must have Statement tab button",
+      />\s*Quick Actions\s*</,
+      "Header must not duplicate a separate Quick Actions heading",
     );
   });
 
-  it("renders mobile swipe helper text for the horizontally scrollable tabs", () => {
-    assert.match(
+  it("renders a single sticky 5-tab bar inside TableScroll with Swipe for more sections cue", () => {
+    assert.match(viewSource, /<TableScroll[^>]*label="Dashboard sections"/);
+    assert.match(viewSource, /id=\{`tab-btn-\$\{tab\.id\}`\}/);
+    assert.match(viewSource, /"overview"/);
+    assert.match(viewSource, /"tickets"/);
+    assert.match(viewSource, /"budget"/);
+    assert.match(viewSource, /"ledger"/);
+    assert.match(viewSource, /"statement"/);
+    assert.match(viewSource, /Swipe right for more sections/);
+    assert.doesNotMatch(
       viewSource,
-      /Swipe for more/,
-      "Mobile view must show 'Swipe for more' helper text",
-    );
-  });
-
-  it("places both mobile and desktop tab bars directly inside the top of the content card, separated by a divider", () => {
-    assert.match(
-      viewSource,
-      /<section className="[^"]*bg-white[^"]*rounded-\[20px\][^"]*relative">\s*<nav aria-label="Event Sections"/,
-      "Content card must wrap tab nav at its top",
-    );
-    assert.match(
-      viewSource,
-      /border-b border-\[#E5DDD3\]"\s*\/>\s*<\/nav>/,
-      "Tab nav must have a subtle horizontal divider before closing",
+      /sm:hidden[\s\S]*tab-btn-overview/,
+      "Dashboard must not render a duplicate sm:hidden tab bar",
     );
   });
 });

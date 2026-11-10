@@ -36,39 +36,29 @@ describe("Unified Event Dashboard 5-Tab Information Architecture", () => {
     assert.match(typesSource, /"statement"/);
   });
 
-  it("renders the 5 unified tabs in the mobile/desktop tab navigation", () => {
+  it("renders the 5 unified tabs in a single responsive TableScroll tab navigation", () => {
     assert.match(
       viewSource,
-      /id="tab-btn-overview"/,
-      "Tab bar must have Overview tab button",
+      /<TableScroll[^>]*label="Dashboard sections"/,
+      "Tab bar must wrap pills in TableScroll",
     );
     assert.match(
       viewSource,
-      /id="tab-btn-tickets"/,
-      "Tab bar must have Tickets tab button",
+      /tabs\.map\(/,
+      "Tab bar must map the 5 configured unified tabs",
     );
-    assert.match(
-      viewSource,
-      /id="tab-btn-budget"/,
-      "Tab bar must have Budget tab button",
-    );
-    assert.match(
-      viewSource,
-      /id="tab-btn-ledger"/,
-      "Tab bar must have Ledger tab button",
-    );
-    assert.match(
-      viewSource,
-      /id="tab-btn-statement"/,
-      "Tab bar must have Statement tab button",
-    );
+    assert.match(viewSource, /id:\s*"overview"/);
+    assert.match(viewSource, /id:\s*"tickets"/);
+    assert.match(viewSource, /id:\s*"budget"/);
+    assert.match(viewSource, /id:\s*"ledger"/);
+    assert.match(viewSource, /id:\s*"statement"/);
   });
 
   it("renders the mobile swipe helper cue for tabs", () => {
     assert.match(
       viewSource,
-      /Swipe for more/,
-      "Mobile tab bar must render swipe for more helper cue",
+      /Swipe right for more sections/i,
+      "Tab strip must render swipe helper cue for narrow viewports",
     );
   });
 

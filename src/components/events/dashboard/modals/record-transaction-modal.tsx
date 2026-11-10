@@ -56,11 +56,14 @@ export function RecordTransactionModal({
   userRole,
   initialType = "revenue",
   initialCategory,
-  ticketTiers,
+  ticketTiers: rawTicketTiers,
   categories = [],
   costCenters = [],
   budgetCeiling = 0,
 }: RecordTransactionModalProps) {
+  const ticketTiers = rawTicketTiers.filter(
+    (t) => !t.retiredAt && t.status !== "retired",
+  );
   const determineInitialMode = (): TransactionMode => {
     if (initialCategory === "ticket_sales") return "ticket";
     if (initialType === "expense") return "expense";
