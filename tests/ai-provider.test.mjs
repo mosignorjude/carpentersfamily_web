@@ -23,10 +23,7 @@ describe("AI provider configuration & fallback", () => {
   it("evaluates AI_REPORTS_ENABLED and key presence safely", async () => {
     const core = await loadProviderCore();
     assert.equal(core.isAiReportsEnabled({}), false);
-    assert.equal(
-      core.isAiReportsEnabled({ GEMINI_API_KEY: "test-key" }),
-      true,
-    );
+    assert.equal(core.isAiReportsEnabled({ GEMINI_API_KEY: "test-key" }), true);
     assert.equal(
       core.isAiReportsEnabled({
         GEMINI_API_KEY: "test-key",
@@ -35,7 +32,10 @@ describe("AI provider configuration & fallback", () => {
       false,
     );
     assert.equal(
-      core.isAiReportsEnabled({ GROQ_API_KEY: "groq-key", AI_REPORTS_ENABLED: "true" }),
+      core.isAiReportsEnabled({
+        GROQ_API_KEY: "groq-key",
+        AI_REPORTS_ENABLED: "true",
+      }),
       true,
     );
     assert.equal(core.getAiDailyLimitPerOfficer({}), 20);
@@ -64,21 +64,27 @@ describe("AI provider configuration & fallback", () => {
     };
     const fallback = {
       name: "groq",
-      model: "llama-3.3-70b-versatile",
+      model: "qwen/qwen3.8-27b",
       async generateJson() {
         calls.push("groq");
-        return { headline: "Fallback result", highlights: ["One highlight"], risks: [], recommendations: [] };
+        return {
+          headline: "Fallback result",
+          highlights: ["One highlight"],
+          risks: [],
+          recommendations: [],
+        };
       },
     };
 
-    const result = await core.runProvidersWithFallback(
-      [primary, fallback],
-      { system: "sys", facts: { a: 1 }, schema: {} },
-    );
+    const result = await core.runProvidersWithFallback([primary, fallback], {
+      system: "sys",
+      facts: { a: 1 },
+      schema: {},
+    });
 
     assert.deepEqual(calls, ["gemini", "groq"]);
     assert.equal(result.provider, "groq");
-    assert.equal(result.model, "llama-3.3-70b-versatile");
+    assert.equal(result.model, "qwen/qwen3.8-27b");
     assert.equal(result.data.headline, "Fallback result");
   });
 

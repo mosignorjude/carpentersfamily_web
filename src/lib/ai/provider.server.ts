@@ -19,7 +19,7 @@ export {
 } from "./provider-core";
 
 const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite";
-const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
+const DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b";
 const PROVIDER_TIMEOUT_MS = 20_000;
 
 function createGeminiProvider(
@@ -78,7 +78,7 @@ function createGroqProvider(apiKey: string, model: string): AiProviderAdapter {
           body: JSON.stringify({
             model,
             temperature: 0.2,
-            max_tokens: 900,
+            max_tokens: 1500,
             response_format: { type: "json_object" },
             messages: [
               {

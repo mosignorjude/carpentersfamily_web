@@ -11,29 +11,16 @@ async function loadTsModule(relPath) {
     },
   }).outputText;
 
-  // Rewrite relative TS imports so Node resolves sibling TypeScript sources cleanly.
-  return { raw: stripped, compiled };
+  return import(
+    `data:text/javascript;base64,${Buffer.from(compiled).toString("base64")}`
+  );
 }
 
 async function main() {
   const { GoogleGenAI } = await import("@google/genai");
-  const promptsMod = await loadTsModule("src/lib/ai/prompts.ts");
-  const prompts = await import(
-    `data:text/javascript;base64,${Buffer.from(promptsMod.compiled).toString("base64")}`
-  );
-  const groundingMod = await loadTsModule("src/lib/ai/grounding.ts");
-  const grounding = await import(
-    `data:text/javascript;base64,${Buffer.from(groundingMod.compiled).toString("base64")}`
-  );
+  const prompts = await loadTsModule("src/lib/ai/prompts.ts");
+  const grounding = await loadTsModule("src/lib/ai/grounding.ts");
 
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!apiKey) {
-    console.error("GEMINI_API_KEY is missing in .env.local");
-    process.exitCode = 1;
-    return;
-  }
-
-  const model = process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash-lite";
   const facts = {
     report_type: "club_finance",
     year: 2026,
@@ -58,40 +45,106 @@ async function main() {
     ],
   };
 
-  console.log(`Testing Gemini Interactions API with model: ${model}`);
   const prompt = prompts.buildNarrativePrompt("club_finance");
-  const client = new GoogleGenAI({ apiKey });
-  const interaction = await client.interactions.create(
-    {
-      model,
-      input: JSON.stringify({ FACTS: facts }),
-      system_instruction: prompt.system,
-      response_format: {
-        type: "text",
-        mime_type: "application/json",
-        schema: prompt.schema,
-      },
-      generation_config: {
-        max_output_tokens: 900,
-      },
-      store: false,
-    },
-    {
-      timeout_ms: 20_000,
-      retries: { strategy: "none" },
-    },
-  );
+  let testedAny = false;
 
-  const text = interaction.output_text;
-  if (!text) {
-    throw new Error("Gemini returned no output text.");
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+  if (geminiKey) {
+    testedAny = true;
+    const model = process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash-lite";
+    console.log(`Testing Gemini Interactions API with model: ${model}`);
+    const client = new GoogleGenAI({ apiKey: geminiKey });
+    const interaction = await client.interactions.create(
+      {
+        model,
+        input: JSON.stringify({ FACTS: facts }),
+        system_instruction: prompt.system,
+        response_format: {
+          type: "text",
+          mime_type: "application/json",
+          schema: prompt.schema,
+        },
+        generation_config: {
+          max_output_tokens: 900,
+        },
+        store: false,
+      },
+      {
+        timeout_ms: 20_000,
+        retries: { strategy: "none" },
+      },
+    );
+
+    const text = interaction.output_text;
+    if (!text) {
+      throw new Error("Gemini returned no output text.");
+    }
+    const parsed = JSON.parse(text);
+    const check = grounding.validateNarrativeContent(parsed, facts);
+    console.log("Gemini headline:", parsed.headline);
+    console.log("Gemini grounding passed:", check.ok, check.reasons ?? []);
+    if (!check.ok) {
+      process.exitCode = 1;
+    }
+  } else {
+    console.log("GEMINI_API_KEY not set; skipping Gemini smoke check.");
   }
 
-  const parsed = JSON.parse(text);
-  const check = grounding.validateNarrativeContent(parsed, facts);
-  console.log("Generated narrative headline:", parsed.headline);
-  console.log("Grounding check passed:", check.ok, check.reasons ?? []);
-  if (!check.ok) {
+  const groqKey = process.env.GROQ_API_KEY?.trim();
+  if (groqKey) {
+    testedAny = true;
+    const groqModel = process.env.GROQ_MODEL?.trim() || "qwen/qwen3.8-27b";
+    console.log(`Testing Groq fallback API with model: ${groqModel}`);
+    const response = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${groqKey}`,
+        },
+        body: JSON.stringify({
+          model: groqModel,
+          temperature: 0.2,
+          max_tokens: 1500,
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content: `${prompt.system}\nJSON Schema: ${JSON.stringify(prompt.schema)}`,
+            },
+            {
+              role: "user",
+              content: JSON.stringify({ FACTS: facts }),
+            },
+          ],
+        }),
+        signal: AbortSignal.timeout(20_000),
+      },
+    );
+
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(`Groq HTTP ${response.status}: ${detail}`);
+    }
+    const payload = await response.json();
+    const content = payload.choices?.[0]?.message?.content;
+    if (!content) {
+      throw new Error("Groq returned empty completion content.");
+    }
+    const parsed = JSON.parse(content);
+    const check = grounding.validateNarrativeContent(parsed, facts);
+    console.log("Groq headline:", parsed.headline);
+    console.log("Groq grounding passed:", check.ok, check.reasons ?? []);
+    if (!check.ok) {
+      process.exitCode = 1;
+    }
+  } else {
+    console.log("GROQ_API_KEY not set; skipping Groq smoke check.");
+  }
+
+  if (!testedAny) {
+    console.error("Neither GEMINI_API_KEY nor GROQ_API_KEY is configured.");
     process.exitCode = 1;
   }
 }
