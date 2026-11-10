@@ -13,8 +13,8 @@ describe("EventDomainLedger UI Component", () => {
     assert.match(source, /slice\(\s*startIndex,\s*endIndex\s*\)/);
   });
 
-  it("renders status filter pills including Pending Review, Approved, and Rejected", () => {
-    assert.match(source, /Pending Review/);
+  it("renders status filter pills including Pending, Approved, and Rejected", () => {
+    assert.match(source, /Pending\s*\(/);
     assert.match(source, /Approved/);
     assert.match(source, /Rejected/);
   });

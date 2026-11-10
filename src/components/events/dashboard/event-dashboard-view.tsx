@@ -909,7 +909,7 @@ export function EventDashboardView({
                 {pendingTransactionsCount > 0 && (
                   <span
                     className="w-2 h-2 rounded-full bg-[#D6A23A]"
-                    title={`${pendingTransactionsCount} pending review`}
+                    title={`${pendingTransactionsCount} pending`}
                   />
                 )}
               </button>
@@ -998,7 +998,7 @@ export function EventDashboardView({
                       {tab.pendingBadge && tab.pendingBadge > 0 ? (
                         <span
                           className="w-2 h-2 rounded-full bg-[#D6A23A]"
-                          title={`${tab.pendingBadge} pending review`}
+                          title={`${tab.pendingBadge} pending`}
                         />
                       ) : null}
                       {tab.alert && (

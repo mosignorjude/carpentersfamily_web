@@ -311,7 +311,7 @@ export function VoucherInspectionDrawer({
                     <div className="mt-0.5">
                       {isPending && (
                         <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
-                          Pending Review
+                          Pending
                         </span>
                       )}
                       {isApproved && (

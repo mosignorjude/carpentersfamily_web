@@ -390,7 +390,7 @@ export function EventDomainLedger({
             type="button"
           >
             <span className="w-2 h-2 rounded-full bg-[#D6A23A]" />
-            Pending Review ({pendingCount})
+            Pending ({pendingCount})
           </button>
           <button
             className={`px-3.5 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] flex items-center gap-1.5 ${
@@ -497,7 +497,7 @@ export function EventDomainLedger({
             const statusLabel = isApproved
               ? "Approved"
               : isPending
-                ? "Pending Review"
+                ? "Pending"
                 : isRejected
                   ? "Reversed"
                   : "Cancelled";
@@ -750,7 +750,7 @@ export function EventDomainLedger({
                       <td className="py-3 px-4 text-center whitespace-nowrap">
                         {isPending && (
                           <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
-                            Pending Review
+                            Pending
                           </span>
                         )}
                         {isApproved && (
