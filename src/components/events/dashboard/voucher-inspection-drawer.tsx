@@ -19,6 +19,7 @@ import {
 import { voidRecordAction } from "@/app/actions";
 import { VoidRecordModal } from "@/components/common/void-record-modal";
 import { ReceiptPreview } from "@/components/finances/receipt-preview";
+import { CfButton } from "@/components/ui";
 import { dispatchFlashCard } from "@/components/ui/flash-card";
 import { formatNaira } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
@@ -293,7 +294,7 @@ export function VoucherInspectionDrawer({
                     )}
                     {isRejected && (
                       <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
-                        Reversed / Rejected
+                        Voided
                       </span>
                     )}
                     {isCancelled && (
@@ -420,13 +421,14 @@ export function VoucherInspectionDrawer({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button
-              className="px-4 py-2 bg-white text-[#3D291F] border border-[#E5DDD3] rounded-xl text-xs font-semibold hover:bg-[#FAF6F0] transition-colors cursor-pointer min-h-[44px] flex items-center justify-center"
+            <CfButton
+              className="bg-white"
               onClick={onClose}
-              type="button"
+              size="compact"
+              variant="secondary"
             >
               Close
-            </button>
+            </CfButton>
 
             {isOfficer &&
               !isNotCounted &&
@@ -436,26 +438,27 @@ export function VoucherInspectionDrawer({
                 </span>
               ) : (
                 <>
-                  <button
-                    className="px-4 py-2 bg-white text-[#BA3C2A] border border-[#BA3C2A]/40 rounded-xl text-xs font-bold hover:bg-[#FDF0EE] transition-colors cursor-pointer flex items-center gap-1.5 min-h-[44px]"
+                  <CfButton
+                    className="bg-white text-[#BA3C2A] border-[#BA3C2A]/40 hover:bg-[#FDF0EE] hover:border-[#BA3C2A]/60"
                     disabled={isSubmitting}
                     onClick={handleInitiateVoid}
-                    type="button"
+                    size="compact"
+                    variant="secondary"
                   >
-                    <ShieldAlert className="w-4 h-4" />
-                    <span>Reverse / Void</span>
-                  </button>
+                    <ShieldAlert className="w-4 h-4 shrink-0" />
+                    <span>Void Record</span>
+                  </CfButton>
 
                   {!isApproved && (
-                    <button
-                      className="px-4 py-2 bg-[#174C37] text-white rounded-xl text-xs font-bold hover:bg-[#103D2B] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 min-h-[44px] shadow-xs"
+                    <CfButton
                       disabled={isSubmitting}
                       onClick={handleApprove}
-                      type="button"
+                      size="default"
+                      variant="primary"
                     >
-                      <CheckCircle2 className="w-4 h-4 text-[#F0C768]" />
+                      <CheckCircle2 className="w-4 h-4 text-[#F0C768] shrink-0" />
                       <span>Approve Record</span>
-                    </button>
+                    </CfButton>
                   )}
                 </>
               ))}

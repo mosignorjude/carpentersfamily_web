@@ -293,7 +293,7 @@ export function TabTickets({
         currentUserId={currentUserId}
         domain="tickets"
         onInspect={onInspectTransaction ?? ((txn) => setSelectedTxn(txn))}
-        subtitle="Tap any ticket card to inspect receipt, verify pending sale, or reverse/void"
+        subtitle="Tap any ticket card to inspect receipt, verify pending sale, or void"
         ticketTiers={tiers}
         title="Ticket Sales Records"
         transactions={ticketSalesTransactions}

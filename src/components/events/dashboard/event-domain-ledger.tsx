@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Download, Search, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { CfButton, CfFilterPill } from "@/components/ui";
 import { downloadLedgerCSV, formatNaira } from "@/lib/format";
 import type {
   DashboardCostCenter,
@@ -291,14 +292,14 @@ export function EventDomainLedger({
             <p className="text-xs text-[#5C4638] mt-0.5">{subtitle}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              className="px-3 py-2 min-h-[44px] rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] hover:border-[#174C37] text-xs font-semibold text-[#3D291F] flex items-center gap-1.5 cursor-pointer transition-colors"
+            <CfButton
               onClick={handleCsvExport}
-              type="button"
+              size="compact"
+              variant="secondary"
             >
-              <Download className="w-3.5 h-3.5 text-[#174C37]" />
+              <Download className="w-3.5 h-3.5 text-[#174C37] shrink-0" />
               <span>Export CSV</span>
-            </button>
+            </CfButton>
           </div>
         </div>
 
@@ -373,13 +374,14 @@ export function EventDomainLedger({
                 )}
               </select>
 
-              <button
-                className="shrink-0 px-3 py-2 min-h-[44px] rounded-xl bg-[#E5DDD3]/60 hover:bg-[#E5DDD3] text-xs font-semibold text-[#3D291F] cursor-pointer transition-colors"
+              <CfButton
+                className="shrink-0 bg-[#E5DDD3]/60 hover:bg-[#E5DDD3]"
                 onClick={handleResetFilters}
-                type="button"
+                size="compact"
+                variant="secondary"
               >
                 Reset
-              </button>
+              </CfButton>
             </div>
           </div>
         ) : (
@@ -414,20 +416,21 @@ export function EventDomainLedger({
             {(searchQuery ||
               statusFilter !== "all" ||
               channelFilter !== "all") && (
-              <button
-                className="shrink-0 px-3 py-2 min-h-[44px] rounded-xl bg-[#E5DDD3]/60 hover:bg-[#E5DDD3] text-xs font-semibold text-[#3D291F] cursor-pointer transition-colors"
+              <CfButton
+                className="shrink-0 bg-[#E5DDD3]/60 hover:bg-[#E5DDD3]"
                 onClick={handleResetFilters}
-                type="button"
+                size="compact"
+                variant="secondary"
               >
                 Reset
-              </button>
+              </CfButton>
             )}
           </div>
         )}
 
         {/* Domain Filter Pills (Unified Ledger) */}
         {domain === "all" && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pt-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto">
             {[
               {
                 id: "all" as const,
@@ -440,21 +443,17 @@ export function EventDomainLedger({
               },
               { id: "expenses" as const, label: `Expenses (${expensesCount})` },
             ].map((pill) => (
-              <button
-                className={`shrink-0 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                  typeFilter === pill.id
-                    ? "bg-[#174C37] text-white shadow-2xs"
-                    : "bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3] hover:text-[#3D291F]"
-                }`}
+              <CfFilterPill
+                active={typeFilter === pill.id}
                 key={pill.id}
                 onClick={() => {
                   setTypeFilter(pill.id);
                   setCurrentPage(1);
                 }}
-                type="button"
+                tone="forest"
               >
                 {pill.label}
-              </button>
+              </CfFilterPill>
             ))}
           </div>
         )}
@@ -480,27 +479,23 @@ export function EventDomainLedger({
                 label: `Online Sales (${onlineChannelCount})`,
               },
             ].map((ch) => (
-              <button
-                className={`shrink-0 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                  channelFilter === ch.id
-                    ? "bg-[#0C3325] text-white"
-                    : "bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3] hover:text-[#3D291F]"
-                }`}
+              <CfFilterPill
+                active={channelFilter === ch.id}
                 key={ch.id}
                 onClick={() => {
                   setChannelFilter(ch.id);
                   setCurrentPage(1);
                 }}
-                type="button"
+                tone="deep"
               >
                 {ch.label}
-              </button>
+              </CfFilterPill>
             ))}
           </div>
         )}
 
         {/* Status Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pt-2 border-t border-[#E5DDD3]/70">
+        <div className="flex items-center gap-1.5 overflow-x-auto pt-1 border-t border-[#E5DDD3]/70">
           {[
             {
               id: "all" as const,
@@ -518,28 +513,24 @@ export function EventDomainLedger({
               : []),
             {
               id: "voided" as const,
-              label: `Reversed / Voided (${voidedCount})`,
+              label: `Voided (${voidedCount})`,
             },
           ].map((pill) => {
             const isActive =
               statusFilter === pill.id ||
               (pill.id === "voided" && statusFilter === "rejected");
             return (
-              <button
-                className={`shrink-0 px-3 py-2 min-h-[44px] rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
-                  isActive
-                    ? "bg-[#3D291F] text-white"
-                    : "bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3] hover:text-[#3D291F]"
-                }`}
+              <CfFilterPill
+                active={isActive}
                 key={pill.id}
                 onClick={() => {
                   setStatusFilter(pill.id);
                   setCurrentPage(1);
                 }}
-                type="button"
+                tone="espresso"
               >
                 {pill.label}
-              </button>
+              </CfFilterPill>
             );
           })}
         </div>
@@ -576,13 +567,14 @@ export function EventDomainLedger({
               transactions.
             </p>
             <div className="pt-1">
-              <button
-                className="px-4 py-2 min-h-[44px] rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs font-semibold text-[#174C37] hover:border-[#174C37] cursor-pointer"
+              <CfButton
+                className="text-[#174C37]"
                 onClick={handleResetFilters}
-                type="button"
+                size="compact"
+                variant="secondary"
               >
                 Reset All Filters
-              </button>
+              </CfButton>
             </div>
           </div>
         ) : (
@@ -610,15 +602,15 @@ export function EventDomainLedger({
           </span>
 
           <div className="flex items-center gap-1.5 max-w-full overflow-x-auto py-1">
-            <button
-              className="px-3 py-2 border border-[#E5DDD3] bg-[#FAF6F0] rounded-xl font-medium text-[#3D291F] hover:border-[#174C37] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 min-h-[44px] shrink-0 cursor-pointer"
+            <CfButton
               disabled={validPage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              type="button"
+              size="compact"
+              variant="secondary"
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <ChevronLeft className="w-3.5 h-3.5 shrink-0" />
               <span>Previous</span>
-            </button>
+            </CfButton>
 
             <div className="hidden sm:flex items-center gap-1.5">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(
@@ -639,15 +631,15 @@ export function EventDomainLedger({
               )}
             </div>
 
-            <button
-              className="px-3 py-2 border border-[#E5DDD3] bg-[#FAF6F0] rounded-xl font-medium text-[#3D291F] hover:border-[#174C37] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 min-h-[44px] shrink-0 cursor-pointer"
+            <CfButton
               disabled={validPage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              type="button"
+              size="compact"
+              variant="secondary"
             >
               <span>Next</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+              <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+            </CfButton>
           </div>
         </div>
       )}

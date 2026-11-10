@@ -465,6 +465,12 @@ describe("form control baseline", () => {
     }
   });
 
+  it("exports CfFilterPill with a 44px touch wrapper around a 34px visual chip", () => {
+    assert.match(button, /export const CfFilterPill\b/);
+    assert.match(button, /CfFilterPill[\s\S]*min-h-\[44px\]/);
+    assert.match(button, /CfFilterPill[\s\S]*h-\[34px\]/);
+  });
+
   it("gives every hand-rolled control in the Phase-1 dialogs an explicit floor", () => {
     const tally = new Map();
     const offenders = [];

@@ -34,6 +34,13 @@ describe("VoucherInspectionDrawer Component", () => {
     assert.match(source, /dispatchFlashCard\(\{[\s\S]*Record Approved/);
   });
 
+  it("uses Void-only action & status labels with CfButton controls", () => {
+    assert.match(source, /<CfButton/);
+    assert.match(source, /Void Record/);
+    assert.match(source, />\s*Voided\s*</);
+    assert.doesNotMatch(source, /Reverse\s*\/\s*Void|Reversed\s*\/\s*Rejected/i);
+  });
+
   it("renders inline PDF and image receipt preview via shared ReceiptPreview and displays Recorded By", () => {
     assert.match(source, /<ReceiptPreview/);
     assert.doesNotMatch(source, /Open PDF in New Tab/);

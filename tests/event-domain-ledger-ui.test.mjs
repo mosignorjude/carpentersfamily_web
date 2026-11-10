@@ -21,10 +21,13 @@ describe("EventDomainLedger & LedgerTransactionCard UI Components", () => {
     assert.match(ledgerSource, /slice\(\s*startIndex,\s*endIndex\s*\)/);
   });
 
-  it("renders status filter pills including All, Approved, Pending, and Reversed / Voided", () => {
+  it("renders status filter pills using CfFilterPill with Voided (no Reverse/Reversed wording)", () => {
+    assert.match(ledgerSource, /<CfFilterPill/);
+    assert.match(ledgerSource, /<CfButton/);
     assert.match(ledgerSource, /Pending\s*\(/);
     assert.match(ledgerSource, /Approved\s*\(/);
-    assert.match(ledgerSource, /Voided|Reversed/);
+    assert.match(ledgerSource, /Voided\s*\(/);
+    assert.doesNotMatch(ledgerSource, /Reversed\s*\/\s*Voided/);
     assert.doesNotMatch(ledgerSource, /Pending Review/);
   });
 

@@ -42,9 +42,9 @@ const variantStyles: Record<CfButtonVariant, string> = {
 };
 
 const sizeStyles: Record<CfButtonSize, string> = {
-  default: "h-12 px-4 py-2 text-sm font-bold rounded-xl gap-2",
-  compact: "h-11 px-3 py-1.5 text-xs font-semibold rounded-lg gap-1.5",
-  large: "h-12 px-6 py-3 text-sm font-bold rounded-xl gap-2.5",
+  default: "min-h-12 px-5 py-2.5 text-sm font-bold rounded-xl gap-2",
+  compact: "min-h-11 px-3.5 py-1.5 text-xs font-semibold rounded-xl gap-1.5",
+  large: "min-h-12 px-6 py-3 text-sm font-bold rounded-xl gap-2.5",
   icon: "h-11 w-11 p-0 rounded-xl justify-center text-sm",
 };
 
@@ -158,3 +158,62 @@ export function FormSubmitButton({
     </CfButton>
   );
 }
+
+export type CfFilterPillTone = "forest" | "deep" | "espresso";
+
+export interface CfFilterPillProps
+  extends ButtonHTMLAttributes<HTMLButtonElement> {
+  active?: boolean;
+  tone?: CfFilterPillTone;
+  pillClassName?: string;
+}
+
+const filterToneActive: Record<CfFilterPillTone, string> = {
+  forest:
+    "bg-[#174C37] text-white font-bold shadow-2xs border border-[#174C37]",
+  deep: "bg-[#0C3325] text-white font-bold shadow-2xs border border-[#0C3325]",
+  espresso:
+    "bg-[#3D291F] text-white font-bold shadow-2xs border border-[#3D291F]",
+};
+
+/**
+ * Filter / chip toggle button: renders a compact 34px visual pill centered inside
+ * a 44px minimum touch target so filter strips stay visually lighter than secondary
+ * and primary CTA buttons while preserving mobile touch ergonomics.
+ */
+export const CfFilterPill = forwardRef<HTMLButtonElement, CfFilterPillProps>(
+  (
+    {
+      active = false,
+      tone = "forest",
+      pillClassName = "",
+      className = "",
+      children,
+      type = "button",
+      ...props
+    },
+    ref,
+  ) => {
+    return (
+      <button
+        ref={ref}
+        aria-pressed={active}
+        className={`min-h-[44px] py-1 inline-flex items-center shrink-0 cursor-pointer group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+        type={type}
+        {...props}
+      >
+        <span
+          className={`h-[34px] inline-flex items-center gap-1.5 px-3 rounded-lg text-xs whitespace-nowrap transition-colors ${
+            active
+              ? filterToneActive[tone]
+              : "bg-[#FAF6F0] text-[#5C4638] font-semibold border border-[#E5DDD3] group-hover:text-[#3D291F] group-hover:border-[#174C37]/40"
+          } ${pillClassName}`}
+        >
+          {children}
+        </span>
+      </button>
+    );
+  },
+);
+
+CfFilterPill.displayName = "CfFilterPill";
