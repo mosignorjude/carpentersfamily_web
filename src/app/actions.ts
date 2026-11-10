@@ -29,7 +29,9 @@ import {
   notifyPollCreated,
   notifyTicketOrderAlerted,
   notifyTicketOrderReceived,
+  notifyTicketOrderReviewed,
 } from "@/lib/email/notifications";
+import type { VoidEntityType } from "@/components/events/dashboard/dashboard-types";
 import {
   buildEventFinanceNoticeUrl,
   normalizeEventFinanceTab,
@@ -4227,4 +4229,194 @@ export async function lookupTicketOrderAction(
     error: null,
     pendingReference: row.public_reference,
   };
+}
+
+export interface VoidRecordInput {
+  entityType: VoidEntityType;
+  recordId: string;
+  eventId?: string;
+  reason: string;
+  returnUrl?: string;
+}
+
+export async function voidRecordAction(
+  input: VoidRecordInput | FormData,
+): Promise<{ success: boolean; error?: string }> {
+  let entityType: VoidEntityType;
+  let recordId: string;
+  let eventId: string | undefined;
+  let reason: string;
+  let returnUrl: string | undefined;
+
+  if (input instanceof FormData) {
+    entityType = String(input.get("entity_type") || "") as VoidEntityType;
+    recordId = String(input.get("record_id") || "");
+    eventId = (input.get("event_id") as string) || undefined;
+    reason = String(input.get("reason") || "");
+    returnUrl = (input.get("return_url") as string) || undefined;
+  } else {
+    entityType = input.entityType;
+    recordId = input.recordId;
+    eventId = input.eventId;
+    reason = input.reason;
+    returnUrl = input.returnUrl;
+  }
+
+  const trimmedReason = reason ? reason.trim() : "";
+  if (
+    !trimmedReason ||
+    trimmedReason.length < 5 ||
+    containsControlCharacters(trimmedReason)
+  ) {
+    const errorMsg =
+      "A transparent audit reason of at least 5 characters is mandatory.";
+    if (returnUrl) {
+      redirect(
+        `${returnUrl}${returnUrl.includes("?") ? "&" : "?"}notice=invalid-request`,
+      );
+    }
+    return { success: false, error: errorMsg };
+  }
+
+  if (!recordId || !uuidPattern.test(recordId)) {
+    const errorMsg = "Invalid record identifier.";
+    if (returnUrl) {
+      redirect(
+        `${returnUrl}${returnUrl.includes("?") ? "&" : "?"}notice=invalid-request`,
+      );
+    }
+    return { success: false, error: errorMsg };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) {
+    if (returnUrl) redirect("/portal?notice=sign-in");
+    return { success: false, error: "Authentication required." };
+  }
+
+  if (entityType === "ticket_sale") {
+    const { data: sale, error: fetchErr } = await supabase
+      .from("event_ticket_sales")
+      .select(
+        "id, event_id, source, verification_status, buyer_email, buyer_name, public_reference, amount_ngn, quantity",
+      )
+      .eq("id", recordId)
+      .maybeSingle();
+
+    if (fetchErr || !sale) {
+      return { success: false, error: "Ticket sale not found." };
+    }
+
+    const targetEventId = eventId || sale.event_id;
+
+    if (sale.verification_status === "approved") {
+      const { error: refundErr } = await supabase
+        .from("event_ticket_sales")
+        .update({
+          refunded_at: new Date().toISOString(),
+          refunded_by: authData.user.id,
+          refund_reason: trimmedReason,
+        })
+        .eq("id", recordId)
+        .is("refunded_at", null);
+
+      if (refundErr) {
+        return { success: false, error: refundErr.message };
+      }
+    } else {
+      const decision = sale.source === "online" ? "cancelled" : "rejected";
+      const { data: rpcData, error: rpcErr } = await supabase.rpc(
+        "verify_event_ticket_sale",
+        {
+          p_sale_id: recordId,
+          p_decision: decision,
+          p_reason: trimmedReason,
+        },
+      );
+
+      if (rpcErr) {
+        return { success: false, error: rpcErr.message };
+      }
+
+      if (sale.buyer_email && sale.public_reference) {
+        const row = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+        await notifyTicketOrderReviewed({
+          saleId: recordId,
+          publicReference: sale.public_reference,
+          buyerEmail: sale.buyer_email,
+          buyerName: sale.buyer_name || "Buyer",
+          eventTitle: row?.event_title || "Event",
+          tierName: row?.tier_name || "General Admission",
+          quantity: sale.quantity || 1,
+          amountNgn: Number(sale.amount_ngn || 0),
+          decision,
+          reason: trimmedReason,
+        }).catch((err) =>
+          console.error("[Unified Void] Ticket notification failed:", err),
+        );
+      }
+    }
+
+    revalidatePath(`/events/${targetEventId}/dashboard`);
+    revalidatePath(`/events/${targetEventId}/tickets`);
+  } else if (entityType === "event_transaction") {
+    const { data: txn, error: fetchErr } = await supabase
+      .from("event_financial_transactions")
+      .select("id, event_id, verification_status, voided_at")
+      .eq("id", recordId)
+      .maybeSingle();
+
+    if (fetchErr || !txn) {
+      return { success: false, error: "Event transaction not found." };
+    }
+
+    const targetEventId = eventId || txn.event_id;
+
+    if (txn.verification_status === "recorded") {
+      const { error: rpcErr } = await supabase.rpc(
+        "verify_event_financial_transaction",
+        {
+          p_transaction_id: recordId,
+          p_decision: "rejected",
+          p_reason: trimmedReason,
+        },
+      );
+      if (rpcErr) return { success: false, error: rpcErr.message };
+    } else {
+      const { error: rpcErr } = await supabase.rpc(
+        "void_event_financial_transaction",
+        {
+          p_transaction_id: recordId,
+          p_reason: trimmedReason,
+        },
+      );
+      if (rpcErr) return { success: false, error: rpcErr.message };
+    }
+
+    revalidatePath(`/events/${targetEventId}/dashboard`);
+    revalidatePath(`/events/${targetEventId}/finance`);
+    revalidatePath("/finances");
+  } else if (entityType === "club_transaction") {
+    const { error: rpcErr } = await supabase.rpc(
+      "void_club_financial_transaction",
+      {
+        p_transaction_id: recordId,
+        p_reason: trimmedReason,
+      },
+    );
+    if (rpcErr) return { success: false, error: rpcErr.message };
+
+    revalidatePath("/finances");
+  } else {
+    return { success: false, error: "Unsupported entity type for void action." };
+  }
+
+  if (returnUrl) {
+    redirect(
+      `${returnUrl}${returnUrl.includes("?") ? "&" : "?"}notice=voided`,
+    );
+  }
+
+  return { success: true };
 }
