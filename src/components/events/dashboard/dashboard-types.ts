@@ -22,7 +22,7 @@ export interface MobileTabItem {
   alert?: boolean;
 }
 
-export type TicketTierStatus = "active" | "sold_out" | "limited";
+export type TicketTierStatus = "active" | "sold_out" | "limited" | "retired";
 
 export interface DashboardTicketTier {
   id: string;
@@ -33,6 +33,7 @@ export interface DashboardTicketTier {
   description: string;
   benefits: string[];
   status: TicketTierStatus;
+  retiredAt?: string | null;
 }
 
 export type RevenueCategory =
@@ -94,6 +95,7 @@ export interface DashboardTransaction {
   type: TransactionType;
   category: string;
   categoryLabel: string;
+  tierName?: string;
   channel?: "member" | "online";
   description: string;
   amount: number;
@@ -106,6 +108,7 @@ export interface DashboardTransaction {
     filename: string;
     contentType: string;
     sizeBytes?: number;
+    sha256?: string | null;
   } | null;
   isLegacy?: boolean;
   authorizedBy: string;
@@ -145,10 +148,19 @@ export interface DashboardNotification {
 
 export interface DashboardTeamMember {
   id: string;
+  memberId?: string;
   name: string;
+  username?: string | null;
   role: string;
+  roleKey?: string;
   chapter: string;
   phone?: string;
+}
+
+export interface DashboardClubMember {
+  id: string;
+  fullName: string;
+  username: string | null;
 }
 
 export interface DashboardEventInfo {
@@ -161,11 +173,12 @@ export interface DashboardEventInfo {
   dateFormatted: string;
   timeWAT: string;
   durationLabel?: string;
+  durationDays?: number;
   location: string;
   details?: string;
   budgetCeiling: number;
   archivedAt?: string | null;
-  dressCode?: string;
+  ticketingEnabled?: boolean;
   attendanceEnabled?: boolean;
   minutesEnabled?: boolean;
 }

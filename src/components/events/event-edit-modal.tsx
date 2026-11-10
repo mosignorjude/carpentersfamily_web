@@ -31,12 +31,14 @@ interface EventEditModalProps {
   isOpen: boolean;
   event: EventRow | null;
   onClose: () => void;
+  returnTo?: string;
 }
 
 export function EventEditModal({
   isOpen,
   event,
   onClose,
+  returnTo,
 }: EventEditModalProps) {
   const [isPending, setIsPending] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -150,6 +152,9 @@ export function EventEditModal({
           }}
         >
           <input name="event_id" type="hidden" value={event.id} />
+          {returnTo && (
+            <input name="return_to" type="hidden" value={returnTo} />
+          )}
 
           {/* Event Title */}
           <div>

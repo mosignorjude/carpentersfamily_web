@@ -25,6 +25,8 @@ test("normalizeEventFinanceTab accepts only the dashboard tab allowlist", () => 
     "expenses",
     "budget",
     "revenue",
+    "ledger",
+    "statement",
     "reports",
     "team_roles",
     "audit_log",

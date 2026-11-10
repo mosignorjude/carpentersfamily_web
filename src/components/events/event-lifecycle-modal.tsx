@@ -24,6 +24,7 @@ interface EventLifecycleModalProps {
   event: EventRow | null;
   action: EventLifecycleAction | null;
   onClose: () => void;
+  returnTo?: string;
 }
 
 export function EventLifecycleModal({
@@ -31,6 +32,7 @@ export function EventLifecycleModal({
   event,
   action,
   onClose,
+  returnTo,
 }: EventLifecycleModalProps) {
   const [isPending, setIsPending] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -197,6 +199,9 @@ export function EventLifecycleModal({
           }}
         >
           <input name="event_id" type="hidden" value={event.id} />
+          {returnTo && (
+            <input name="return_to" type="hidden" value={returnTo} />
+          )}
           {config.statusValue && (
             <input name="status" type="hidden" value={config.statusValue} />
           )}

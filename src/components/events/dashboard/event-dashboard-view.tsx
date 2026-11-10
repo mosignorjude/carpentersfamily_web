@@ -32,8 +32,10 @@ import { TableScroll } from "@/components/ui/table-scroll";
 import { useSuccessNotice } from "@/components/ui/use-success-notice";
 import { downloadLedgerCSV } from "@/lib/format";
 import { getScrollBehavior } from "@/lib/tab-navigation.mjs";
+import type { EventRow } from "@/components/events/event-types";
 import type {
   ActivityLogItem,
+  DashboardClubMember,
   DashboardCostCenter,
   DashboardEventInfo,
   DashboardNotification,
@@ -94,6 +96,7 @@ function mapDbPaymentMethod(label: string): string {
 
 interface EventDashboardViewProps {
   event: DashboardEventInfo;
+  eventRow?: EventRow;
   userRole: string;
   currentUserId?: string;
   initialTab?: DashboardTab;
@@ -104,9 +107,15 @@ interface EventDashboardViewProps {
   initialActivityLogs: ActivityLogItem[];
   initialNotifications?: DashboardNotification[];
   teamMembers: DashboardTeamMember[];
+  clubMembers?: DashboardClubMember[];
   categories?: EventFinanceCategoryItem[];
   canManageCategories?: boolean;
   canDeleteCategories?: boolean;
+  canEditEvent?: boolean;
+  canManageLifecycle?: boolean;
+  canSetEventStatus?: boolean;
+  canReopenEvent?: boolean;
+  canManageTeamRoles?: boolean;
   notice?: { message: string; isError?: boolean };
 }
 

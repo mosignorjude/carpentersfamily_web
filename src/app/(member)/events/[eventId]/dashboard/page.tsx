@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type {
   ActivityLogItem,
+  DashboardClubMember,
   DashboardCostCenter,
   DashboardEventInfo,
   DashboardRevenueStream,
@@ -14,6 +15,8 @@ import type {
   RevenueCategory,
 } from "@/components/events/dashboard/dashboard-types";
 import { EventDashboardView } from "@/components/events/dashboard/event-dashboard-view";
+import type { EventRow } from "@/components/events/event-types";
+import { getEventCardAccess } from "@/lib/event-card-access.mjs";
 import { partitionExpensesByAllocation } from "@/lib/event-cost-centers.mjs";
 import {
   formatEventDateSpan,
@@ -76,6 +79,27 @@ const dashboardNoticeMap: Record<
   },
   refunded: {
     message: "Ticket sale refunded.",
+  },
+  updated: {
+    message: "Event details updated.",
+  },
+  completed: {
+    message: "Event marked as completed.",
+  },
+  cancelled: {
+    message: "Event cancelled.",
+  },
+  reopened: {
+    message: "Event reopened for planning.",
+  },
+  archived: {
+    message: "Event archived.",
+  },
+  "event-role-assigned": {
+    message: "Committee role assigned.",
+  },
+  "event-role-revoked": {
+    message: "Committee role removed.",
   },
   denied: {
     message: "You are not authorized to perform that action.",
@@ -194,7 +218,7 @@ export default async function EventDashboardPage({
     supabase
       .from("events")
       .select(
-        "id, title, event_type, starts_at, duration_days, location, status, archived_at, description, minutes_enabled, attendance_enabled, income_enabled, expenses_enabled, ticketing_enabled, budget_enabled",
+        "id, title, event_type, starts_at, duration_days, ends_at, location, status, status_changed_at, archived_at, created_at, updated_at, description, minutes_enabled, attendance_enabled, income_enabled, expenses_enabled, ticketing_enabled, budget_enabled",
       )
       .eq("id", eventId)
       .maybeSingle(),
@@ -221,7 +245,6 @@ export default async function EventDashboardPage({
       .from("event_ticket_tiers")
       .select("id, name, price_ngn, capacity, retired_at")
       .eq("event_id", eventId)
-      .is("retired_at", null)
       .order("created_at", { ascending: true }),
     supabase
       .from("event_ticket_sales")
@@ -288,17 +311,48 @@ export default async function EventDashboardPage({
     clubRoles.includes("admin") || clubRoles.includes("president");
   const isExecutive = clubRoles.includes("executive");
   const isEventLead =
-    eventRoles.includes("lead") || eventRoles.includes("event_lead");
+    eventRoles.includes("lead") ||
+    eventRoles.includes("event_lead") ||
+    eventRoles.includes("assistant");
+
+  const cardAccess = getEventCardAccess({
+    roles: new Set(clubRoles),
+    eventRoles: new Set(eventRoles),
+    status: rawEvent.status,
+    archivedAt: rawEvent.archived_at,
+  });
 
   let computedRole = "member";
   if (isAdmin) computedRole = "admin";
   else if (isExecutive) computedRole = "executive";
   else if (isEventLead) computedRole = "event_lead";
 
-  const isMutableEvent =
-    rawEvent.status === "scheduled" && rawEvent.archived_at === null;
+  const isMutableEvent = cardAccess.mutable;
   const canManageCategories = (isAdmin || isEventLead) && isMutableEvent;
   const canDeleteCategories = isAdmin && isMutableEvent;
+  const canManageTeamRoles = (isAdmin || isExecutive) && isMutableEvent;
+  const canEditEvent = cardAccess.canEdit && isMutableEvent;
+  const canManageLifecycle =
+    (cardAccess.canSetStatus && isMutableEvent) ||
+    (cardAccess.isManager &&
+      !rawEvent.archived_at &&
+      (rawEvent.status === "completed" || rawEvent.status === "cancelled"));
+
+  const clubMembers: DashboardClubMember[] = canManageTeamRoles
+    ? await supabase
+        .from("member_profiles")
+        .select("id, full_name, username")
+        .eq("status", "active")
+        .order("full_name", { ascending: true })
+        .limit(500)
+        .then(({ data }) =>
+          (data ?? []).map((m) => ({
+            id: m.id,
+            fullName: m.full_name || m.username || "Club Member",
+            username: m.username ?? null,
+          })),
+        )
+    : [];
 
   const eventInfo: DashboardEventInfo = {
     id: rawEvent.id,
@@ -312,10 +366,12 @@ export default async function EventDashboardPage({
     ),
     timeWAT: formatEventTime(rawEvent.starts_at),
     durationLabel: formatEventDurationLabel(rawEvent.duration_days),
+    durationDays: rawEvent.duration_days ?? 1,
     location: rawEvent.location,
     details: rawEvent.description ?? undefined,
     budgetCeiling: budgetResult.data?.total_ngn ?? 0,
     archivedAt: rawEvent.archived_at,
+    ticketingEnabled: rawEvent.ticketing_enabled,
     attendanceEnabled: rawEvent.attendance_enabled,
     minutesEnabled: rawEvent.minutes_enabled,
   };
@@ -339,9 +395,12 @@ export default async function EventDashboardPage({
             | undefined);
       return {
         id: row.id || `team-${idx + 1}`,
+        memberId: row.member_id ?? undefined,
         name:
           profileData?.full_name || profileData?.username || "Assigned Officer",
+        username: profileData?.username ?? null,
         role: roleMap[row.role] || row.role,
+        roleKey: row.role,
         chapter: "",
       };
     },
@@ -360,8 +419,9 @@ export default async function EventDashboardPage({
         .filter((s) => s.tier_id === t.id)
         .reduce((sum, s) => sum + s.quantity, 0);
 
-      const status =
-        soldCount >= t.capacity
+      const status = t.retired_at
+        ? "retired"
+        : soldCount >= t.capacity
           ? "sold_out"
           : t.capacity - soldCount <= 10
             ? "limited"
@@ -376,6 +436,7 @@ export default async function EventDashboardPage({
         description: `Official admission pass for ${t.name}`,
         benefits: ["Verified event admission", "Club secretariat registry"],
         status,
+        retiredAt: t.retired_at ?? null,
       };
     },
   );
@@ -590,7 +651,7 @@ export default async function EventDashboardPage({
       ? supabase
           .from("finance_receipts")
           .select(
-            "id, event_transaction_id, original_filename, content_type, size_bytes",
+            "id, event_transaction_id, original_filename, content_type, size_bytes, sha256",
           )
           .in("event_transaction_id", rawTxnIds)
       : Promise.resolve({ data: [] }),
@@ -598,7 +659,7 @@ export default async function EventDashboardPage({
       ? supabase
           .from("finance_receipts")
           .select(
-            "id, event_ticket_sale_id, original_filename, content_type, size_bytes",
+            "id, event_ticket_sale_id, original_filename, content_type, size_bytes, sha256",
           )
           .in("event_ticket_sale_id", rawSaleIds)
       : Promise.resolve({ data: [] }),
@@ -612,6 +673,7 @@ export default async function EventDashboardPage({
         filename: r.original_filename,
         contentType: r.content_type,
         sizeBytes: r.size_bytes,
+        sha256: r.sha256 ?? null,
       },
     ]),
   );
@@ -624,6 +686,7 @@ export default async function EventDashboardPage({
         filename: r.original_filename,
         contentType: r.content_type,
         sizeBytes: r.size_bytes,
+        sha256: r.sha256 ?? null,
       },
     ]),
   );
@@ -721,6 +784,7 @@ export default async function EventDashboardPage({
       type: "revenue",
       category: "ticket_sales",
       categoryLabel: channelLabel,
+      tierName,
       channel: isOnline ? "online" : "member",
       description: `${s.quantity}x ${tierName} Ticket${s.quantity === 1 ? "" : "s"}`,
       amount: s.amount_ngn,
@@ -800,13 +864,42 @@ export default async function EventDashboardPage({
     initialTab = "overview";
   }
 
+  const eventRow: EventRow = {
+    id: rawEvent.id,
+    title: rawEvent.title,
+    event_type: rawEvent.event_type,
+    starts_at: rawEvent.starts_at,
+    duration_days: rawEvent.duration_days ?? 1,
+    ends_at: rawEvent.ends_at ?? null,
+    location: rawEvent.location,
+    description: rawEvent.description ?? null,
+    minutes_enabled: rawEvent.minutes_enabled,
+    attendance_enabled: rawEvent.attendance_enabled,
+    budget_enabled: rawEvent.budget_enabled,
+    income_enabled: rawEvent.income_enabled,
+    expenses_enabled: rawEvent.expenses_enabled,
+    ticketing_enabled: rawEvent.ticketing_enabled,
+    status: rawEvent.status,
+    status_changed_at: rawEvent.status_changed_at ?? rawEvent.starts_at,
+    archived_at: rawEvent.archived_at,
+    created_at: rawEvent.created_at ?? rawEvent.starts_at,
+    updated_at: rawEvent.updated_at ?? rawEvent.starts_at,
+  };
+
   return (
     <div className="min-h-full p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
       <EventDashboardView
         canDeleteCategories={canDeleteCategories}
+        canEditEvent={canEditEvent}
         canManageCategories={canManageCategories}
+        canManageLifecycle={canManageLifecycle}
+        canManageTeamRoles={canManageTeamRoles}
+        canReopenEvent={cardAccess.canReopen}
+        canSetEventStatus={cardAccess.canSetStatus}
         categories={categories}
+        clubMembers={clubMembers}
         event={eventInfo}
+        eventRow={eventRow}
         initialActivityLogs={activityLogs}
         initialCostCenters={costCenters}
         initialNotifications={[]}

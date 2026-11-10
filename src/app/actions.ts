@@ -34,6 +34,7 @@ import {
 } from "@/lib/email/notifications";
 import {
   buildEventFinanceNoticeUrl,
+  buildSafeEventDashboardReturnUrl,
   normalizeEventFinanceTab,
 } from "@/lib/event-finance-tab.mjs";
 import {
@@ -1869,7 +1870,15 @@ export async function createEventAction(formData: FormData) {
 }
 
 export async function updateEventDetailsAction(formData: FormData) {
+  const rawReturnTo = optionalEventText(formData, "return_to", 120);
   const eventId = eventText(formData, "event_id", 36);
+  const redirectUrl = (notice: string) =>
+    buildSafeEventDashboardReturnUrl(
+      eventId ?? "",
+      notice,
+      rawReturnTo,
+      eventNoticeUrl(notice),
+    );
   if (!eventId || !uuidPattern.test(eventId))
     redirect(eventNoticeUrl("invalid-request"));
   const actor = await getActiveEventActor(eventId);
@@ -1878,7 +1887,7 @@ export async function updateEventDetailsAction(formData: FormData) {
     !actor.eventRoles.has("lead") &&
     !actor.eventRoles.has("assistant")
   ) {
-    redirect(eventNoticeUrl("denied"));
+    redirect(redirectUrl("denied"));
   }
   if (
     !eventFieldsOnly(formData, [
@@ -1892,14 +1901,15 @@ export async function updateEventDetailsAction(formData: FormData) {
       "location",
       "description",
       "reason",
+      "return_to",
     ])
   ) {
-    redirect(eventNoticeUrl("invalid-request"));
+    redirect(redirectUrl("invalid-request"));
   }
   const title = eventText(formData, "title", 120);
   for (const key of ["event_date", "start_hour", "start_minute", "meridiem"]) {
     if (formData.getAll(key).length !== 1) {
-      redirect(eventNoticeUrl("invalid-request"));
+      redirect(redirectUrl("invalid-request"));
     }
   }
   const schedule = parseEventSchedule({
@@ -1908,7 +1918,7 @@ export async function updateEventDetailsAction(formData: FormData) {
     startMinute: formData.get("start_minute"),
     meridiem: formData.get("meridiem"),
   });
-  if (!schedule.ok) redirect(eventNoticeUrl("invalid-request"));
+  if (!schedule.ok) redirect(redirectUrl("invalid-request"));
   const startsAt = schedule.startsAt;
   const durationDays = parseDurationDays(formData.get("duration_days"));
   const location = eventText(formData, "location", 200);
@@ -1922,7 +1932,7 @@ export async function updateEventDetailsAction(formData: FormData) {
     description === undefined ||
     !reason
   ) {
-    redirect(eventNoticeUrl("invalid-request"));
+    redirect(redirectUrl("invalid-request"));
   }
 
   const days = durationDays as number;
@@ -1944,7 +1954,7 @@ export async function updateEventDetailsAction(formData: FormData) {
     p_reason: reason,
     p_duration_days: days,
   });
-  if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
+  if (error) redirect(redirectUrl(rpcErrorNotice(error)));
 
   if (
     beforeRow &&
@@ -1988,7 +1998,8 @@ export async function updateEventDetailsAction(formData: FormData) {
   }
 
   revalidatePath("/events");
-  redirect(eventNoticeUrl("updated"));
+  revalidatePath(`/events/${eventId}/dashboard`);
+  redirect(redirectUrl("updated"));
 }
 
 function eventRoleNoticeUrl(notice: string, returnTo?: string | null) {
@@ -1999,13 +2010,19 @@ function eventRoleNoticeUrl(notice: string, returnTo?: string | null) {
 }
 
 export async function assignEventRoleAction(formData: FormData) {
-  const returnTo = optionalEventText(formData, "return_to", 40);
+  const returnTo = optionalEventText(formData, "return_to", 120);
   const eventId = eventText(formData, "event_id", 36);
+  const redirectUrl = (notice: string) =>
+    buildSafeEventDashboardReturnUrl(
+      eventId ?? "",
+      notice,
+      returnTo,
+      eventRoleNoticeUrl(notice, returnTo),
+    );
   if (!eventId || !uuidPattern.test(eventId))
     redirect(eventRoleNoticeUrl("invalid-request", returnTo));
   const actor = await getActiveEventActor(eventId);
-  if (!eventManagerAllowed(actor.roles))
-    redirect(eventRoleNoticeUrl("denied", returnTo));
+  if (!eventManagerAllowed(actor.roles)) redirect(redirectUrl("denied"));
   if (
     !eventFieldsOnly(formData, [
       "event_id",
@@ -2015,7 +2032,7 @@ export async function assignEventRoleAction(formData: FormData) {
       "return_to",
     ])
   ) {
-    redirect(eventRoleNoticeUrl("invalid-request", returnTo));
+    redirect(redirectUrl("invalid-request"));
   }
   const memberId = eventText(formData, "member_id", 36);
   const role = eventText(formData, "event_role", 20);
@@ -2026,7 +2043,7 @@ export async function assignEventRoleAction(formData: FormData) {
     !["lead", "assistant", "committee"].includes(role ?? "") ||
     !reason
   ) {
-    redirect(eventRoleNoticeUrl("invalid-request", returnTo));
+    redirect(redirectUrl("invalid-request"));
   }
   const { error } = await actor.supabase.rpc("assign_event_role", {
     p_event_id: eventId,
@@ -2034,7 +2051,7 @@ export async function assignEventRoleAction(formData: FormData) {
     p_role: role,
     p_reason: reason,
   });
-  if (error) redirect(eventRoleNoticeUrl(rpcErrorNotice(error), returnTo));
+  if (error) redirect(redirectUrl(rpcErrorNotice(error)));
 
   await notifyEventRoleAssigned({
     supabase: actor.supabase,
@@ -2045,37 +2062,45 @@ export async function assignEventRoleAction(formData: FormData) {
   });
 
   revalidatePath("/events");
+  revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath("/officers/members");
-  redirect(eventRoleNoticeUrl("event-role-assigned", returnTo));
+  redirect(redirectUrl("event-role-assigned"));
 }
 
 export async function revokeEventRoleAction(formData: FormData) {
-  const returnTo = optionalEventText(formData, "return_to", 40);
+  const returnTo = optionalEventText(formData, "return_to", 120);
   const eventId = eventText(formData, "event_id", 36);
+  const redirectUrl = (notice: string) =>
+    buildSafeEventDashboardReturnUrl(
+      eventId ?? "",
+      notice,
+      returnTo,
+      eventRoleNoticeUrl(notice, returnTo),
+    );
   if (!eventId || !uuidPattern.test(eventId))
     redirect(eventRoleNoticeUrl("invalid-request", returnTo));
   const actor = await getActiveEventActor(eventId);
-  if (!eventManagerAllowed(actor.roles))
-    redirect(eventRoleNoticeUrl("denied", returnTo));
+  if (!eventManagerAllowed(actor.roles)) redirect(redirectUrl("denied"));
   if (
     !eventFieldsOnly(formData, ["event_id", "member_id", "reason", "return_to"])
   ) {
-    redirect(eventRoleNoticeUrl("invalid-request", returnTo));
+    redirect(redirectUrl("invalid-request"));
   }
   const memberId = eventText(formData, "member_id", 36);
   const reason = eventText(formData, "reason", 500);
   if (!memberId || !uuidPattern.test(memberId) || !reason) {
-    redirect(eventRoleNoticeUrl("invalid-request", returnTo));
+    redirect(redirectUrl("invalid-request"));
   }
   const { error } = await actor.supabase.rpc("revoke_event_role", {
     p_event_id: eventId,
     p_member_id: memberId,
     p_reason: reason,
   });
-  if (error) redirect(eventRoleNoticeUrl(rpcErrorNotice(error), returnTo));
+  if (error) redirect(redirectUrl(rpcErrorNotice(error)));
   revalidatePath("/events");
+  revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath("/officers/members");
-  redirect(eventRoleNoticeUrl("event-role-revoked", returnTo));
+  redirect(redirectUrl("event-role-revoked"));
 }
 
 export async function setEventBudgetAction(formData: FormData) {
@@ -2186,15 +2211,31 @@ export async function setEventBudgetAction(formData: FormData) {
 }
 
 export async function setEventStatusAction(formData: FormData) {
+  const rawReturnTo = optionalEventText(formData, "return_to", 120);
   const eventId = eventText(formData, "event_id", 36);
+  const redirectUrl = (notice: string) =>
+    buildSafeEventDashboardReturnUrl(
+      eventId ?? "",
+      notice,
+      rawReturnTo,
+      eventNoticeUrl(notice),
+    );
   if (!eventId || !uuidPattern.test(eventId))
     redirect(eventNoticeUrl("invalid-request"));
   const actor = await getActiveEventActor(eventId);
   if (!eventManagerAllowed(actor.roles) && !actor.eventRoles.has("lead")) {
-    redirect(eventNoticeUrl("denied"));
+    redirect(redirectUrl("denied"));
   }
-  if (!eventFieldsOnly(formData, ["event_id", "status", "reason", "confirm"])) {
-    redirect(eventNoticeUrl("invalid-request"));
+  if (
+    !eventFieldsOnly(formData, [
+      "event_id",
+      "status",
+      "reason",
+      "confirm",
+      "return_to",
+    ])
+  ) {
+    redirect(redirectUrl("invalid-request"));
   }
   const status = eventText(formData, "status", 20);
   const reason = eventText(formData, "reason", 500);
@@ -2205,7 +2246,7 @@ export async function setEventStatusAction(formData: FormData) {
     confirmValues.length !== 1 ||
     confirmValues[0] !== "yes"
   ) {
-    redirect(eventNoticeUrl("invalid-request"));
+    redirect(redirectUrl("invalid-request"));
   }
 
   const { data: beforeRow } = await actor.supabase
@@ -2221,7 +2262,7 @@ export async function setEventStatusAction(formData: FormData) {
     p_status: status,
     p_reason: reason,
   });
-  if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
+  if (error) redirect(redirectUrl(rpcErrorNotice(error)));
 
   if (status === "cancelled" && beforeRow && beforeRow.status !== "cancelled") {
     await notifyEventCancelled({
@@ -2237,58 +2278,80 @@ export async function setEventStatusAction(formData: FormData) {
 
   revalidatePath("/events");
   revalidatePath(`/events/${eventId}/finance`);
+  revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath("/finances");
-  redirect(eventNoticeUrl(status === "completed" ? "completed" : "cancelled"));
+  redirect(redirectUrl(status === "completed" ? "completed" : "cancelled"));
 }
 
 export async function reopenEventAction(formData: FormData) {
+  const rawReturnTo = optionalEventText(formData, "return_to", 120);
   const eventId = eventText(formData, "event_id", 36);
+  const redirectUrl = (notice: string) =>
+    buildSafeEventDashboardReturnUrl(
+      eventId ?? "",
+      notice,
+      rawReturnTo,
+      eventNoticeUrl(notice),
+    );
   if (!eventId || !uuidPattern.test(eventId))
     redirect(eventNoticeUrl("invalid-request"));
   const actor = await getActiveEventActor(eventId);
-  if (!financeCorrectionAllowed(actor.roles))
-    redirect(eventNoticeUrl("denied"));
-  if (!eventFieldsOnly(formData, ["event_id", "reason", "confirm"])) {
-    redirect(eventNoticeUrl("invalid-request"));
+  if (!financeCorrectionAllowed(actor.roles)) redirect(redirectUrl("denied"));
+  if (
+    !eventFieldsOnly(formData, ["event_id", "reason", "confirm", "return_to"])
+  ) {
+    redirect(redirectUrl("invalid-request"));
   }
   const reason = eventText(formData, "reason", 500);
   const confirmValues = formData.getAll("confirm");
   if (!reason || confirmValues.length !== 1 || confirmValues[0] !== "yes") {
-    redirect(eventNoticeUrl("invalid-request"));
+    redirect(redirectUrl("invalid-request"));
   }
   const { error } = await actor.supabase.rpc("set_event_status", {
     p_event_id: eventId,
     p_status: "scheduled",
     p_reason: reason,
   });
-  if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
+  if (error) redirect(redirectUrl(rpcErrorNotice(error)));
   revalidatePath("/events");
   revalidatePath(`/events/${eventId}/finance`);
+  revalidatePath(`/events/${eventId}/dashboard`);
   revalidatePath("/finances");
-  redirect(eventNoticeUrl("reopened"));
+  redirect(redirectUrl("reopened"));
 }
 
 export async function archiveEventAction(formData: FormData) {
+  const rawReturnTo = optionalEventText(formData, "return_to", 120);
   const eventId = eventText(formData, "event_id", 36);
+  const redirectUrl = (notice: string) =>
+    buildSafeEventDashboardReturnUrl(
+      eventId ?? "",
+      notice,
+      rawReturnTo,
+      eventNoticeUrl(notice),
+    );
   if (!eventId || !uuidPattern.test(eventId))
     redirect(eventNoticeUrl("invalid-request"));
   const actor = await getActiveEventActor(eventId);
-  if (!eventManagerAllowed(actor.roles)) redirect(eventNoticeUrl("denied"));
-  if (!eventFieldsOnly(formData, ["event_id", "reason", "confirm"])) {
-    redirect(eventNoticeUrl("invalid-request"));
+  if (!eventManagerAllowed(actor.roles)) redirect(redirectUrl("denied"));
+  if (
+    !eventFieldsOnly(formData, ["event_id", "reason", "confirm", "return_to"])
+  ) {
+    redirect(redirectUrl("invalid-request"));
   }
   const reason = eventText(formData, "reason", 500);
   const confirmValues = formData.getAll("confirm");
   if (!reason || confirmValues.length !== 1 || confirmValues[0] !== "yes") {
-    redirect(eventNoticeUrl("invalid-request"));
+    redirect(redirectUrl("invalid-request"));
   }
   const { error } = await actor.supabase.rpc("archive_event", {
     p_event_id: eventId,
     p_reason: reason,
   });
-  if (error) redirect(eventNoticeUrl(rpcErrorNotice(error)));
+  if (error) redirect(redirectUrl(rpcErrorNotice(error)));
   revalidatePath("/events");
-  redirect(eventNoticeUrl("archived"));
+  revalidatePath(`/events/${eventId}/dashboard`);
+  redirect(redirectUrl("archived"));
 }
 
 function eventFinanceInput(
