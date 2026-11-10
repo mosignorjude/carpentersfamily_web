@@ -424,7 +424,7 @@ export function TabTickets({
                               <div className="flex items-center justify-end gap-1.5">
                                 {onOpenEditTierModal && (
                                   <button
-                                    className="px-2.5 py-1 text-xs font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-lg transition-colors flex items-center gap-1 cursor-pointer min-h-[30px]"
+                                    className="px-2.5 py-1 text-xs font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-lg transition-colors flex items-center gap-1 cursor-pointer min-h-[38px]"
                                     id={`btn-edit-tier-${tier.id}`}
                                     onClick={() => onOpenEditTierModal(tier)}
                                     type="button"
@@ -435,7 +435,7 @@ export function TabTickets({
                                 )}
                                 {onOpenRetireTierModal && (
                                   <button
-                                    className="px-2.5 py-1 text-xs font-semibold text-[#BA3C2A] bg-white border border-[#BA3C2A]/30 hover:bg-[#FDF0EE] rounded-lg transition-colors flex items-center gap-1 cursor-pointer min-h-[30px]"
+                                    className="px-2.5 py-1 text-xs font-semibold text-[#BA3C2A] bg-white border border-[#BA3C2A]/30 hover:bg-[#FDF0EE] rounded-lg transition-colors flex items-center gap-1 cursor-pointer min-h-[38px]"
                                     id={`btn-retire-tier-${tier.id}`}
                                     onClick={() => onOpenRetireTierModal(tier)}
                                     type="button"
