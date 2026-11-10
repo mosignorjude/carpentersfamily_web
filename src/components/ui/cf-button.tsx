@@ -194,10 +194,11 @@ export const CfFilterPill = forwardRef<HTMLButtonElement, CfFilterPillProps>(
     },
     ref,
   ) => {
+    const isDisclosure = props["aria-expanded"] !== undefined;
     return (
       <button
         ref={ref}
-        aria-pressed={active}
+        {...(!isDisclosure ? { "aria-pressed": active } : {})}
         className={`min-h-[44px] py-1 inline-flex items-center shrink-0 cursor-pointer group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
         type={type}
         {...props}

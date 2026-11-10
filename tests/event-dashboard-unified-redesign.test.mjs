@@ -96,6 +96,11 @@ describe("Spotlight Header & Collapsible Metadata", () => {
       /aria-expanded/,
       "Disclosure trigger must declare aria-expanded",
     );
+    assert.match(
+      viewSource,
+      /<CfFilterPill[\s\S]*Event info/,
+      "Event info disclosure button must use CfFilterPill sizing",
+    );
   });
 
   it("shows only Event History & Timeline, Event Features, Event Description, plus retained lifecycle and Edit Details controls", () => {

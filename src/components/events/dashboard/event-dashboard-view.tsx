@@ -31,7 +31,7 @@ import {
   EventLifecycleModal,
 } from "@/components/events/event-lifecycle-modal";
 import type { EventRow } from "@/components/events/event-types";
-import { CfButton } from "@/components/ui";
+import { CfButton, CfFilterPill } from "@/components/ui";
 import {
   dispatchActionStatusToast,
   dispatchFlashCard,
@@ -707,13 +707,13 @@ export function EventDashboardView({
                 <span>{event.archivedAt ? "Archived" : event.status}</span>
               </span>
 
-              <CfButton
+              <CfFilterPill
                 aria-controls="event-header-details"
                 aria-expanded={isHeaderExpanded}
-                className="text-[#5C4638]"
                 onClick={() => setIsHeaderExpanded((prev) => !prev)}
-                size="compact"
-                variant="secondary"
+                pillClassName={
+                  isHeaderExpanded ? "border-[#174C37]/50 text-[#174C37]" : ""
+                }
               >
                 <span>{isHeaderExpanded ? "Hide info" : "Event info"}</span>
                 <ChevronDown
@@ -721,7 +721,7 @@ export function EventDashboardView({
                     isHeaderExpanded ? "rotate-180" : ""
                   }`}
                 />
-              </CfButton>
+              </CfFilterPill>
             </div>
           </div>
 

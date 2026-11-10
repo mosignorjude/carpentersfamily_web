@@ -469,6 +469,7 @@ describe("form control baseline", () => {
     assert.match(button, /export const CfFilterPill\b/);
     assert.match(button, /CfFilterPill[\s\S]*min-h-\[44px\]/);
     assert.match(button, /CfFilterPill[\s\S]*h-\[34px\]/);
+    assert.match(button, /props\["aria-expanded"\]/);
   });
 
   it("renders icon+label JSX children directly inside CfButton flex row without an unflexed span wrapper", () => {
