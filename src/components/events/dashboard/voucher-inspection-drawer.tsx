@@ -476,14 +476,14 @@ export function VoucherInspectionDrawer({
               />
               <div className="flex items-center justify-end gap-2">
                 <button
-                  className="px-3 py-1.5 text-xs text-[#5C4638] hover:bg-white rounded-lg transition-colors cursor-pointer"
+                  className="px-3 py-1.5 text-xs text-[#5C4638] hover:bg-white rounded-lg transition-colors cursor-pointer min-h-[44px] flex items-center justify-center"
                   onClick={() => setShowRejectInput(false)}
                   type="button"
                 >
                   Back
                 </button>
                 <button
-                  className="px-4 py-2 bg-[#BA3C2A] text-white rounded-xl text-xs font-bold hover:bg-[#8E2A1C] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                  className="px-4 py-2 bg-[#BA3C2A] text-white rounded-xl text-xs font-bold hover:bg-[#8E2A1C] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 min-h-[44px]"
                   disabled={isSubmitting || rejectionReason.trim().length < 5}
                   onClick={handleReject}
                   type="button"
@@ -521,14 +521,14 @@ export function VoucherInspectionDrawer({
               />
               <div className="flex items-center justify-end gap-2">
                 <button
-                  className="px-3 py-1.5 text-xs text-[#5C4638] hover:bg-white rounded-lg transition-colors cursor-pointer"
+                  className="px-3 py-1.5 text-xs text-[#5C4638] hover:bg-white rounded-lg transition-colors cursor-pointer min-h-[44px] flex items-center justify-center"
                   onClick={() => setShowCancelInput(false)}
                   type="button"
                 >
                   Back
                 </button>
                 <button
-                  className="px-4 py-2 bg-[#5C4638] text-white rounded-xl text-xs font-bold hover:bg-[#3D291F] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                  className="px-4 py-2 bg-[#5C4638] text-white rounded-xl text-xs font-bold hover:bg-[#3D291F] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 min-h-[44px]"
                   disabled={
                     isSubmitting || cancellationReason.trim().length < 5
                   }
@@ -600,7 +600,7 @@ export function VoucherInspectionDrawer({
 
                   {!showRejectInput && (
                     <button
-                      className="px-4 py-2 bg-white text-[#BA3C2A] border border-[#BA3C2A]/40 rounded-xl text-xs font-bold hover:bg-[#FDF0EE] transition-colors cursor-pointer flex items-center gap-1.5 min-h-[38px]"
+                      className="px-4 py-2 bg-white text-[#BA3C2A] border border-[#BA3C2A]/40 rounded-xl text-xs font-bold hover:bg-[#FDF0EE] transition-colors cursor-pointer flex items-center gap-1.5 min-h-[44px]"
                       disabled={isSubmitting}
                       onClick={() => setShowRejectInput(true)}
                       type="button"
@@ -612,7 +612,7 @@ export function VoucherInspectionDrawer({
 
                   {!isApproved && (
                     <button
-                      className="px-4 py-2 bg-[#174C37] text-white rounded-xl text-xs font-bold hover:bg-[#103D2B] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 min-h-[38px] shadow-xs"
+                      className="px-4 py-2 bg-[#174C37] text-white rounded-xl text-xs font-bold hover:bg-[#103D2B] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 min-h-[44px] shadow-xs"
                       disabled={isSubmitting}
                       onClick={handleApprove}
                       type="button"

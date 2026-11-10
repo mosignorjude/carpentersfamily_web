@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Eye,
   FileText,
+  Paperclip,
   Search,
   X,
 } from "lucide-react";
@@ -474,176 +475,120 @@ export function EventDomainLedger({
             const isApproved = status === "approved";
             const isExpense = domain === "expenses" || txn.type === "expense";
 
-            const isSelfReview =
-              Boolean(currentUserId) &&
-              Boolean(txn.createdBy) &&
-              txn.createdBy === currentUserId;
+            const dotColor = isNotCounted
+              ? "bg-[#BA3C2A]"
+              : isPending
+                ? "bg-[#D6A23A]"
+                : "bg-[#174C37]";
+            const statusTextColor = isNotCounted
+              ? "text-[#BA3C2A]"
+              : isPending
+                ? "text-[#B27D16]"
+                : "text-[#174C37]";
+            const cardBorderBg = isNotCounted
+              ? "bg-[#FFF8F7] border-[#BA3C2A]/30 opacity-90"
+              : "bg-white border-[#E5DDD3]";
+            const amountColor = isNotCounted
+              ? "line-through text-[#7A685D]"
+              : isExpense
+                ? "text-[#BA3C2A]"
+                : "text-[#174C37]";
+            const amountFormatted = `${isNotCounted ? "" : isExpense ? "-" : "+"}${formatNaira(txn.amount)}`;
+            const statusLabel = isApproved
+              ? "Approved"
+              : isPending
+                ? "Pending Review"
+                : isRejected
+                  ? "Reversed"
+                  : "Cancelled";
+            const hasReceipt = Boolean(
+              txn.receipt ||
+                (txn.paymentMethod === "paystack" &&
+                  txn.paymentStatus === "paid"),
+            );
 
             return (
-              <div
-                className={`p-4 space-y-3 ${
-                  isNotCounted ? "bg-[#FAF6F0]/40 opacity-80" : "bg-white"
-                }`}
+              <button
+                className={`w-full text-left p-3 rounded-xl border ${cardBorderBg} hover:border-[#174C37]/50 active:bg-[#FAF6F0] transition-all cursor-pointer shadow-xs space-y-1.5 min-h-[44px] flex flex-col justify-center`}
                 key={`mobile-${txn.id}`}
+                onClick={() => onInspect?.(txn)}
+                type="button"
               >
-                {/* Header: Ref & Date & Amount */}
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-[#FAF6F0] text-[#3D291F]"
-                        title={`Full Transaction ID: ${txn.id}`}
-                      >
-                        #{txn.paymentRef || txn.id.slice(0, 8).toUpperCase()}
-                      </span>
-                      {txn.categoryLabel && (
-                        <span
-                          className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-                            domain === "tickets" &&
-                            txn.categoryLabel === "Online Sales"
-                              ? "text-[#174C37] bg-[#E9F4EE] border border-[#174C37]/20"
-                              : "text-[#6B5D53] bg-[#FAF6F0]"
-                          }`}
-                        >
-                          {txn.categoryLabel}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[11px] text-[#6B5D53] font-mono mt-1 block">
-                      {txn.date}
-                    </span>
-                  </div>
-
-                  <div className="text-right">
+                {/* Line 1: Status Dot + Bold Action/Title First + Counterparty + Monospace Amount */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
                     <span
-                      className={`text-base font-bold font-mono tabular-nums ${
+                      className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`}
+                    />
+                    <strong
+                      className={`text-xs font-bold truncate block ${
                         isNotCounted
-                          ? "line-through text-[#6B5D53]"
-                          : isExpense
-                            ? "text-[#BA3C2A]"
-                            : "text-[#174C37]"
+                          ? "line-through text-[#7A685D]"
+                          : "text-[#3D291F]"
                       }`}
                     >
-                      {isNotCounted ? "" : isExpense ? "-" : "+"}
-                      {formatNaira(txn.amount)}
-                    </span>
-                    {isRejected && (
-                      <span className="block text-[10px] font-bold uppercase text-[#BA3C2A]">
-                        Reversed
-                      </span>
-                    )}
-                    {isCancelled && (
-                      <span className="block text-[10px] font-bold uppercase text-[#5C4638]">
-                        Cancelled
+                      {txn.description || txn.categoryLabel || "Transaction"}
+                    </strong>
+                    {txn.payerPayee && (
+                      <span className="text-[11px] text-[#7A685D] truncate hidden sm:inline">
+                        · {txn.payerPayee}
                       </span>
                     )}
                   </div>
-                </div>
-
-                {/* Description & Counterparty */}
-                <div>
-                  <h4 className="font-semibold text-sm text-[#3D291F]">
-                    {txn.description}
-                  </h4>
-                  <p className="text-xs text-[#6B5D53] mt-0.5">
-                    Party:{" "}
-                    <span className="font-medium text-[#3D291F]">
-                      {txn.payerPayee}
-                    </span>
-                    {txn.paymentMethod ? ` · ${txn.paymentMethod}` : ""}
-                  </p>
-                  {isRejected && txn.rejectionReason && (
-                    <div className="mt-1.5 text-xs text-[#BA3C2A] bg-[#FDF0EE] p-2 rounded-lg border border-[#F5C7C0]">
-                      <strong>Reversed:</strong> {txn.rejectionReason}
-                    </div>
-                  )}
-                  {isCancelled && txn.rejectionReason && (
-                    <div className="mt-1.5 text-xs text-[#5C4638] bg-[#FAF6F0] p-2 rounded-lg border border-[#E5DDD3]">
-                      <strong>Cancelled:</strong> {txn.rejectionReason}
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer: Voucher, Status, Actions */}
-                <div className="flex items-center justify-between pt-2.5 border-t border-[#F2ECE4] gap-2">
-                  <div className="flex items-center gap-2">
-                    {/* Status Badge */}
-                    {isPending && (
-                      <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#FFF4E5] text-[#B27D16] border border-[#F8D8A7]">
-                        Pending Review
-                      </span>
-                    )}
-                    {isApproved && (
-                      <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#E9F4EE] text-[#174C37] border border-[#C4E2D0]">
-                        Approved
-                      </span>
-                    )}
-                    {isRejected && (
-                      <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#FDF0EE] text-[#BA3C2A] border border-[#F5C7C0]">
-                        Rejected
-                      </span>
-                    )}
-                    {isCancelled && (
-                      <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3]">
-                        Cancelled
-                      </span>
-                    )}
-
-                    {/* Voucher Evidence */}
-                    <ReceiptCell
-                      isLegacy={txn.isLegacy}
-                      paymentMethod={txn.paymentMethod}
-                      paymentStatus={txn.paymentStatus}
-                      receipt={txn.receipt ?? null}
-                    />
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="px-3 py-2 text-xs font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-xl transition-colors flex items-center gap-1.5 min-h-[44px] cursor-pointer"
-                      onClick={() => onInspect?.(txn)}
-                      type="button"
+                  <div className="text-right shrink-0">
+                    <span
+                      className={`font-mono font-bold text-xs tabular-nums ${amountColor}`}
                     >
-                      <Eye className="w-4 h-4" />
-                      <span>Inspect</span>
-                    </button>
-
-                    {isOfficer &&
-                      isPending &&
-                      (isExecutive && isSelfReview ? (
-                        <span className="text-[10px] font-semibold text-[#B27D16] bg-[#FFF4E5] border border-[#F8D8A7] px-2.5 py-1.5 rounded-lg text-center">
-                          Needs Another Officer's Review
-                        </span>
-                      ) : (
-                        <>
-                          {onApprove && (
-                            <button
-                              aria-label="Quick Approve Record"
-                              className="p-2.5 text-[#174C37] bg-[#E9F4EE] hover:bg-[#D4ECE0] rounded-xl transition-colors border border-[#174C37]/30 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
-                              onClick={() => onApprove(txn)}
-                              title="Quick Approve Record"
-                              type="button"
-                            >
-                              <Check className="w-4 h-4" />
-                            </button>
-                          )}
-                          {onReject && (
-                            <button
-                              aria-label="Reject and Reverse Transaction"
-                              className="p-2.5 text-[#BA3C2A] bg-[#FDF0EE] hover:bg-[#F8D7D2] rounded-xl transition-colors border border-[#BA3C2A]/30 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
-                              onClick={() => onReject(txn)}
-                              title="Reject and Reverse Transaction"
-                              type="button"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          )}
-                        </>
-                      ))}
+                      {amountFormatted}
+                    </span>
                   </div>
                 </div>
-              </div>
+
+                {/* Line 2: Category, Mobile Party Fallback, Date, Paperclip Receipt, Status */}
+                <div className="flex items-center justify-between text-[10px] text-[#7A685D] border-t border-[#E5DDD3]/40 pt-1 gap-2">
+                  <div className="flex items-center gap-1.5 truncate pr-1">
+                    <span className="font-medium text-[#5C4638] truncate">
+                      {txn.categoryLabel ||
+                        (domain === "expenses"
+                          ? "Expense"
+                          : domain === "tickets"
+                            ? "Ticket Sale"
+                            : "Revenue")}
+                    </span>
+                    {txn.payerPayee && (
+                      <>
+                        <span className="sm:hidden">·</span>
+                        <span className="truncate sm:hidden">
+                          {txn.payerPayee}
+                        </span>
+                      </>
+                    )}
+                    <span>·</span>
+                    <span className="font-mono shrink-0">{txn.date}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {hasReceipt && (
+                      <span
+                        className="text-[#174C37] inline-flex items-center gap-0.5 font-medium"
+                        title="Receipt / payment evidence attached"
+                      >
+                        <Paperclip className="w-3 h-3" />
+                        <span className="hidden sm:inline">Receipt</span>
+                      </span>
+                    )}
+                    <span className={`font-bold ${statusTextColor}`}>
+                      {statusLabel}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Reason note if reversed or cancelled */}
+                {isNotCounted && txn.rejectionReason && (
+                  <div className="text-[10px] text-[#BA3C2A] bg-[#FDF0EE] px-2 py-1 rounded-md border border-[#F5C7C0] truncate">
+                    <strong>Reason:</strong> {txn.rejectionReason}
+                  </div>
+                )}
+              </button>
             );
           })
         )}
