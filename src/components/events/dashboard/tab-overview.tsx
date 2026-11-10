@@ -86,17 +86,9 @@ export function TabOverview({
   const overBudgetDeficit = Math.max(0, totalExpenses - budgetCeiling);
 
   const pendingTransactions = transactions.filter(
-    (t) => t.status === "pending" || t.status === "unverified",
+    (t) =>
+      t.verificationStatus === "recorded" || (t.status as string) === "pending",
   );
-
-  const expensePercent =
-    budgetCeiling > 0
-      ? Math.min(100, Math.max(0, (totalExpenses / safeBudget) * 100))
-      : 0;
-  const committedPercent =
-    budgetCeiling > 0
-      ? Math.min(100, Math.max(0, (committedExpenses / safeBudget) * 100))
-      : 0;
 
   const latestCostCenters = [...costCenters]
     .sort((a, b) => {
@@ -127,7 +119,8 @@ export function TabOverview({
                 <strong className="font-mono font-bold">
                   {formatNaira(overBudgetDeficit)}
                 </strong>
-                . Submit an executive ceiling revision or reallocate departmental funds.
+                . Submit an executive ceiling revision or reallocate
+                departmental funds.
               </p>
             </div>
           </div>
@@ -661,7 +654,7 @@ export function TabOverview({
                       <span className="font-semibold text-[#3D291F]">
                         {txn.description}
                       </span>
-                      {txn.receiptUrl && (
+                      {Boolean(txn.receipt) && (
                         <Paperclip className="w-3 h-3 text-[#7A685D]" />
                       )}
                     </div>

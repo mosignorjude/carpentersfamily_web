@@ -6,16 +6,13 @@ import {
   Calendar,
   ChevronDown,
   Clock,
-  DollarSign,
   Download,
   FileText,
   Gauge,
   Lock,
   MapPin,
   Plus,
-  Shield,
   Ticket,
-  Users,
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
@@ -45,6 +42,7 @@ import type {
   MobileTabItem,
   TransactionType,
 } from "./dashboard-types";
+import { EventDomainLedger } from "./event-domain-ledger";
 import { DownloadReportModal } from "./modals/download-report-modal";
 import { EventBudgetCeilingModal } from "./modals/event-budget-ceiling-modal";
 import { EventCategoryManagementModal } from "./modals/event-category-management-modal";
@@ -55,8 +53,6 @@ import {
 } from "./modals/record-transaction-modal";
 import { TransactionDetailModal } from "./modals/transaction-detail-modal";
 import { VoidTransactionModal } from "./modals/void-transaction-modal";
-import { VoucherInspectionDrawer } from "./voucher-inspection-drawer";
-import { EventDomainLedger } from "./event-domain-ledger";
 import { TabAuditLog } from "./tab-audit-log";
 import { TabBudgetAllocations } from "./tab-budget-allocations";
 import { TabExpenses } from "./tab-expenses";
@@ -65,6 +61,7 @@ import { TabReports } from "./tab-reports";
 import { TabRevenue } from "./tab-revenue";
 import { TabTeamRoles } from "./tab-team-roles";
 import { TabTickets } from "./tab-tickets";
+import { VoucherInspectionDrawer } from "./voucher-inspection-drawer";
 
 function mapDbPaymentMethod(label: string): string {
   const normalized = label.toLowerCase();
@@ -284,11 +281,7 @@ export function EventDashboardView({
   const selectTab = (tabId: DashboardTab) => {
     let target = tabId;
     if (tabId === "expenses" || tabId === "revenue") target = "budget";
-    if (
-      tabId === "reports" ||
-      tabId === "team_roles" ||
-      tabId === "audit_log"
-    )
+    if (tabId === "reports" || tabId === "team_roles" || tabId === "audit_log")
       target = "statement";
     setActiveTab(target);
     const searchParams = new URLSearchParams(window.location.search);
@@ -599,7 +592,9 @@ export function EventDashboardView({
                 </span>
                 <div className="flex items-center gap-1.5">
                   <MapPin className="w-4 h-4 text-[#174C37] shrink-0" />
-                  <span className="truncate max-w-[200px] sm:max-w-xs">{event.location}</span>
+                  <span className="truncate max-w-[200px] sm:max-w-xs">
+                    {event.location}
+                  </span>
                 </div>
                 {/* On-demand Details Disclosure Button */}
                 <button
@@ -607,7 +602,7 @@ export function EventDashboardView({
                   onClick={() => setIsHeaderExpanded((prev) => !prev)}
                   aria-expanded={isHeaderExpanded}
                   aria-controls="event-header-details"
-                  className="inline-flex items-center gap-1 text-xs font-bold text-[#174C37] hover:text-[#0C3325] px-2 py-1 rounded-lg hover:bg-[#FAF6F0] transition-colors ml-auto sm:ml-2 min-h-[36px] cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-[#174C37] hover:text-[#0C3325] px-2 py-1 rounded-lg hover:bg-[#FAF6F0] transition-colors ml-auto sm:ml-2 min-h-[44px] cursor-pointer"
                 >
                   <span>{isHeaderExpanded ? "Hide info" : "Details"}</span>
                   <ChevronDown
@@ -674,21 +669,30 @@ export function EventDashboardView({
             >
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-[#FAF6F0] p-3 rounded-xl border border-[#E5DDD3]">
                 <div>
-                  <span className="text-[#6B5D53] block text-[11px]">Financial Reference</span>
+                  <span className="text-[#6B5D53] block text-[11px]">
+                    Financial Reference
+                  </span>
                   <span className="font-mono font-bold text-[#3D291F]">
                     EVT-{event.id.slice(0, 8).toUpperCase()}-FIN
                   </span>
                 </div>
                 {event.durationLabel && (
                   <div>
-                    <span className="text-[#6B5D53] block text-[11px]">Scheduled Duration</span>
-                    <span className="font-semibold text-[#3D291F]">{event.durationLabel}</span>
+                    <span className="text-[#6B5D53] block text-[11px]">
+                      Scheduled Duration
+                    </span>
+                    <span className="font-semibold text-[#3D291F]">
+                      {event.durationLabel}
+                    </span>
                   </div>
                 )}
                 <div>
-                  <span className="text-[#6B5D53] block text-[11px]">Meeting Hub Context</span>
+                  <span className="text-[#6B5D53] block text-[11px]">
+                    Meeting Hub Context
+                  </span>
                   <span className="text-[#3D291F]">
-                    Minutes and attendance roll calls are maintained in the separate Meeting Hub.
+                    Minutes and attendance roll calls are maintained in the
+                    separate Meeting Hub.
                   </span>
                 </div>
               </div>
@@ -879,43 +883,48 @@ export function EventDashboardView({
 
           {/* Desktop 5-Pill Tab Bar (hidden sm:block) */}
           <div className="hidden sm:block">
-            <div className="flex w-max items-center gap-2 p-1.5 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                const isActive =
-                  activeTab === tab.id ||
-                  (tab.id === "budget" &&
-                    (activeTab === "expenses" || activeTab === "revenue")) ||
-                  (tab.id === "statement" &&
-                    (activeTab === "reports" ||
-                      activeTab === "team_roles" ||
-                      activeTab === "audit_log"));
+            <TableScroll label="Dashboard sections">
+              <div className="flex w-max items-center gap-2 p-1.5 bg-[#FAF6F0] rounded-xl border border-[#E5DDD3]">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive =
+                    activeTab === tab.id ||
+                    (tab.id === "budget" &&
+                      (activeTab === "expenses" || activeTab === "revenue")) ||
+                    (tab.id === "statement" &&
+                      (activeTab === "reports" ||
+                        activeTab === "team_roles" ||
+                        activeTab === "audit_log"));
 
-                return (
-                  <button
-                    aria-current={isActive ? "page" : undefined}
-                    aria-selected={isActive}
-                    className={`px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex items-center gap-2 min-h-[44px] cursor-pointer border-0 ${
-                      isActive
-                        ? "bg-[#174C37] text-white shadow-xs font-semibold"
-                        : "bg-transparent text-[#5C4638] hover:text-[#174C37] hover:bg-white/80"
-                    }`}
-                    id={`tab-btn-${tab.id}-desktop`}
-                    key={tab.id}
-                    onClick={() => selectTab(tab.id)}
-                    role="tab"
-                    type="button"
-                  >
-                    <Icon
-                      className={`w-4 h-4 ${
-                        isActive ? "text-[#D6A23A]" : "text-[#7A685D]"
+                  return (
+                    <button
+                      aria-current={isActive ? "page" : undefined}
+                      aria-selected={isActive}
+                      className={`px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex items-center gap-2 min-h-[48px] cursor-pointer border-0 ${
+                        isActive
+                          ? "bg-[#174C37] text-white shadow-xs font-semibold"
+                          : "bg-transparent text-[#5C4638] hover:text-[#174C37] hover:bg-white/80"
                       }`}
-                    />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+                      id={`tab-btn-${tab.id}-desktop`}
+                      key={tab.id}
+                      onClick={() => selectTab(tab.id)}
+                      role="tab"
+                      type="button"
+                    >
+                      <Icon
+                        className={`w-4 h-4 ${
+                          isActive ? "text-[#D6A23A]" : "text-[#7A685D]"
+                        }`}
+                      />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </TableScroll>
+            <p className="mt-1.5 text-xs text-[#7A685D] lg:hidden">
+              Swipe right for more sections
+            </p>
           </div>
 
           {/* Subtle horizontal divider separating the tab bar from the active tab content on desktop */}
@@ -1062,7 +1071,8 @@ export function EventDashboardView({
                     Master Event Financial Ledger
                   </h3>
                   <p className="text-xs text-[#7A685D]">
-                    Real-time transaction register across all ticket sales, revenue inflows, and expense disbursements.
+                    Real-time transaction register across all ticket sales,
+                    revenue inflows, and expense disbursements.
                   </p>
                 </div>
               </div>
@@ -1089,7 +1099,9 @@ export function EventDashboardView({
               budgetCeiling={event.budgetCeiling}
               costCenters={costCenters}
               event={event}
-              onOpenDownloadReportModal={() => setIsDownloadReportModalOpen(true)}
+              onOpenDownloadReportModal={() =>
+                setIsDownloadReportModalOpen(true)
+              }
               revenueStreams={revenueStreams}
               teamMembers={teamMembers}
               totalExpenses={totalExpenses}

@@ -38,7 +38,6 @@ export function TabBudgetAllocations({
     (sum, c) => sum + (c.allocated || 0),
     0,
   );
-  const unallocatedBuffer = Math.max(0, budgetCeiling - totalAllocated);
 
   // Cash flow summary
   const cashTimeline = [

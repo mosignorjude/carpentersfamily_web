@@ -781,7 +781,11 @@ export default async function EventDashboardPage({
   let initialTab: DashboardTab = "overview";
   if (rawTab === "tickets") {
     initialTab = "tickets";
-  } else if (rawTab === "budget" || rawTab === "expenses" || rawTab === "revenue") {
+  } else if (
+    rawTab === "budget" ||
+    rawTab === "expenses" ||
+    rawTab === "revenue"
+  ) {
     initialTab = "budget";
   } else if (rawTab === "ledger") {
     initialTab = "ledger";

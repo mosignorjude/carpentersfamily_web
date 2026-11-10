@@ -14,7 +14,10 @@ import { useState } from "react";
 import { ReceiptCell } from "@/components/finances/receipt-cell";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { formatNaira } from "@/lib/format";
-import type { DashboardTransaction } from "./dashboard-types";
+import type {
+  DashboardTransaction,
+  EventFinanceCategoryItem,
+} from "./dashboard-types";
 
 interface EventDomainLedgerProps {
   title?: string;
@@ -23,7 +26,7 @@ interface EventDomainLedgerProps {
   currentUserId?: string;
   userRole?: string;
   eventId?: string;
-  categories?: any[];
+  categories?: EventFinanceCategoryItem[];
   canRecord?: boolean;
   onRecordTransaction?: () => void;
   onInspect?: (transaction: DashboardTransaction) => void;
@@ -78,7 +81,8 @@ export function EventDomainLedger({
       if (typeFilter === "tickets") {
         if (txn.category !== "ticket_sales") return false;
       } else if (typeFilter === "revenue") {
-        if (txn.type !== "revenue" || txn.category === "ticket_sales") return false;
+        if (txn.type !== "revenue" || txn.category === "ticket_sales")
+          return false;
       } else if (typeFilter === "expenses") {
         if (txn.type !== "expense") return false;
       }
@@ -134,9 +138,7 @@ export function EventDomainLedger({
   const revenueCount = transactions.filter(
     (t) => t.type === "revenue" && t.category !== "ticket_sales",
   ).length;
-  const expensesCount = transactions.filter(
-    (t) => t.type === "expense",
-  ).length;
+  const expensesCount = transactions.filter((t) => t.type === "expense").length;
 
   const filteredNet = filtered.reduce((acc, txn) => {
     const s = resolveStatus(txn);
@@ -305,7 +307,9 @@ export function EventDomainLedger({
           </div>
 
           <div className="text-right shrink-0">
-            <span className="text-[11px] text-[#7A685D] block">Filtered Net</span>
+            <span className="text-[11px] text-[#7A685D] block">
+              Filtered Net
+            </span>
             <span
               className={`font-mono font-bold text-xs ${
                 filteredNet >= 0 ? "text-[#174C37]" : "text-[#BA3C2A]"
@@ -561,7 +565,7 @@ export function EventDomainLedger({
                   <div className="flex items-center gap-2">
                     <button
                       className="px-3 py-2 text-xs font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-xl transition-colors flex items-center gap-1.5 min-h-[44px] cursor-pointer"
-                      onClick={() => onInspect(txn)}
+                      onClick={() => onInspect?.(txn)}
                       type="button"
                     >
                       <Eye className="w-4 h-4" />
@@ -789,7 +793,7 @@ export function EventDomainLedger({
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             className="px-2.5 py-1 text-[11px] font-semibold text-[#174C37] bg-white border border-[#174C37]/30 hover:bg-[#FAF6F0] rounded-lg transition-colors flex items-center gap-1 min-h-[30px] cursor-pointer"
-                            onClick={() => onInspect(txn)}
+                            onClick={() => onInspect?.(txn)}
                             type="button"
                           >
                             <Eye className="w-3.5 h-3.5" />
