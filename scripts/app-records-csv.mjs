@@ -47,6 +47,7 @@ export const APP_RECORDS_TABLES = Object.freeze([
   ["public", "membership_requests"],
   ["public", "partnership_enquiries"],
   ["public", "member_invites"],
+  ["public", "ai_report_narratives"],
   ["private", "administration_guard"],
   ["private", "poll_voter_eligibility"],
   ["private", "poll_ballots"],

@@ -11,6 +11,11 @@
     "test:security-regression": "node --test",
     "test:receipts": "node --test tests/finance-receipt-validation.test.mjs",
     "test:reports": "node --test tests/report-export-security.test.mjs",
+    "test:ai-facts": "node --test tests/ai-report-facts.test.mjs",
+    "test:ai-grounding": "node --test tests/ai-grounding.test.mjs",
+    "test:ai-provider": "node --test tests/ai-provider.test.mjs",
+    "test:ai-request-guard": "node --test tests/ai-request-guard.test.mjs",
+    "test:pdf-branded": "node --test tests/pdf-branded.test.mjs",
     "test:navigation": "node --test tests/app-navigation.test.mjs",
     "test:dashboard": "node --test tests/home-dashboard.test.mjs",
     "test:events-ui": "node --test tests/event-card-access.test.mjs",
@@ -25,7 +30,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1156.0",
+    "@google/genai": "^3.1.0",
     "@react-email/components": "^1.0.12",
+    "@react-pdf/renderer": "^4.9.0",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.2",
     "@vercel/analytics": "^2.0.1",
@@ -35,7 +42,8 @@
     "qrcode": "1.5.4",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "resend": "^6.34.1"
+    "resend": "^6.34.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.5",
