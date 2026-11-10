@@ -18,6 +18,11 @@ interface TabBudgetAllocationsProps {
   canManageCategories?: boolean;
   onManageCategories?: () => void;
   onOpenBudgetCeilingModal?: () => void;
+  onJumpToLedger?: (
+    type?: "all" | "tickets" | "revenue" | "expenses",
+    category?: string,
+    status?: "all" | "recorded" | "approved" | "rejected" | "cancelled",
+  ) => void;
 }
 
 export function TabBudgetAllocations({
@@ -27,6 +32,7 @@ export function TabBudgetAllocations({
   canManageCategories,
   onManageCategories,
   onOpenBudgetCeilingModal,
+  onJumpToLedger,
 }: TabBudgetAllocationsProps) {
   const [activeChartTab, setActiveChartTab] = useState<
     "allocation" | "revenue_mix" | "cash_velocity"
@@ -271,7 +277,20 @@ export function TabBudgetAllocations({
                             className="hover:bg-[#FAF6F0]/50 transition-colors"
                           >
                             <td className="py-3 px-3.5 font-bold text-[#3D291F]">
-                              {center.name}
+                              {onJumpToLedger ? (
+                                <button
+                                  className="text-left font-bold text-[#174C37] hover:underline cursor-pointer min-h-[44px] flex items-center"
+                                  onClick={() =>
+                                    onJumpToLedger("expenses", center.name)
+                                  }
+                                  title={`View ledger items for ${center.name}`}
+                                  type="button"
+                                >
+                                  {center.name}
+                                </button>
+                              ) : (
+                                center.name
+                              )}
                             </td>
                             <td className="py-3 px-3.5 whitespace-nowrap font-mono font-semibold text-[#3D291F]">
                               {formatNaira(center.allocated)}{" "}
@@ -370,12 +389,21 @@ export function TabBudgetAllocations({
                       )}`}
                     />
                   </div>
-                  <div className="flex justify-between text-[11px] text-[#7A685D]">
+                  <div className="flex justify-between items-center text-[11px] text-[#7A685D]">
                     <span>Target: {formatNaira(stream.target)}</span>
                     <span>
                       {stream.actual >= stream.target ? "Achieved" : "Pending"}
                     </span>
                   </div>
+                  {onJumpToLedger && (
+                    <button
+                      className="text-[11px] font-bold text-[#174C37] hover:underline cursor-pointer min-h-[44px] flex items-center pt-1"
+                      onClick={() => onJumpToLedger("revenue", stream.name)}
+                      type="button"
+                    >
+                      View Revenue Entries &rarr;
+                    </button>
+                  )}
                 </div>
               );
             })}

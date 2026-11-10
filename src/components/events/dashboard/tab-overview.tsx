@@ -37,6 +37,12 @@ interface TabOverviewProps {
   canRecord?: boolean;
   canManageCategories?: boolean;
   onNavigateTab: (tabId: string) => void;
+  onJumpToLedger?: (
+    type?: "all" | "tickets" | "revenue" | "expenses",
+    category?: string,
+    status?: "all" | "recorded" | "approved" | "rejected" | "cancelled",
+  ) => void;
+  onInspectTransaction?: (transaction: DashboardTransaction) => void;
   onOpenRecordModal: (type: "ticket" | "revenue" | "expense") => void;
   onOpenBudgetCeilingModal?: () => void;
 }
@@ -55,6 +61,8 @@ export function TabOverview({
   canRecord = false,
   canManageCategories = false,
   onNavigateTab,
+  onJumpToLedger,
+  onInspectTransaction,
   onOpenRecordModal,
   onOpenBudgetCeilingModal,
 }: TabOverviewProps) {
@@ -149,11 +157,15 @@ export function TabOverview({
             </span>
           </div>
           <button
-            className="text-xs font-bold text-[#174C37] hover:underline shrink-0 cursor-pointer"
-            onClick={() => onNavigateTab("ledger")}
+            className="text-xs font-bold text-[#174C37] hover:underline shrink-0 cursor-pointer min-h-[44px] flex items-center"
+            onClick={() =>
+              onJumpToLedger
+                ? onJumpToLedger("all", "", "recorded")
+                : onNavigateTab("ledger")
+            }
             type="button"
           >
-            Review Ledger &rarr;
+            Review Pending ({pendingTransactions.length}) &rarr;
           </button>
         </div>
       )}
@@ -442,9 +454,15 @@ export function TabOverview({
                 </p>
               ) : (
                 ticketTiers.slice(0, 3).map((tier) => (
-                  <div
-                    className="flex items-center justify-between text-xs py-1 border-b border-[#FAF6F0]"
+                  <button
+                    className="w-full flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-[#FAF6F0] border-b border-[#FAF6F0] transition-colors cursor-pointer text-left min-h-[44px]"
                     key={tier.id}
+                    onClick={() =>
+                      onJumpToLedger
+                        ? onJumpToLedger("tickets", tier.name, "all")
+                        : onNavigateTab("tickets")
+                    }
+                    type="button"
                   >
                     <span className="text-[#5C4638] font-medium">
                       {tier.name}
@@ -452,7 +470,7 @@ export function TabOverview({
                     <span className="font-mono font-semibold text-[#174C37]">
                       {tier.sold} / {tier.capacity}
                     </span>
-                  </div>
+                  </button>
                 ))
               )}
             </div>
@@ -460,7 +478,7 @@ export function TabOverview({
 
           {canRecord && (
             <button
-              className="w-full py-2 bg-[#174C37] text-white rounded-xl text-xs font-semibold hover:bg-[#103D2B] transition-colors flex items-center justify-center gap-1.5 min-h-[38px] shadow-xs cursor-pointer"
+              className="w-full py-2 bg-[#174C37] text-white rounded-xl text-xs font-semibold hover:bg-[#103D2B] transition-colors flex items-center justify-center gap-1.5 min-h-[44px] shadow-xs cursor-pointer"
               onClick={() => onOpenRecordModal("ticket")}
               type="button"
             >
@@ -505,9 +523,15 @@ export function TabOverview({
                 </p>
               ) : (
                 latestCostCenters.map((center) => (
-                  <div
-                    className="flex items-center justify-between text-xs py-1 border-b border-[#FAF6F0]"
+                  <button
+                    className="w-full flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-[#FAF6F0] border-b border-[#FAF6F0] transition-colors cursor-pointer text-left min-h-[44px]"
                     key={center.id}
+                    onClick={() =>
+                      onJumpToLedger
+                        ? onJumpToLedger("expenses", center.name, "all")
+                        : onNavigateTab("budget")
+                    }
+                    type="button"
                   >
                     <span className="text-[#5C4638] font-medium truncate max-w-[140px]">
                       {center.name}
@@ -528,7 +552,7 @@ export function TabOverview({
                         )
                       </span>
                     </span>
-                  </div>
+                  </button>
                 ))
               )}
             </div>
@@ -536,7 +560,7 @@ export function TabOverview({
 
           {canRecord && (
             <button
-              className="w-full py-2 bg-white border border-[#E5DDD3] text-[#3D291F] rounded-xl text-xs font-semibold hover:bg-[#FAF6F0] transition-colors flex items-center justify-center gap-1.5 min-h-[38px] cursor-pointer"
+              className="w-full py-2 bg-white border border-[#E5DDD3] text-[#3D291F] rounded-xl text-xs font-semibold hover:bg-[#FAF6F0] transition-colors flex items-center justify-center gap-1.5 min-h-[44px] cursor-pointer"
               onClick={() => onOpenRecordModal("expense")}
               type="button"
             >
@@ -619,8 +643,12 @@ export function TabOverview({
           </div>
 
           <button
-            className="text-xs text-[#174C37] bg-transparent border-0 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
-            onClick={() => onNavigateTab("ledger")}
+            className="text-xs text-[#174C37] bg-transparent border-0 font-semibold hover:underline flex items-center gap-1 cursor-pointer min-h-[44px]"
+            onClick={() =>
+              onJumpToLedger
+                ? onJumpToLedger("all", "", "all")
+                : onNavigateTab("ledger")
+            }
             type="button"
           >
             <span>Master Ledger ({transactions.length})</span>
@@ -635,13 +663,21 @@ export function TabOverview({
         ) : (
           <div className="divide-y divide-[#E5DDD3]">
             {transactions.slice(0, 5).map((txn) => (
-              <div
-                className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
+              <button
+                className="w-full py-3 px-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-left hover:bg-[#FAF6F0] rounded-xl transition-colors cursor-pointer min-h-[44px]"
                 key={txn.id}
+                onClick={() =>
+                  onInspectTransaction
+                    ? onInspectTransaction(txn)
+                    : onJumpToLedger
+                      ? onJumpToLedger("all", txn.id)
+                      : onNavigateTab("ledger")
+                }
+                type="button"
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs ${
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
                       txn.type === "revenue"
                         ? "bg-[#174C37]/10 text-[#174C37]"
                         : "bg-[#BA3C2A]/10 text-[#BA3C2A]"
@@ -664,7 +700,7 @@ export function TabOverview({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 self-end sm:self-center">
+                <div className="flex items-center gap-4 self-end sm:self-center shrink-0">
                   <span className="text-[#7A685D] text-[11px] font-mono">
                     {txn.date}
                   </span>
@@ -681,7 +717,7 @@ export function TabOverview({
                     {formatNaira(txn.amount)}
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}

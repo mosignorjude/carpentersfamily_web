@@ -2,18 +2,19 @@
 
 import {
   ArrowLeft,
-  BarChart3,
   Calendar,
   ChevronDown,
+  ClipboardCheck,
   Clock,
   Download,
   FileText,
-  Gauge,
+  Layers,
   Lock,
   MapPin,
+  PieChart,
   Plus,
+  Receipt,
   Ticket,
-  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -181,6 +182,29 @@ export function EventDashboardView({
   // Voucher inspection drawer state
   const [selectedTxnForVoucher, setSelectedTxnForVoucher] =
     useState<DashboardTransaction | null>(null);
+
+  // Deep-linking to ledger filter state
+  const [ledgerInitialType, setLedgerInitialType] = useState<
+    "all" | "tickets" | "revenue" | "expenses"
+  >("all");
+  const [ledgerInitialCategory, setLedgerInitialCategory] =
+    useState<string>("");
+  const [ledgerInitialStatus, setLedgerInitialStatus] = useState<
+    "all" | "recorded" | "approved" | "rejected" | "cancelled"
+  >("all");
+
+  const jumpToLedger = (
+    type: "all" | "tickets" | "revenue" | "expenses" = "all",
+    category = "",
+    status: "all" | "recorded" | "approved" | "rejected" | "cancelled" = "all",
+  ) => {
+    setLedgerInitialType(type);
+    setLedgerInitialCategory(
+      category === "All" || category === "all" ? "" : category,
+    );
+    setLedgerInitialStatus(status);
+    selectTab("ledger");
+  };
 
   useEffect(() => {
     function handleDismiss(event: Event) {
@@ -363,6 +387,14 @@ export function EventDashboardView({
     0,
   );
 
+  const pendingTransactionsCount = transactions.filter(
+    (t) =>
+      t.verificationStatus === "recorded" || (t.status as string) === "pending",
+  ).length;
+
+  const isOverBudget =
+    event.budgetCeiling > 0 && totalExpenses > event.budgetCeiling;
+
   // Handlers
   const handleSaveTransaction = (txnData: RecordedTransactionSubmission) => {
     // Persist in Supabase via server actions; server revalidates on success
@@ -483,31 +515,35 @@ export function EventDashboardView({
       id: "overview",
       label: "Overview",
       subtitle: "Financial summary, budget ceiling & variances",
-      icon: Gauge,
+      icon: PieChart,
     },
     {
       id: "tickets",
       label: "Tickets",
       subtitle: "Tier inventory, sales tallies & pass holders",
       icon: Ticket,
+      badge: totalTicketsSold > 0 ? `${totalTicketsSold}` : undefined,
     },
     {
       id: "budget",
       label: "Budget & Revenue",
       subtitle: "Departmental allocations, revenue streams & cash flow",
-      icon: BarChart3,
+      icon: Layers,
+      alert: isOverBudget,
     },
     {
       id: "ledger",
       label: "Ledger",
       subtitle: "Master transaction journal across all domains",
-      icon: Wallet,
+      icon: Receipt,
+      badge: transactions.length > 0 ? `${transactions.length}` : undefined,
+      pendingBadge: pendingTransactionsCount,
     },
     {
       id: "statement",
       label: "Statement & Team",
       subtitle: "Official P&L statement, export & committee desks",
-      icon: FileText,
+      icon: ClipboardCheck,
     },
   ];
 
@@ -781,7 +817,7 @@ export function EventDashboardView({
                     : "bg-white text-[#231F1D] font-medium border border-[#E5DDD3] hover:bg-stone-50"
                 }`}
               >
-                <Gauge className="w-4 h-4 text-[#174C37]" />
+                <PieChart className="w-4 h-4 text-[#174C37]" />
                 <span className="text-[13px] whitespace-nowrap">Overview</span>
               </button>
 
@@ -801,6 +837,17 @@ export function EventDashboardView({
               >
                 <Ticket className="w-4 h-4 text-[#174C37]" />
                 <span className="text-[13px] whitespace-nowrap">Tickets</span>
+                {totalTicketsSold > 0 && (
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none ${
+                      activeTab === "tickets"
+                        ? "bg-white/40 text-[#174C37]"
+                        : "bg-[#E5DDD3] text-[#3D291F]"
+                    }`}
+                  >
+                    {totalTicketsSold}
+                  </span>
+                )}
               </button>
 
               {/* Tab 3: Budget & Revenue */}
@@ -823,10 +870,13 @@ export function EventDashboardView({
                     : "bg-white text-[#231F1D] font-medium border border-[#E5DDD3] hover:bg-stone-50"
                 }`}
               >
-                <BarChart3 className="w-4 h-4 text-[#174C37]" />
+                <Layers className="w-4 h-4 text-[#174C37]" />
                 <span className="text-[13px] whitespace-nowrap">
                   Budget & Streams
                 </span>
+                {isOverBudget && (
+                  <span className="w-2 h-2 rounded-full bg-[#BA3C2A] animate-ping" />
+                )}
               </button>
 
               {/* Tab 4: Ledger */}
@@ -843,8 +893,25 @@ export function EventDashboardView({
                     : "bg-white text-[#231F1D] font-medium border border-[#E5DDD3] hover:bg-stone-50"
                 }`}
               >
-                <Wallet className="w-4 h-4 text-[#174C37]" />
+                <Receipt className="w-4 h-4 text-[#174C37]" />
                 <span className="text-[13px] whitespace-nowrap">Ledger</span>
+                {transactions.length > 0 && (
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none ${
+                      activeTab === "ledger"
+                        ? "bg-white/40 text-[#174C37]"
+                        : "bg-[#E5DDD3] text-[#3D291F]"
+                    }`}
+                  >
+                    {transactions.length}
+                  </span>
+                )}
+                {pendingTransactionsCount > 0 && (
+                  <span
+                    className="w-2 h-2 rounded-full bg-[#D6A23A]"
+                    title={`${pendingTransactionsCount} pending review`}
+                  />
+                )}
               </button>
 
               {/* Tab 5: Statement & Team */}
@@ -869,7 +936,7 @@ export function EventDashboardView({
                     : "bg-white text-[#231F1D] font-medium border border-[#E5DDD3] hover:bg-stone-50"
                 }`}
               >
-                <FileText className="w-4 h-4 text-[#174C37]" />
+                <ClipboardCheck className="w-4 h-4 text-[#174C37]" />
                 <span className="text-[13px] whitespace-nowrap">
                   Statement & Team
                 </span>
@@ -917,6 +984,26 @@ export function EventDashboardView({
                         }`}
                       />
                       <span>{tab.label}</span>
+                      {tab.badge && (
+                        <span
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none ${
+                            isActive
+                              ? "bg-white/20 text-white"
+                              : "bg-[#E5DDD3] text-[#3D291F]"
+                          }`}
+                        >
+                          {tab.badge}
+                        </span>
+                      )}
+                      {tab.pendingBadge && tab.pendingBadge > 0 ? (
+                        <span
+                          className="w-2 h-2 rounded-full bg-[#D6A23A]"
+                          title={`${tab.pendingBadge} pending review`}
+                        />
+                      ) : null}
+                      {tab.alert && (
+                        <span className="w-2 h-2 rounded-full bg-[#BA3C2A] animate-ping" />
+                      )}
                     </button>
                   );
                 })}
@@ -945,6 +1032,8 @@ export function EventDashboardView({
               committedExpenses={committedExpenses}
               costCenters={costCenters}
               event={event}
+              onInspectTransaction={(txn) => setSelectedTxnForVoucher(txn)}
+              onJumpToLedger={jumpToLedger}
               onNavigateTab={(tab) => selectTab(tab as DashboardTab)}
               onOpenBudgetCeilingModal={() => setIsBudgetCeilingModalOpen(true)}
               onOpenRecordModal={(type) => {
@@ -1012,6 +1101,7 @@ export function EventDashboardView({
               budgetCeiling={event.budgetCeiling}
               canManageCategories={canManageCategories}
               costCenters={costCenters}
+              onJumpToLedger={jumpToLedger}
               onManageCategories={() => {
                 setCategoryModalType("budget_allocation");
                 setIsCategoryModalOpen(true);
@@ -1082,6 +1172,9 @@ export function EventDashboardView({
                 currentUserId={currentUserId}
                 domain="all"
                 eventId={event.id}
+                initialCategoryFilter={ledgerInitialCategory}
+                initialStatusFilter={ledgerInitialStatus}
+                initialTypeFilter={ledgerInitialType}
                 onInspect={(txn) => setSelectedTxnForVoucher(txn)}
                 onRecordTransaction={() => {
                   setRecordInitialType("expense");

@@ -17,6 +17,9 @@ export interface MobileTabItem {
   label: string;
   subtitle: string;
   icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
+  pendingBadge?: number;
+  alert?: boolean;
 }
 
 export type TicketTierStatus = "active" | "sold_out" | "limited";

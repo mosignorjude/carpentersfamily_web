@@ -10,7 +10,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ReceiptCell } from "@/components/finances/receipt-cell";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { formatNaira } from "@/lib/format";
@@ -28,6 +28,14 @@ interface EventDomainLedgerProps {
   eventId?: string;
   categories?: EventFinanceCategoryItem[];
   canRecord?: boolean;
+  initialTypeFilter?: "all" | "tickets" | "revenue" | "expenses";
+  initialCategoryFilter?: string;
+  initialStatusFilter?:
+    | "all"
+    | "recorded"
+    | "approved"
+    | "rejected"
+    | "cancelled";
   onRecordTransaction?: () => void;
   onInspect?: (transaction: DashboardTransaction) => void;
   onApprove?: (transaction: DashboardTransaction) => void;
@@ -42,21 +50,37 @@ export function EventDomainLedger({
   transactions,
   currentUserId,
   userRole,
+  initialTypeFilter = "all",
+  initialCategoryFilter = "",
+  initialStatusFilter = "all",
   onInspect,
   onApprove,
   onReject,
 }: EventDomainLedgerProps) {
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>(initialCategoryFilter);
   const [statusFilter, setStatusFilter] = useState<
     "all" | "recorded" | "approved" | "rejected" | "cancelled"
-  >("all");
+  >(initialStatusFilter);
   const [typeFilter, setTypeFilter] = useState<
     "all" | "tickets" | "revenue" | "expenses"
-  >("all");
+  >(initialTypeFilter);
   const [channelFilter, setChannelFilter] = useState<
     "all" | "member" | "online"
   >("all");
+
+  useEffect(() => {
+    if (initialTypeFilter) setTypeFilter(initialTypeFilter);
+  }, [initialTypeFilter]);
+
+  useEffect(() => {
+    if (initialStatusFilter) setStatusFilter(initialStatusFilter);
+  }, [initialStatusFilter]);
+
+  useEffect(() => {
+    if (initialCategoryFilter !== undefined)
+      setSearchQuery(initialCategoryFilter);
+  }, [initialCategoryFilter]);
 
   const isOfficer =
     userRole === "admin" ||
@@ -178,7 +202,7 @@ export function EventDomainLedger({
         <div className="relative min-w-[240px]">
           <Search className="w-4 h-4 text-[#7A685D] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
-            className="w-full h-9 pl-9 pr-3 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#7A685D] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+            className="w-full h-9 pl-9 pr-9 text-xs bg-white border border-[#E5DDD3] rounded-xl text-[#3D291F] placeholder-[#7A685D] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setCurrentPage(1);
@@ -187,6 +211,19 @@ export function EventDomainLedger({
             type="text"
             value={searchQuery}
           />
+          {searchQuery && (
+            <button
+              aria-label="Clear search"
+              className="absolute right-1 top-1/2 -translate-y-1/2 text-[#7A685D] hover:text-[#3D291F] p-1 rounded-lg cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+              onClick={() => {
+                setSearchQuery("");
+                setCurrentPage(1);
+              }}
+              type="button"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
