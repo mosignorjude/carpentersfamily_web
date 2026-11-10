@@ -14,6 +14,7 @@ import {
   NOTIFICATION_CATEGORY_COPY,
   type NotificationCategory,
 } from "@/lib/email/templates/club-notification-email";
+import { MonthlyOverviewEmail } from "@/lib/email/templates/monthly-overview-email";
 import {
   NotificationEnqueueError,
   withNotificationEnqueueRetry,
@@ -351,6 +352,31 @@ function absolutePortalUrl(path: string | null): string | undefined {
 function renderOutboxJob(job: OutboxJob): Promise<PreparedEmail> {
   const payload = asRecord(job.templatePayload);
   const details = readDetails(payload.details);
+
+  if (job.triggerType === "monthly_overview") {
+    return render(
+      MonthlyOverviewEmail({
+        previewText: readString(payload.previewText) ?? job.heading,
+        heading: job.heading,
+        greeting: readString(payload.greeting) ?? undefined,
+        periodLabel: readString(payload.periodLabel) ?? "Recent period",
+        headline: readString(payload.headline) ?? job.bodyText,
+        aiStatusNote: readString(payload.aiStatusNote),
+        details,
+        ctaLabel: job.ctaLabel ?? "Review & approve",
+        ctaUrl:
+          absolutePortalUrl(job.ctaUrl) ??
+          absolutePortalUrl("/officers/reports") ??
+          "",
+      }),
+    ).then((html) => ({
+      to: job.recipientEmail,
+      subject: job.subject,
+      html,
+      text: toPlainText(html),
+      tags: [{ name: "category", value: job.triggerType }],
+    }));
+  }
 
   return render(
     ClubNotificationEmail({

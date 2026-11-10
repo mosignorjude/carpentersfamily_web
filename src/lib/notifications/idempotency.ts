@@ -243,3 +243,12 @@ export function broadcastRecipientKey(
     `${normalizedId(batchGroupKey)}:recipient:${normalizedId(userId)}`,
   );
 }
+
+export function monthlyOverviewEmailKey(params: {
+  periodLabel: string;
+  officerEmail: string;
+}): string {
+  return finalize(
+    `monthly_overview:${normalizedId(params.periodLabel)}:officer:${slug(params.officerEmail)}`,
+  );
+}

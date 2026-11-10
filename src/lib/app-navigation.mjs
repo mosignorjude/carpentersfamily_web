@@ -20,7 +20,10 @@ export function getNavigationItems(roles) {
     { href: "/announcements", label: "Announcements" },
     { href: "/polls", label: "Polls" },
     ...(canSeeOfficerAreas
-      ? [{ href: "/officers/members", label: "Member Admin" }]
+      ? [
+          { href: "/officers/members", label: "Member Admin" },
+          { href: "/officers/reports", label: "Reports" },
+        ]
       : []),
   ];
 }

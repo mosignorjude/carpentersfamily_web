@@ -1,53 +1,31 @@
+import { createElement } from "react";
 import { readBoundedFormData } from "@/lib/bounded-form-data";
 import { clubBrand } from "@/lib/brand";
+import { ClubFinancePdfDocument, DuesPdfDocument } from "@/lib/pdf/documents";
+import { renderReportPdf } from "@/lib/pdf/render.server";
 import {
   createSimplePdf,
   formatNgn,
   getWATDate,
   MAX_REPORT_EXPORT_BYTES,
-  MAX_REPORT_ROWS,
   owedByMember,
   type ReportFormat,
   toCsvRows,
   wholeNgn,
 } from "@/lib/report-export";
+import {
+  type ClubFinanceTxnRow,
+  type DuesReportRow,
+  loadApprovedNarrativeForReport,
+  loadClubFinanceSnapshot,
+  loadDuesSnapshot,
+  type MemberProfileMini,
+} from "@/lib/reports/loaders.server";
 import { getSiteOrigin } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-type FinanceTransaction = {
-  id: string;
-  kind: string;
-  amount_ngn: string | number;
-  transaction_date: string;
-  description: string | null;
-  category_name_snapshot: string | null;
-  payer_payee: string | null;
-  source_note: string | null;
-  is_opening_balance: boolean;
-  voided_at: string | null;
-  void_reason: string | null;
-  payment_method?: string | null;
-};
-
-type DuesStatus = {
-  member_id: string;
-  full_name: string;
-  username: string;
-  covered_month: string;
-  amount_ngn: string | number | null;
-  status: string;
-  due_date: string;
-  is_overdue: boolean;
-};
-
-type MemberProfile = {
-  id: string;
-  full_name: string;
-  username: string;
-};
 
 const RESPONSE_HEADERS = {
   "Cache-Control": "private, no-store, max-age=0",
@@ -55,7 +33,7 @@ const RESPONSE_HEADERS = {
   "X-Content-Type-Options": "nosniff",
   Vary: "Cookie",
 };
-const MAX_EXPORT_REQUEST_BYTES = 128;
+const MAX_EXPORT_REQUEST_BYTES = 192;
 
 function errorResponse(status: number, message: string) {
   return Response.json(
@@ -64,24 +42,11 @@ function errorResponse(status: number, message: string) {
   );
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function reportRowCount(value: unknown) {
-  if (typeof value !== "string" || !/^\d{1,18}$/u.test(value)) return null;
-  try {
-    return BigInt(value);
-  } catch {
-    return null;
-  }
-}
-
 function isReportFormat(value: string | null): value is ReportFormat {
   return value === "csv" || value === "pdf";
 }
 
-function reportStatus(row: DuesStatus, currentMonth: string) {
+function reportStatus(row: DuesReportRow, currentMonth: string) {
   if (row.status === "paid") return "Paid";
   if (row.status === "written_off") return "Written off";
   if (row.status !== "unpaid") return null;
@@ -100,7 +65,7 @@ function financeRowsToCsv(
   year: number,
   asOf: string,
   summary: Record<string, string | number>,
-  transactions: FinanceTransaction[],
+  transactions: ClubFinanceTxnRow[],
   receiptsByTransaction: Map<string, string[]>,
 ) {
   const columns = [
@@ -169,7 +134,7 @@ function financeRowsToPdf(
   year: number,
   asOf: string,
   summary: Record<string, string | number>,
-  transactions: FinanceTransaction[],
+  transactions: ClubFinanceTxnRow[],
   receiptsByTransaction: Map<string, string[]>,
 ) {
   const lines = [
@@ -181,7 +146,7 @@ function financeRowsToPdf(
     `All-time event cash in: ${formatPdfAmount(summary.event_inflow)}`,
     `All-time event cash out: ${formatPdfAmount(summary.event_outflow)}`,
     `Current club balance: ${formatPdfAmount(summary.balance)}`,
-    "Text-only PDF. Unsupported glyphs are transliterated; CSV preserves original Unicode.",
+    "Text-only PDF fallback.",
     "",
     `Transactions from ${year}-01-01 through ${year}-12-31 (${transactions.length})`,
     "",
@@ -213,8 +178,8 @@ function financeRowsToPdf(
 function duesRowsToCsv(
   year: number,
   asOf: string,
-  duesRows: DuesStatus[],
-  profilesById: Map<string, MemberProfile>,
+  duesRows: DuesReportRow[],
+  profilesById: Map<string, MemberProfileMini>,
 ) {
   const columns = [
     "Member",
@@ -255,11 +220,11 @@ function duesRowsToCsv(
   ]);
 }
 
-function duesRowsToPdf(
+function duesRowsToFallbackPdf(
   year: number,
   asOf: string,
-  duesRows: DuesStatus[],
-  profilesById: Map<string, MemberProfile>,
+  duesRows: DuesReportRow[],
+  profilesById: Map<string, MemberProfileMini>,
 ) {
   const totalsByMember = owedByMember(duesRows, asOf);
   if (totalsByMember === null) return null;
@@ -269,7 +234,7 @@ function duesRowsToPdf(
     `As of: ${asOf}`,
     `Individual dues rows returned under your current access: ${duesRows.length}`,
     "Total owed includes unpaid months in this report year with a due date on or before the report date.",
-    "Text-only PDF. Unsupported glyphs are transliterated; CSV preserves original Unicode.",
+    "Text-only PDF fallback.",
     "",
   ];
   const memberIds = [...new Set(duesRows.map((row) => row.member_id))].sort();
@@ -302,31 +267,11 @@ async function createFinanceExport(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   year: number,
   format: ReportFormat,
+  includeAi: boolean,
 ) {
-  const reportResult = await supabase.rpc("club_finance_report_data");
-  if (reportResult.error || !isRecord(reportResult.data))
-    return { kind: "unavailable" as const };
-  const rowCount = reportRowCount(reportResult.data.row_count);
-  const reportAsOf = reportResult.data.as_of;
-  const summary = reportResult.data.summary;
-  const transactionData = reportResult.data.transactions;
-  if (
-    reportResult.data.year !== year ||
-    rowCount === null ||
-    typeof reportAsOf !== "string" ||
-    !/^\d{4}-\d{2}-\d{2}$/u.test(reportAsOf) ||
-    reportAsOf.slice(0, 4) !== String(year) ||
-    !isRecord(summary) ||
-    !Array.isArray(transactionData)
-  ) {
-    return { kind: "unavailable" as const };
-  }
-  if (rowCount > BigInt(MAX_REPORT_ROWS)) return { kind: "too-large" as const };
-  if (transactionData.some((transaction) => !isRecord(transaction)))
-    return { kind: "unavailable" as const };
-  const transactions = transactionData as FinanceTransaction[];
-  if (transactions.length !== Number(rowCount))
-    return { kind: "unavailable" as const };
+  const snap = await loadClubFinanceSnapshot(supabase, year);
+  if (snap.kind !== "ok") return snap;
+
   for (const field of [
     "dues_income",
     "other_income",
@@ -335,179 +280,140 @@ async function createFinanceExport(
     "event_outflow",
     "balance",
   ] as const) {
-    if (wholeNgn(summary[field] as string | number) === null)
+    if (wholeNgn(snap.summary[field]) === null) {
       return { kind: "unavailable" as const };
-  }
-  if (
-    transactions.some((transaction) => {
-      const amount = wholeNgn(transaction.amount_ngn);
-      return (
-        typeof transaction.id !== "string" ||
-        typeof transaction.kind !== "string" ||
-        typeof transaction.is_opening_balance !== "boolean" ||
-        typeof transaction.transaction_date !== "string" ||
-        !["income", "expense"].includes(transaction.kind) ||
-        amount === null ||
-        amount <= BigInt(0) ||
-        !/^\d{4}-\d{2}-\d{2}$/u.test(transaction.transaction_date) ||
-        transaction.transaction_date.slice(0, 4) !== String(year) ||
-        [
-          transaction.description,
-          transaction.category_name_snapshot,
-          transaction.payer_payee,
-          transaction.source_note,
-          transaction.voided_at,
-          transaction.void_reason,
-        ].some((value) => value !== null && typeof value !== "string")
-      );
-    })
-  ) {
-    return { kind: "unavailable" as const };
-  }
-
-  const receiptsByTransaction = new Map<string, string[]>();
-  if (transactions.length > 0) {
-    const receiptResult = await supabase
-      .from("finance_receipts")
-      .select("club_transaction_id, original_filename", { count: "exact" })
-      .in(
-        "club_transaction_id",
-        transactions.map((transaction) => transaction.id),
-      )
-      .order("created_at", { ascending: true })
-      .limit(MAX_REPORT_ROWS);
-    if (receiptResult.error) return { kind: "unavailable" as const };
-    if ((receiptResult.count ?? 0) > MAX_REPORT_ROWS)
-      return { kind: "too-large" as const };
-    for (const receipt of receiptResult.data ?? []) {
-      if (!receipt.club_transaction_id) continue;
-      const current =
-        receiptsByTransaction.get(receipt.club_transaction_id) ?? [];
-      current.push(receipt.original_filename);
-      receiptsByTransaction.set(receipt.club_transaction_id, current);
     }
   }
 
-  const body =
-    format === "csv"
-      ? financeRowsToCsv(
-          year,
-          reportAsOf,
-          summary as Record<string, string | number>,
-          transactions,
-          receiptsByTransaction,
-        )
-      : financeRowsToPdf(
-          year,
-          reportAsOf,
-          summary as Record<string, string | number>,
-          transactions,
-          receiptsByTransaction,
-        );
+  if (format === "csv") {
+    const csv = financeRowsToCsv(
+      snap.year,
+      snap.asOf,
+      snap.summary,
+      snap.transactions,
+      snap.receiptsByTransaction,
+    );
+    if (Buffer.byteLength(csv, "utf8") > MAX_REPORT_EXPORT_BYTES) {
+      return { kind: "too-large" as const };
+    }
+    return { kind: "ok" as const, body: csv, narrativeId: null };
+  }
+
+  const narrative = includeAi
+    ? await loadApprovedNarrativeForReport(
+        supabase,
+        "club_finance",
+        null,
+        snap.fingerprint,
+      )
+    : null;
+
+  let body: Uint8Array | null;
+  try {
+    body = await renderReportPdf(
+      createElement(ClubFinancePdfDocument, {
+        year: snap.year,
+        asOf: snap.asOf,
+        generatedDate: getWATDate(),
+        summary: snap.summary,
+        transactions: snap.transactions,
+        receiptsByTransaction: snap.receiptsByTransaction,
+        narrative,
+      }),
+    );
+  } catch (err) {
+    console.error(
+      "[Club Finance PDF] Branded render failed, falling back:",
+      err,
+    );
+    body = financeRowsToPdf(
+      snap.year,
+      snap.asOf,
+      snap.summary,
+      snap.transactions,
+      snap.receiptsByTransaction,
+    );
+  }
+
   if (body === null) return { kind: "too-large" as const };
-  const bytes =
-    typeof body === "string"
-      ? Buffer.byteLength(body, "utf8")
-      : body.byteLength;
-  if (bytes > MAX_REPORT_EXPORT_BYTES) return { kind: "too-large" as const };
-  return { kind: "ok" as const, body };
+  if (body.byteLength > MAX_REPORT_EXPORT_BYTES) {
+    return { kind: "too-large" as const };
+  }
+  return {
+    kind: "ok" as const,
+    body,
+    narrativeId: narrative?.id ?? null,
+  };
 }
 
 async function createDuesExport(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   year: number,
   format: ReportFormat,
+  includeAi: boolean,
 ) {
-  const reportResult = await supabase.rpc("dues_report_data");
-  if (reportResult.error || !isRecord(reportResult.data))
-    return { kind: "unavailable" as const };
-  const rowCount = reportRowCount(reportResult.data.row_count);
-  const reportAsOf = reportResult.data.as_of;
-  const rowData = reportResult.data.rows;
-  if (
-    reportResult.data.year !== year ||
-    rowCount === null ||
-    typeof reportAsOf !== "string" ||
-    !/^\d{4}-\d{2}-\d{2}$/u.test(reportAsOf) ||
-    reportAsOf.slice(0, 4) !== String(year) ||
-    !Array.isArray(rowData)
-  ) {
-    return { kind: "unavailable" as const };
-  }
-  if (rowCount > BigInt(MAX_REPORT_ROWS)) return { kind: "too-large" as const };
-  if (rowData.length !== Number(rowCount))
-    return { kind: "unavailable" as const };
-  if (rowData.some((row) => !isRecord(row)))
-    return { kind: "unavailable" as const };
-  const rawDuesRows = rowData as DuesStatus[];
-  const fallbackDuesAmount =
-    rawDuesRows
-      .map((row) => wholeNgn(row.amount_ngn))
-      .find((amt): amt is bigint => amt !== null && amt > BigInt(0)) ??
-    BigInt(5000);
-  const duesRows: DuesStatus[] = rawDuesRows.map((row) => {
-    const parsedAmount = wholeNgn(row.amount_ngn);
-    if (parsedAmount !== null && parsedAmount > BigInt(0)) {
-      return row;
-    }
-    return {
-      ...row,
-      amount_ngn: fallbackDuesAmount.toString(),
-    };
-  });
-  if (
-    duesRows.some((row) => {
-      const amount = wholeNgn(row.amount_ngn);
-      return (
-        typeof row.member_id !== "string" ||
-        typeof row.full_name !== "string" ||
-        typeof row.username !== "string" ||
-        amount === null ||
-        amount <= BigInt(0) ||
-        !["paid", "unpaid", "written_off"].includes(row.status) ||
-        typeof row.is_overdue !== "boolean" ||
-        !/^\d{4}-\d{2}-\d{2}$/u.test(row.covered_month) ||
-        !/^\d{4}-\d{2}-\d{2}$/u.test(row.due_date) ||
-        row.covered_month.slice(0, 4) !== String(year)
+  const snap = await loadDuesSnapshot(supabase, year);
+  if (snap.kind !== "ok") return snap;
+
+  if (format === "csv") {
+    let csv: string | null;
+    try {
+      csv = duesRowsToCsv(
+        snap.year,
+        snap.asOf,
+        snap.duesRows,
+        snap.profilesById,
       );
-    })
-  ) {
-    return { kind: "unavailable" as const };
-  }
-  const profilesById = new Map<string, MemberProfile>();
-  for (const row of duesRows) {
-    const profile = {
-      id: row.member_id,
-      full_name: row.full_name,
-      username: row.username,
-    };
-    const previous = profilesById.get(profile.id);
-    if (
-      previous &&
-      (previous.full_name !== profile.full_name ||
-        previous.username !== profile.username)
-    ) {
+    } catch {
       return { kind: "unavailable" as const };
     }
-    profilesById.set(profile.id, profile);
+    if (csv === null) return { kind: "unavailable" as const };
+    if (Buffer.byteLength(csv, "utf8") > MAX_REPORT_EXPORT_BYTES) {
+      return { kind: "too-large" as const };
+    }
+    return { kind: "ok" as const, body: csv, narrativeId: null };
   }
 
-  let body: string | Uint8Array | null;
+  const narrative = includeAi
+    ? await loadApprovedNarrativeForReport(
+        supabase,
+        "dues",
+        null,
+        snap.fingerprint,
+      )
+    : null;
+
+  let body: Uint8Array | null;
   try {
-    body =
-      format === "csv"
-        ? duesRowsToCsv(year, reportAsOf, duesRows, profilesById)
-        : duesRowsToPdf(year, reportAsOf, duesRows, profilesById);
-  } catch {
-    return { kind: "unavailable" as const };
+    body = await renderReportPdf(
+      createElement(DuesPdfDocument, {
+        year: snap.year,
+        asOf: snap.asOf,
+        generatedDate: getWATDate(),
+        duesRows: snap.duesRows,
+        profilesById: snap.profilesById,
+        narrative,
+      }),
+    );
+  } catch (err) {
+    console.error("[Dues PDF] Branded render failed, falling back:", err);
+    body = duesRowsToFallbackPdf(
+      snap.year,
+      snap.asOf,
+      snap.duesRows,
+      snap.profilesById,
+    );
   }
-  if (body === null) return { kind: "unavailable" as const };
-  const bytes =
-    typeof body === "string"
-      ? Buffer.byteLength(body, "utf8")
-      : body.byteLength;
-  if (bytes > MAX_REPORT_EXPORT_BYTES) return { kind: "too-large" as const };
-  return { kind: "ok" as const, body };
+
+  if (body === null) return { kind: "too-large" as const };
+  if (body.byteLength > MAX_REPORT_EXPORT_BYTES) {
+    return { kind: "too-large" as const };
+  }
+  return {
+    kind: "ok" as const,
+    body,
+    narrativeId: narrative?.id ?? null,
+  };
 }
 
 function isSameSiteRequest(request: Request, expectedOrigin: string) {
@@ -554,15 +460,20 @@ export async function POST(
     return errorResponse(400, "Choose a supported report format.");
   const formEntries = [...formResult.form.entries()];
   const formatValues = formResult.form.getAll("format");
+  const allowedKeys = formEntries.every(
+    ([key]) => key === "format" || key === "includeAi",
+  );
   if (
-    formEntries.length !== 1 ||
-    formEntries[0]?.[0] !== "format" ||
+    !allowedKeys ||
     formatValues.length !== 1 ||
     typeof formatValues[0] !== "string" ||
     !isReportFormat(formatValues[0])
-  )
+  ) {
     return errorResponse(400, "Choose a supported report format.");
+  }
   const format = formatValues[0];
+  const includeAiRaw = formResult.form.get("includeAi");
+  const includeAi = includeAiRaw !== "false" && includeAiRaw !== "0";
 
   let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
   try {
@@ -586,8 +497,8 @@ export async function POST(
   const year = Number(getWATDate().slice(0, 4));
   const result =
     report === "finances"
-      ? await createFinanceExport(supabase, year, format)
-      : await createDuesExport(supabase, year, format);
+      ? await createFinanceExport(supabase, year, format, includeAi)
+      : await createDuesExport(supabase, year, format, includeAi);
   if (result.kind === "too-large") {
     return errorResponse(
       413,

@@ -21,6 +21,7 @@ import type {
   DuesMemberOption,
   DuesMonthOption,
 } from "@/app/(member)/dues/dues-forms";
+import { AiSummaryPanel } from "@/components/reports/ai-summary-panel";
 import { clubBrand } from "@/lib/brand";
 import { formatNaira } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
@@ -51,6 +52,7 @@ interface DuesPageViewProps {
   isAdmin?: boolean;
   isDuesExempt?: boolean;
   isOfficer: boolean;
+  aiEnabled?: boolean;
   canRecord: boolean;
   canWriteOff: boolean;
   canCorrect: boolean;
@@ -97,6 +99,7 @@ interface DuesPageViewProps {
 export function DuesPageView({
   member,
   isOfficer,
+  aiEnabled = false,
   canRecord,
   canWriteOff,
   canCorrect,
@@ -140,6 +143,7 @@ export function DuesPageView({
 }: DuesPageViewProps) {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [isDownloadReportOpen, setIsDownloadReportOpen] = useState(false);
+  const [includeAiInPdf, setIncludeAiInPdf] = useState(true);
   useModalHygiene({
     isOpen: isDownloadReportOpen,
     onClose: () => setIsDownloadReportOpen(false),
@@ -310,6 +314,18 @@ export function DuesPageView({
               records.
             </p>
 
+            {isOfficer && aiEnabled && (
+              <label className="flex items-center gap-2 min-h-[44px] px-1 text-xs text-[#5C4638] cursor-pointer select-none">
+                <input
+                  checked={includeAiInPdf}
+                  className="w-4 h-4 accent-[#174C37]"
+                  onChange={(e) => setIncludeAiInPdf(e.target.checked)}
+                  type="checkbox"
+                />
+                <span>Include approved AI summary in PDF (when available)</span>
+              </label>
+            )}
+
             <div className="space-y-2.5 pt-1">
               <form
                 action="/api/reports/dues"
@@ -319,6 +335,11 @@ export function DuesPageView({
                 target="_blank"
               >
                 <input name="format" type="hidden" value="pdf" />
+                <input
+                  name="includeAi"
+                  type="hidden"
+                  value={isOfficer && includeAiInPdf ? "true" : "false"}
+                />
                 <button
                   className="w-full py-3 px-4 rounded-xl bg-[#174C37] text-white text-xs font-semibold flex items-center justify-center gap-2 hover:bg-[#103D2B] active:scale-[0.99] transition shadow-xs cursor-pointer border-0 min-h-[44px]"
                   type="submit"
@@ -581,6 +602,13 @@ export function DuesPageView({
       {/* TAB 3: OFFICER TREASURY (Gated by isOfficer) */}
       {activeTab === "officer" && isOfficer && (
         <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-150">
+          {isOfficer && aiEnabled && (
+            <AiSummaryPanel
+              aiEnabled={aiEnabled}
+              reportType="dues"
+              title="Club Dues AI Summary"
+            />
+          )}
           {/* Officer Approvals Queue */}
           {viewerId && (
             <div className="scroll-target" id="dues-approvals">

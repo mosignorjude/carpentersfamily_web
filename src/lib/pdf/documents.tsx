@@ -114,12 +114,12 @@ export function ClubFinancePdfDocument(props: ClubFinancePdfProps) {
               tone: "danger",
             },
             {
-              label: "Event Cash In",
+              label: "All-time Event Cash In",
               value: formatMoneyLabel(props.summary.event_inflow),
               tone: "positive",
             },
             {
-              label: "Event Cash Out",
+              label: "All-time Event Cash Out",
               value: formatMoneyLabel(props.summary.event_outflow),
               tone: "danger",
             },

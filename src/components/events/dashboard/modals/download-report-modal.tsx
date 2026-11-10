@@ -1,6 +1,7 @@
 "use client";
 
 import { FileSpreadsheet, FileText, X } from "lucide-react";
+import { useState } from "react";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 
 interface DownloadReportModalProps {
@@ -8,6 +9,7 @@ interface DownloadReportModalProps {
   onClose: () => void;
   eventId: string;
   eventTitle: string;
+  aiEnabled?: boolean;
   onExportCsv: () => void;
 }
 
@@ -16,14 +18,19 @@ export function DownloadReportModal({
   onClose,
   eventId,
   eventTitle,
+  aiEnabled = false,
   onExportCsv,
 }: DownloadReportModalProps) {
+  const [includeAi, setIncludeAi] = useState(true);
   useModalHygiene({ isOpen, onClose });
 
   if (!isOpen) return null;
 
   const handleDownloadPdf = () => {
-    const downloadUrl = `/api/events/${encodeURIComponent(eventId)}/finance-report?format=pdf`;
+    const aiParam = aiEnabled
+      ? `&includeAi=${includeAi ? "true" : "false"}`
+      : "";
+    const downloadUrl = `/api/events/${encodeURIComponent(eventId)}/finance-report?format=pdf${aiParam}`;
     const link = document.createElement("a");
     link.href = downloadUrl;
     link.setAttribute("download", `event-finance-${eventId}.pdf`);
@@ -74,6 +81,18 @@ export function DownloadReportModal({
           <strong className="text-[#231F1D] font-semibold">{eventTitle}</strong>
           .
         </p>
+
+        {aiEnabled && (
+          <label className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0]/70 text-xs font-medium text-[#3D291F] cursor-pointer min-h-[44px]">
+            <input
+              checked={includeAi}
+              className="h-4 w-4 accent-[#174C37]"
+              onChange={(e) => setIncludeAi(e.target.checked)}
+              type="checkbox"
+            />
+            <span>Include approved AI executive summary (when available)</span>
+          </label>
+        )}
 
         <div className="space-y-2.5 pt-1">
           {/* Full Audit Report (PDF) */}

@@ -162,6 +162,12 @@ export function getNotificationHref(notification) {
         return "/dues#dues-requests";
       }
       if (
+        titleLower.includes("monthly overview") ||
+        bodyLower.includes("monthly club overview")
+      ) {
+        return "/officers/reports";
+      }
+      if (
         titleLower.includes("rate") ||
         bodyLower.includes("monthly dues rate")
       ) {

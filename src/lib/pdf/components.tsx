@@ -33,15 +33,16 @@ let cachedLogoDataUri: string | null | undefined;
 
 function getLogoDataUri(): string | null {
   if (cachedLogoDataUri !== undefined) return cachedLogoDataUri;
-  const candidates = [
-    path.join(process.cwd(), "public", "brand", "carpenters-family-mark.png"),
-  ];
-  for (const filePath of candidates) {
-    if (existsSync(filePath)) {
-      const b64 = readFileSync(filePath).toString("base64");
-      cachedLogoDataUri = `data:image/png;base64,${b64}`;
-      return cachedLogoDataUri;
-    }
+  const filePath = path.join(
+    process.cwd(),
+    "public",
+    "brand",
+    "carpenters-family-mark.png",
+  );
+  if (existsSync(filePath)) {
+    const b64 = readFileSync(filePath).toString("base64");
+    cachedLogoDataUri = `data:image/png;base64,${b64}`;
+    return cachedLogoDataUri;
   }
   cachedLogoDataUri = null;
   return null;

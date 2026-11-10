@@ -20,6 +20,7 @@ import {
   type ClubPaymentSettings,
 } from "@/components/admin/club-bank-settings-card";
 import { VoidRecordModal } from "@/components/common/void-record-modal";
+import { AiSummaryPanel } from "@/components/reports/ai-summary-panel";
 import { dispatchFlashCard } from "@/components/ui/flash-card";
 import { useSuccessNotice } from "@/components/ui/use-success-notice";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
@@ -46,6 +47,7 @@ import { RecordIncomeModal } from "./record-income-modal";
 
 interface FinancesPageViewProps {
   isAdmin?: boolean;
+  aiEnabled?: boolean;
   paymentSettings?: ClubPaymentSettings | null;
   existingOpeningBalance?: OpeningBalanceTransaction | null;
   isOfficer: boolean;
@@ -84,6 +86,7 @@ interface FinancesPageViewProps {
 
 export function FinancesPageView({
   isAdmin = false,
+  aiEnabled = false,
   paymentSettings,
   existingOpeningBalance,
   isOfficer,
@@ -116,6 +119,7 @@ export function FinancesPageView({
   const [isRecordExpenseOpen, setIsRecordExpenseOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isDownloadReportOpen, setIsDownloadReportOpen] = useState(false);
+  const [includeAiInPdf, setIncludeAiInPdf] = useState(true);
   useModalHygiene({
     isOpen: isDownloadReportOpen,
     onClose: () => setIsDownloadReportOpen(false),
@@ -218,6 +222,18 @@ export function FinancesPageView({
               transaction ledger.
             </p>
 
+            {aiEnabled && (
+              <label className="flex items-center gap-2 min-h-[44px] px-1 text-xs text-[#5C4638] cursor-pointer select-none">
+                <input
+                  checked={includeAiInPdf}
+                  className="w-4 h-4 accent-[#174C37]"
+                  onChange={(e) => setIncludeAiInPdf(e.target.checked)}
+                  type="checkbox"
+                />
+                <span>Include approved AI summary in PDF (when available)</span>
+              </label>
+            )}
+
             <div className="space-y-2.5 pt-1">
               <form
                 action="/api/reports/finances"
@@ -227,6 +243,11 @@ export function FinancesPageView({
                 target="_blank"
               >
                 <input name="format" type="hidden" value="pdf" />
+                <input
+                  name="includeAi"
+                  type="hidden"
+                  value={includeAiInPdf ? "true" : "false"}
+                />
                 <button
                   className="w-full py-3 px-4 rounded-xl bg-[#174C37] text-white text-sm font-semibold flex items-center justify-between hover:bg-[#103D2B] active:scale-[0.99] transition shadow-xs cursor-pointer border-0 min-h-[44px]"
                   type="submit"
@@ -316,6 +337,14 @@ export function FinancesPageView({
               existingOpeningBalance={existingOpeningBalance}
             />
           </div>
+
+          {isOfficer && aiEnabled && (
+            <AiSummaryPanel
+              aiEnabled={aiEnabled}
+              reportType="club_finance"
+              title="Club Finance AI Summary"
+            />
+          )}
         </section>
       )}
 

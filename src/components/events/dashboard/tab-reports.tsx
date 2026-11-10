@@ -9,6 +9,7 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
+import { AiSummaryPanel } from "@/components/reports/ai-summary-panel";
 import { CfButton } from "@/components/ui";
 import { downloadLedgerCSV, formatNaira, formatPercent } from "@/lib/format";
 import type {
@@ -33,6 +34,8 @@ interface TabReportsProps {
   budgetCeiling: number;
   pendingTransactionsCount?: number;
   canManageTeamRoles?: boolean;
+  aiEnabled?: boolean;
+  isClubOfficer?: boolean;
   onOpenDownloadReportModal?: () => void;
   onOpenAssignTeamModal?: () => void;
   onOpenRevokeTeamModal?: (member: DashboardTeamMember) => void;
@@ -50,6 +53,8 @@ export function TabReports({
   budgetCeiling,
   pendingTransactionsCount = 0,
   canManageTeamRoles = false,
+  aiEnabled = false,
+  isClubOfficer = false,
   onOpenDownloadReportModal,
   onOpenAssignTeamModal,
   onOpenRevokeTeamModal,
@@ -171,6 +176,15 @@ export function TabReports({
             </CfButton>
           </div>
         </div>
+
+        {isClubOfficer && aiEnabled && (
+          <AiSummaryPanel
+            aiEnabled={aiEnabled}
+            eventId={event.id}
+            reportType="event_finance"
+            title="Event Finance AI Summary"
+          />
+        )}
 
         {/* Club Letterhead */}
         <div className="bg-[#FAF6F0] rounded-xl p-4 border border-[#E5DDD3] flex flex-wrap items-center justify-between gap-3">

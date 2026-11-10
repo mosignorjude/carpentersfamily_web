@@ -6,10 +6,10 @@ import type { ReactElement } from "react";
 import { MAX_REPORT_EXPORT_BYTES } from "@/lib/report-export";
 
 export async function renderReportPdf(
-  document: ReactElement<DocumentProps>,
+  document: ReactElement,
   maxBytes = MAX_REPORT_EXPORT_BYTES,
 ): Promise<Uint8Array | null> {
-  const buffer = await renderToBuffer(document);
+  const buffer = await renderToBuffer(document as ReactElement<DocumentProps>);
   if (buffer.byteLength > maxBytes) {
     return null;
   }

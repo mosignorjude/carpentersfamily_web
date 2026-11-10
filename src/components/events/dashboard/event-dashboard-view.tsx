@@ -141,6 +141,8 @@ interface EventDashboardViewProps {
   canSetEventStatus?: boolean;
   canReopenEvent?: boolean;
   canManageTeamRoles?: boolean;
+  aiEnabled?: boolean;
+  isClubOfficer?: boolean;
   notice?: { message: string; isError?: boolean };
 }
 
@@ -165,6 +167,8 @@ export function EventDashboardView({
   canSetEventStatus = false,
   canReopenEvent = false,
   canManageTeamRoles = false,
+  aiEnabled = false,
+  isClubOfficer = false,
   notice: _notice,
 }: EventDashboardViewProps) {
   const [activeTab, setActiveTab] = useState<DashboardTab>(() =>
@@ -1193,10 +1197,12 @@ export function EventDashboardView({
         {activeTab === "statement" && (
           <TabReports
             activityLogs={activityLogs}
+            aiEnabled={aiEnabled}
             budgetCeiling={event.budgetCeiling}
             canManageTeamRoles={canManageTeamRoles}
             costCenters={costCenters}
             event={event}
+            isClubOfficer={isClubOfficer}
             onOpenAssignTeamModal={() => {
               setSelectedTeamMember(null);
               setTeamModalMode("assign");
@@ -1303,6 +1309,7 @@ export function EventDashboardView({
       />
 
       <DownloadReportModal
+        aiEnabled={aiEnabled}
         eventId={event.id}
         eventTitle={event.title}
         isOpen={isDownloadReportModalOpen}

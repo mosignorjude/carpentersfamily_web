@@ -3,6 +3,7 @@ import { signOutAction } from "@/app/actions";
 import { DuesPageView } from "@/components/dues/dues-page-view";
 import type { DuesPaymentRequestItem } from "@/components/dues/officer-dues-approvals-card";
 import type { ReconciliationMember } from "@/components/dues/pre-launch-dues-reconciliation-card";
+import { isAiReportsEnabled } from "@/lib/ai/provider.server";
 import { canManageDues } from "@/lib/dues-governance.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { DuesMemberOption, DuesMonthOption } from "./dues-forms";
@@ -524,6 +525,7 @@ export default async function DuesPage({
       isAdmin={isAdmin}
       isDuesExempt={isDuesExempt}
       isOfficer={isOfficer}
+      aiEnabled={isAiReportsEnabled()}
       member={member}
       memberListError={memberListError}
       members={members}

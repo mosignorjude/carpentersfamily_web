@@ -16,6 +16,7 @@ import type {
 } from "@/components/events/dashboard/dashboard-types";
 import { EventDashboardView } from "@/components/events/dashboard/event-dashboard-view";
 import type { EventRow } from "@/components/events/event-types";
+import { isAiReportsEnabled } from "@/lib/ai/provider.server";
 import { getEventCardAccess } from "@/lib/event-card-access.mjs";
 import { partitionExpensesByAllocation } from "@/lib/event-cost-centers.mjs";
 import {
@@ -898,6 +899,7 @@ export default async function EventDashboardPage({
   return (
     <div className="min-h-full p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
       <EventDashboardView
+        aiEnabled={isAiReportsEnabled()}
         canDeleteCategories={canDeleteCategories}
         canEditEvent={canEditEvent}
         canManageCategories={canManageCategories}
@@ -916,6 +918,7 @@ export default async function EventDashboardPage({
         initialTab={initialTab}
         initialTicketTiers={ticketTiers}
         initialTransactions={transactions}
+        isClubOfficer={isAdmin || isExecutive}
         notice={notice}
         teamMembers={teamMembers}
         userRole={computedRole}

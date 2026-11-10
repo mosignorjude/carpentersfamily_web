@@ -1,3 +1,6 @@
+import { createElement } from "react";
+import { EventFinancePdfDocument } from "@/lib/pdf/documents";
+import { renderReportPdf } from "@/lib/pdf/render.server";
 import {
   createSimplePdf,
   getWATDate,
@@ -5,6 +8,10 @@ import {
   MAX_REPORT_ROWS,
   toCsvRows,
 } from "@/lib/report-export";
+import {
+  loadApprovedNarrativeForReport,
+  loadEventFinanceSnapshot,
+} from "@/lib/reports/loaders.server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -15,45 +22,6 @@ const privateHeaders = {
   Pragma: "no-cache",
   "X-Content-Type-Options": "nosniff",
   Vary: "Cookie",
-};
-
-type TransactionRow = {
-  id: string;
-  kind: "income" | "expense";
-  amount_ngn: number | string;
-  transaction_date: string;
-  description: string | null;
-  source_note: string | null;
-  payer_payee: string | null;
-  payment_method: string | null;
-  category_name_snapshot: string | null;
-  budget_allocation_name_snapshot: string | null;
-  payment_status: string;
-};
-
-type SaleRow = {
-  id: string;
-  tier_id: string;
-  buyer_name: string | null;
-  quantity: number;
-  unit_price_ngn: number | string;
-  amount_ngn: number | string;
-  payment_method: string | null;
-  created_at: string;
-  refunded_at: string | null;
-  verification_status: "recorded" | "approved" | "rejected" | "cancelled";
-};
-
-type TierRow = { id: string; name: string };
-type ReportSummary = {
-  paid_income_ngn: number | string;
-  pending_income_ngn: number | string;
-  unpaid_income_ngn: number | string;
-  actual_expense_ngn: number | string;
-  committed_expense_ngn: number | string;
-  ticket_income_ngn: number | string;
-  tickets_sold: number | string;
-  net_result_ngn: number | string;
 };
 
 function errorResponse(status: number, message: string) {
@@ -102,6 +70,11 @@ function amount(value: string | number) {
   return Number.isSafeInteger(parsed) ? parsed : null;
 }
 
+function formatMoneyText(value: number): string {
+  const abs = Math.trunc(Math.abs(value)).toLocaleString("en-US");
+  return value < 0 ? `-NGN ${abs}` : `NGN ${abs}`;
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ eventId: string }> },
@@ -147,96 +120,27 @@ export async function GET(
     return errorResponse(403, "Active membership is required.");
   }
 
-  const { data: event, error: eventError } = await supabase
-    .from("events")
-    .select("id,title")
-    .eq("id", eventId)
-    .maybeSingle();
-  if (eventError) return errorResponse(503, "The event could not be verified.");
-  if (!event) return errorResponse(404, "The event is unavailable.");
-
-  let transactionQuery = supabase
-    .from("event_financial_transactions")
-    .select(
-      "id,kind,amount_ngn,transaction_date,description,source_note,payer_payee,payment_method,category_name_snapshot,budget_allocation_name_snapshot,payment_status",
-    )
-    .eq("event_id", eventId)
-    .is("voided_at", null)
-    .order("transaction_date", { ascending: true })
-    .order("created_at", { ascending: true })
-    .limit(MAX_REPORT_ROWS);
-  if (start) transactionQuery = transactionQuery.gte("transaction_date", start);
-  if (end) transactionQuery = transactionQuery.lte("transaction_date", end);
-
-  let salesQuery = supabase
-    .from("event_ticket_sales")
-    .select(
-      "id,tier_id,buyer_name,quantity,unit_price_ngn,amount_ngn,payment_method,created_at,refunded_at,verification_status",
-    )
-    .eq("event_id", eventId)
-    .order("created_at", { ascending: true })
-    .limit(MAX_REPORT_ROWS);
-  if (!start && !end) {
-    salesQuery = salesQuery.is("refunded_at", null);
-  } else {
-    const startIso = start ? watDateBoundary(start) : null;
-    const endIso = end ? watDateBoundary(end, true) : null;
-    const clauses = ["created_at", "refunded_at"].map((column) => {
-      const filters = [
-        ...(startIso ? [`${column}.gte.${startIso}`] : []),
-        ...(endIso ? [`${column}.lt.${endIso}`] : []),
-      ];
-      return `and(${filters.join(",")})`;
-    });
-    salesQuery = salesQuery.or(clauses.join(","));
+  const snap = await loadEventFinanceSnapshot(supabase, eventId, start, end);
+  if (snap.kind === "not-found") {
+    return errorResponse(404, "The event is unavailable.");
   }
-
-  const [transactionResult, saleResult, summaryResult, tierResult] =
-    await Promise.all([
-      transactionQuery,
-      salesQuery,
-      supabase.rpc("event_finance_report_summary", {
-        p_event_id: eventId,
-        p_start_date: start,
-        p_end_date: end,
-      }),
-      supabase
-        .from("event_ticket_tiers")
-        .select("id,name")
-        .eq("event_id", eventId)
-        .limit(100),
-    ]);
-  if (
-    transactionResult.error ||
-    saleResult.error ||
-    summaryResult.error ||
-    tierResult.error
-  ) {
-    return errorResponse(503, "Event report data could not be verified.");
-  }
-
-  const transactions = (transactionResult.data ?? []) as TransactionRow[];
-  const sales = (saleResult.data ?? []) as SaleRow[];
-  if (
-    transactions.length >= MAX_REPORT_ROWS ||
-    sales.length >= MAX_REPORT_ROWS
-  ) {
+  if (snap.kind === "too-large") {
     return errorResponse(
       413,
       "This report contains too many rows. Select a narrower date range.",
     );
   }
-
-  const summaryData = Array.isArray(summaryResult.data)
-    ? summaryResult.data[0]
-    : summaryResult.data;
-  if (!summaryData) {
-    return errorResponse(503, "Event report totals could not be verified.");
+  if (snap.kind !== "ok") {
+    return errorResponse(503, "Event report data could not be verified.");
   }
-  const reportSummary = summaryData as ReportSummary;
-  const tierNames = new Map(
-    ((tierResult.data ?? []) as TierRow[]).map((tier) => [tier.id, tier.name]),
-  );
+
+  const {
+    event,
+    summary: reportSummary,
+    transactions,
+    sales,
+    tierNames,
+  } = snap;
   const columns = [
     "Date",
     "Record type",
@@ -251,6 +155,16 @@ export async function GET(
     "Payer, payee, or buyer",
   ];
   const ticketRows: Array<Array<string | number | null>> = [];
+  const ledgerPdfRows: Array<{
+    date: string;
+    type: string;
+    category: string;
+    description: string;
+    status: string;
+    counterparty: string;
+    amount: string;
+  }> = [];
+
   for (const sale of sales) {
     const saleDate = timestampDay(sale.created_at);
     const saleAmount = amount(sale.amount_ngn);
@@ -262,34 +176,47 @@ export async function GET(
     const refundWithinRange = sale.refunded_at
       ? dateInRange(sale.refunded_at, start, end)
       : false;
+    const tierName = tierNames.get(sale.tier_id) ?? "Retained ticket tier";
+    const statusLabel = sale.refunded_at
+      ? "Sold; refund recorded"
+      : sale.verification_status === "approved"
+        ? "Paid"
+        : sale.verification_status === "recorded"
+          ? "Paid — awaiting officer confirmation"
+          : `${sale.verification_status} — not counted`;
+
     if (saleWithinRange) {
       ticketRows.push([
         saleDate,
         "Ticket sale",
         "Ticket Sales",
         "",
-        tierNames.get(sale.tier_id) ?? "Retained ticket tier",
-        sale.refunded_at
-          ? "Sold; refund recorded"
-          : sale.verification_status === "approved"
-            ? "Paid"
-            : sale.verification_status === "recorded"
-              ? "Paid — awaiting officer confirmation"
-              : `${sale.verification_status} — not counted`,
+        tierName,
+        statusLabel,
         saleAmount,
         sale.quantity,
         unitPrice,
         sale.payment_method?.replaceAll("_", " ") ?? "",
         sale.buyer_name ?? "",
       ]);
+      ledgerPdfRows.push({
+        date: saleDate,
+        type: "Ticket sale",
+        category: "Ticket Sales",
+        description: `${tierName} (${sale.quantity}x)`,
+        status: statusLabel,
+        counterparty: sale.buyer_name || "Anonymous",
+        amount: formatMoneyText(saleAmount),
+      });
     }
     if (refundWithinRange && sale.refunded_at) {
+      const refundDay = timestampDay(sale.refunded_at);
       ticketRows.push([
-        timestampDay(sale.refunded_at),
+        refundDay,
         "Ticket refund",
         "Ticket Sales",
         "",
-        tierNames.get(sale.tier_id) ?? "Retained ticket tier",
+        tierName,
         "Refunded",
         -saleAmount,
         -sale.quantity,
@@ -297,20 +224,46 @@ export async function GET(
         sale.payment_method?.replaceAll("_", " ") ?? "",
         sale.buyer_name ?? "",
       ]);
+      ledgerPdfRows.push({
+        date: refundDay,
+        type: "Ticket refund",
+        category: "Ticket Sales",
+        description: `${tierName} (${sale.quantity}x)`,
+        status: "Refunded",
+        counterparty: sale.buyer_name || "Anonymous",
+        amount: formatMoneyText(-saleAmount),
+      });
     }
   }
 
   const transactionRows = transactions.map((transaction) => {
     const transactionAmount = amount(transaction.amount_ngn);
     if (transactionAmount === null) return null;
-    return [
-      transaction.transaction_date,
-      transaction.kind === "income" ? "Other income" : "Expense",
-      transaction.category_name_snapshot ?? "Uncategorized legacy entry",
-      transaction.budget_allocation_name_snapshot ?? "",
+    const typeLabel =
+      transaction.kind === "income" ? "Other income" : "Expense";
+    const categoryLabel =
+      transaction.category_name_snapshot ?? "Uncategorized legacy entry";
+    const descLabel =
       transaction.kind === "income"
         ? (transaction.source_note ?? "")
-        : (transaction.description ?? ""),
+        : (transaction.description ?? "");
+
+    ledgerPdfRows.push({
+      date: transaction.transaction_date,
+      type: typeLabel,
+      category: categoryLabel,
+      description: descLabel || "—",
+      status: transaction.payment_status,
+      counterparty: transaction.payer_payee || "—",
+      amount: formatMoneyText(transactionAmount),
+    });
+
+    return [
+      transaction.transaction_date,
+      typeLabel,
+      categoryLabel,
+      transaction.budget_allocation_name_snapshot ?? "",
+      descLabel,
       transaction.payment_status,
       transactionAmount,
       "",
@@ -357,43 +310,74 @@ export async function GET(
   }
 
   const format = url.searchParams.get("format") === "pdf" ? "pdf" : "csv";
+  const includeAiParam = url.searchParams.get("includeAi");
+  const includeAi = includeAiParam !== "false" && includeAiParam !== "0";
 
   if (format === "pdf") {
-    const lines: string[] = [
-      `Event Title: ${event.title}`,
-      `Period: ${start ?? "All dates"} to ${end ?? "All dates"}`,
-      `Generated: ${getWATDate()}`,
-      "",
-      "--- FINANCIAL SUMMARY ---",
-      `Paid other income: NGN ${reportSummary.paid_income_ngn}`,
-      `Pending other income: NGN ${reportSummary.pending_income_ngn}`,
-      `Unpaid other income: NGN ${reportSummary.unpaid_income_ngn}`,
-      `Paid & deposit expenses: NGN ${reportSummary.actual_expense_ngn}`,
-      `Expense commitments: NGN ${reportSummary.committed_expense_ngn}`,
-      `Ticket income net of refunds: NGN ${reportSummary.ticket_income_ngn}`,
-      `Net ticket quantity: ${reportSummary.tickets_sold}`,
-      `Net event result: NGN ${reportSummary.net_result_ngn}`,
-      "",
-      "--- TRANSACTIONS & TICKET RELEASES ---",
-    ];
+    const narrative = includeAi
+      ? await loadApprovedNarrativeForReport(
+          supabase,
+          "event_finance",
+          eventId,
+          snap.fingerprint,
+        )
+      : null;
 
-    for (const row of transactionRows) {
-      if (!row) continue;
-      lines.push(
-        `${row[0]} | ${row[1]} | NGN ${row[6]} | ${row[5]} | ${row[4] || "No description"} | ${row[10] || "No counterparty"}`,
+    let pdfData: Uint8Array | null;
+    try {
+      pdfData = await renderReportPdf(
+        createElement(EventFinancePdfDocument, {
+          eventTitle: event.title,
+          from: start,
+          to: end,
+          generatedDate: getWATDate(),
+          summary: reportSummary,
+          ledgerRows: ledgerPdfRows.sort((a, b) =>
+            a.date.localeCompare(b.date),
+          ),
+          narrative,
+        }),
+      );
+    } catch (err) {
+      console.error(
+        "[Event Finance PDF] Branded render failed, falling back:",
+        err,
+      );
+      const lines: string[] = [
+        `Event Title: ${event.title}`,
+        `Period: ${start ?? "All dates"} to ${end ?? "All dates"}`,
+        `Generated: ${getWATDate()}`,
+        "",
+        "--- FINANCIAL SUMMARY ---",
+        `Paid other income: NGN ${reportSummary.paid_income_ngn}`,
+        `Pending other income: NGN ${reportSummary.pending_income_ngn}`,
+        `Unpaid other income: NGN ${reportSummary.unpaid_income_ngn}`,
+        `Paid & deposit expenses: NGN ${reportSummary.actual_expense_ngn}`,
+        `Expense commitments: NGN ${reportSummary.committed_expense_ngn}`,
+        `Ticket income net of refunds: NGN ${reportSummary.ticket_income_ngn}`,
+        `Net ticket quantity: ${reportSummary.tickets_sold}`,
+        `Net event result: NGN ${reportSummary.net_result_ngn}`,
+        "",
+        "--- TRANSACTIONS & TICKET RELEASES ---",
+      ];
+      for (const row of transactionRows) {
+        if (!row) continue;
+        lines.push(
+          `${row[0]} | ${row[1]} | NGN ${row[6]} | ${row[5]} | ${row[4] || "No description"} | ${row[10] || "No counterparty"}`,
+        );
+      }
+      for (const row of ticketRows) {
+        lines.push(
+          `${row[0]} | ${row[1]} (${row[4]}) | Qty: ${row[7]} | NGN ${row[6]} | ${row[9]} | ${row[10] || "Anonymous"}`,
+        );
+      }
+      pdfData = createSimplePdf(
+        "Carpenters Family Social Club | Event Finance Report",
+        event.title,
+        lines,
       );
     }
-    for (const row of ticketRows) {
-      lines.push(
-        `${row[0]} | ${row[1]} (${row[3]}) | Qty: ${row[6]} | NGN ${row[5]} | ${row[8]} | ${row[9] || "Anonymous"}`,
-      );
-    }
 
-    const pdfData = createSimplePdf(
-      "Carpenters Family Social Club | Event Finance Report",
-      event.title,
-      lines,
-    );
     if (!pdfData) {
       return errorResponse(
         413,

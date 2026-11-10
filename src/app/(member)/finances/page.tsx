@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { FinancesPageView } from "@/components/finances/finances-page-view";
+import { isAiReportsEnabled } from "@/lib/ai/provider.server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { FinanceCategory, FinanceTransaction } from "./finance-forms";
 
@@ -318,6 +319,7 @@ export default async function FinancesPage({
       financeUnavailable={financeUnavailable}
       isAdmin={isAdmin}
       isOfficer={isOfficer}
+      aiEnabled={isAiReportsEnabled()}
       notice={params.notice}
       page={page}
       pageCount={pageCount}

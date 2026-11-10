@@ -9,6 +9,7 @@ const navigationIcons: Record<string, ClubIconName> = {
   "/": "home",
   "/portal": "home",
   "/officers/members": "users",
+  "/officers/reports": "file",
   "/announcements": "megaphone",
   "/polls": "poll",
   "/dues": "wallet",
