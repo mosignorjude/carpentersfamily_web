@@ -1,12 +1,13 @@
 "use client";
 
-import { Download, Printer } from "lucide-react";
+import { Download, Printer, Users } from "lucide-react";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { downloadLedgerCSV, formatNaira, formatPercent } from "@/lib/format";
 import type {
   DashboardCostCenter,
   DashboardEventInfo,
   DashboardRevenueStream,
+  DashboardTeamMember,
   DashboardTransaction,
 } from "./dashboard-types";
 
@@ -15,9 +16,11 @@ interface TabReportsProps {
   revenueStreams: DashboardRevenueStream[];
   costCenters: DashboardCostCenter[];
   transactions: DashboardTransaction[];
+  teamMembers?: DashboardTeamMember[];
   totalRevenue: number;
   totalExpenses: number;
   budgetCeiling: number;
+  onOpenDownloadReportModal?: () => void;
 }
 
 export function TabReports({
@@ -25,9 +28,11 @@ export function TabReports({
   revenueStreams,
   costCenters,
   transactions,
+  teamMembers = [],
   totalRevenue,
   totalExpenses,
   budgetCeiling,
+  onOpenDownloadReportModal,
 }: TabReportsProps) {
   const netSurplus = totalRevenue - totalExpenses;
   const safeBudget = budgetCeiling || 1;
@@ -60,7 +65,11 @@ export function TabReports({
 
           <button
             className="px-4 py-2 text-xs font-semibold text-white bg-[#174C37] hover:bg-[#103D2B] rounded-xl min-h-[40px] flex items-center justify-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-            onClick={() => downloadLedgerCSV(transactions)}
+            onClick={
+              onOpenDownloadReportModal
+                ? onOpenDownloadReportModal
+                : () => downloadLedgerCSV(transactions)
+            }
             type="button"
           >
             <Download className="w-3.5 h-3.5 text-white" />
@@ -68,6 +77,42 @@ export function TabReports({
           </button>
         </div>
       </div>
+
+      {/* Section A: Event Committee & Officers */}
+      {teamMembers && teamMembers.length > 0 && (
+        <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-5 shadow-xs space-y-3">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD3]">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-[#174C37]" />
+              <h4 className="text-base font-bold text-[#3D291F]">
+                Event Committee &amp; Officers
+              </h4>
+            </div>
+            <span className="text-[#174C37] font-semibold font-mono text-xs bg-[#FAF6F0] px-2.5 py-1 rounded-lg border border-[#E5DDD3]">
+              {teamMembers.length} Assigned
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {teamMembers.map((m) => (
+              <div
+                className="p-3 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0]/60 flex items-center justify-between text-xs"
+                key={m.id}
+              >
+                <div>
+                  <h5 className="font-bold text-[#3D291F] text-sm">{m.name}</h5>
+                  <span className="text-[11px] text-[#7A685D]">
+                    Committee Member
+                  </span>
+                </div>
+                <span className="font-semibold text-[11px] text-[#174C37] bg-[#174C37]/10 px-2 py-0.5 rounded-md">
+                  {m.role}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Embedded Official Financial Statement */}
       <div className="bg-white sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 border-[#E5DDD3] p-4 sm:p-0 space-y-6 text-xs text-[#3D291F] min-w-0 max-w-full overflow-hidden">

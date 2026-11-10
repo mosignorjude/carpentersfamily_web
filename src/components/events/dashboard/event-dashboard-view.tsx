@@ -1089,7 +1089,9 @@ export function EventDashboardView({
               budgetCeiling={event.budgetCeiling}
               costCenters={costCenters}
               event={event}
+              onOpenDownloadReportModal={() => setIsDownloadReportModalOpen(true)}
               revenueStreams={revenueStreams}
+              teamMembers={teamMembers}
               totalExpenses={totalExpenses}
               totalRevenue={totalRevenue}
               transactions={transactions}
