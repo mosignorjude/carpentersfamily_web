@@ -43,6 +43,10 @@ export async function generateGroundedNarrative(
         content: validated.content,
       };
     }
+    console.warn(
+      `[AI Grounding] Rejected ${reportType} draft (strictRetry=${strictRetry}):`,
+      validated.reasons,
+    );
     lastReasons = validated.reasons;
   }
 

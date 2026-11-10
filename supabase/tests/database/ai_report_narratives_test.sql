@@ -204,7 +204,16 @@ select is(
   'deactivated member receives nothing from get_approved_report_narrative'
 );
 
--- 4. Cron system publish is idempotent and notifies officers only
+-- 4. Cron system snapshot & publish run under service_role without auth.uid(), idempotently notifying officers only
+reset role;
+set local role service_role;
+select set_config('request.jwt.claim.sub', '', true);
+
+select ok(
+  (public.cron_club_overview_report_data(date '2026-10-01', date '2026-10-31') #>> '{club_finance,current_club_balance_ngn}') is not null,
+  'cron_club_overview_report_data executes cleanly as service_role without auth.uid()'
+);
+
 reset role;
 select is(
   public.cron_publish_monthly_overview(

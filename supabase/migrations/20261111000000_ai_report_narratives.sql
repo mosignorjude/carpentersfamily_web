@@ -476,10 +476,27 @@ as $function$
           and t.voided_at is null
           and t.transaction_date between bounds.period_start and bounds.period_end
       ), 0)::text,
-      'current_club_balance_ngn', coalesce((
-        select summary.balance::bigint
-        from private.club_finance_summary_core() as summary
-      ), 0)::text,
+      'current_club_balance_ngn', (
+        coalesce((
+          select pg_catalog.sum(dp.amount_ngn)::bigint
+          from public.dues_payments as dp
+          where dp.payment_method is distinct from 'pre_launch_reconciliation'
+        ), 0::bigint)
+        + coalesce((
+          select pg_catalog.sum(t.amount_ngn)::bigint
+          from public.club_financial_transactions as t
+          where t.kind = 'income' and t.voided_at is null
+        ), 0::bigint)
+        - coalesce((
+          select pg_catalog.sum(t.amount_ngn)::bigint
+          from public.club_financial_transactions as t
+          where t.kind = 'expense' and t.voided_at is null
+        ), 0::bigint)
+        + coalesce((
+          select cash.net::bigint
+          from private.event_cash_totals(null::uuid) as cash
+        ), 0::bigint)
+      )::text,
       'expense_by_category', coalesce((
         select pg_catalog.jsonb_agg(
           pg_catalog.jsonb_build_object(
