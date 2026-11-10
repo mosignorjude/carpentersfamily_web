@@ -55,6 +55,7 @@ import {
 } from "./modals/record-transaction-modal";
 import { TransactionDetailModal } from "./modals/transaction-detail-modal";
 import { VoidTransactionModal } from "./modals/void-transaction-modal";
+import { VoucherInspectionDrawer } from "./voucher-inspection-drawer";
 import { EventDomainLedger } from "./event-domain-ledger";
 import { TabAuditLog } from "./tab-audit-log";
 import { TabBudgetAllocations } from "./tab-budget-allocations";
@@ -179,6 +180,10 @@ export function EventDashboardView({
 
   // Spotlight header metadata disclosure
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
+
+  // Voucher inspection drawer state
+  const [selectedTxnForVoucher, setSelectedTxnForVoucher] =
+    useState<DashboardTransaction | null>(null);
 
   useEffect(() => {
     function handleDismiss(event: Event) {
@@ -1067,6 +1072,7 @@ export function EventDashboardView({
                 currentUserId={currentUserId}
                 domain="all"
                 eventId={event.id}
+                onInspect={(txn) => setSelectedTxnForVoucher(txn)}
                 onRecordTransaction={() => {
                   setRecordInitialType("expense");
                   setRecordInitialCategory(undefined);
@@ -1149,6 +1155,15 @@ export function EventDashboardView({
           setSelectedTransaction(null);
         }}
         transaction={selectedTransaction}
+      />
+
+      <VoucherInspectionDrawer
+        currentUserId={currentUserId}
+        eventId={event.id}
+        isOpen={Boolean(selectedTxnForVoucher)}
+        onClose={() => setSelectedTxnForVoucher(null)}
+        transaction={selectedTxnForVoucher}
+        userRole={userRole}
       />
 
       <EventCategoryManagementModal

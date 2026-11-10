@@ -17,12 +17,16 @@ import { formatNaira } from "@/lib/format";
 import type { DashboardTransaction } from "./dashboard-types";
 
 interface EventDomainLedgerProps {
-  title: string;
-  domain: "tickets" | "revenue" | "expenses";
+  title?: string;
+  domain: "tickets" | "revenue" | "expenses" | "all";
   transactions: DashboardTransaction[];
   currentUserId?: string;
   userRole?: string;
-  onInspect: (transaction: DashboardTransaction) => void;
+  eventId?: string;
+  categories?: any[];
+  canRecord?: boolean;
+  onRecordTransaction?: () => void;
+  onInspect?: (transaction: DashboardTransaction) => void;
   onApprove?: (transaction: DashboardTransaction) => void;
   onReject?: (transaction: DashboardTransaction) => void;
 }
@@ -30,7 +34,7 @@ interface EventDomainLedgerProps {
 const PAGE_SIZE = 20;
 
 export function EventDomainLedger({
-  title,
+  title = "Transaction Ledger",
   domain,
   transactions,
   currentUserId,
@@ -43,6 +47,9 @@ export function EventDomainLedger({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<
     "all" | "recorded" | "approved" | "rejected" | "cancelled"
+  >("all");
+  const [typeFilter, setTypeFilter] = useState<
+    "all" | "tickets" | "revenue" | "expenses"
   >("all");
   const [channelFilter, setChannelFilter] = useState<
     "all" | "member" | "online"
@@ -60,11 +67,21 @@ export function EventDomainLedger({
   const resolveStatus = (txn: DashboardTransaction) =>
     txn.status === "voided" ? "rejected" : txn.verificationStatus || "approved";
 
-  // Filter transactions by status, channel, and search query
+  // Filter transactions by status, channel, domain type, and search query
   const filtered = transactions.filter((txn) => {
     const status = resolveStatus(txn);
     if (statusFilter !== "all" && status !== statusFilter) {
       return false;
+    }
+
+    if (domain === "all" && typeFilter !== "all") {
+      if (typeFilter === "tickets") {
+        if (txn.category !== "ticket_sales") return false;
+      } else if (typeFilter === "revenue") {
+        if (txn.type !== "revenue" || txn.category === "ticket_sales") return false;
+      } else if (typeFilter === "expenses") {
+        if (txn.type !== "expense") return false;
+      }
     }
 
     if (domain === "tickets" && channelFilter !== "all") {
@@ -110,6 +127,23 @@ export function EventDomainLedger({
   const cancelledCount = transactions.filter(
     (t) => resolveStatus(t) === "cancelled",
   ).length;
+
+  const ticketsCount = transactions.filter(
+    (t) => t.category === "ticket_sales",
+  ).length;
+  const revenueCount = transactions.filter(
+    (t) => t.type === "revenue" && t.category !== "ticket_sales",
+  ).length;
+  const expensesCount = transactions.filter(
+    (t) => t.type === "expense",
+  ).length;
+
+  const filteredNet = filtered.reduce((acc, txn) => {
+    const s = resolveStatus(txn);
+    if (s === "rejected" || s === "cancelled") return acc;
+    if (txn.type === "expense") return acc - txn.amount;
+    return acc + txn.amount;
+  }, 0);
 
   const memberChannelCount = transactions.filter(
     (t) =>
@@ -202,6 +236,85 @@ export function EventDomainLedger({
           >
             Online Sales ({onlineChannelCount})
           </button>
+        </div>
+      )}
+
+      {/* Domain Type Filter Bar (Master Ledger domain="all") */}
+      {domain === "all" && (
+        <div className="px-4 py-2 border-b border-[#E5DDD3] bg-[#FAF6F0]/80 flex items-center justify-between gap-3 overflow-x-auto text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold text-[#7A685D] uppercase tracking-wider mr-1 shrink-0">
+              Type:
+            </span>
+            <button
+              className={`px-3 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] ${
+                typeFilter === "all"
+                  ? "bg-[#174C37] text-white font-semibold shadow-2xs"
+                  : "bg-white text-[#5C4638] border border-[#E5DDD3] hover:bg-[#FAF6F0]"
+              }`}
+              onClick={() => {
+                setTypeFilter("all");
+                setCurrentPage(1);
+              }}
+              type="button"
+            >
+              All ({transactions.length})
+            </button>
+            <button
+              className={`px-3 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] ${
+                typeFilter === "tickets"
+                  ? "bg-[#174C37] text-white font-semibold shadow-2xs"
+                  : "bg-white text-[#5C4638] border border-[#E5DDD3] hover:bg-[#FAF6F0]"
+              }`}
+              onClick={() => {
+                setTypeFilter("tickets");
+                setCurrentPage(1);
+              }}
+              type="button"
+            >
+              Tickets ({ticketsCount})
+            </button>
+            <button
+              className={`px-3 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] ${
+                typeFilter === "revenue"
+                  ? "bg-[#174C37] text-white font-semibold shadow-2xs"
+                  : "bg-white text-[#5C4638] border border-[#E5DDD3] hover:bg-[#FAF6F0]"
+              }`}
+              onClick={() => {
+                setTypeFilter("revenue");
+                setCurrentPage(1);
+              }}
+              type="button"
+            >
+              Revenue ({revenueCount})
+            </button>
+            <button
+              className={`px-3 py-1.5 rounded-xl font-medium transition-colors cursor-pointer min-h-[38px] ${
+                typeFilter === "expenses"
+                  ? "bg-[#174C37] text-white font-semibold shadow-2xs"
+                  : "bg-white text-[#5C4638] border border-[#E5DDD3] hover:bg-[#FAF6F0]"
+              }`}
+              onClick={() => {
+                setTypeFilter("expenses");
+                setCurrentPage(1);
+              }}
+              type="button"
+            >
+              Expenses ({expensesCount})
+            </button>
+          </div>
+
+          <div className="text-right shrink-0">
+            <span className="text-[11px] text-[#7A685D] block">Filtered Net</span>
+            <span
+              className={`font-mono font-bold text-xs ${
+                filteredNet >= 0 ? "text-[#174C37]" : "text-[#BA3C2A]"
+              }`}
+            >
+              {filteredNet >= 0 ? "+" : ""}
+              {formatNaira(filteredNet)}
+            </span>
+          </div>
         </div>
       )}
 
