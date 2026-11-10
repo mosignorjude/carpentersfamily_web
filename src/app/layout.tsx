@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
@@ -100,6 +101,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <NavigationProgressBar />
         <GlobalFlashListener />
         {children}
+        <Analytics />
       </body>
     </html>
   );
