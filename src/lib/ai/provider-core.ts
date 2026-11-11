@@ -2,6 +2,7 @@ export interface NarrativeRequest {
   system: string;
   facts: unknown;
   schema: Record<string, unknown>;
+  maxOutputTokens?: number;
 }
 
 export interface AiProviderAdapter {

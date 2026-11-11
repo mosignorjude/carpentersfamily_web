@@ -4,11 +4,16 @@ import { FileSpreadsheet, FileText, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CfFilterPill } from "@/components/ui";
+import type { DocumentDraftType } from "@/lib/ai/document-drafts";
 import type { CustomReportMetadata } from "@/lib/ai/report-spec";
 import { formatNaira } from "@/lib/format";
 import type { OverviewPeriod } from "@/lib/reports/period";
 import { AiSummaryPanel, type ClientNarrativeDto } from "./ai-summary-panel";
 import { CustomReportBuilder } from "./custom-report-builder";
+import {
+  DocumentDraftEditor,
+  type MeetingDraftOption,
+} from "./document-draft-editor";
 
 export interface ClubOverviewFactsView {
   period_label: string;
@@ -61,6 +66,9 @@ export function ClubOverviewClient({
   aiEnabled,
   initialNarrative,
   customMetadata,
+  meetings,
+  initialDraftDoc,
+  initialMeetingId,
 }: {
   period: OverviewPeriod;
   currentMonthParam: string;
@@ -70,6 +78,9 @@ export function ClubOverviewClient({
   aiEnabled: boolean;
   initialNarrative: ClientNarrativeDto | null;
   customMetadata: CustomReportMetadata;
+  meetings: MeetingDraftOption[];
+  initialDraftDoc?: DocumentDraftType;
+  initialMeetingId?: string;
 }) {
   const router = useRouter();
   const [includeAi, setIncludeAi] = useState(true);
@@ -334,20 +345,18 @@ export function ClubOverviewClient({
         initialMetadata={customMetadata}
       />
 
-      <section className="pt-2">
-        <div className="rounded-2xl border border-dashed border-[#E5DDD3] bg-[#FAF6F0] p-4 space-y-1">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#3D291F]">
-            <Sparkles className="w-3.5 h-3.5 text-[#174C37]" />
-            <span>
-              Phase 3: AGM, Treasurer &amp; Minutes Drafting (Planned)
-            </span>
-          </div>
-          <p className="text-xs text-[#5C4638]">
-            Draft formal AGM financial statements, treasurer reports, and
-            pseudonymised meeting minutes.
-          </p>
-        </div>
-      </section>
+      <DocumentDraftEditor
+        aiEnabled={aiEnabled}
+        currentMonthParam={currentMonthParam}
+        defaultPeriodParam={period.periodParam}
+        defaultYear={
+          Number(currentYearParam.slice(5)) || new Date().getUTCFullYear()
+        }
+        initialDocType={initialDraftDoc}
+        initialMeetingId={initialMeetingId}
+        meetings={meetings}
+        previousMonthParam={previousMonthParam}
+      />
     </div>
   );
 }

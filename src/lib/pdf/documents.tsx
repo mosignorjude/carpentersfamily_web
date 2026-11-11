@@ -1,6 +1,11 @@
-import { Document, Text, View } from "@react-pdf/renderer";
+import { Document, StyleSheet, Text, View } from "@react-pdf/renderer";
+import type { FormalDocumentDraftContent } from "@/lib/ai/document-drafts";
 import { clubBrand } from "@/lib/brand";
 import { formatNgn, owedByMember, wholeNgn } from "@/lib/report-export";
+import type {
+  AgmComparisonRow,
+  AgmStatementFacts,
+} from "@/lib/reports/drafts-core";
 import {
   AiSummarySection,
   DataTable,
@@ -654,6 +659,523 @@ export function CustomReportPdfDocument(props: CustomReportPdfProps) {
             average: formatMoneyLabel(row.averageAmountNgn ?? 0),
             share: `${row.sharePct}%`,
           }))}
+        />
+      </ReportShell>
+    </Document>
+  );
+}
+
+const formalPdfStyles = StyleSheet.create({
+  sectionCard: {
+    backgroundColor: "#FAF6F0",
+    borderWidth: 1,
+    borderColor: "#E5DDD3",
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginBottom: 8,
+  },
+  sectionHeading: {
+    fontSize: 9.5,
+    fontWeight: 700,
+    color: "#174C37",
+    marginBottom: 4,
+  },
+  sectionBody: {
+    fontSize: 8.5,
+    color: "#3D291F",
+    lineHeight: 1.45,
+  },
+  summaryBanner: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5DDD3",
+    borderLeftWidth: 3.5,
+    borderLeftColor: "#D6A23A",
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
+  summaryBannerLabel: {
+    fontSize: 7.5,
+    fontWeight: 700,
+    color: "#8D5B0E",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    marginBottom: 3,
+  },
+  signatureBlock: {
+    marginTop: 14,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#E5DDD3",
+  },
+  signatureMeta: {
+    fontSize: 7.5,
+    color: "#5C4638",
+    marginBottom: 10,
+  },
+  signatureGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 14,
+  },
+  signatureCol: {
+    flex: 1,
+  },
+  signatureLine: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#3D291F",
+    height: 18,
+    marginBottom: 4,
+  },
+  signatureCaption: {
+    fontSize: 7.5,
+    fontWeight: 700,
+    color: "#5C4638",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+});
+
+function uniqueRecs(items: readonly string[]) {
+  const seen = new Map<string, number>();
+  return items.map((text) => {
+    const count = (seen.get(text) ?? 0) + 1;
+    seen.set(text, count);
+    return { key: `${text.slice(0, 32)}#${count}`, text };
+  });
+}
+
+function FormalSectionsBlock({
+  draft,
+  approvedBy,
+  approvedAt,
+  badgeLabel,
+}: {
+  draft: FormalDocumentDraftContent;
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  badgeLabel: string;
+}) {
+  const recItems = uniqueRecs(draft.recommendations);
+  return (
+    <View>
+      <View style={formalPdfStyles.summaryBanner} wrap={false}>
+        <Text style={formalPdfStyles.summaryBannerLabel}>
+          {badgeLabel}
+          {approvedBy && approvedAt
+            ? ` · Approved by ${approvedBy} (${approvedAt})`
+            : ""}
+        </Text>
+        <Text style={pdfStyles.aiHeadline}>{draft.title}</Text>
+        <Text style={formalPdfStyles.sectionBody}>{draft.summary}</Text>
+      </View>
+
+      {draft.sections.map((section) => (
+        <View
+          key={section.key}
+          style={formalPdfStyles.sectionCard}
+          wrap={false}
+        >
+          <Text style={formalPdfStyles.sectionHeading}>{section.heading}</Text>
+          <Text style={formalPdfStyles.sectionBody}>{section.body}</Text>
+        </View>
+      ))}
+
+      {recItems.length > 0 ? (
+        <View style={pdfStyles.aiBox} wrap={false}>
+          <Text style={pdfStyles.aiSubheading}>
+            Recommendations &amp; Action Priorities
+          </Text>
+          {recItems.map((item) => (
+            <Text key={item.key} style={pdfStyles.aiBullet}>
+              • {item.text}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function SignatureRow({
+  signatories,
+  attestationLine,
+}: {
+  signatories: readonly string[];
+  attestationLine: string;
+}) {
+  return (
+    <View style={formalPdfStyles.signatureBlock} wrap={false}>
+      <Text style={formalPdfStyles.signatureMeta}>{attestationLine}</Text>
+      <View style={formalPdfStyles.signatureGrid}>
+        {signatories.map((roleLabel) => (
+          <View key={roleLabel} style={formalPdfStyles.signatureCol}>
+            <View style={formalPdfStyles.signatureLine} />
+            <Text style={formalPdfStyles.signatureCaption}>{roleLabel}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+export interface AgmStatementPdfProps {
+  fiscalYear: number;
+  generatedDate: string;
+  facts: AgmStatementFacts;
+  comparisonRows: AgmComparisonRow[];
+  draft: FormalDocumentDraftContent | null;
+  approvedByName?: string | null;
+  approvedAt?: string | null;
+}
+
+const AGM_YOY_COLUMNS: readonly DataTableColumn[] = [
+  { key: "item", label: "Statement Line Item", width: "36%" },
+  { key: "cur", label: "Current FY", width: "22%", align: "right" },
+  { key: "prev", label: "Prior FY", width: "20%", align: "right" },
+  { key: "var", label: "YoY Change", width: "22%", align: "right" },
+];
+
+const AGM_EXP_COLUMNS: readonly DataTableColumn[] = [
+  { key: "category", label: "Operating Category", width: "55%" },
+  { key: "share", label: "Share", width: "20%", align: "right" },
+  { key: "amount", label: "Amount", width: "25%", align: "right" },
+];
+
+function formatCompCell(value: number, unit: AgmComparisonRow["unit"]): string {
+  if (unit === "NGN") return formatMoneyLabel(value);
+  if (unit === "PCT") return `${value}%`;
+  return String(value);
+}
+
+export function AgmStatementPdfDocument(props: AgmStatementPdfProps) {
+  const { current, fiscal_year, prior_fiscal_year } = props.facts;
+
+  return (
+    <Document
+      author={clubBrand.name}
+      creator={clubBrand.name}
+      title={`${clubBrand.name} | AGM Financial Statement FY ${fiscal_year}`}
+    >
+      <ReportShell
+        generatedDate={props.generatedDate}
+        periodLabel={`FY ${fiscal_year} vs FY ${prior_fiscal_year}`}
+        reportTitle="AGM Financial Statement"
+        subtitle="Annual General Meeting Report"
+      >
+        <SummaryCards
+          items={[
+            {
+              label: "Closing Club Balance",
+              value: formatMoneyLabel(current.closing_club_balance_ngn),
+              tone: "positive",
+            },
+            {
+              label: `FY ${fiscal_year} Total Inflows`,
+              value: formatMoneyLabel(current.total_inflows_ngn),
+              tone: "positive",
+            },
+            {
+              label: `FY ${fiscal_year} Total Outflows`,
+              value: formatMoneyLabel(current.total_outflows_ngn),
+              tone: "danger",
+            },
+            {
+              label: "Net Surplus / (Deficit)",
+              value: formatMoneyLabel(current.net_surplus_ngn),
+              tone: current.net_surplus_ngn >= 0 ? "positive" : "danger",
+            },
+            {
+              label: "Dues Collection Rate",
+              value: `${current.dues_collection_rate_pct}% (${current.active_members} members)`,
+              tone:
+                current.dues_collection_rate_pct >= 75 ? "positive" : "accent",
+            },
+            {
+              label: "3+ Months Arrears",
+              value: `${current.overdue_three_plus_members} members`,
+              tone:
+                current.overdue_three_plus_members > 0 ? "danger" : "default",
+            },
+          ]}
+        />
+
+        {props.draft ? (
+          <FormalSectionsBlock
+            approvedAt={props.approvedAt}
+            approvedBy={props.approvedByName}
+            badgeLabel="AGM Financial Commentary"
+            draft={props.draft}
+          />
+        ) : null}
+
+        <Text style={pdfStyles.sectionTitle}>
+          Comparative Statement of Income &amp; Expenditure (FY {fiscal_year} vs
+          FY {prior_fiscal_year})
+        </Text>
+        <DataTable
+          columns={AGM_YOY_COLUMNS}
+          emptyMessage="No financial movements recorded for the selected years."
+          rows={props.comparisonRows.map((row) => ({
+            item: row.lineItem,
+            cur: formatCompCell(row.currentValue, row.unit),
+            prev: formatCompCell(row.priorValue, row.unit),
+            var:
+              row.variancePct !== null
+                ? `${formatCompCell(row.varianceValue, row.unit)} (${row.variancePct > 0 ? "+" : ""}${row.variancePct}%)`
+                : formatCompCell(row.varianceValue, row.unit),
+          }))}
+        />
+
+        <Text style={pdfStyles.sectionTitle}>
+          FY {fiscal_year} Operating Expenses by Category
+        </Text>
+        <DataTable
+          columns={AGM_EXP_COLUMNS}
+          emptyMessage="No club operating expenses were recorded during this fiscal year."
+          rows={current.expense_by_category.map((cat) => ({
+            category: cat.category,
+            share: `${cat.share_pct}%`,
+            amount: formatMoneyLabel(cat.amount),
+          }))}
+        />
+
+        <SignatureRow
+          attestationLine={
+            props.approvedByName && props.approvedAt
+              ? `Prepared for the Annual General Meeting · Officer review attested by ${props.approvedByName} on ${props.approvedAt} WAT.`
+              : `Prepared for the Annual General Meeting of ${clubBrand.name} on ${props.generatedDate} WAT.`
+          }
+          signatories={[
+            "Club Treasurer / Date",
+            "Financial Secretary / Date",
+            "Club President / Date",
+          ]}
+        />
+      </ReportShell>
+    </Document>
+  );
+}
+
+export interface TreasurerReportPdfProps {
+  periodLabel: string;
+  periodStart: string;
+  periodEnd: string;
+  generatedDate: string;
+  facts: {
+    treasury_totals: {
+      total_inflows_ngn: number;
+      total_outflows_ngn: number;
+      net_period_cash_flow_ngn: number;
+      closing_club_balance_ngn: number;
+    };
+    club_finance: {
+      period_dues_collected_ngn: number;
+      period_other_income_ngn: number;
+      period_expenses_ngn: number;
+      expense_by_category: Array<{
+        category: string;
+        amount: number;
+        share_pct: number;
+      }>;
+    };
+    dues: {
+      active_members: number;
+      collection_rate_pct: number;
+      owed_through_end_ngn: number;
+      overdue_three_plus_members: number;
+    };
+    events: {
+      events_count: number;
+      net_event_cash_ngn: number;
+      top_events: Array<{ title: string; net_result_ngn: number }>;
+    };
+  };
+  draft: FormalDocumentDraftContent | null;
+  approvedByName?: string | null;
+  approvedAt?: string | null;
+}
+
+export function TreasurerReportPdfDocument(props: TreasurerReportPdfProps) {
+  const { treasury_totals, club_finance, dues, events } = props.facts;
+
+  return (
+    <Document
+      author={clubBrand.name}
+      creator={clubBrand.name}
+      title={`${clubBrand.name} | Treasurer's Report ${props.periodLabel}`}
+    >
+      <ReportShell
+        generatedDate={props.generatedDate}
+        periodLabel={`${props.periodStart} to ${props.periodEnd}`}
+        reportTitle="Treasurer's Report"
+        subtitle={`Period ${props.periodLabel} · Treasury Office`}
+      >
+        <SummaryCards
+          items={[
+            {
+              label: "Closing Club Balance",
+              value: formatMoneyLabel(treasury_totals.closing_club_balance_ngn),
+              tone: "positive",
+            },
+            {
+              label: "Total Period Inflows",
+              value: formatMoneyLabel(treasury_totals.total_inflows_ngn),
+              tone: "positive",
+            },
+            {
+              label: "Total Period Outflows",
+              value: formatMoneyLabel(treasury_totals.total_outflows_ngn),
+              tone: "danger",
+            },
+            {
+              label: "Net Period Cash Flow",
+              value: formatMoneyLabel(treasury_totals.net_period_cash_flow_ngn),
+              tone:
+                treasury_totals.net_period_cash_flow_ngn >= 0
+                  ? "positive"
+                  : "danger",
+            },
+            {
+              label: "Dues Collection Rate",
+              value: `${dues.collection_rate_pct}% (${dues.active_members} members)`,
+              tone: dues.collection_rate_pct >= 75 ? "positive" : "accent",
+            },
+            {
+              label: "Dues Owed Through End",
+              value: formatMoneyLabel(dues.owed_through_end_ngn),
+              tone: dues.overdue_three_plus_members > 0 ? "danger" : "default",
+            },
+          ]}
+        />
+
+        {props.draft ? (
+          <FormalSectionsBlock
+            approvedAt={props.approvedAt}
+            approvedBy={props.approvedByName}
+            badgeLabel="Treasurer's Narrative"
+            draft={props.draft}
+          />
+        ) : null}
+
+        <Text style={pdfStyles.sectionTitle}>
+          Operating Expenditure by Category
+        </Text>
+        <DataTable
+          columns={OVERVIEW_CAT_COLUMNS}
+          emptyMessage="No club operating expenses occurred during this period."
+          rows={club_finance.expense_by_category.map((cat) => ({
+            category: cat.category,
+            share: `${cat.share_pct}%`,
+            amount: formatMoneyLabel(cat.amount),
+          }))}
+        />
+
+        <Text style={pdfStyles.sectionTitle}>
+          Event Cash Performance ({events.events_count} events)
+        </Text>
+        <DataTable
+          columns={OVERVIEW_EVENT_COLUMNS}
+          emptyMessage="No event cash transactions occurred during this period."
+          rows={events.top_events.map((ev) => ({
+            title: ev.title,
+            net: formatMoneyLabel(ev.net_result_ngn),
+          }))}
+        />
+
+        <SignatureRow
+          attestationLine={
+            props.approvedByName && props.approvedAt
+              ? `Submitted by the Office of the Treasurer · Reviewed & approved by ${props.approvedByName} on ${props.approvedAt} WAT.`
+              : `Submitted by the Office of the Treasurer on ${props.generatedDate} WAT.`
+          }
+          signatories={[
+            "Club Treasurer Signature & Date",
+            "President / Attestation & Date",
+          ]}
+        />
+      </ReportShell>
+    </Document>
+  );
+}
+
+export interface MeetingMinutesPdfProps {
+  meetingTitle: string;
+  meetingDateLabel: string;
+  location: string;
+  generatedDate: string;
+  revisionLabel: string;
+  attendanceSummaryLabel: string;
+  draft: FormalDocumentDraftContent | null;
+  plainPublishedText?: string | null;
+  approvedByName?: string | null;
+  approvedAt?: string | null;
+}
+
+export function MeetingMinutesPdfDocument(props: MeetingMinutesPdfProps) {
+  return (
+    <Document
+      author={clubBrand.name}
+      creator={clubBrand.name}
+      title={`${clubBrand.name} | Meeting Minutes — ${props.meetingTitle}`}
+    >
+      <ReportShell
+        generatedDate={props.generatedDate}
+        periodLabel={props.meetingDateLabel}
+        reportTitle="Official Meeting Minutes"
+        subtitle="Secretariat Record"
+      >
+        <SummaryCards
+          items={[
+            {
+              label: "Meeting",
+              value: props.meetingTitle,
+            },
+            {
+              label: "Venue / Location",
+              value: props.location,
+            },
+            {
+              label: "Attendance & Record",
+              value: `${props.attendanceSummaryLabel} · ${props.revisionLabel}`,
+              tone: "positive",
+            },
+          ]}
+        />
+
+        {props.draft ? (
+          <FormalSectionsBlock
+            approvedAt={props.approvedAt}
+            approvedBy={props.approvedByName}
+            badgeLabel="Structured Secretariat Minutes"
+            draft={props.draft}
+          />
+        ) : props.plainPublishedText ? (
+          <View style={formalPdfStyles.sectionCard}>
+            <Text style={formalPdfStyles.sectionHeading}>Recorded Minutes</Text>
+            <Text style={formalPdfStyles.sectionBody}>
+              {props.plainPublishedText}
+            </Text>
+          </View>
+        ) : (
+          <Text style={pdfStyles.emptyNotice}>
+            No minutes have been published or approved for this meeting yet.
+          </Text>
+        )}
+
+        <SignatureRow
+          attestationLine={
+            props.approvedByName && props.approvedAt
+              ? `Secretariat record verified by ${props.approvedByName} on ${props.approvedAt} WAT.`
+              : `Issued from the Club Secretariat on ${props.generatedDate} WAT.`
+          }
+          signatories={[
+            "General Secretary / Date",
+            "Meeting Chair / President / Date",
+          ]}
         />
       </ReportShell>
     </Document>

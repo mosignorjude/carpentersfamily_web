@@ -39,6 +39,8 @@ async function buildModules() {
   const sources = [
     ["src/lib/brand.ts", "brand.js", false],
     ["src/lib/report-export.ts", "report-export.js", false],
+    ["src/lib/ai/pseudonymise.ts", "pseudonymise.js", false],
+    ["src/lib/ai/document-drafts.ts", "document-drafts.js", false],
     ["src/lib/ai/facts.ts", "facts.js", false],
     ["src/lib/ai/grounding.ts", "grounding.js", false],
     ["src/lib/ai/report-spec.ts", "report-spec.js", false],
@@ -56,6 +58,11 @@ async function buildModules() {
     );
     const out = compileTs(raw, srcPath, isJsx)
       .replace(/from\s+["']\.\/facts["']/g, 'from "./facts.js"')
+      .replace(/from\s+["']\.\/pseudonymise["']/g, 'from "./pseudonymise.js"')
+      .replace(
+        /from\s+["']\.\/document-drafts["']/g,
+        'from "./document-drafts.js"',
+      )
       .replace(/from\s+["']\.\/fonts["']/g, 'from "./fonts.js"')
       .replace(/from\s+["']\.\/components["']/g, 'from "./components.js"')
       .replace(/from\s+["']@\/lib\/ai\/facts["']/g, 'from "./facts.js"')

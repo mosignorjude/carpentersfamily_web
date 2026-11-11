@@ -15,6 +15,8 @@
     "test:ai-grounding": "node --test tests/ai-grounding.test.mjs",
     "test:ai-spec": "node --test tests/ai-report-spec.test.mjs",
     "test:ai-custom": "node --test tests/ai-custom-report.test.mjs",
+    "test:ai-pseudonymise": "node --test tests/ai-pseudonymise.test.mjs",
+    "test:ai-drafts": "node --test tests/ai-drafts.test.mjs",
     "test:ai-provider": "node --test tests/ai-provider.test.mjs",
     "test:ai-request-guard": "node --test tests/ai-request-guard.test.mjs",
     "test:ai-monthly": "node --test tests/ai-monthly-overview.test.mjs",

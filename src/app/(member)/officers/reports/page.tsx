@@ -2,7 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ClubOverviewClient } from "@/components/reports/club-overview-client";
 import { DataUnavailableCard } from "@/components/ui/state-screen";
+import { isUuid } from "@/lib/ai/api-schemas";
+import { isDocumentDraftType } from "@/lib/ai/document-drafts";
 import { isAiReportsEnabled } from "@/lib/ai/provider.server";
+import { listMeetingsForDrafting } from "@/lib/reports/drafts.server";
 import {
   loadActiveOfficerNarrative,
   loadClubOverviewSnapshot,
@@ -18,7 +21,11 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export default async function OfficerReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{
+    period?: string;
+    draftDoc?: string;
+    event?: string;
+  }>;
 }) {
   const params = await searchParams;
   let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
@@ -95,9 +102,10 @@ export default async function OfficerReportsPage({
 
   const selectedPeriod = parseOverviewPeriod(params.period) ?? currentMonth;
 
-  const [snap, customMetadata] = await Promise.all([
+  const [snap, customMetadata, meetings] = await Promise.all([
     loadClubOverviewSnapshot(supabase, selectedPeriod),
     loadCustomReportMetadata(supabase),
+    listMeetingsForDrafting(supabase),
   ]);
   const initialNarrative =
     snap.kind === "ok"
@@ -110,6 +118,11 @@ export default async function OfficerReportsPage({
         })
       : null;
 
+  const initialDraftDoc = isDocumentDraftType(params.draftDoc)
+    ? params.draftDoc
+    : undefined;
+  const initialMeetingId = isUuid(params.event) ? params.event : undefined;
+
   return (
     <ClubOverviewClient
       aiEnabled={isAiReportsEnabled()}
@@ -117,7 +130,10 @@ export default async function OfficerReportsPage({
       currentYearParam={currentYear.periodParam}
       customMetadata={customMetadata}
       facts={snap.kind === "ok" ? snap.facts : null}
+      initialDraftDoc={initialDraftDoc}
+      initialMeetingId={initialMeetingId}
       initialNarrative={initialNarrative}
+      meetings={meetings}
       period={selectedPeriod}
       previousMonthParam={previousMonth.periodParam}
     />

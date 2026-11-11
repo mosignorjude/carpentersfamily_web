@@ -1,3 +1,11 @@
+import {
+  collectDraftStrings,
+  type FormalDocumentDraftContent,
+  findDraftUnresolvedTokens,
+  formatMinutesForEventRecord,
+  normalizeFormalDocumentDraft,
+} from "./document-drafts";
+
 export interface AiNarrativeContent {
   headline: string;
   highlights: string[];
@@ -393,22 +401,11 @@ function isGroundedNumber(
   return false;
 }
 
-export function validateNarrativeContent(
-  raw: unknown,
+function verifyStringsGroundedInFacts(
+  allStrings: readonly string[],
   facts: unknown,
-): GroundingValidationResult {
-  const shapeResult = validateNarrativeShape(raw);
-  if (!shapeResult.ok) return shapeResult;
-
-  const { content } = shapeResult;
-  const allStrings = [
-    content.headline,
-    ...content.highlights,
-    ...content.risks,
-    ...content.recommendations,
-  ];
-  const reasons: string[] = [];
-
+  reasons: string[],
+): void {
   for (const segment of allStrings) {
     checkTextSafety(segment, reasons);
   }
@@ -427,9 +424,92 @@ export function validateNarrativeContent(
       reasons.push(`Ungrounded number in AI output: ${rawToken}${match[2]}`);
     }
   }
+}
+
+export function validateNarrativeContent(
+  raw: unknown,
+  facts: unknown,
+): GroundingValidationResult {
+  const shapeResult = validateNarrativeShape(raw);
+  if (!shapeResult.ok) return shapeResult;
+
+  const { content } = shapeResult;
+  const allStrings = [
+    content.headline,
+    ...content.highlights,
+    ...content.risks,
+    ...content.recommendations,
+  ];
+  const reasons: string[] = [];
+
+  verifyStringsGroundedInFacts(allStrings, facts, reasons);
 
   if (reasons.length > 0) {
     return { ok: false, reasons };
   }
   return { ok: true, content };
+}
+
+export function validateFormalDraftContent(
+  docType: "agm_statement" | "treasurer_report",
+  raw: unknown,
+  facts: unknown,
+):
+  | { ok: true; content: FormalDocumentDraftContent }
+  | { ok: false; reasons: string[] } {
+  const shape = normalizeFormalDocumentDraft(docType, raw);
+  if (!shape.ok) return shape;
+
+  const reasons: string[] = [];
+  verifyStringsGroundedInFacts(
+    collectDraftStrings(shape.draft),
+    facts,
+    reasons,
+  );
+
+  if (reasons.length > 0) {
+    return { ok: false, reasons };
+  }
+  return { ok: true, content: shape.draft };
+}
+
+export function validateMinutesDraftContent(raw: unknown):
+  | {
+      ok: true;
+      content: FormalDocumentDraftContent;
+      unresolvedTokens: string[];
+    }
+  | { ok: false; reasons: string[] } {
+  const shape = normalizeFormalDocumentDraft("minutes", raw);
+  if (!shape.ok) return shape;
+
+  const reasons: string[] = [];
+  const allStrings = collectDraftStrings(shape.draft);
+  for (const segment of allStrings) {
+    if (hasDisallowedControlChar(segment)) {
+      reasons.push("Control characters are not allowed in minutes text.");
+    }
+    if (/<script|<iframe|javascript:|<[a-z!/][^>]*>/i.test(segment)) {
+      reasons.push("HTML or script markup is not allowed in minutes text.");
+    }
+  }
+
+  const formatted = formatMinutesForEventRecord(shape.draft);
+  if (formatted.length === 0 || formatted.length > 20_000) {
+    reasons.push(
+      "Formatted minutes must stay between 1 and 20,000 characters for club records.",
+    );
+  }
+
+  if (reasons.length > 0) {
+    return { ok: false, reasons };
+  }
+
+  const unresolvedTokens = findDraftUnresolvedTokens(shape.draft);
+  const content: FormalDocumentDraftContent = {
+    ...shape.draft,
+    ...(unresolvedTokens.length > 0 ? { unresolvedTokens } : {}),
+  };
+
+  return { ok: true, content, unresolvedTokens };
 }

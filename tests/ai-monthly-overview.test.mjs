@@ -28,6 +28,14 @@ async function loadMonthlyCoreModule() {
     new URL("../src/lib/ai/facts.ts", import.meta.url),
     "utf8",
   );
+  const pseudoSrc = await readFile(
+    new URL("../src/lib/ai/pseudonymise.ts", import.meta.url),
+    "utf8",
+  );
+  const docDraftsSrc = await readFile(
+    new URL("../src/lib/ai/document-drafts.ts", import.meta.url),
+    "utf8",
+  );
   const groundingSrc = await readFile(
     new URL("../src/lib/ai/grounding.ts", import.meta.url),
     "utf8",
@@ -52,8 +60,14 @@ async function loadMonthlyCoreModule() {
     ).toString("base64")}`;
 
   const factsUrl = compile(factsSrc);
-  const groundingUrl = compile(groundingSrc);
-  const promptsUrl = compile(promptsSrc.replace("./facts", factsUrl));
+  const pseudoUrl = compile(pseudoSrc);
+  const docDraftsUrl = compile(docDraftsSrc.replace("./pseudonymise", pseudoUrl));
+  const groundingUrl = compile(groundingSrc.replace("./document-drafts", docDraftsUrl));
+  const promptsUrl = compile(
+    promptsSrc
+      .replace("./facts", factsUrl)
+      .replace("./document-drafts", docDraftsUrl),
+  );
   const periodUrl = compile(periodSrc);
   const rewrittenCore = coreSrc
     .replaceAll("@/lib/ai/facts", factsUrl)

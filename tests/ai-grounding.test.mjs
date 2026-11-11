@@ -4,19 +4,28 @@ import { describe, it } from "node:test";
 import ts from "typescript";
 
 async function loadGroundingModule() {
-  const source = await readFile(
-    new URL("../src/lib/ai/grounding.ts", import.meta.url),
-    "utf8",
-  );
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-  }).outputText;
-  return import(
-    `data:text/javascript;base64,${Buffer.from(compiled).toString("base64")}`
-  );
+  const compile = (src) =>
+    `data:text/javascript;base64,${Buffer.from(
+      ts.transpileModule(src, {
+        compilerOptions: {
+          module: ts.ModuleKind.ESNext,
+          target: ts.ScriptTarget.ES2022,
+        },
+      }).outputText,
+    ).toString("base64")}`;
+
+  const [pseudoSrc, docDraftsSrc, source] = await Promise.all([
+    readFile(new URL("../src/lib/ai/pseudonymise.ts", import.meta.url), "utf8"),
+    readFile(
+      new URL("../src/lib/ai/document-drafts.ts", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../src/lib/ai/grounding.ts", import.meta.url), "utf8"),
+  ]);
+
+  const pseudoUrl = compile(pseudoSrc);
+  const docDraftsUrl = compile(docDraftsSrc.replace("./pseudonymise", pseudoUrl));
+  return import(compile(source.replace("./document-drafts", docDraftsUrl)));
 }
 
 const sampleFacts = {

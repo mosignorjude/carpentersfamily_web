@@ -42,7 +42,7 @@ function createGeminiProvider(
             schema: req.schema,
           },
           generation_config: {
-            max_output_tokens: 900,
+            max_output_tokens: req.maxOutputTokens ?? 900,
           },
           store: false,
         },
@@ -78,7 +78,7 @@ function createGroqProvider(apiKey: string, model: string): AiProviderAdapter {
           body: JSON.stringify({
             model,
             temperature: 0.2,
-            max_tokens: 1500,
+            max_tokens: Math.max(1500, req.maxOutputTokens ?? 1500),
             response_format: { type: "json_object" },
             messages: [
               {

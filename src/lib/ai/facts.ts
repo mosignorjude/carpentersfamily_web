@@ -5,7 +5,10 @@ export type AiReportType =
   | "dues"
   | "event_finance"
   | "club_overview"
-  | "custom";
+  | "custom"
+  | "agm_statement"
+  | "treasurer_report"
+  | "minutes";
 
 export interface ClubFinanceSummaryInput {
   dues_income: string | number;
@@ -538,5 +541,194 @@ export function buildClubOverviewFacts(raw: ClubOverviewRpcInput) {
       sessions_count: toWholeNumber(raw.attendance.sessions_count),
       total_checkins: toWholeNumber(raw.attendance.total_checkins),
     },
+  };
+}
+
+function pctDelta(currentVal: number, priorVal: number): number | null {
+  if (priorVal <= 0) return null;
+  return Math.round(((currentVal - priorVal) / priorVal) * 1000) / 10;
+}
+
+export function buildAgmStatementFacts(input: {
+  fiscalYear: number;
+  currentOverview: ClubOverviewRpcInput;
+  priorOverview: ClubOverviewRpcInput;
+}) {
+  const cur = buildClubOverviewFacts(input.currentOverview);
+  const prev = buildClubOverviewFacts(input.priorOverview);
+
+  const curInflows =
+    cur.club_finance.period_dues_collected_ngn +
+    cur.club_finance.period_other_income_ngn +
+    cur.events.event_cash_in_ngn;
+  const curOutflows =
+    cur.club_finance.period_expenses_ngn + cur.events.event_cash_out_ngn;
+  const curOperatingSurplus =
+    cur.club_finance.period_dues_collected_ngn +
+    cur.club_finance.period_other_income_ngn -
+    cur.club_finance.period_expenses_ngn;
+  const curNetSurplus = curInflows - curOutflows;
+
+  const prevInflows =
+    prev.club_finance.period_dues_collected_ngn +
+    prev.club_finance.period_other_income_ngn +
+    prev.events.event_cash_in_ngn;
+  const prevOutflows =
+    prev.club_finance.period_expenses_ngn + prev.events.event_cash_out_ngn;
+  const prevOperatingSurplus =
+    prev.club_finance.period_dues_collected_ngn +
+    prev.club_finance.period_other_income_ngn -
+    prev.club_finance.period_expenses_ngn;
+  const prevNetSurplus = prevInflows - prevOutflows;
+
+  return {
+    report: "agm_statement" as const,
+    fiscal_year: input.fiscalYear,
+    prior_fiscal_year: input.fiscalYear - 1,
+    period: `${input.fiscalYear}-01-01..${input.fiscalYear}-12-31`,
+    prior_period: `${input.fiscalYear - 1}-01-01..${input.fiscalYear - 1}-12-31`,
+    currency: "NGN" as const,
+    current: {
+      dues_collected_ngn: cur.club_finance.period_dues_collected_ngn,
+      other_income_ngn: cur.club_finance.period_other_income_ngn,
+      event_cash_in_ngn: cur.events.event_cash_in_ngn,
+      total_inflows_ngn: curInflows,
+      operating_expenses_ngn: cur.club_finance.period_expenses_ngn,
+      event_cash_out_ngn: cur.events.event_cash_out_ngn,
+      total_outflows_ngn: curOutflows,
+      operating_surplus_ngn: curOperatingSurplus,
+      net_event_cash_ngn: cur.events.net_event_cash_ngn,
+      net_surplus_ngn: curNetSurplus,
+      closing_club_balance_ngn: cur.club_finance.current_club_balance_ngn,
+      active_members: cur.dues.active_members,
+      dues_collection_rate_pct: cur.dues.collection_rate_pct,
+      dues_owed_through_end_ngn: cur.dues.owed_through_end_ngn,
+      overdue_three_plus_members: cur.dues.overdue_three_plus_members,
+      events_count: cur.events.events_count,
+      completed_count: cur.events.completed_count,
+      tickets_sold: cur.events.tickets_sold,
+      ticket_revenue_ngn: cur.events.ticket_revenue_ngn,
+      attendance_sessions: cur.attendance.sessions_count,
+      attendance_checkins: cur.attendance.total_checkins,
+      expense_by_category: cur.club_finance.expense_by_category,
+      top_events: cur.events.top_events,
+    },
+    prior: {
+      dues_collected_ngn: prev.club_finance.period_dues_collected_ngn,
+      other_income_ngn: prev.club_finance.period_other_income_ngn,
+      event_cash_in_ngn: prev.events.event_cash_in_ngn,
+      total_inflows_ngn: prevInflows,
+      operating_expenses_ngn: prev.club_finance.period_expenses_ngn,
+      event_cash_out_ngn: prev.events.event_cash_out_ngn,
+      total_outflows_ngn: prevOutflows,
+      operating_surplus_ngn: prevOperatingSurplus,
+      net_event_cash_ngn: prev.events.net_event_cash_ngn,
+      net_surplus_ngn: prevNetSurplus,
+      dues_collection_rate_pct: prev.dues.collection_rate_pct,
+      events_count: prev.events.events_count,
+      tickets_sold: prev.events.tickets_sold,
+      ticket_revenue_ngn: prev.events.ticket_revenue_ngn,
+      attendance_sessions: prev.attendance.sessions_count,
+      attendance_checkins: prev.attendance.total_checkins,
+    },
+    yoy_change: {
+      dues_collected_delta_ngn:
+        cur.club_finance.period_dues_collected_ngn -
+        prev.club_finance.period_dues_collected_ngn,
+      dues_collected_delta_pct: pctDelta(
+        cur.club_finance.period_dues_collected_ngn,
+        prev.club_finance.period_dues_collected_ngn,
+      ),
+      other_income_delta_ngn:
+        cur.club_finance.period_other_income_ngn -
+        prev.club_finance.period_other_income_ngn,
+      other_income_delta_pct: pctDelta(
+        cur.club_finance.period_other_income_ngn,
+        prev.club_finance.period_other_income_ngn,
+      ),
+      total_inflows_delta_ngn: curInflows - prevInflows,
+      total_inflows_delta_pct: pctDelta(curInflows, prevInflows),
+      operating_expenses_delta_ngn:
+        cur.club_finance.period_expenses_ngn -
+        prev.club_finance.period_expenses_ngn,
+      operating_expenses_delta_pct: pctDelta(
+        cur.club_finance.period_expenses_ngn,
+        prev.club_finance.period_expenses_ngn,
+      ),
+      total_outflows_delta_ngn: curOutflows - prevOutflows,
+      total_outflows_delta_pct: pctDelta(curOutflows, prevOutflows),
+      net_surplus_delta_ngn: curNetSurplus - prevNetSurplus,
+      net_surplus_delta_pct: pctDelta(curNetSurplus, prevNetSurplus),
+      net_event_cash_delta_ngn:
+        cur.events.net_event_cash_ngn - prev.events.net_event_cash_ngn,
+      attendance_checkins_delta:
+        cur.attendance.total_checkins - prev.attendance.total_checkins,
+      attendance_checkins_delta_pct: pctDelta(
+        cur.attendance.total_checkins,
+        prev.attendance.total_checkins,
+      ),
+    },
+  };
+}
+
+export function buildTreasurerReportFacts(input: {
+  overview: ClubOverviewRpcInput;
+}) {
+  const base = buildClubOverviewFacts(input.overview);
+  const totalInflows =
+    base.club_finance.period_dues_collected_ngn +
+    base.club_finance.period_other_income_ngn +
+    base.events.event_cash_in_ngn;
+  const totalOutflows =
+    base.club_finance.period_expenses_ngn + base.events.event_cash_out_ngn;
+
+  return {
+    report: "treasurer_report" as const,
+    period_label: base.period_label,
+    period: base.period,
+    currency: "NGN" as const,
+    treasury_totals: {
+      total_inflows_ngn: totalInflows,
+      total_outflows_ngn: totalOutflows,
+      net_period_cash_flow_ngn: totalInflows - totalOutflows,
+      closing_club_balance_ngn: base.club_finance.current_club_balance_ngn,
+    },
+    club_finance: base.club_finance,
+    dues: base.dues,
+    events: base.events,
+    attendance: base.attendance,
+  };
+}
+
+export function buildMeetingMinutesFacts(input: {
+  eventId: string;
+  eventTitle: string;
+  startsAt: string;
+  durationDays: number;
+  location: string | null;
+  attendanceCounts: {
+    present: number;
+    late: number;
+    absent: number;
+    excused: number;
+    total: number;
+  };
+  notesHash: string;
+}) {
+  return {
+    report: "minutes" as const,
+    event_id: input.eventId,
+    meeting_title: sanitizeLabel(input.eventTitle, "Club Meeting", 120),
+    starts_at_date: input.startsAt.slice(0, 10),
+    duration_days: toWholeNumber(input.durationDays),
+    location: sanitizeLabel(input.location, "Club Venue", 100),
+    attendance: {
+      present_count: toWholeNumber(input.attendanceCounts.present),
+      late_count: toWholeNumber(input.attendanceCounts.late),
+      absent_count: toWholeNumber(input.attendanceCounts.absent),
+      excused_count: toWholeNumber(input.attendanceCounts.excused),
+      total_recorded: toWholeNumber(input.attendanceCounts.total),
+    },
+    notes_hash: input.notesHash,
   };
 }

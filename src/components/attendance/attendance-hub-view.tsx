@@ -6,16 +6,19 @@ import {
   ChevronDown,
   Clock,
   Copy,
+  Download,
   FileText,
   History,
   MapPin,
   Plus,
   Printer,
   Sliders,
+  Sparkles,
   UserCheck,
   Users,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { NewMeetingModal } from "@/components/attendance/new-meeting-modal";
@@ -652,36 +655,56 @@ export function AttendanceHubView({
                   </p>
                 </div>
 
-                {minutes?.content && (
-                  <div className="flex items-center gap-2 self-start sm:self-auto">
-                    <button
-                      className="px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] text-xs font-bold text-[#5C4638] hover:bg-[#E5DDD3] transition-colors flex items-center gap-1.5 min-h-[36px] cursor-pointer"
-                      onClick={handleCopyMinutes}
-                      type="button"
+                <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                  {canWriteMinutes && (
+                    <Link
+                      className="px-3 py-1.5 rounded-lg border border-[#174C37]/30 bg-[#FAF6F0] text-xs font-bold text-[#174C37] hover:bg-[#E5DDD3] transition-colors flex items-center gap-1.5 min-h-[36px]"
+                      href={`/officers/reports?draftDoc=minutes&event=${encodeURIComponent(selectedEvent.id)}#document-drafting`}
                     >
-                      {copiedMinutes ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-[#174C37]" />
-                          <span>Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5 text-[#174C37]" />
-                          <span>Copy</span>
-                        </>
-                      )}
-                    </button>
+                      <Sparkles className="w-3.5 h-3.5 text-[#D6A23A]" />
+                      <span>AI Minutes Drafter</span>
+                    </Link>
+                  )}
 
-                    <button
-                      className="px-3 py-1.5 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#0C3325] transition-colors flex items-center gap-1.5 min-h-[36px] cursor-pointer"
-                      onClick={() => window.print()}
-                      type="button"
-                    >
-                      <Printer className="w-3.5 h-3.5 text-[#D6A23A]" />
-                      <span>Print</span>
-                    </button>
-                  </div>
-                )}
+                  {minutes?.content && (
+                    <>
+                      <a
+                        className="px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] text-xs font-bold text-[#5C4638] hover:bg-[#E5DDD3] transition-colors flex items-center gap-1.5 min-h-[36px]"
+                        href={`/api/reports/drafts?reportType=minutes&eventId=${encodeURIComponent(selectedEvent.id)}`}
+                      >
+                        <Download className="w-3.5 h-3.5 text-[#174C37]" />
+                        <span>Download PDF</span>
+                      </a>
+
+                      <button
+                        className="px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] text-xs font-bold text-[#5C4638] hover:bg-[#E5DDD3] transition-colors flex items-center gap-1.5 min-h-[36px] cursor-pointer"
+                        onClick={handleCopyMinutes}
+                        type="button"
+                      >
+                        {copiedMinutes ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-[#174C37]" />
+                            <span>Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 text-[#174C37]" />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        className="px-3 py-1.5 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#0C3325] transition-colors flex items-center gap-1.5 min-h-[36px] cursor-pointer"
+                        onClick={() => window.print()}
+                        type="button"
+                      >
+                        <Printer className="w-3.5 h-3.5 text-[#D6A23A]" />
+                        <span>Print</span>
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               <MinutesCard
