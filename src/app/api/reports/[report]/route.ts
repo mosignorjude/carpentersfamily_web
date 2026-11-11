@@ -1,4 +1,5 @@
 import { createElement } from "react";
+import { isSameSiteOrigin } from "@/lib/ai/request-guard";
 import { readBoundedFormData } from "@/lib/bounded-form-data";
 import { clubBrand } from "@/lib/brand";
 import { ClubFinancePdfDocument, DuesPdfDocument } from "@/lib/pdf/documents";
@@ -416,16 +417,6 @@ async function createDuesExport(
   };
 }
 
-function isSameSiteRequest(request: Request, expectedOrigin: string) {
-  const origin = request.headers.get("origin");
-  if (!origin) return false;
-  try {
-    return new URL(origin).origin === expectedOrigin;
-  } catch {
-    return false;
-  }
-}
-
 export async function POST(
   request: Request,
   context: { params: Promise<{ report: string }> },
@@ -438,7 +429,7 @@ export async function POST(
   const siteOrigin = getSiteOrigin();
   if (!siteOrigin)
     return errorResponse(503, "The report service is unavailable.");
-  if (!isSameSiteRequest(request, siteOrigin)) {
+  if (!isSameSiteOrigin(request, siteOrigin)) {
     return errorResponse(403, "The report request could not be verified.");
   }
   if (url.searchParams.size !== 0)
