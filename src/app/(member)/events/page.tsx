@@ -53,7 +53,7 @@ export default async function EventsPage() {
   const eventIds = (eventData ?? []).map((evt) => evt.id);
 
   const [
-    { data: allEventRoles },
+    { data: allEventRoles, error: teamAssignmentsError },
     { data: allBudgets },
     { data: allTiers },
     { data: allSales },
@@ -176,7 +176,14 @@ export default async function EventsPage() {
 
   const userName = profile?.full_name || profile?.username || "Club Member";
 
-  const eventReadError = eventsError || rolesError || clubRolesError;
+  if (teamAssignmentsError) {
+    console.error(
+      "[Events Page] Failed to load event role assignments:",
+      teamAssignmentsError,
+    );
+  }
+  const eventReadError =
+    eventsError || rolesError || clubRolesError || teamAssignmentsError;
   const loadError = eventReadError
     ? "Event information could not be loaded. No event actions are available."
     : undefined;

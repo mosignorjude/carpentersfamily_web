@@ -47,12 +47,13 @@ select ok(
   'members receive safe event fields only and cannot write event rows directly'
 );
 select ok(
-  has_column_privilege('authenticated', 'public.event_role_assignments', 'role', 'SELECT')
+  has_column_privilege('authenticated', 'public.event_role_assignments', 'id', 'SELECT')
+  and has_column_privilege('authenticated', 'public.event_role_assignments', 'role', 'SELECT')
   and has_column_privilege('authenticated', 'public.event_role_assignments', 'revoked_at', 'SELECT')
   and not has_column_privilege('authenticated', 'public.event_role_assignments', 'grant_reason', 'SELECT')
   and not has_column_privilege('authenticated', 'public.event_role_assignments', 'assigned_by', 'SELECT')
   and not has_table_privilege('authenticated', 'public.event_role_assignments', 'INSERT,UPDATE,DELETE'),
-  'member-visible event staffing omits private assignment history fields and direct writes'
+  'member-visible event staffing includes id without exposing private assignment history fields or direct writes'
 );
 select ok(
   has_column_privilege('authenticated', 'public.event_budgets', 'total_ngn', 'SELECT')

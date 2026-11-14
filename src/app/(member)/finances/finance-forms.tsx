@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, AlertTriangle, Plus, Tag } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   correctClubFinanceAction,
   createFinanceCategoryAction,
@@ -10,8 +10,23 @@ import {
   voidClubFinanceAction,
 } from "@/app/actions";
 import { FormattedAmountInput } from "@/components/formatted-amount-input";
-import { CfFieldLayout, CfSelect, CfTextField, CONTROL } from "@/components/ui";
+import {
+  CfFieldLayout,
+  CfSelect,
+  CfTextField,
+  CONTROL,
+  FormAlertBanner,
+} from "@/components/ui";
 import { FormSubmitButton } from "@/components/ui/cf-button";
+import {
+  buildFinancePayloadSignature,
+  findProbableDuplicateTransaction,
+  getSessionStorageSafe,
+  isRetryableSubmissionError,
+  rememberSubmissionDraftKey,
+  resolveDraftIdempotencyKey,
+} from "@/lib/finance-idempotency.mjs";
+import { formatNaira } from "@/lib/format";
 
 export type FinanceCategory = {
   id: string;
@@ -44,15 +59,128 @@ function confirmSubmit(
   if (!window.confirm(message)) event.preventDefault();
 }
 
+function prepareClubFinanceSubmission(params: {
+  kind: "income" | "expense";
+  formData: FormData;
+  paymentMethod: "bank_transfer" | "cash";
+  existingTransactions: FinanceTransaction[];
+  confirmedDuplicateSig: string;
+  currentKey: string;
+}):
+  | { kind: "confirm"; signature: string; message: string }
+  | { kind: "ready"; idempotencyKey: string } {
+  const rawAmount = String(params.formData.get("amount_ngn") || "").replace(
+    /\D/g,
+    "",
+  );
+  const amountNgn = Number(rawAmount);
+  const transactionDate = String(params.formData.get("transaction_date") || "");
+  const description = String(params.formData.get("description") || "").trim();
+  const sourceNote = String(params.formData.get("source_note") || "").trim();
+  const payerPayee = String(params.formData.get("payer_payee") || "").trim();
+  const categoryId = String(params.formData.get("category_id") || "");
+  const rawFile = params.formData.get("receipt_file");
+  const receiptFile =
+    rawFile instanceof File && rawFile.size > 0 ? rawFile : null;
+
+  const signature = buildFinancePayloadSignature({
+    scope: "club",
+    targetId: "club",
+    kind: params.kind,
+    amountNgn,
+    transactionDate,
+    description: params.kind === "expense" ? description : null,
+    sourceNote: params.kind === "income" ? sourceNote : null,
+    payerPayee,
+    categoryId: params.kind === "expense" ? categoryId : null,
+    paymentMethod: params.paymentMethod,
+    receiptMeta: receiptFile
+      ? {
+          name: receiptFile.name,
+          size: receiptFile.size,
+          lastModified: receiptFile.lastModified,
+        }
+      : null,
+  });
+
+  const duplicate = findProbableDuplicateTransaction(
+    {
+      kind: params.kind,
+      amountNgn,
+      transactionDate,
+      description: params.kind === "expense" ? description : sourceNote,
+      sourceNote: params.kind === "income" ? sourceNote : description,
+      payerPayee,
+    },
+    params.existingTransactions,
+  );
+
+  if (duplicate && params.confirmedDuplicateSig !== signature) {
+    const label = params.kind === "expense" ? description : sourceNote;
+    return {
+      kind: "confirm",
+      signature,
+      message: `A matching ${params.kind} entry for ${formatNaira(amountNgn)} (${label}) already exists on ${transactionDate}. Click Record again only if this is a separate legitimate transaction.`,
+    };
+  }
+
+  const storage = getSessionStorageSafe();
+  const scopeKey = `club:${params.kind}`;
+  const resolvedKey = resolveDraftIdempotencyKey({
+    storage,
+    scopeKey,
+    signature,
+    fallbackKey: params.currentKey,
+  });
+  rememberSubmissionDraftKey({
+    storage,
+    scopeKey,
+    signature,
+    currentKey: resolvedKey,
+  });
+  return { kind: "ready", idempotencyKey: resolvedKey };
+}
+
+function useClubFinanceSubmit() {
+  const [submitError, setSubmitError] = useState("");
+  const [isPending, startTransition] = useTransition();
+
+  const submitForm = (form: HTMLFormElement) => {
+    setSubmitError("");
+    const submitData = new FormData(form);
+    startTransition(async () => {
+      try {
+        await recordClubFinanceAction(submitData);
+      } catch (error) {
+        if (!isRetryableSubmissionError(error)) {
+          throw error;
+        }
+        setSubmitError(
+          "Could not confirm whether this transaction finished saving because of a network or server interruption. Submitting again will safely use the same submission key to avoid creating a duplicate entry.",
+        );
+      }
+    });
+  };
+
+  return {
+    submitError,
+    dismissSubmitError: () => setSubmitError(""),
+    isPending,
+    submitForm,
+  };
+}
+
 export function ClubIncomeForm({
   today,
   canBackdate,
   idempotencyKey,
+  existingTransactions = [],
   onCancel,
 }: {
   today: string;
   canBackdate: boolean;
   idempotencyKey: string;
+  existingTransactions?: FinanceTransaction[];
   onCancel?: () => void;
 }) {
   const yearStart = `${today.slice(0, 4)}-01-01`;
@@ -60,6 +188,11 @@ export function ClubIncomeForm({
     "bank_transfer",
   );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [duplicateWarning, setDuplicateWarning] = useState("");
+  const [confirmedDuplicateSig, setConfirmedDuplicateSig] = useState("");
+  const { submitError, dismissSubmitError, isPending, submitForm } =
+    useClubFinanceSubmit();
+  const idempotencyInputRef = useRef<HTMLInputElement | null>(null);
 
   const clearFieldError = (fieldName: string) => {
     if (fieldErrors[fieldName]) {
@@ -72,6 +205,9 @@ export function ClubIncomeForm({
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (isPending) return;
+
     const form = e.currentTarget;
     const formData = new FormData(form);
     const errors: Record<string, string> = {};
@@ -97,21 +233,64 @@ export function ClubIncomeForm({
     }
 
     if (Object.keys(errors).length > 0) {
-      e.preventDefault();
       setFieldErrors(errors);
+      return;
     }
+
+    const prep = prepareClubFinanceSubmission({
+      kind: "income",
+      formData,
+      paymentMethod,
+      existingTransactions,
+      confirmedDuplicateSig,
+      currentKey: idempotencyInputRef.current?.value || idempotencyKey,
+    });
+    if (prep.kind === "confirm") {
+      setConfirmedDuplicateSig(prep.signature);
+      setDuplicateWarning(prep.message);
+      return;
+    }
+
+    setDuplicateWarning("");
+    if (idempotencyInputRef.current) {
+      idempotencyInputRef.current.value = prep.idempotencyKey;
+    }
+    submitForm(form);
   };
 
   return (
     <form
-      action={recordClubFinanceAction}
       className="space-y-4 text-xs text-[#3D291F]"
       encType="multipart/form-data"
       noValidate
       onSubmit={handleSubmit}
     >
       <input name="kind" type="hidden" value="income" />
-      <input name="idempotency_key" type="hidden" value={idempotencyKey} />
+      <input
+        defaultValue={idempotencyKey}
+        name="idempotency_key"
+        ref={idempotencyInputRef}
+        type="hidden"
+      />
+      {submitError ? (
+        <FormAlertBanner
+          message={submitError}
+          onDismiss={dismissSubmitError}
+          title="Submission Interrupted"
+          variant="error"
+        />
+      ) : null}
+      {duplicateWarning ? (
+        <FormAlertBanner
+          message={duplicateWarning}
+          onDismiss={() => {
+            setDuplicateWarning("");
+            setConfirmedDuplicateSig("");
+          }}
+          title="Possible Duplicate Entry"
+          variant="warning"
+        />
+      ) : null}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
@@ -230,7 +409,7 @@ export function ClubIncomeForm({
             Cancel
           </button>
         )}
-        <FormSubmitButton loadingText="Recording...">
+        <FormSubmitButton loadingText="Recording..." pending={isPending}>
           Record Non-Dues Income
         </FormSubmitButton>
       </div>
@@ -243,12 +422,14 @@ export function ClubExpenseForm({
   today,
   canBackdate,
   idempotencyKey,
+  existingTransactions = [],
   onCancel,
 }: {
   categories: FinanceCategory[];
   today: string;
   canBackdate: boolean;
   idempotencyKey: string;
+  existingTransactions?: FinanceTransaction[];
   onCancel?: () => void;
 }) {
   const yearStart = `${today.slice(0, 4)}-01-01`;
@@ -257,6 +438,11 @@ export function ClubExpenseForm({
     "bank_transfer",
   );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [duplicateWarning, setDuplicateWarning] = useState("");
+  const [confirmedDuplicateSig, setConfirmedDuplicateSig] = useState("");
+  const { submitError, dismissSubmitError, isPending, submitForm } =
+    useClubFinanceSubmit();
+  const idempotencyInputRef = useRef<HTMLInputElement | null>(null);
 
   const clearFieldError = (fieldName: string) => {
     if (fieldErrors[fieldName]) {
@@ -269,6 +455,9 @@ export function ClubExpenseForm({
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (isPending) return;
+
     const form = e.currentTarget;
     const formData = new FormData(form);
     const errors: Record<string, string> = {};
@@ -304,21 +493,64 @@ export function ClubExpenseForm({
     }
 
     if (Object.keys(errors).length > 0) {
-      e.preventDefault();
       setFieldErrors(errors);
+      return;
     }
+
+    const prep = prepareClubFinanceSubmission({
+      kind: "expense",
+      formData,
+      paymentMethod,
+      existingTransactions,
+      confirmedDuplicateSig,
+      currentKey: idempotencyInputRef.current?.value || idempotencyKey,
+    });
+    if (prep.kind === "confirm") {
+      setConfirmedDuplicateSig(prep.signature);
+      setDuplicateWarning(prep.message);
+      return;
+    }
+
+    setDuplicateWarning("");
+    if (idempotencyInputRef.current) {
+      idempotencyInputRef.current.value = prep.idempotencyKey;
+    }
+    submitForm(form);
   };
 
   return (
     <form
-      action={recordClubFinanceAction}
       className="space-y-4 text-xs text-[#3D291F]"
       encType="multipart/form-data"
       noValidate
       onSubmit={handleSubmit}
     >
       <input name="kind" type="hidden" value="expense" />
-      <input name="idempotency_key" type="hidden" value={idempotencyKey} />
+      <input
+        defaultValue={idempotencyKey}
+        name="idempotency_key"
+        ref={idempotencyInputRef}
+        type="hidden"
+      />
+      {submitError ? (
+        <FormAlertBanner
+          message={submitError}
+          onDismiss={dismissSubmitError}
+          title="Submission Interrupted"
+          variant="error"
+        />
+      ) : null}
+      {duplicateWarning ? (
+        <FormAlertBanner
+          message={duplicateWarning}
+          onDismiss={() => {
+            setDuplicateWarning("");
+            setConfirmedDuplicateSig("");
+          }}
+          title="Possible Duplicate Entry"
+          variant="warning"
+        />
+      ) : null}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
@@ -459,7 +691,11 @@ export function ClubExpenseForm({
             Cancel
           </button>
         )}
-        <FormSubmitButton loadingText="Recording..." variant="danger">
+        <FormSubmitButton
+          loadingText="Recording..."
+          pending={isPending}
+          variant="danger"
+        >
           Record Expense
         </FormSubmitButton>
       </div>

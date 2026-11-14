@@ -23,6 +23,11 @@ import { VoidRecordModal } from "@/components/common/void-record-modal";
 import { AiSummaryPanel } from "@/components/reports/ai-summary-panel";
 import { dispatchFlashCard } from "@/components/ui/flash-card";
 import { useSuccessNotice } from "@/components/ui/use-success-notice";
+import {
+  clearSubmissionDraftKey,
+  createSubmissionKey,
+  getSessionStorageSafe,
+} from "@/lib/finance-idempotency.mjs";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 import { CategoryManagementModal } from "./category-management-modal";
 import { ClubFinancialSummary } from "./club-financial-summary";
@@ -134,21 +139,24 @@ export function FinancesPageView({
 
   // Generate dynamic client idempotency keys and refresh after mutations
   const [incomeIdempotencyKey, setIncomeIdempotencyKey] = useState(() =>
-    crypto.randomUUID(),
+    createSubmissionKey(),
   );
   const [expenseIdempotencyKey, setExpenseIdempotencyKey] = useState(() =>
-    crypto.randomUUID(),
+    createSubmissionKey(),
   );
 
   // Close open modals and rotate idempotency keys only when an action succeeds.
   useSuccessNotice(() => {
+    const storage = getSessionStorageSafe();
+    clearSubmissionDraftKey({ storage, scopeKey: "club:income" });
+    clearSubmissionDraftKey({ storage, scopeKey: "club:expense" });
     setIsRecordIncomeOpen(false);
     setIsRecordExpenseOpen(false);
     setIsCategoryModalOpen(false);
     setCorrectingTransaction(null);
     setVoidingTransaction(null);
-    setIncomeIdempotencyKey(crypto.randomUUID());
-    setExpenseIdempotencyKey(crypto.randomUUID());
+    setIncomeIdempotencyKey(createSubmissionKey());
+    setExpenseIdempotencyKey(createSubmissionKey());
   });
 
   return (
@@ -443,6 +451,7 @@ export function FinancesPageView({
       {/* Modals */}
       <RecordIncomeModal
         canBackdate={canCorrect}
+        existingTransactions={transactions}
         idempotencyKey={incomeIdempotencyKey}
         isOpen={isRecordIncomeOpen}
         onClose={() => setIsRecordIncomeOpen(false)}
@@ -452,6 +461,7 @@ export function FinancesPageView({
       <RecordExpenseModal
         canBackdate={canCorrect}
         categories={categories}
+        existingTransactions={transactions}
         idempotencyKey={expenseIdempotencyKey}
         isOpen={isRecordExpenseOpen}
         onClose={() => setIsRecordExpenseOpen(false)}

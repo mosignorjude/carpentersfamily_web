@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import {
-  notifyRegistrationReceivedIfPending,
-  notifyWelcomeIfActive,
-} from "@/lib/email/notifications";
+  resolveAuthCallbackDestination,
+  shouldNotifyPendingRegistrationOnCallback,
+} from "@/lib/auth-callback";
+import { notifyRegistrationReceivedIfPending } from "@/lib/email/notifications";
 import { getSiteOrigin } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -20,10 +21,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/portal?notice=auth-failed", origin));
   }
 
-  const destination =
-    requestUrl.searchParams.get("next") === "/reset-password"
-      ? "/reset-password"
-      : "/portal";
+  const destination = resolveAuthCallbackDestination(
+    requestUrl.searchParams.get("next"),
+  );
 
   try {
     const supabase = await createSupabaseServerClient();
@@ -32,9 +32,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(
         new URL("/portal?notice=auth-failed", origin),
       );
-    if (data.user?.email_confirmed_at) {
+    if (
+      shouldNotifyPendingRegistrationOnCallback({
+        destination,
+        emailConfirmedAt: data.user?.email_confirmed_at,
+      })
+    ) {
       await notifyRegistrationReceivedIfPending(data.user.id);
-      await notifyWelcomeIfActive(data.user.id);
     }
     return NextResponse.redirect(new URL(destination, origin));
   } catch {

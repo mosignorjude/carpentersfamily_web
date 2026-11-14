@@ -5,6 +5,10 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { FormattedAmountInput } from "@/components/formatted-amount-input";
 import { FormAlertBanner, FormFieldError } from "@/components/ui";
+import {
+  buildFinancePayloadSignature,
+  findProbableDuplicateTransaction,
+} from "@/lib/finance-idempotency.mjs";
 import { formatNaira, formatPercent } from "@/lib/format";
 import {
   buildDisbursementFields,
@@ -46,6 +50,9 @@ interface RecordTransactionModalProps {
   categories?: EventFinanceCategoryItem[];
   costCenters?: DashboardCostCenter[];
   budgetCeiling?: number;
+  existingTransactions?: DashboardTransaction[];
+  submitError?: string | null;
+  onDismissSubmitError?: () => void;
 }
 
 export function RecordTransactionModal({
@@ -60,6 +67,9 @@ export function RecordTransactionModal({
   categories = [],
   costCenters = [],
   budgetCeiling = 0,
+  existingTransactions = [],
+  submitError = null,
+  onDismissSubmitError,
 }: RecordTransactionModalProps) {
   const ticketTiers = rawTicketTiers.filter(
     (t) => !t.retiredAt && t.status !== "retired",
@@ -162,6 +172,9 @@ export function RecordTransactionModal({
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [notes, setNotes] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [duplicateWarning, setDuplicateWarning] = useState<string>("");
+  const [confirmedDuplicateSignature, setConfirmedDuplicateSignature] =
+    useState<string>("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const clearFieldError = (fieldName: string) => {
@@ -196,6 +209,8 @@ export function RecordTransactionModal({
       setPaymentStatus("paid");
       setReceiptFile(null);
       setError("");
+      setDuplicateWarning("");
+      setConfirmedDuplicateSignature("");
       setFieldErrors({});
     } else {
       setDescription("");
@@ -206,6 +221,8 @@ export function RecordTransactionModal({
       setReceiptFile(null);
       setTicketQuantity(1);
       setError("");
+      setDuplicateWarning("");
+      setConfirmedDuplicateSignature("");
       setFieldErrors({});
     }
   }, [isOpen, initialCategory, initialType]);
@@ -371,6 +388,48 @@ export function RecordTransactionModal({
       budgetAllocationCategoryId = fields.budgetAllocationCategoryId;
     }
 
+    const lagosToday = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Africa/Lagos",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    const trimmedDescription = description.trim();
+    const trimmedPayerPayee =
+      payerPayee.trim() ||
+      (mode === "revenue" ? "Event Patron" : "Event Vendor");
+    const probableDuplicate = findProbableDuplicateTransaction(
+      {
+        kind: mode === "revenue" ? "income" : "expense",
+        amountNgn: numAmount,
+        transactionDate: lagosToday,
+        description: trimmedDescription,
+        sourceNote: trimmedDescription,
+        payerPayee: trimmedPayerPayee,
+      },
+      existingTransactions,
+    );
+    const duplicateSignature = buildFinancePayloadSignature({
+      scope: "event-duplicate-guard",
+      kind: mode === "revenue" ? "income" : "expense",
+      amountNgn: numAmount,
+      transactionDate: lagosToday,
+      description: trimmedDescription,
+      payerPayee: trimmedPayerPayee,
+    });
+    if (
+      probableDuplicate &&
+      confirmedDuplicateSignature !== duplicateSignature
+    ) {
+      setConfirmedDuplicateSignature(duplicateSignature);
+      setDuplicateWarning(
+        `A matching ${mode === "revenue" ? "revenue" : "expense"} entry for ${formatNaira(numAmount)} (${trimmedDescription}) was already recorded today. Click the submit button again only if this is a separate legitimate transaction.`,
+      );
+      return;
+    }
+
+    setDuplicateWarning("");
+
     onSave({
       date: watTime,
       type: mode === "revenue" ? "revenue" : "expense",
@@ -496,6 +555,27 @@ export function RecordTransactionModal({
           noValidate
           onSubmit={handleSubmit}
         >
+          {submitError ? (
+            <FormAlertBanner
+              message={submitError}
+              onDismiss={onDismissSubmitError}
+              title="Submission Needs Attention"
+              variant="error"
+            />
+          ) : null}
+
+          {duplicateWarning ? (
+            <FormAlertBanner
+              message={duplicateWarning}
+              onDismiss={() => {
+                setDuplicateWarning("");
+                setConfirmedDuplicateSignature("");
+              }}
+              title="Possible Duplicate Entry"
+              variant="warning"
+            />
+          ) : null}
+
           {error ? (
             <FormAlertBanner
               message={error}

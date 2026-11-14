@@ -386,6 +386,13 @@ export default async function EventDashboardPage({
     event_assistant: "Event Assistant",
     committee_member: "Committee Member",
   };
+  if (teamResult.error) {
+    console.error(
+      "[Event Dashboard] Failed to load event role assignments:",
+      teamResult.error,
+    );
+  }
+
   const teamMembers: DashboardTeamMember[] = (teamResult.data ?? []).map(
     (row, idx) => {
       const profileData = Array.isArray(row.member_profiles)
@@ -921,6 +928,11 @@ export default async function EventDashboardPage({
         isClubOfficer={isAdmin || isExecutive}
         notice={notice}
         teamMembers={teamMembers}
+        teamLoadError={
+          teamResult.error
+            ? "Assigned event team members could not be loaded right now. Refresh or try again."
+            : undefined
+        }
         userRole={computedRole}
         currentUserId={authData.user.id}
       />

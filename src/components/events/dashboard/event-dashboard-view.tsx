@@ -31,13 +31,22 @@ import {
   EventLifecycleModal,
 } from "@/components/events/event-lifecycle-modal";
 import type { EventRow } from "@/components/events/event-types";
-import { CfButton, CfFilterPill } from "@/components/ui";
+import { CfButton, CfFilterPill, FormAlertBanner } from "@/components/ui";
 import {
   dispatchActionStatusToast,
   dispatchFlashCard,
 } from "@/components/ui/flash-card";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { useSuccessNotice } from "@/components/ui/use-success-notice";
+import {
+  buildFinancePayloadSignature,
+  clearSubmissionDraftKey,
+  createSubmissionKey,
+  getSessionStorageSafe,
+  isRetryableSubmissionError,
+  rememberSubmissionDraftKey,
+  resolveDraftIdempotencyKey,
+} from "@/lib/finance-idempotency.mjs";
 import { downloadLedgerCSV } from "@/lib/format";
 import { getScrollBehavior } from "@/lib/tab-navigation.mjs";
 import type {
@@ -132,6 +141,7 @@ interface EventDashboardViewProps {
   initialActivityLogs: ActivityLogItem[];
   initialNotifications?: DashboardNotification[];
   teamMembers: DashboardTeamMember[];
+  teamLoadError?: string;
   clubMembers?: DashboardClubMember[];
   categories?: EventFinanceCategoryItem[];
   canManageCategories?: boolean;
@@ -158,6 +168,7 @@ export function EventDashboardView({
   initialTransactions,
   initialActivityLogs,
   teamMembers,
+  teamLoadError,
   clubMembers = [],
   categories = [],
   canManageCategories = false,
@@ -180,6 +191,12 @@ export function EventDashboardView({
   const [scrollRequest, setScrollRequest] = useState(0);
   const lastInitialTab = useRef(initialTab);
   const [isPending, startTransition] = useTransition();
+  const [transactionDraftKey, setTransactionDraftKey] = useState(() =>
+    createSubmissionKey(),
+  );
+  const [transactionSubmitError, setTransactionSubmitError] = useState<
+    string | null
+  >(null);
 
   const ticketTiers = initialTicketTiers;
   const revenueStreams = initialRevenueStreams;
@@ -268,6 +285,12 @@ export function EventDashboardView({
   };
 
   useSuccessNotice(() => {
+    const storage = getSessionStorageSafe();
+    clearSubmissionDraftKey({ storage, scopeKey: `event:${event.id}:expense` });
+    clearSubmissionDraftKey({ storage, scopeKey: `event:${event.id}:income` });
+    clearSubmissionDraftKey({ storage, scopeKey: `event:${event.id}:ticket` });
+    setTransactionSubmitError(null);
+    setTransactionDraftKey(createSubmissionKey());
     setIsRecordModalOpen(false);
     setIsVoidModalOpen(false);
     setRecordToVoid(null);
@@ -485,11 +508,63 @@ export function EventDashboardView({
 
   // Handlers
   const handleSaveTransaction = (txnData: RecordedTransactionSubmission) => {
-    const idempotencyKey =
-      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID()
-        : "00000000-0000-4000-8000-000000000000";
+    setTransactionSubmitError(null);
+    const storage = getSessionStorageSafe();
+    const isTicketSale =
+      txnData.category === "ticket_sales" && Boolean(txnData.tierId);
+    const scopeKind = isTicketSale
+      ? "ticket"
+      : txnData.type === "revenue"
+        ? "income"
+        : "expense";
+    const scopeKey = `event:${event.id}:${scopeKind}`;
     const dbMethod = mapDbPaymentMethod(txnData.paymentMethod);
+    const paymentStatus = txnData.paymentStatus || "paid";
+    const lagosToday = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Africa/Lagos",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    const receiptMeta = txnData.receiptFile
+      ? {
+          name: txnData.receiptFile.name,
+          size: txnData.receiptFile.size,
+          lastModified: txnData.receiptFile.lastModified,
+        }
+      : null;
+
+    const signature = buildFinancePayloadSignature({
+      scope: "event",
+      targetId: event.id,
+      kind: scopeKind,
+      amountNgn: Math.round(txnData.amount),
+      transactionDate: lagosToday,
+      description: txnData.description,
+      sourceNote: txnData.description,
+      payerPayee: txnData.payerPayee,
+      categoryId: txnData.category,
+      budgetAllocationCategoryId: txnData.budgetAllocationCategoryId,
+      paymentMethod: dbMethod,
+      paymentStatus,
+      tierId: txnData.tierId,
+      quantity: txnData.ticketQuantity,
+      receiptMeta,
+    });
+
+    const idempotencyKey = resolveDraftIdempotencyKey({
+      storage,
+      scopeKey,
+      signature,
+      fallbackKey: transactionDraftKey,
+    });
+    rememberSubmissionDraftKey({
+      storage,
+      scopeKey,
+      signature,
+      currentKey: idempotencyKey,
+    });
+    setTransactionDraftKey(idempotencyKey);
 
     if (txnData.category === "ticket_sales" && txnData.tierId) {
       const fd = new FormData();
@@ -507,18 +582,18 @@ export function EventDashboardView({
         title: "Recording Ticket Sale…",
         message: `Issuing ${txnData.ticketQuantity ?? 1} pass(es) for ${txnData.payerPayee}.`,
       });
-      startTransition(() => {
-        void recordEventTicketSaleAction(fd);
+      startTransition(async () => {
+        try {
+          await recordEventTicketSaleAction(fd);
+        } catch (error) {
+          if (!isRetryableSubmissionError(error)) throw error;
+          setTransactionSubmitError(
+            "Connection dropped or timed out before confirmation arrived. Your submission key is preserved—click Record again to safely retry without creating a duplicate.",
+          );
+        }
       });
       return;
     }
-
-    const lagosToday = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Africa/Lagos",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(new Date());
 
     const fd = new FormData();
     fd.set("event_id", event.id);
@@ -528,7 +603,7 @@ export function EventDashboardView({
     fd.set("transaction_date", lagosToday);
     fd.set("category_id", txnData.category);
     fd.set("category_name", txnData.categoryLabel);
-    fd.set("payment_status", txnData.paymentStatus || "paid");
+    fd.set("payment_status", paymentStatus);
     fd.set("payment_method", dbMethod);
     fd.set("idempotency_key", idempotencyKey);
     if (txnData.receiptFile) {
@@ -556,8 +631,15 @@ export function EventDashboardView({
           : "Recording Disbursement…",
       message: `Posting ${txnData.categoryLabel} (${txnData.payerPayee}) to the event ledger.`,
     });
-    startTransition(() => {
-      void recordEventFinancialTransactionAction(fd);
+    startTransition(async () => {
+      try {
+        await recordEventFinancialTransactionAction(fd);
+      } catch (error) {
+        if (!isRetryableSubmissionError(error)) throw error;
+        setTransactionSubmitError(
+          "Connection dropped or timed out before confirmation arrived. Your submission key is preserved—click Record again to safely retry without creating a duplicate.",
+        );
+      }
     });
   };
 
@@ -684,6 +766,9 @@ export function EventDashboardView({
 
   return (
     <div className="space-y-4 animate-in fade-in duration-150">
+      {teamLoadError && (
+        <FormAlertBanner message={teamLoadError} variant="error" />
+      )}
       {/* Compact Spotlight Event Header Card */}
       <section className="bg-white rounded-2xl border border-[#E5DDD3] shadow-xs relative">
         {/* Top Forest Green Accent Line */}
@@ -1229,14 +1314,20 @@ export function EventDashboardView({
         budgetCeiling={event.budgetCeiling}
         categories={categories}
         costCenters={costCenters}
+        existingTransactions={initialTransactions}
         initialCategory={recordInitialCategory}
         initialType={recordInitialType}
         isOpen={isRecordModalOpen}
         isPending={isPending}
         onClose={() => {
-          if (!isPending) setIsRecordModalOpen(false);
+          if (!isPending) {
+            setTransactionSubmitError(null);
+            setIsRecordModalOpen(false);
+          }
         }}
+        onDismissSubmitError={() => setTransactionSubmitError(null)}
         onSave={handleSaveTransaction}
+        submitError={transactionSubmitError}
         ticketTiers={activeTicketTiers}
         userRole={userRole}
       />

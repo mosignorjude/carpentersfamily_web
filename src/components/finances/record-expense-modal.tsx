@@ -4,6 +4,7 @@ import { TrendingDown, X } from "lucide-react";
 import {
   ClubExpenseForm,
   type FinanceCategory,
+  type FinanceTransaction,
 } from "@/app/(member)/finances/finance-forms";
 import { FormAlertBanner } from "@/components/ui";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
@@ -16,6 +17,7 @@ interface RecordExpenseModalProps {
   canBackdate: boolean;
   idempotencyKey: string;
   categoryUnavailable?: boolean;
+  existingTransactions?: FinanceTransaction[];
 }
 
 export function RecordExpenseModal({
@@ -26,6 +28,7 @@ export function RecordExpenseModal({
   canBackdate,
   idempotencyKey,
   categoryUnavailable = false,
+  existingTransactions = [],
 }: RecordExpenseModalProps) {
   useModalHygiene({ isOpen, onClose });
 
@@ -86,6 +89,7 @@ export function RecordExpenseModal({
             <ClubExpenseForm
               canBackdate={canBackdate}
               categories={categories}
+              existingTransactions={existingTransactions}
               idempotencyKey={idempotencyKey}
               onCancel={onClose}
               today={today}

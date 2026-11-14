@@ -267,11 +267,17 @@ export default async function MemberAdministrationPage({
   });
 
   // Fetch event assignments
-  const { data: assignmentRows } = await supabase
+  const { data: assignmentRows, error: assignmentsError } = await supabase
     .from("event_role_assignments")
     .select("id, event_id, member_id, role, assigned_at")
     .is("revoked_at", null)
     .order("assigned_at", { ascending: true });
+  if (assignmentsError) {
+    console.error(
+      "[Officers Members Page] Failed to load event role assignments:",
+      assignmentsError,
+    );
+  }
 
   const memberMap = new Map((memberRows ?? []).map((m) => [m.id, m]));
 
@@ -384,14 +390,15 @@ export default async function MemberAdministrationPage({
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {membersError ? (
+      {membersError || assignmentsError ? (
         <div
           className="bg-red-50 border border-red-200 rounded-xl p-6 text-center mb-6"
           role="alert"
         >
           <p className="text-sm font-semibold text-red-800">
-            Member records could not be loaded. No member details or actions are
-            available until the roster can be verified.{" "}
+            {membersError
+              ? "Member records could not be loaded. No member details or actions are available until the roster can be verified."
+              : "Assigned event staffing records could not be loaded right now."}{" "}
             <Link href="/officers/members">Try again</Link>.
           </p>
         </div>

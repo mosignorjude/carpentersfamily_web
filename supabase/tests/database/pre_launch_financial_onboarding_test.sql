@@ -433,5 +433,73 @@ select is(
 
 reset role;
 
+-- 25. Pre-launch cohort vs future post-launch member scope & October continuity
+insert into auth.users (
+  id, aud, role, email, encrypted_password,
+  raw_app_meta_data, raw_user_meta_data, email_confirmed_at
+) values
+  ('00000000-0000-0000-0000-000000000971', 'authenticated', 'authenticated', 'postlaunch-new@example.test', '', '{}'::jsonb, '{"full_name":"Post Launch New Member","username":"postlaunch_new"}'::jsonb, now()),
+  ('00000000-0000-0000-0000-000000000972', 'authenticated', 'authenticated', 'prelaunch-nov@example.test', '', '{}'::jsonb, '{"full_name":"Prelaunch Approved Nov","username":"prelaunch_nov"}'::jsonb, now());
+
+update public.member_profiles
+set status = 'active'
+where id in (
+  '00000000-0000-0000-0000-000000000971'::uuid,
+  '00000000-0000-0000-0000-000000000972'::uuid
+);
+
+update public.dues_membership_periods
+set starts_month = '2026-11-01'::date
+where member_id in (
+  '00000000-0000-0000-0000-000000000971'::uuid,
+  '00000000-0000-0000-0000-000000000972'::uuid
+);
+
+-- A genuine post-launch November member must NEVER see Feb-Oct 2026
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000971', true);
+select is(
+  (select count(*) from public.dues_month_status
+   where member_id = '00000000-0000-0000-0000-000000000971'::uuid
+     and covered_month < date '2026-11-01'),
+  0::bigint,
+  'future post-launch member without historical backfill excludes Feb-Oct obligations'
+);
+reset role;
+
+select is(
+  private.dues_member_has_month_obligation('00000000-0000-0000-0000-000000000971'::uuid, date '2026-09-01'),
+  false,
+  'future post-launch member has no September 2026 obligation'
+);
+
+-- Backfilling a prelaunch member approved in November aligns starts_month to 2026-10-01
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000961', true);
+select lives_ok(
+  $$
+    select public.backfill_member_historical_dues(
+      '00000000-0000-0000-0000-000000000972'::uuid,
+      array['2026-02-01'::date, '2026-03-01'::date],
+      'Reconciled prelaunch member approved in Nov'
+    );
+  $$,
+  'backfill succeeds for post-launch approved prelaunch member'
+);
+reset role;
+
+select is(
+  (select starts_month from public.dues_membership_periods
+   where member_id = '00000000-0000-0000-0000-000000000972'::uuid and ends_before_month is null),
+  date '2026-10-01',
+  'reconciled post-launch prelaunch member gets starts_month aligned to 2026-10-01'
+);
+
+select is(
+  private.dues_member_has_month_obligation('00000000-0000-0000-0000-000000000972'::uuid, date '2026-10-01'),
+  true,
+  'reconciled post-launch prelaunch member carries October 2026 obligation'
+);
+
 select * from finish();
 rollback;

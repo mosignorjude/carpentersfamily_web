@@ -39,19 +39,21 @@ test("the deferred copy confirms the email first and then states pending approva
   assert.match(copy, /Pending Approval/);
 });
 
-test("the auth callback queues the pending notice before the welcome check", () => {
+test("the auth callback queues the pending notice only outside recovery and never calls notifyWelcomeIfActive", () => {
   const route = fs.readFileSync("src/app/auth/callback/route.ts", "utf8");
   assert.match(
     route,
-    /import \{\s*notifyRegistrationReceivedIfPending,/,
-    "the callback must import the deferred notice",
+    /import \{\s*notifyRegistrationReceivedIfPending\s*\}/,
+    "the callback must import only the deferred pending notice",
   );
-  const branch = route.match(
-    /if \(data\.user\?\.email_confirmed_at\) \{([\s\S]*?)\n {4}\}/,
+  assert.doesNotMatch(
+    route,
+    /notifyWelcomeIfActive/,
+    "the callback must never trigger welcome emails",
   );
-  assert.ok(branch, "the confirmed-email branch must exist");
-  const deferred = branch[1].search(/notifyRegistrationReceivedIfPending\(/);
-  const welcome = branch[1].search(/notifyWelcomeIfActive\(/);
-  assert.notEqual(deferred, -1, "the branch must queue the pending notice");
-  assert.ok(deferred < welcome, "the pending notice must be queued first");
+  assert.match(
+    route,
+    /shouldNotifyPendingRegistrationOnCallback\([\s\S]*notifyRegistrationReceivedIfPending\(/,
+    "the callback must gate pending notice behind shouldNotifyPendingRegistrationOnCallback",
+  );
 });

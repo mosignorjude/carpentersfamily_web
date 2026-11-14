@@ -101,6 +101,7 @@ CfButton.displayName = "CfButton";
 
 export interface FormSubmitButtonProps
   extends Omit<CfButtonProps, "loading" | "type"> {
+  pending?: boolean;
   pendingLabel?: string;
   statusToastTitle?: string;
   statusToastMessage?: string;
@@ -113,6 +114,7 @@ export interface FormSubmitButtonProps
  */
 export function FormSubmitButton({
   children,
+  pending: externalPending,
   pendingLabel,
   loadingText,
   statusToastTitle,
@@ -121,7 +123,8 @@ export function FormSubmitButton({
   disabled,
   ...props
 }: FormSubmitButtonProps) {
-  const { pending } = useFormStatus();
+  const { pending: formStatusPending } = useFormStatus();
+  const pending = Boolean(externalPending || formStatusPending);
   const wasPendingRef = useRef(false);
   const resolvedLabel =
     loadingText ??

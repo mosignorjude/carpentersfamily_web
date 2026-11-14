@@ -1,6 +1,7 @@
 "use client";
 
 import { TrendingUp, X } from "lucide-react";
+import type { FinanceTransaction } from "@/app/(member)/finances/finance-forms";
 import { ClubIncomeForm } from "@/app/(member)/finances/finance-forms";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 
@@ -10,6 +11,7 @@ interface RecordIncomeModalProps {
   today: string;
   canBackdate: boolean;
   idempotencyKey: string;
+  existingTransactions?: FinanceTransaction[];
 }
 
 export function RecordIncomeModal({
@@ -18,6 +20,7 @@ export function RecordIncomeModal({
   today,
   canBackdate,
   idempotencyKey,
+  existingTransactions = [],
 }: RecordIncomeModalProps) {
   useModalHygiene({ isOpen, onClose });
 
@@ -70,6 +73,7 @@ export function RecordIncomeModal({
         <div className="p-6 flex-1 min-h-0 overflow-y-auto">
           <ClubIncomeForm
             canBackdate={canBackdate}
+            existingTransactions={existingTransactions}
             idempotencyKey={idempotencyKey}
             onCancel={onClose}
             today={today}
