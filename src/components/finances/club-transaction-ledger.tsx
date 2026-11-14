@@ -263,9 +263,13 @@ export function ClubTransactionLedger({
                             <span>{transaction.category_name_snapshot}</span>
                           </span>
                         )}
-                        {formatPaymentMethodLabel(transaction.payment_method) && (
+                        {formatPaymentMethodLabel(
+                          transaction.payment_method,
+                        ) && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-white text-[#54433A] border border-[#E5DDD3]">
-                            {formatPaymentMethodLabel(transaction.payment_method)}
+                            {formatPaymentMethodLabel(
+                              transaction.payment_method,
+                            )}
                           </span>
                         )}
                       </div>

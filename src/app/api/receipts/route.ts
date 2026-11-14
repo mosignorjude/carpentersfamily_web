@@ -1,7 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { validateFinanceReceiptUpload } from "@/lib/finance-receipt-validation";
-import { buildReturnRedirectUrl, sanitizeReturnUrl } from "@/lib/receipt-redirect";
+import {
+  buildReturnRedirectUrl,
+  sanitizeReturnUrl,
+} from "@/lib/receipt-redirect";
 import { buildReceiptObjectKey } from "@/lib/receipt-rules.mjs";
 import { getR2StorageAdapter } from "@/lib/receipt-storage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";

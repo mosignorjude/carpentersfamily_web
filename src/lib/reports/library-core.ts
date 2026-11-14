@@ -91,7 +91,9 @@ function defaultHeadlineForType(
     case "dues":
       return `Member Dues Summary (${periodStart.slice(0, 4)})`;
     case "event_finance":
-      return scopeTitle ? `${scopeTitle} — Event Finance` : "Event Finance Report";
+      return scopeTitle
+        ? `${scopeTitle} — Event Finance`
+        : "Event Finance Report";
     case "agm_statement":
       return `AGM Financial Statement (${periodStart.slice(0, 4)})`;
     case "treasurer_report":
@@ -144,9 +146,7 @@ export function buildReportLibraryItems(
   const eventTitles = options.eventTitles ?? new Map<string, string>();
 
   return rows
-    .filter(
-      (row) => row.status === "draft" || row.status === "approved",
-    )
+    .filter((row) => row.status === "draft" || row.status === "approved")
     .map((row) => {
       const content = asContentRecord(row.content);
       const scopeTitle = row.scope_id
@@ -172,7 +172,9 @@ export function buildReportLibraryItems(
         row.period_start,
         row.period_end,
       );
-      const liveFingerprint = scopeKey ? activeFingerprints[scopeKey] : undefined;
+      const liveFingerprint = scopeKey
+        ? activeFingerprints[scopeKey]
+        : undefined;
       const isStale = Boolean(
         liveFingerprint && liveFingerprint !== row.facts_fingerprint,
       );

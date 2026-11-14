@@ -10,8 +10,8 @@ import {
   loadAgmStatementSnapshot,
   loadTreasurerReportSnapshot,
 } from "@/lib/reports/drafts.server";
-import type { ReportsStudioMode } from "@/lib/reports/library-core";
 import { loadOfficerReportLibrary } from "@/lib/reports/library.server";
+import type { ReportsStudioMode } from "@/lib/reports/library-core";
 import {
   loadActiveOfficerNarrative,
   loadClubFinanceSnapshot,
@@ -124,7 +124,7 @@ export default async function OfficerReportsPage({
     loadClubOverviewSnapshot(supabase, selectedPeriod),
     loadCustomReportMetadata(supabase),
     listMeetingsForDrafting(supabase),
-    loadClubFinanceSnapshot(supabase),
+    loadClubFinanceSnapshot(supabase, currentYearNumber),
     loadDuesSnapshot(supabase, currentYearNumber),
     loadAgmStatementSnapshot(supabase, currentYearNumber),
     loadTreasurerReportSnapshot(supabase, currentMonth),

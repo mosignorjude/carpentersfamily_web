@@ -96,7 +96,13 @@ export async function runProvidersWithFallback(
     const providersLeft = providers.length - i;
     const attemptTimeoutMs =
       providersLeft > 1
-        ? Math.min(PRIMARY_ATTEMPT_CAP_MS, Math.max(MIN_ATTEMPT_BUDGET_MS, Math.floor(remainingMs / providersLeft)))
+        ? Math.min(
+            PRIMARY_ATTEMPT_CAP_MS,
+            Math.max(
+              MIN_ATTEMPT_BUDGET_MS,
+              Math.floor(remainingMs / providersLeft),
+            ),
+          )
         : remainingMs;
 
     try {

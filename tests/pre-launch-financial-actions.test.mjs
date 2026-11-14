@@ -148,8 +148,8 @@ describe("recordOpeningBalanceAction structure and validation", () => {
     );
     assert.match(
       body,
-      /2026-10-01/,
-      "Must default date to 2026-10-01 when omitted",
+      /todayInWatDate\(\)/,
+      "Must default date dynamically to todayInWatDate() when omitted",
     );
     assert.match(
       body,

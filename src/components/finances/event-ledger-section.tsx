@@ -203,7 +203,9 @@ export function EventLedgerSection({
                             ) : (
                               <Layers className="w-3 h-3 text-[#174C37]" />
                             )}
-                            <span className="capitalize">{entry.entry_kind}</span>
+                            <span className="capitalize">
+                              {entry.entry_kind}
+                            </span>
                           </span>
                           <span className="text-[10px] text-[#7A685D] font-mono font-medium">
                             Gen {entry.generation}
