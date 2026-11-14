@@ -7,8 +7,10 @@ import {
   Lock,
   ShieldCheck,
 } from "lucide-react";
+import { useState } from "react";
 import { recordOpeningBalanceAction } from "@/app/actions";
 import { FormSubmitButton } from "@/components/ui";
+import { createSubmissionKey } from "@/lib/finance-idempotency.mjs";
 import { formatNaira } from "@/lib/format";
 
 export interface OpeningBalanceTransaction {
@@ -22,12 +24,25 @@ export interface OpeningBalanceTransaction {
 export interface OpeningBalanceEntryCardProps {
   existingOpeningBalance?: OpeningBalanceTransaction | null;
   canRecord?: boolean;
+  today?: string;
+}
+
+function getWatTodayFallback() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Lagos",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 }
 
 export function OpeningBalanceEntryCard({
   existingOpeningBalance,
   canRecord = false,
+  today,
 }: OpeningBalanceEntryCardProps) {
+  const [idempotencyKey] = useState(() => createSubmissionKey());
+  const defaultDate = today || getWatTodayFallback();
   // If already recorded, show verified and locked status badge with recorded details
   if (existingOpeningBalance) {
     const formattedAmount = formatNaira(existingOpeningBalance.amount_ngn);
@@ -145,6 +160,7 @@ export function OpeningBalanceEntryCard({
         className="space-y-4"
         method="post"
       >
+        <input name="idempotency_key" type="hidden" value={idempotencyKey} />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div className="space-y-1.5">
             <label
@@ -175,7 +191,7 @@ export function OpeningBalanceEntryCard({
             </label>
             <input
               className="w-full h-10 px-3 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] text-xs font-semibold text-[#3D291F] focus:outline-none focus:border-[#174C37] focus:bg-white transition-colors"
-              defaultValue="2026-10-01"
+              defaultValue={defaultDate}
               id="transaction_date"
               name="transaction_date"
               required

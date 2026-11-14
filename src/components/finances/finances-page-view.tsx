@@ -66,6 +66,9 @@ interface FinancesPageViewProps {
     event_inflow?: number | string | null;
     event_outflow?: number | string | null;
   } | null;
+  openingBalanceTotal?: number;
+  postLaunchDues?: number;
+  preLaunchDues?: number;
   financeUnavailable: boolean;
   categoryUnavailable: boolean;
   receiptUnavailable: boolean;
@@ -98,6 +101,9 @@ export function FinancesPageView({
   canCorrect,
   today,
   summary,
+  openingBalanceTotal = 0,
+  postLaunchDues = 0,
+  preLaunchDues = 0,
   financeUnavailable,
   categoryUnavailable,
   receiptUnavailable,
@@ -343,6 +349,7 @@ export function FinancesPageView({
             <OpeningBalanceEntryCard
               canRecord={isAdmin}
               existingOpeningBalance={existingOpeningBalance}
+              today={today}
             />
           </div>
 

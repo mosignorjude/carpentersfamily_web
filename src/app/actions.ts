@@ -278,6 +278,18 @@ function parsePaymentDate(formData: FormData) {
   return value <= todayWAT ? value : null;
 }
 
+function todayInWatDate() {
+  const dateParts = new Intl.DateTimeFormat("en-NG", {
+    timeZone: "Africa/Lagos",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: string) =>
+    dateParts.find((item) => item.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
 function parseFinanceDate(value: FormDataEntryValue | null) {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return null;
@@ -290,15 +302,7 @@ function parseFinanceDate(value: FormDataEntryValue | null) {
   ) {
     return null;
   }
-  const dateParts = new Intl.DateTimeFormat("en-NG", {
-    timeZone: "Africa/Lagos",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-  const part = (type: string) =>
-    dateParts.find((item) => item.type === type)?.value ?? "";
-  const today = `${part("year")}-${part("month")}-${part("day")}`;
+  const today = todayInWatDate();
   return value <= today ? { date: value, today } : null;
 }
 
@@ -1008,7 +1012,7 @@ export async function recordOpeningBalanceAction(
   const dateStr =
     typeof rawDate === "string" && rawDate.trim() !== ""
       ? rawDate.trim()
-      : "2026-10-01";
+      : todayInWatDate();
   const parsedDate = parseFinanceDate(dateStr);
 
   const rawNote = formData.get("source_note");
@@ -1037,10 +1041,7 @@ export async function recordOpeningBalanceAction(
   const idempotencyKey =
     rawIdempotencyKey && uuidPattern.test(rawIdempotencyKey)
       ? rawIdempotencyKey
-      : createHash("md5")
-          .update(`opening-balance-${parsedDate.date}`)
-          .digest("hex")
-          .replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
+      : randomUUID();
 
   const { error } = await actor.supabase.rpc("record_club_opening_balance", {
     p_amount_ngn: amount,

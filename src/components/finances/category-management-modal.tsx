@@ -5,6 +5,7 @@ import {
   type FinanceCategory,
   FinanceCategoryForms,
 } from "@/app/(member)/finances/finance-forms";
+import { useModalHygiene } from "@/lib/use-modal-hygiene";
 
 interface CategoryManagementModalProps {
   isOpen: boolean;
@@ -17,6 +18,8 @@ export function CategoryManagementModal({
   onClose,
   categories,
 }: CategoryManagementModalProps) {
+  useModalHygiene({ isOpen, onClose });
+
   if (!isOpen) return null;
 
   return (
@@ -26,9 +29,15 @@ export function CategoryManagementModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0C3325]/75 backdrop-blur-xs"
       role="dialog"
     >
-      <div className="bg-white rounded-2xl border border-[#E5DDD3] w-full max-w-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <button
+        aria-label="Close modal overlay"
+        className="fixed inset-0 cursor-default bg-transparent border-0"
+        onClick={onClose}
+        type="button"
+      />
+      <div className="relative z-10 bg-white rounded-2xl border border-[#E5DDD3] w-full max-w-xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between">
+        <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#174C37] text-white flex items-center justify-center font-bold text-base shadow-xs">
               <Tag className="w-5 h-5 text-[#D6A23A]" />

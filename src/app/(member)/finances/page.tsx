@@ -154,11 +154,15 @@ export default async function FinancesPage({
       .eq("is_opening_balance", true)
       .is("voided_at", null)
       .order("transaction_date", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .limit(10),
   ]);
   const paymentSettings = paymentSettingsResult?.data ?? null;
-  const existingOpeningBalance = openingBalanceResult?.data ?? null;
+  const openingBalanceRows = openingBalanceResult?.data ?? [];
+  const existingOpeningBalance = openingBalanceRows[0] ?? null;
+  const openingBalanceTotal = openingBalanceRows.reduce(
+    (sum, row) => sum + (Number(row.amount_ngn) || 0),
+    0,
+  );
   const transactionCount = transactionCountResult.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(transactionCount / PAGE_SIZE));
   const page = Math.min(requestedPage, pageCount - 1);
@@ -166,7 +170,7 @@ export default async function FinancesPage({
     supabase
       .from("club_financial_transactions")
       .select(
-        "id, kind, amount_ngn, transaction_date, description, category_id, category_name_snapshot, payer_payee, source_note, is_opening_balance, created_at, updated_at, voided_at, void_reason",
+        "id, kind, amount_ngn, transaction_date, description, category_id, category_name_snapshot, payer_payee, source_note, is_opening_balance, payment_method, created_at, updated_at, voided_at, void_reason",
       )
       .order("transaction_date", { ascending: false })
       .order("created_at", { ascending: false })
@@ -181,6 +185,8 @@ export default async function FinancesPage({
             "club_finance_corrected",
             "club_finance_voided",
             "club_finance_receipt_attached",
+            "finance_receipt_attached",
+            "club_payment_settings_updated",
             "finance_category_created",
             "finance_category_retired",
             "event_finance_category_created",
@@ -204,6 +210,8 @@ export default async function FinancesPage({
           "club_finance_corrected",
           "club_finance_voided",
           "club_finance_receipt_attached",
+          "finance_receipt_attached",
+          "club_payment_settings_updated",
           "finance_category_created",
           "finance_category_retired",
           "event_finance_category_created",
@@ -288,6 +296,22 @@ export default async function FinancesPage({
   const summary = Array.isArray(summaryResult.data)
     ? summaryResult.data[0]
     : summaryResult.data;
+  const eventNet =
+    (Number(summary?.event_inflow ?? 0) || 0) -
+    (Number(summary?.event_outflow ?? 0) || 0);
+  const postLaunchDues = summary
+    ? Math.max(
+        0,
+        (Number(summary.balance ?? 0) || 0) -
+          openingBalanceTotal -
+          (Number(summary.other_income ?? 0) || 0) +
+          (Number(summary.expenses ?? 0) || 0) -
+          eventNet,
+      )
+    : 0;
+  const preLaunchDues = summary
+    ? Math.max(0, (Number(summary.dues_income ?? 0) || 0) - postLaunchDues)
+    : 0;
   const auditError = Boolean(auditResult?.error);
   const auditRows = (auditResult?.data ?? []) as FinanceAuditRow[];
   let actorNames = new Map<string, string>();
@@ -316,6 +340,9 @@ export default async function FinancesPage({
       eventLedgerEntries={eventLedgerEntries}
       eventTitles={eventTitles}
       existingOpeningBalance={existingOpeningBalance}
+      openingBalanceTotal={openingBalanceTotal}
+      postLaunchDues={postLaunchDues}
+      preLaunchDues={preLaunchDues}
       financeUnavailable={financeUnavailable}
       isAdmin={isAdmin}
       isOfficer={isOfficer}

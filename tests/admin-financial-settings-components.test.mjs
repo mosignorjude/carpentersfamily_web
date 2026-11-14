@@ -110,12 +110,17 @@ describe("OpeningBalanceEntryCard component requirements", () => {
     assert.match(source, /name=["']source_note["']/);
   });
 
-  it("defaults transaction_date to 2026-10-01 and source_note to go-live statement", () => {
+  it("defaults transaction_date dynamically to today and attaches client idempotency_key", () => {
     const source = readFileSync(openingBalanceCardPath, "utf8");
     assert.match(
       source,
-      /defaultValue=["']2026-10-01["']/,
-      "transaction_date must default to 2026-10-01",
+      /defaultValue=\{defaultDate\}/,
+      "transaction_date must default dynamically using WAT today fallback",
+    );
+    assert.match(
+      source,
+      /name=["']idempotency_key["']/,
+      "Opening balance form must include dynamic idempotency_key input",
     );
     assert.match(
       source,

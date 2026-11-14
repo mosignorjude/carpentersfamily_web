@@ -92,9 +92,15 @@ export function OfficerAuditHistory({
           class: "bg-[#BA3C2A]/10 text-[#BA3C2A] border border-[#BA3C2A]/20",
         };
       case "club_finance_receipt_attached":
+      case "finance_receipt_attached":
         return {
           label: "Receipt Attached",
           class: "bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20",
+        };
+      case "club_payment_settings_updated":
+        return {
+          label: "Bank Settings Updated",
+          class: "bg-[#D6A23A]/15 text-[#3D291F] border border-[#D6A23A]/30",
         };
       case "finance_category_created":
         return {

@@ -93,4 +93,33 @@ describe("Finance Page Clean-Up & Audit Pagination (Stage 5)", () => {
       );
     });
   });
+
+  describe("Ledger payment_method, audit filter completeness, and modal hygiene", () => {
+    it("selects payment_method in finances/page.tsx and includes finance_receipt_attached & club_payment_settings_updated in audit filters", () => {
+      assert.match(financesPageSource, /payment_method/);
+      assert.match(financesPageSource, /"finance_receipt_attached"/);
+      assert.match(financesPageSource, /"club_payment_settings_updated"/);
+    });
+
+    it("maps finance_receipt_attached and club_payment_settings_updated badges in OfficerAuditHistory", () => {
+      assert.match(auditHistorySource, /case "finance_receipt_attached":/);
+      assert.match(auditHistorySource, /case "club_payment_settings_updated":/);
+    });
+
+    it("adds useModalHygiene, backdrop dismiss, and responsive scroll bounds to CategoryManagementModal and ReceiptModal", () => {
+      const catModalSource = readFileSync(
+        new URL("../src/components/finances/category-management-modal.tsx", import.meta.url),
+        "utf8",
+      );
+      const receiptModalSource = readFileSync(
+        new URL("../src/components/finances/receipt-modal.tsx", import.meta.url),
+        "utf8",
+      );
+      assert.match(catModalSource, /useModalHygiene/);
+      assert.match(catModalSource, /Close modal overlay/);
+      assert.match(catModalSource, /max-h-\[90vh\]/);
+      assert.match(receiptModalSource, /useModalHygiene/);
+      assert.match(receiptModalSource, /max-h-\[90vh\]/);
+    });
+  });
 });
