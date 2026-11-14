@@ -2,12 +2,14 @@
 
 import {
   AlertCircle,
+  ChevronDown,
   Coins,
   Scale,
   ShieldCheck,
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
+import { useState } from "react";
 import { formatNaira } from "@/lib/format";
 
 interface ClubFinancialSummaryProps {
@@ -30,19 +32,17 @@ export function ClubFinancialSummary({
   totalExpenses,
   eventInflow,
   eventOutflow,
-  openingBalanceTotal = 0,
   postLaunchDues = 0,
   preLaunchDues = 0,
   isUnavailable = false,
 }: ClubFinancialSummaryProps) {
+  const [isFormulaExpanded, setIsFormulaExpanded] = useState(false);
+
   const inflow = Number(eventInflow ?? 0);
   const outflow = Number(eventOutflow ?? 0);
   const eventNet = inflow - outflow;
-  const openingReserve = Number(openingBalanceTotal ?? 0);
   const postLaunch = Number(postLaunchDues ?? 0);
   const preLaunch = Number(preLaunchDues ?? 0);
-  const otherIncomeTotal = Number(otherIncome ?? 0);
-  const expensesTotal = Number(totalExpenses ?? 0);
 
   return (
     <section aria-labelledby="summary-heading" className="space-y-4">
@@ -68,9 +68,9 @@ export function ClubFinancialSummary({
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Verified Current Balance Hero + Cash Reconciliation Strip */}
+          {/* Verified Current Balance Hero + Expandable Formula */}
           <div className="rounded-xl bg-[#0C3325] text-white border border-[#174C37] p-5 sm:p-6 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-xs font-semibold text-[#EED7A1]">
                   <ShieldCheck className="w-4 h-4 text-[#D6A23A] shrink-0" />
@@ -80,56 +80,58 @@ export function ClubFinancialSummary({
                   {formatNaira(currentBalance)}
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-medium text-[#F6F1EA]">
-                <span className="w-2 h-2 rounded-full bg-[#D6A23A]" />
-                Cash-reconciled treasury total
-              </span>
+              <button
+                aria-controls="balance-formula-details"
+                aria-expanded={isFormulaExpanded}
+                className="inline-flex items-center justify-center gap-2 self-start sm:self-center min-h-[44px] px-3.5 py-2 rounded-[10px] bg-white/10 hover:bg-white/15 border border-white/20 text-xs font-semibold text-[#F6F1EA] transition-colors cursor-pointer whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D6A23A]"
+                onClick={() => setIsFormulaExpanded((prev) => !prev)}
+                type="button"
+              >
+                <span className="w-2 h-2 rounded-full bg-[#D6A23A] shrink-0" />
+                <span>Cash-reconciled formula</span>
+                <ChevronDown
+                  aria-hidden="true"
+                  className={`w-4 h-4 text-[#EED7A1] transition-transform duration-150 shrink-0 ${
+                    isFormulaExpanded ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
             </div>
 
-            <div className="pt-3 border-t border-white/15 flex flex-wrap items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/8 border border-white/10 text-[#F6F1EA]">
-                <span className="text-white/80">Opening Reserve</span>
-                <span className="font-mono font-bold tabular-nums">
-                  {formatNaira(openingReserve)}
+            {isFormulaExpanded && (
+              <div
+                className="pt-3 border-t border-white/15 flex flex-wrap items-center gap-2 text-xs"
+                id="balance-formula-details"
+              >
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/8 border border-white/10 font-medium text-[#F6F1EA]">
+                  Opening Reserve
                 </span>
-              </span>
-              <span className="text-white/70 font-bold" aria-hidden="true">
-                +
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/8 border border-white/10 text-[#F6F1EA]">
-                <span className="text-white/80">Post-Launch Dues</span>
-                <span className="font-mono font-bold tabular-nums">
-                  {formatNaira(postLaunch)}
+                <span aria-hidden="true" className="text-white/70 font-bold">
+                  +
                 </span>
-              </span>
-              <span className="text-white/70 font-bold" aria-hidden="true">
-                +
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/8 border border-white/10 text-[#F6F1EA]">
-                <span className="text-white/80">Other Income</span>
-                <span className="font-mono font-bold tabular-nums">
-                  {formatNaira(otherIncomeTotal)}
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/8 border border-white/10 font-medium text-[#F6F1EA]">
+                  Post-Launch Dues
                 </span>
-              </span>
-              <span className="text-white/70 font-bold" aria-hidden="true">
-                +
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/8 border border-white/10 text-[#F6F1EA]">
-                <span className="text-white/80">Live Event Net</span>
-                <span className="font-mono font-bold tabular-nums">
-                  {formatNaira(eventNet)}
+                <span aria-hidden="true" className="text-white/70 font-bold">
+                  +
                 </span>
-              </span>
-              <span className="text-white/70 font-bold" aria-hidden="true">
-                −
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/8 border border-white/10 text-[#F6F1EA]">
-                <span className="text-white/80">Club Expenses</span>
-                <span className="font-mono font-bold tabular-nums">
-                  {formatNaira(expensesTotal)}
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/8 border border-white/10 font-medium text-[#F6F1EA]">
+                  Other Income
                 </span>
-              </span>
-            </div>
+                <span aria-hidden="true" className="text-white/70 font-bold">
+                  +
+                </span>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/8 border border-white/10 font-medium text-[#F6F1EA]">
+                  Live Event Net
+                </span>
+                <span aria-hidden="true" className="text-white/70 font-bold">
+                  −
+                </span>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/8 border border-white/10 font-medium text-[#F6F1EA]">
+                  Club Expenses
+                </span>
+              </div>
+            )}
           </div>
 
           {/* 4-Up Supporting Metrics Grid */}
