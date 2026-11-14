@@ -50,8 +50,16 @@ function createSupabase({ tables = {}, rpcs = {} } = {}) {
           call.filters.push({ method: "gte", column, value });
           return builder;
         },
+        gt(column, value) {
+          call.filters.push({ method: "gt", column, value });
+          return builder;
+        },
         lt(column, value) {
           call.filters.push({ method: "lt", column, value });
+          return builder;
+        },
+        or(expression) {
+          call.filters.push({ method: "or", expression });
           return builder;
         },
         order(column, options) {
@@ -378,7 +386,9 @@ test("tickets sold on the home screen count approved orders only", async () => {
   );
   assert.ok(salesQuery, "the home screen must query event_ticket_sales");
   assert.deepEqual(
-    salesQuery.filters.find((filter) => filter.column === "verification_status"),
+    salesQuery.filters.find(
+      (filter) => filter.column === "verification_status",
+    ),
     { method: "eq", column: "verification_status", value: "approved" },
   );
 });

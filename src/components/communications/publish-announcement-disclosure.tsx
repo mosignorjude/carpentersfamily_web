@@ -1,9 +1,14 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Plus, Send } from "lucide-react";
 import { useState } from "react";
 import { createAnnouncementAction } from "@/app/actions";
 import { FormSubmitButton } from "@/components/ui";
+import {
+  type AnnouncementDurationPreset,
+  DEFAULT_ANNOUNCEMENT_DURATION_PRESET,
+} from "@/lib/announcement-lifecycle.mjs";
+import { AnnouncementDurationFields } from "./announcement-duration-fields";
 import type { EventOption } from "./communications-types";
 
 interface PublishAnnouncementDisclosureProps {
@@ -19,6 +24,9 @@ export function PublishAnnouncementDisclosure({
   const [priority, setPriority] = useState<"standard" | "important" | "urgent">(
     "standard",
   );
+  const [durationPreset, setDurationPreset] =
+    useState<AnnouncementDurationPreset>(DEFAULT_ANNOUNCEMENT_DURATION_PRESET);
+  const [customExpiresAt, setCustomExpiresAt] = useState("");
 
   return (
     <div className="bg-white rounded-xl border border-[#E5DDD3] shadow-xs overflow-hidden">
@@ -70,7 +78,7 @@ export function PublishAnnouncementDisclosure({
                 defaultValue={
                   globalPublisher ? "" : (publishEvents[0]?.id ?? "")
                 }
-                className="w-full p-2.5 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
+                className="w-full min-h-[44px] p-2.5 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
               >
                 {globalPublisher && (
                   <option value="">
@@ -85,62 +93,41 @@ export function PublishAnnouncementDisclosure({
               </select>
             </div>
 
-            {/* Priority & Expiry (Admin / Executive only per DB policy) */}
+            {/* Priority Level (Club Officers only) */}
             {globalPublisher && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label
-                    htmlFor="announcement-priority"
-                    className="block text-xs font-bold text-[#3D291F] mb-1"
-                  >
-                    Priority Level
-                  </label>
-                  <select
-                    id="announcement-priority"
-                    name="priority"
-                    value={priority}
-                    onChange={(e) =>
-                      setPriority(
-                        e.target.value as "standard" | "important" | "urgent",
-                      )
-                    }
-                    className="w-full p-2.5 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
-                  >
-                    <option value="standard">Standard Notice</option>
-                    <option value="important">Important Notice</option>
-                    <option value="urgent">
-                      Urgent Alert (Requires Expiry)
-                    </option>
-                  </select>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="announcement-expires-at"
-                    className="block text-xs font-bold text-[#3D291F] mb-1"
-                  >
-                    Expiry Date{" "}
-                    {priority === "urgent"
-                      ? "(Required)"
-                      : priority === "important"
-                        ? "(Optional)"
-                        : "(N/A)"}
-                  </label>
-                  <input
-                    id="announcement-expires-at"
-                    name="expires_at"
-                    type="datetime-local"
-                    disabled={priority === "standard"}
-                    required={priority === "urgent"}
-                    className={`w-full p-2.5 border rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden ${
-                      priority === "standard"
-                        ? "bg-neutral-100 border-neutral-200 text-neutral-400 cursor-not-allowed"
-                        : "bg-white border-[#E5DDD3]"
-                    }`}
-                  />
-                </div>
+              <div>
+                <label
+                  htmlFor="announcement-priority"
+                  className="block text-xs font-bold text-[#3D291F] mb-1"
+                >
+                  Priority Level
+                </label>
+                <select
+                  id="announcement-priority"
+                  name="priority"
+                  value={priority}
+                  onChange={(e) =>
+                    setPriority(
+                      e.target.value as "standard" | "important" | "urgent",
+                    )
+                  }
+                  className="w-full min-h-[44px] p-2.5 bg-white border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
+                >
+                  <option value="standard">Standard Notice</option>
+                  <option value="important">Important Notice</option>
+                  <option value="urgent">Urgent Alert</option>
+                </select>
               </div>
             )}
+
+            {/* Publication Duration & Expiry */}
+            <AnnouncementDurationFields
+              idPrefix="publish-announcement"
+              durationPreset={durationPreset}
+              onDurationPresetChange={setDurationPreset}
+              customExpiresAt={customExpiresAt}
+              onCustomExpiresAtChange={setCustomExpiresAt}
+            />
 
             {/* Title */}
             <div>
@@ -157,7 +144,7 @@ export function PublishAnnouncementDisclosure({
                 required
                 maxLength={160}
                 placeholder="e.g. Schedule Update for Year-End Family Banquet"
-                className="w-full p-2.5 bg-white border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
+                className="w-full min-h-[44px] p-2.5 bg-white border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
               />
             </div>
 
@@ -180,20 +167,33 @@ export function PublishAnnouncementDisclosure({
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="cf-btn cf-btn--neutral"
+                className="cf-btn cf-btn--neutral min-h-[44px]"
               >
                 Cancel
               </button>
               <FormSubmitButton
-                className="cf-btn cf-btn--primary"
+                name="submission_mode"
+                value="draft"
+                className="cf-btn cf-btn--neutral cf-btn--accent min-h-[44px]"
+                pendingLabel="Saving Draft…"
+                statusToastMessage="Saving announcement draft without sending notifications."
+              >
+                <FileText className="w-3.5 h-3.5 text-[#174C37]" />
+                <span>Save Draft</span>
+              </FormSubmitButton>
+              <FormSubmitButton
+                name="submission_mode"
+                value="publish"
+                className="cf-btn cf-btn--primary min-h-[44px]"
                 pendingLabel="Publishing Notice…"
                 statusToastMessage="Broadcasting official notice to club members."
               >
-                Post Announcement
+                <Send className="w-3.5 h-3.5" />
+                <span>Post Announcement</span>
               </FormSubmitButton>
             </div>
           </form>

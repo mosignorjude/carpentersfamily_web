@@ -1,3 +1,9 @@
+import type {
+  AnnouncementArchiveReason,
+  AnnouncementDurationPreset,
+  AnnouncementStatus,
+} from "@/lib/announcement-lifecycle.mjs";
+
 export type AnnouncementPriority = "standard" | "important" | "urgent";
 
 export interface AnnouncementRevisionItem {
@@ -6,6 +12,8 @@ export interface AnnouncementRevisionItem {
   title: string;
   message: string;
   priority: AnnouncementPriority;
+  status: AnnouncementStatus;
+  durationPreset: AnnouncementDurationPreset;
   expiresAt: string | null;
   editedAt: string;
   reason: string;
@@ -19,13 +27,51 @@ export interface AnnouncementItem {
   message: string;
   createdAt: string;
   updatedAt: string;
+  publishedAt: string | null;
   revisionNumber: number;
   priority: AnnouncementPriority;
+  status: AnnouncementStatus;
+  durationPreset: AnnouncementDurationPreset;
   expiresAt: string | null;
   isRead: boolean;
   readStatusUnavailable: boolean;
   canManage: boolean;
   revisions: AnnouncementRevisionItem[];
+}
+
+export interface AnnouncementDraftItem {
+  id: string;
+  eventId: string | null;
+  eventTitle: string | null;
+  title: string;
+  message: string;
+  priority: AnnouncementPriority;
+  durationPreset: AnnouncementDurationPreset;
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  revisionNumber: number;
+  canManage: boolean;
+}
+
+export interface AnnouncementArchiveItem {
+  id: string;
+  eventId: string | null;
+  eventTitle: string | null;
+  title: string;
+  message: string;
+  priority: AnnouncementPriority;
+  durationPreset: AnnouncementDurationPreset;
+  publishedAt: string | null;
+  expiresAt: string | null;
+  archivedAt: string;
+  archivedByName: string | null;
+  archiveReason: AnnouncementArchiveReason;
+  purgeAfter: string;
+  createdAt: string;
+  updatedAt: string;
+  revisionNumber: number;
+  canManage: boolean;
 }
 
 export interface PollOptionItem {

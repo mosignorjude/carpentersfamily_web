@@ -9,10 +9,12 @@ import {
   Edit3,
   History,
   Layers,
+  Trash2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { markAnnouncementReadAction } from "@/app/actions";
 import { FormSubmitButton } from "@/components/ui";
+import { AnnouncementDeleteModal } from "./announcement-delete-modal";
 import { AnnouncementEditModal } from "./announcement-edit-modal";
 import type { AnnouncementItem } from "./communications-types";
 
@@ -32,10 +34,17 @@ function formatWAT(isoDate: string) {
 
 interface AnnouncementCardProps {
   announcement: AnnouncementItem;
+  globalPublisher?: boolean;
+  onMarkAsRead?: (announcementId: string) => void;
 }
 
-export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
+export function AnnouncementCard({
+  announcement,
+  globalPublisher = true,
+  onMarkAsRead,
+}: AnnouncementCardProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isRevisionsOpen, setIsRevisionsOpen] = useState(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: close modal when announcement revision updates
@@ -99,22 +108,20 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
               </span>
             )}
 
-            {/* Personal Read State */}
-            <span
-              className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
-                announcement.readStatusUnavailable
-                  ? "bg-neutral-100 text-neutral-500 border border-neutral-200"
-                  : isUnread
-                    ? "bg-[#174C37] text-white"
-                    : "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]"
-              }`}
-            >
-              {announcement.readStatusUnavailable
-                ? "Status unavailable"
-                : isUnread
-                  ? "Unread"
-                  : "Read"}
-            </span>
+            {/* Personal Read State (only shown while unread or if status is unavailable) */}
+            {(announcement.readStatusUnavailable || isUnread) && (
+              <span
+                className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
+                  announcement.readStatusUnavailable
+                    ? "bg-neutral-100 text-neutral-500 border border-neutral-200"
+                    : "bg-[#174C37] text-white"
+                }`}
+              >
+                {announcement.readStatusUnavailable
+                  ? "Status unavailable"
+                  : "Unread"}
+              </span>
+            )}
           </div>
 
           <h3 className="text-base sm:text-lg font-bold text-[#3D291F] pt-0.5 leading-snug">
@@ -126,7 +133,15 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
         <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 sm:pt-0">
           {/* Mark as read button */}
           {!announcement.readStatusUnavailable && isUnread && (
-            <form action={markAnnouncementReadAction}>
+            <form
+              action={markAnnouncementReadAction}
+              onSubmit={(event) => {
+                if (onMarkAsRead) {
+                  event.preventDefault();
+                  onMarkAsRead(announcement.id);
+                }
+              }}
+            >
               <input
                 name="announcement_id"
                 type="hidden"
@@ -155,6 +170,19 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
               <span>Edit</span>
             </button>
           )}
+
+          {/* Delete (Archive) Button */}
+          {announcement.canManage && (
+            <button
+              type="button"
+              onClick={() => setIsDeleteOpen(true)}
+              className="cf-btn cf-btn--neutral min-h-[44px] text-[#8B261E] border-red-200 hover:bg-red-50"
+              title="Move announcement to Archive (recoverable for 7 days)"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-[#8B261E]" />
+              <span>Delete</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -168,7 +196,10 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
         <div className="flex flex-wrap items-center gap-3">
           <span className="flex items-center gap-1">
             <Clock className="w-3.5 h-3.5 text-[#D6A23A]" />
-            <span>Posted: {formatWAT(announcement.createdAt)}</span>
+            <span>
+              Published:{" "}
+              {formatWAT(announcement.publishedAt ?? announcement.createdAt)}
+            </span>
           </span>
 
           {announcement.expiresAt && (
@@ -228,7 +259,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
                 <p className="text-[#7A685D] text-[10px] pt-1 border-t border-[#E5DDD3]/50">
                   Priority: {rev.priority}
                   {rev.expiresAt
-                    ? ` · Highlight until ${formatWAT(rev.expiresAt)}`
+                    ? ` · Active until ${formatWAT(rev.expiresAt)}`
                     : ""}
                 </p>
               </div>
@@ -238,11 +269,23 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
       )}
 
       {/* Edit Modal */}
-      {announcement.canManage && (
+      {announcement.canManage && isEditOpen && (
         <AnnouncementEditModal
+          key={`${announcement.id}-${announcement.revisionNumber}-${announcement.updatedAt}`}
           announcement={announcement}
-          isOpen={isEditOpen}
+          globalPublisher={globalPublisher}
+          isOpen={true}
           onClose={() => setIsEditOpen(false)}
+        />
+      )}
+
+      {/* Delete (Archive) Confirmation Modal */}
+      {announcement.canManage && isDeleteOpen && (
+        <AnnouncementDeleteModal
+          announcementId={announcement.id}
+          announcementTitle={announcement.title}
+          isOpen={true}
+          onClose={() => setIsDeleteOpen(false)}
         />
       )}
     </article>

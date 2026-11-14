@@ -312,7 +312,6 @@ function mapAnnouncementRow(row) {
     !validTimestamp(row.created_at) ||
     !["standard", "important", "urgent"].includes(priority) ||
     (expiresAt !== null && !validTimestamp(expiresAt)) ||
-    (priority === "standard" && expiresAt !== null) ||
     (priority === "urgent" && expiresAt === null)
   ) {
     return null;
@@ -844,21 +843,26 @@ export async function getHomeDashboardData(
   const announcementsQuery = supabase
     .from("announcements")
     .select("id,title,message,created_at,priority,expires_at")
+    .eq("status", "active")
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(ANNOUNCEMENT_LIMIT);
   const importantAnnouncementsQuery = supabase
     .from("announcements")
     .select("id,title,message,created_at,priority,expires_at")
+    .eq("status", "active")
     .eq("priority", "important")
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(PRIORITY_ANNOUNCEMENT_LIMIT);
   const urgentAnnouncementsQuery = supabase
     .from("announcements")
     .select("id,title,message,created_at,priority,expires_at")
+    .eq("status", "active")
     .eq("priority", "urgent")
-    .gte("expires_at", nowIso)
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
     .order("expires_at", { ascending: true })
     .order("created_at", { ascending: false })
     .limit(PRIORITY_ANNOUNCEMENT_LIMIT);

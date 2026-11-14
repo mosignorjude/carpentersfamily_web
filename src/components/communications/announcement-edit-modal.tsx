@@ -4,6 +4,12 @@ import { AlertCircle, Edit3, X } from "lucide-react";
 import { useState } from "react";
 import { updateAnnouncementAction } from "@/app/actions";
 import { FormSubmitButton } from "@/components/ui";
+import {
+  type AnnouncementDurationPreset,
+  DEFAULT_ANNOUNCEMENT_DURATION_PRESET,
+  formatWatDateTimeLocal,
+} from "@/lib/announcement-lifecycle.mjs";
+import { AnnouncementDurationFields } from "./announcement-duration-fields";
 import type {
   AnnouncementItem,
   AnnouncementPriority,
@@ -11,24 +17,27 @@ import type {
 
 interface AnnouncementEditModalProps {
   announcement: AnnouncementItem;
+  globalPublisher?: boolean;
   isOpen: boolean;
   onClose: () => void;
 }
 
-function toWatDateTimeLocal(iso: string | null) {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return new Date(date.getTime() + 60 * 60 * 1000).toISOString().slice(0, 16);
-}
-
 export function AnnouncementEditModal({
   announcement,
+  globalPublisher = true,
   isOpen,
   onClose,
 }: AnnouncementEditModalProps) {
   const [priority, setPriority] = useState<AnnouncementPriority>(
     announcement.priority ?? "standard",
+  );
+  const [expiryAction, setExpiryAction] = useState<"keep" | "set">("keep");
+  const [durationPreset, setDurationPreset] =
+    useState<AnnouncementDurationPreset>(
+      announcement.durationPreset ?? DEFAULT_ANNOUNCEMENT_DURATION_PRESET,
+    );
+  const [customExpiresAt, setCustomExpiresAt] = useState(
+    formatWatDateTimeLocal(announcement.expiresAt),
   );
 
   if (!isOpen) return null;
@@ -86,12 +95,12 @@ export function AnnouncementEditModal({
               required
               maxLength={160}
               defaultValue={announcement.title}
-              className="w-full p-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
+              className="w-full min-h-[44px] p-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
             />
           </div>
 
-          {/* Priority & Expiry */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Priority Level */}
+          {globalPublisher ? (
             <div>
               <label
                 htmlFor={`edit-priority-${announcement.id}`}
@@ -106,41 +115,30 @@ export function AnnouncementEditModal({
                 onChange={(e) =>
                   setPriority(e.target.value as AnnouncementPriority)
                 }
-                className="w-full p-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
+                className="w-full min-h-[44px] p-2.5 bg-[#FAF6F0] border border-[#E5DDD3] rounded-lg text-xs font-semibold text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
               >
                 <option value="standard">Standard Notice</option>
                 <option value="important">Important Notice</option>
-                <option value="urgent">Urgent Alert (Requires Expiry)</option>
+                <option value="urgent">Urgent Alert</option>
               </select>
             </div>
+          ) : (
+            <input name="priority" type="hidden" value={priority} />
+          )}
 
-            <div>
-              <label
-                htmlFor={`edit-expires-${announcement.id}`}
-                className="block text-xs font-bold text-[#3D291F] mb-1"
-              >
-                Highlight Expiry{" "}
-                {priority === "urgent"
-                  ? "(Required)"
-                  : priority === "important"
-                    ? "(Optional)"
-                    : "(N/A)"}
-              </label>
-              <input
-                id={`edit-expires-${announcement.id}`}
-                name="expires_at"
-                type="datetime-local"
-                disabled={priority === "standard"}
-                required={priority === "urgent"}
-                defaultValue={toWatDateTimeLocal(announcement.expiresAt)}
-                className={`w-full p-2.5 border rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden ${
-                  priority === "standard"
-                    ? "bg-neutral-100 border-neutral-200 text-neutral-400 cursor-not-allowed"
-                    : "bg-[#FAF6F0] border-[#E5DDD3]"
-                }`}
-              />
-            </div>
-          </div>
+          {/* Duration / Expiry (Keep current by default so copy edits never reset expiry) */}
+          <AnnouncementDurationFields
+            idPrefix={`edit-${announcement.id}`}
+            durationPreset={durationPreset}
+            onDurationPresetChange={setDurationPreset}
+            customExpiresAt={customExpiresAt}
+            onCustomExpiresAtChange={setCustomExpiresAt}
+            expiryAction={expiryAction}
+            onExpiryActionChange={setExpiryAction}
+            allowKeepCurrent={true}
+            currentExpiresAtIso={announcement.expiresAt}
+            isDraft={announcement.status === "draft"}
+          />
 
           {/* Message */}
           <div>
@@ -175,8 +173,8 @@ export function AnnouncementEditModal({
               type="text"
               required
               maxLength={500}
-              placeholder="e.g. Corrected date and updated venue contact details per Welfare Committee resolution..."
-              className="w-full p-2.5 bg-white border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
+              placeholder="e.g. Corrected date and updated publication duration per executive review..."
+              className="w-full min-h-[44px] p-2.5 bg-white border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
             />
             <p className="text-[11px] text-[#7A685D] mt-1 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5 text-[#D6A23A] shrink-0" />
@@ -188,12 +186,12 @@ export function AnnouncementEditModal({
             <button
               type="button"
               onClick={onClose}
-              className="cf-btn cf-btn--neutral"
+              className="cf-btn cf-btn--neutral min-h-[44px]"
             >
               Cancel
             </button>
             <FormSubmitButton
-              className="cf-btn cf-btn--primary"
+              className="cf-btn cf-btn--primary min-h-[44px]"
               pendingLabel="Saving Revision…"
               statusToastMessage="Recording announcement revision and audit note."
             >

@@ -9,6 +9,11 @@ import type {
   TicketLookupState,
   TicketOrderStatus,
 } from "@/components/tickets/ticket-types";
+import {
+  calculateAnnouncementExpiry,
+  DEFAULT_ANNOUNCEMENT_DURATION_PRESET,
+  isAnnouncementDurationPreset,
+} from "@/lib/announcement-lifecycle.mjs";
 import { parseClubRoleRequest } from "@/lib/club-role-request.mjs";
 import { canManageDues } from "@/lib/dues-governance.mjs";
 import {
@@ -3468,18 +3473,21 @@ function communicationPriority(formData: FormData) {
     : null;
 }
 
-function communicationExpiresAt(
-  formData: FormData,
-  priority: "standard" | "important" | "urgent",
-) {
-  if (priority === "standard") return null;
+function communicationOptionalCustomExpiry(formData: FormData) {
   const values = formData.getAll("expires_at");
-  if (values.length === 0) return priority === "urgent" ? undefined : null;
+  if (values.length === 0) return null;
   if (values.length !== 1 || typeof values[0] !== "string") return undefined;
   const raw = values[0].trim();
-  if (!raw) return priority === "urgent" ? undefined : null;
-  const parsed = eventDateTimeToISOString(raw);
-  return parsed ?? undefined;
+  if (!raw) return null;
+  return eventDateTimeToISOString(raw) ?? undefined;
+}
+
+function communicationDurationPreset(formData: FormData) {
+  if (!formData.has("duration_preset")) {
+    return DEFAULT_ANNOUNCEMENT_DURATION_PRESET;
+  }
+  const value = communicationSingleText(formData, "duration_preset", 20);
+  return isAnnouncementDurationPreset(value) ? value : null;
 }
 
 export async function createAnnouncementAction(formData: FormData) {
@@ -3489,7 +3497,9 @@ export async function createAnnouncementAction(formData: FormData) {
       "title",
       "message",
       "priority",
+      "duration_preset",
       "expires_at",
+      "submission_mode",
     ])
   ) {
     redirect(communicationNotice("invalid-request"));
@@ -3498,45 +3508,149 @@ export async function createAnnouncementAction(formData: FormData) {
   const title = communicationSingleText(formData, "title", 160);
   const message = communicationSingleText(formData, "message", 10_000, true);
   const priority = communicationPriority(formData);
-  const expiresAt = priority
-    ? communicationExpiresAt(formData, priority)
-    : undefined;
+  const durationPreset = communicationDurationPreset(formData);
+  const customExpiresAt = communicationOptionalCustomExpiry(formData);
+  const submissionMode = formData.has("submission_mode")
+    ? communicationSingleText(formData, "submission_mode", 20)
+    : "publish";
+  const targetStatus =
+    submissionMode === "draft"
+      ? "draft"
+      : submissionMode === "publish"
+        ? "active"
+        : null;
+
   if (
     eventId === undefined ||
     !title ||
     !message ||
     !priority ||
-    expiresAt === undefined
+    !durationPreset ||
+    customExpiresAt === undefined ||
+    !targetStatus
   ) {
     redirect(communicationNotice("invalid-request"));
   }
 
+  const expiryCheck = calculateAnnouncementExpiry({
+    mode: "create",
+    status: targetStatus,
+    durationPreset,
+    customExpiresAtIso: customExpiresAt,
+  });
+  if (!expiryCheck.ok) {
+    redirect(communicationNotice("invalid-request"));
+  }
+
   const supabase = await getActiveCommunicationActor();
-  const { data: announcementId, error } =
-    priority === "standard" && expiresAt === null
-      ? await supabase.rpc("create_announcement", {
-          p_event_id: eventId,
-          p_title: title,
-          p_message: message,
-        })
-      : await supabase.rpc("create_announcement", {
-          p_event_id: eventId,
-          p_title: title,
-          p_message: message,
-          p_priority: priority,
-          p_expires_at: expiresAt,
-        });
+  const { data: announcementId, error } = await supabase.rpc(
+    "create_announcement",
+    {
+      p_event_id: eventId,
+      p_title: title,
+      p_message: message,
+      p_priority: priority,
+      p_duration_preset: durationPreset,
+      p_expires_at: customExpiresAt,
+      p_status: targetStatus,
+    },
+  );
   if (error) redirect(communicationNotice(rpcErrorNotice(error)));
   if (typeof announcementId !== "string" || !uuidPattern.test(announcementId)) {
     redirect(communicationNotice("operation-failed"));
   }
 
-  await notifyAnnouncementPublished({
-    announcementId,
-    title,
-    message,
-    priority,
+  if (targetStatus === "active") {
+    await notifyAnnouncementPublished({
+      announcementId,
+      title,
+      message,
+      priority,
+    });
+  }
+
+  revalidateCommunications();
+  redirect(
+    communicationNotice(
+      targetStatus === "draft"
+        ? "announcement-draft-saved"
+        : "announcement-created",
+    ),
+  );
+}
+
+export async function publishDraftAnnouncementAction(formData: FormData) {
+  if (
+    !communicationFieldsOnly(formData, [
+      "announcement_id",
+      "duration_preset",
+      "expires_at",
+    ])
+  ) {
+    redirect(communicationNotice("invalid-request"));
+  }
+  const announcementId = communicationUuid(formData, "announcement_id");
+  const hasPreset = formData.has("duration_preset");
+  const durationPreset = hasPreset
+    ? communicationDurationPreset(formData)
+    : null;
+  const customExpiresAt = formData.has("expires_at")
+    ? communicationOptionalCustomExpiry(formData)
+    : null;
+
+  if (
+    !announcementId ||
+    (hasPreset && !durationPreset) ||
+    customExpiresAt === undefined
+  ) {
+    redirect(communicationNotice("invalid-request"));
+  }
+
+  if (durationPreset) {
+    const expiryCheck = calculateAnnouncementExpiry({
+      mode: "publish",
+      status: "active",
+      durationPreset,
+      customExpiresAtIso: customExpiresAt,
+    });
+    if (!expiryCheck.ok) {
+      redirect(communicationNotice("invalid-request"));
+    }
+  }
+
+  const supabase = await getActiveCommunicationActor();
+  const { data, error } = await supabase.rpc("publish_announcement", {
+    p_announcement_id: announcementId,
+    p_duration_preset: durationPreset,
+    p_expires_at: durationPreset === "custom" ? customExpiresAt : null,
   });
+  if (error) redirect(communicationNotice(rpcErrorNotice(error)));
+
+  const published =
+    data && typeof data === "object" && !Array.isArray(data)
+      ? (data as {
+          title?: unknown;
+          message?: unknown;
+          priority?: unknown;
+        })
+      : null;
+
+  if (
+    published &&
+    typeof published.title === "string" &&
+    typeof published.message === "string"
+  ) {
+    const priority =
+      published.priority === "important" || published.priority === "urgent"
+        ? published.priority
+        : "standard";
+    await notifyAnnouncementPublished({
+      announcementId,
+      title: published.title,
+      message: published.message,
+      priority,
+    });
+  }
 
   revalidateCommunications();
   redirect(communicationNotice("announcement-created"));
@@ -3550,6 +3664,8 @@ export async function updateAnnouncementAction(formData: FormData) {
       "message",
       "reason",
       "priority",
+      "expiry_action",
+      "duration_preset",
       "expires_at",
     ])
   ) {
@@ -3559,41 +3675,208 @@ export async function updateAnnouncementAction(formData: FormData) {
   const title = communicationSingleText(formData, "title", 160);
   const message = communicationSingleText(formData, "message", 10_000, true);
   const reason = communicationSingleText(formData, "reason", 500);
-  const hasPriorityField = formData.has("priority");
   const priority = communicationPriority(formData);
-  const expiresAt = priority
-    ? communicationExpiresAt(formData, priority)
-    : undefined;
+  const expiryActionRaw = formData.has("expiry_action")
+    ? communicationSingleText(formData, "expiry_action", 20)
+    : "keep";
+  const expiryAction =
+    expiryActionRaw === "keep" || expiryActionRaw === "set"
+      ? expiryActionRaw
+      : null;
+  const durationPreset =
+    expiryAction === "set" ? communicationDurationPreset(formData) : null;
+  const customExpiresAt =
+    expiryAction === "set" ? communicationOptionalCustomExpiry(formData) : null;
+
   if (
     !announcementId ||
     !title ||
     !message ||
     !reason ||
     !priority ||
-    expiresAt === undefined
+    !expiryAction ||
+    (expiryAction === "set" &&
+      (!durationPreset || customExpiresAt === undefined))
   ) {
     redirect(communicationNotice("invalid-request"));
   }
 
+  if (expiryAction === "set" && durationPreset === "custom") {
+    const expiryCheck = calculateAnnouncementExpiry({
+      mode: "edit",
+      status: "active",
+      expiryAction: "preset",
+      durationPreset: "custom",
+      customExpiresAtIso: customExpiresAt,
+    });
+    if (!expiryCheck.ok) {
+      redirect(communicationNotice("invalid-request"));
+    }
+  }
+
   const supabase = await getActiveCommunicationActor();
-  const { error } = hasPriorityField
-    ? await supabase.rpc("update_announcement", {
-        p_announcement_id: announcementId,
-        p_title: title,
-        p_message: message,
-        p_reason: reason,
-        p_priority: priority,
-        p_expires_at: expiresAt,
-      })
-    : await supabase.rpc("update_announcement", {
-        p_announcement_id: announcementId,
-        p_title: title,
-        p_message: message,
-        p_reason: reason,
-      });
+  const { error } = await supabase.rpc("update_announcement", {
+    p_announcement_id: announcementId,
+    p_title: title,
+    p_message: message,
+    p_reason: reason,
+    p_priority: priority,
+    p_duration_preset: durationPreset,
+    p_expires_at: durationPreset === "custom" ? customExpiresAt : null,
+    p_expiry_action: expiryAction,
+  });
   if (error) redirect(communicationNotice(rpcErrorNotice(error)));
   revalidateCommunications();
   redirect(communicationNotice("announcement-updated"));
+}
+
+export async function archiveAnnouncementAction(formData: FormData) {
+  if (!communicationFieldsOnly(formData, ["announcement_id", "reason"])) {
+    redirect(communicationNotice("invalid-request"));
+  }
+  const announcementId = communicationUuid(formData, "announcement_id");
+  const reason = formData.has("reason")
+    ? communicationSingleText(formData, "reason", 500)
+    : "Manually deleted";
+
+  if (!announcementId || reason === null) {
+    redirect(communicationNotice("invalid-request"));
+  }
+
+  const supabase = await getActiveCommunicationActor();
+  const { error } = await supabase.rpc("archive_announcement", {
+    p_announcement_id: announcementId,
+    p_reason: reason,
+  });
+  if (error) redirect(communicationNotice(rpcErrorNotice(error)));
+  revalidateCommunications();
+  redirect(communicationNotice("announcement-archived"));
+}
+
+export async function restoreAnnouncementAction(formData: FormData) {
+  if (
+    !communicationFieldsOnly(formData, [
+      "announcement_id",
+      "expiry_action",
+      "duration_preset",
+      "expires_at",
+      "reason",
+    ])
+  ) {
+    redirect(communicationNotice("invalid-request"));
+  }
+  const announcementId = communicationUuid(formData, "announcement_id");
+  const expiryActionRaw = formData.has("expiry_action")
+    ? communicationSingleText(formData, "expiry_action", 20)
+    : "keep";
+  const expiryAction =
+    expiryActionRaw === "keep" || expiryActionRaw === "preset"
+      ? expiryActionRaw
+      : expiryActionRaw === "set"
+        ? "preset"
+        : null;
+  const durationPreset =
+    expiryAction === "preset" ? communicationDurationPreset(formData) : null;
+  const customExpiresAt =
+    expiryAction === "preset"
+      ? communicationOptionalCustomExpiry(formData)
+      : null;
+  const reason = formData.has("reason")
+    ? communicationSingleText(formData, "reason", 500)
+    : "Restored from archive";
+
+  if (
+    !announcementId ||
+    !expiryAction ||
+    reason === null ||
+    (expiryAction === "preset" &&
+      (!durationPreset || customExpiresAt === undefined))
+  ) {
+    redirect(communicationNotice("invalid-request"));
+  }
+
+  if (expiryAction === "preset" && durationPreset) {
+    const expiryCheck = calculateAnnouncementExpiry({
+      mode: "restore",
+      status: "active",
+      expiryAction: "preset",
+      durationPreset,
+      customExpiresAtIso: customExpiresAt,
+    });
+    if (!expiryCheck.ok) {
+      redirect(communicationNotice("invalid-request"));
+    }
+  }
+
+  const supabase = await getActiveCommunicationActor();
+  const { error } = await supabase.rpc("restore_announcement", {
+    p_announcement_id: announcementId,
+    p_duration_preset: durationPreset,
+    p_expires_at: durationPreset === "custom" ? customExpiresAt : null,
+    p_reason: reason,
+  });
+  if (error) redirect(communicationNotice(rpcErrorNotice(error)));
+  revalidateCommunications();
+  redirect(communicationNotice("announcement-restored"));
+}
+
+export async function markAnnouncementReadInlineAction(
+  announcementIdInput: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const announcementId =
+    typeof announcementIdInput === "string"
+      ? announcementIdInput.trim().toLowerCase()
+      : "";
+  if (!uuidPattern.test(announcementId)) {
+    return { ok: false, error: "This announcement reference is invalid." };
+  }
+
+  let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
+  try {
+    supabase = await createSupabaseServerClient();
+  } catch {
+    return {
+      ok: false,
+      error: "Communications service is temporarily unavailable.",
+    };
+  }
+
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) {
+    return {
+      ok: false,
+      error: "Please sign in with an active member account first.",
+    };
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("member_profiles")
+    .select("status")
+    .eq("id", authData.user.id)
+    .maybeSingle();
+  if (profileError || profile?.status !== "active") {
+    return {
+      ok: false,
+      error: "Only active member accounts can mark announcements as read.",
+    };
+  }
+
+  const { error } = await supabase.rpc("mark_announcement_read", {
+    p_announcement_id: announcementId,
+  });
+  if (error) {
+    const noticeCode = rpcErrorNotice(error);
+    return {
+      ok: false,
+      error:
+        noticeCode === "denied"
+          ? "This announcement is no longer active."
+          : "Could not mark announcement as read right now.",
+    };
+  }
+
+  revalidateCommunications();
+  return { ok: true };
 }
 
 export async function markAnnouncementReadAction(formData: FormData) {

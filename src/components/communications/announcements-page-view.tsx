@@ -1,15 +1,27 @@
 "use client";
 
 import { AlertCircle, Megaphone, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { markAnnouncementReadInlineAction } from "@/app/actions";
+import {
+  AnnouncementArchiveSection,
+  AnnouncementDraftsSection,
+} from "./announcement-archive-section";
 import { AnnouncementCard } from "./announcement-card";
 import { CommunicationsNav } from "./communications-nav";
 import { CommunicationsPrivacyBanner } from "./communications-privacy-banner";
-import type { AnnouncementItem, EventOption } from "./communications-types";
+import type {
+  AnnouncementArchiveItem,
+  AnnouncementDraftItem,
+  AnnouncementItem,
+  EventOption,
+} from "./communications-types";
 import { PublishAnnouncementDisclosure } from "./publish-announcement-disclosure";
 
 interface AnnouncementsPageViewProps {
   announcements: AnnouncementItem[];
+  drafts?: AnnouncementDraftItem[];
+  archivedAnnouncements?: AnnouncementArchiveItem[];
   unreadAnnouncementsCount: number;
   openPollsCount: number;
   globalPublisher: boolean;
@@ -21,6 +33,8 @@ interface AnnouncementsPageViewProps {
 
 export function AnnouncementsPageView({
   announcements,
+  drafts = [],
+  archivedAnnouncements = [],
   unreadAnnouncementsCount,
   openPollsCount,
   globalPublisher,
@@ -30,17 +44,64 @@ export function AnnouncementsPageView({
   historyUnavailableMessage,
 }: AnnouncementsPageViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [scopeFilter, setScopeFilter] = useState<"all" | "club_wide" | "event">(
-    "all",
+  const [scopeFilter, setScopeFilter] = useState<
+    "all" | "club_wide" | "event" | "archive"
+  >("all");
+  const [optimisticReadIds, setOptimisticReadIds] = useState<string[]>([]);
+  const [markReadError, setMarkReadError] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+
+  const canAccessArchive = globalPublisher || publishEvents.length > 0;
+  const readSet = useMemo(
+    () => new Set(optimisticReadIds),
+    [optimisticReadIds],
   );
 
+  const effectiveAnnouncements = useMemo(
+    () =>
+      announcements.map((ann) =>
+        readSet.has(ann.id) ? { ...ann, isRead: true } : ann,
+      ),
+    [announcements, readSet],
+  );
+
+  const optimisticNewReadsCount = useMemo(
+    () =>
+      announcements.filter((ann) => !ann.isRead && readSet.has(ann.id)).length,
+    [announcements, readSet],
+  );
+  const effectiveUnreadCount = Math.max(
+    0,
+    unreadAnnouncementsCount - optimisticNewReadsCount,
+  );
+
+  function handleMarkAsRead(announcementId: string) {
+    setMarkReadError(null);
+    setOptimisticReadIds((previous) =>
+      previous.includes(announcementId)
+        ? previous
+        : [...previous, announcementId],
+    );
+
+    startTransition(async () => {
+      const result = await markAnnouncementReadInlineAction(announcementId);
+      if (!result.ok) {
+        setOptimisticReadIds((previous) =>
+          previous.filter((id) => id !== announcementId),
+        );
+        setMarkReadError(
+          result.error ?? "Could not mark announcement as read right now.",
+        );
+      }
+    });
+  }
+
   const filteredAnnouncements = useMemo(() => {
-    return announcements.filter((ann) => {
-      // Scope filter
+    if (scopeFilter === "archive") return [];
+    return effectiveAnnouncements.filter((ann) => {
       if (scopeFilter === "club_wide" && ann.eventId !== null) return false;
       if (scopeFilter === "event" && ann.eventId === null) return false;
 
-      // Search query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchesTitle = ann.title.toLowerCase().includes(query);
@@ -52,14 +113,25 @@ export function AnnouncementsPageView({
 
       return true;
     });
-  }, [announcements, scopeFilter, searchQuery]);
+  }, [effectiveAnnouncements, scopeFilter, searchQuery]);
+
+  const filteredArchived = useMemo(() => {
+    if (!searchQuery.trim()) return archivedAnnouncements;
+    const query = searchQuery.toLowerCase();
+    return archivedAnnouncements.filter(
+      (item) =>
+        item.title.toLowerCase().includes(query) ||
+        item.message.toLowerCase().includes(query) ||
+        (item.eventTitle?.toLowerCase().includes(query) ?? false),
+    );
+  }, [archivedAnnouncements, searchQuery]);
 
   return (
     <div className="space-y-6">
       {/* Sub-Navigation */}
       <CommunicationsNav
         activeScreen="announcements"
-        unreadAnnouncementsCount={unreadAnnouncementsCount}
+        unreadAnnouncementsCount={effectiveUnreadCount}
         openPollsCount={openPollsCount}
       />
 
@@ -76,13 +148,13 @@ export function AnnouncementsPageView({
       </div>
 
       {/* Error or History Unavailable Banners */}
-      {errorMessage && (
+      {(errorMessage || markReadError) && (
         <div
           role="alert"
           className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-[#8B261E] flex items-center gap-2"
         >
           <AlertCircle className="w-4 h-4 text-[#8B261E] shrink-0" />
-          <span>{errorMessage}</span>
+          <span>{markReadError ?? errorMessage}</span>
         </div>
       )}
 
@@ -104,10 +176,18 @@ export function AnnouncementsPageView({
         />
       )}
 
+      {/* Drafts Section (if authorized and drafts exist) */}
+      {canAccessArchive && drafts.length > 0 && (
+        <AnnouncementDraftsSection
+          drafts={drafts}
+          globalPublisher={globalPublisher}
+        />
+      )}
+
       {/* Filter & Search Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
         {/* Scope segmented tabs */}
-        <div className="bg-white rounded-lg border border-[#E5DDD3] p-1 flex items-center gap-1 self-start sm:self-auto">
+        <div className="bg-white rounded-lg border border-[#E5DDD3] p-1 flex flex-wrap items-center gap-1 self-start sm:self-auto">
           {[
             { id: "all", label: `All (${announcements.length})` },
             {
@@ -118,12 +198,22 @@ export function AnnouncementsPageView({
               id: "event",
               label: `Events (${announcements.filter((a) => Boolean(a.eventId)).length})`,
             },
+            ...(canAccessArchive
+              ? [
+                  {
+                    id: "archive",
+                    label: `Archive (${archivedAnnouncements.length})`,
+                  },
+                ]
+              : []),
           ].map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() =>
-                setScopeFilter(tab.id as "all" | "club_wide" | "event")
+                setScopeFilter(
+                  tab.id as "all" | "club_wide" | "event" | "archive",
+                )
               }
               className={`cf-btn cf-btn--compact cf-btn--tab ${
                 scopeFilter === tab.id ? "cf-btn--tab-active" : ""
@@ -142,13 +232,15 @@ export function AnnouncementsPageView({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search announcements..."
-            className="w-full pl-8 pr-3 py-1.5 bg-white border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] placeholder-[#7A685D] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
+            className="w-full min-h-[44px] pl-8 pr-3 py-1.5 bg-white border border-[#E5DDD3] rounded-lg text-xs text-[#3D291F] placeholder-[#7A685D] focus:ring-2 focus:ring-[#174C37] focus:outline-hidden"
           />
         </div>
       </div>
 
-      {/* Announcements List */}
-      {filteredAnnouncements.length === 0 ? (
+      {/* Announcements List or Archive View */}
+      {scopeFilter === "archive" && canAccessArchive ? (
+        <AnnouncementArchiveSection archivedAnnouncements={filteredArchived} />
+      ) : filteredAnnouncements.length === 0 ? (
         <div className="bg-white rounded-xl border border-[#E5DDD3] p-12 text-center space-y-2">
           <Megaphone className="w-8 h-8 text-[#7A685D] mx-auto opacity-40" />
           <h2 className="text-base font-bold text-[#3D291F]">
@@ -164,6 +256,8 @@ export function AnnouncementsPageView({
             <AnnouncementCard
               key={announcement.id}
               announcement={announcement}
+              globalPublisher={globalPublisher}
+              onMarkAsRead={handleMarkAsRead}
             />
           ))}
         </div>

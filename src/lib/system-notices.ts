@@ -282,10 +282,50 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     title: "Announcement Published",
     message: "Announcement is now live for all members.",
   },
+  "announcement-draft-saved": {
+    type: "info",
+    title: "Draft Saved",
+    message:
+      "Announcement saved as a draft. No emails or notifications were sent.",
+  },
   "announcement-updated": {
     type: "success",
     title: "Announcement Updated",
     message: "Announcement updated.",
+  },
+  "announcement-archived": {
+    type: "info",
+    title: "Moved to Archive",
+    message:
+      "Announcement moved to Archive and will remain recoverable for 7 days.",
+  },
+  "announcement-restored": {
+    type: "success",
+    title: "Announcement Restored",
+    message: "Announcement restored to active notices.",
+  },
+  "announcement-already-archived": {
+    type: "info",
+    title: "Already Archived",
+    message: "This announcement has already been moved to Archive.",
+  },
+  "announcement-recovery-expired": {
+    type: "error",
+    title: "Recovery Window Ended",
+    message:
+      "The 7-day archive recovery window for this announcement has ended.",
+  },
+  "announcement-restore-required": {
+    type: "error",
+    title: "Restore Before Editing",
+    message:
+      "Archived announcements must be restored before they can be edited.",
+  },
+  "announcement-future-expiry-required": {
+    type: "error",
+    title: "Future Expiry Required",
+    message:
+      "Expired announcements require a new future duration or expiry date before restoration.",
   },
   "announcement-read": {
     type: "info",

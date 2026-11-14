@@ -36,7 +36,18 @@ const MESSAGE_RULES: ReadonlyArray<readonly [RegExp, string]> = [
     /add up exactly to the budget|cannot exceed the budget|does not accept budget changes|exceeds? the allowed limit|tier capacity has been reached/i,
     "budget-exceeded",
   ],
+  [/already in the archive/i, "announcement-already-archived"],
+  [/7-day archive recovery window has ended/i, "announcement-recovery-expired"],
+  [/must be restored before editing/i, "announcement-restore-required"],
+  [
+    /require a new future expiry duration/i,
+    "announcement-future-expiry-required",
+  ],
   [/already (?:been )?(reviewed|refunded)/i, "already-processed"],
+  [
+    /priority or expiry is invalid|duration action is invalid/i,
+    "invalid-request",
+  ],
   [/already exists for this email/i, "request-already-pending"],
   [/invite.*expired/i, "invite-expired"],
   [/invite.*(invalid|not found|already been consumed)/i, "invite-invalid"],

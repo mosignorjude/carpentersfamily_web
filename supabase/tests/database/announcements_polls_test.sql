@@ -591,5 +591,202 @@ select throws_ok(
   'polls reject votes after their deadline'
 );
 
+-- ============================================================================
+-- Issues 05 & 06: Draft -> Active -> Archived -> Permanently Deleted Lifecycle
+-- ============================================================================
+
+-- President (0000...2002) saves a Club-wide draft with 14d preset: countdown must not start until published.
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000002002', true);
+select set_config(
+  'test.draft_club_announcement',
+  public.create_announcement(
+    null,
+    'Draft club notice',
+    'Still being reviewed before release.',
+    'important',
+    '14d',
+    null,
+    'draft'
+  )::text,
+  true
+);
+select ok(
+  (select status = 'draft' and published_at is null and expires_at is null
+   from public.announcements
+   where id = current_setting('test.draft_club_announcement')::uuid),
+  'draft announcements do not start expiry countdown before publication and President can set priority'
+);
+
+-- Ordinary member (0000...2004) cannot see drafts, cannot archive, cannot restore.
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000002004', true);
+select is(
+  (select count(*)::integer from public.announcements
+   where id = current_setting('test.draft_club_announcement')::uuid),
+  0,
+  'ordinary members cannot read draft announcements via RLS'
+);
+select is(
+  (select count(*)::integer from public.list_draft_announcements()),
+  0,
+  'ordinary members see no entries from list_draft_announcements'
+);
+select throws_ok(
+  $$select public.archive_announcement(current_setting('test.club_announcement')::uuid, 'Unauthorized delete')$$,
+  '42501', 'Announcement deletion access is required.',
+  'ordinary members cannot delete announcements'
+);
+
+-- Event Lead (0000...2005) cannot delete or edit Club-wide announcements, and cannot archive other events.
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000002005', true);
+select throws_ok(
+  $$select public.archive_announcement(current_setting('test.club_announcement')::uuid, 'Lead delete club note')$$,
+  '42501', 'Announcement deletion access is required.',
+  'Event Leads cannot delete club-wide announcements'
+);
+select is(
+  (select count(*)::integer from public.list_draft_announcements()
+   where id = current_setting('test.draft_club_announcement')::uuid),
+  0,
+  'Event Leads cannot list club-wide draft announcements'
+);
+
+-- Event Lead can set custom/preset duration, edit duration, delete (archive), and restore for their assigned event.
+select set_config(
+  'test.lead_timed_announcement',
+  public.create_announcement(
+    current_setting('test.comms_event_one')::uuid,
+    'Event logistics timing',
+    'Doors open early for setup team.',
+    'standard',
+    '7d',
+    null,
+    'active'
+  )::text,
+  true
+);
+select ok(
+  (select status = 'active' and expires_at > published_at + interval '6 days'
+   from public.announcements
+   where id = current_setting('test.lead_timed_announcement')::uuid),
+  'Event Leads can configure publication duration on their event announcements'
+);
+
+-- President publishes draft: published_at and expires_at (14d from publish) are stamped atomically.
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000002002', true);
+select lives_ok(
+  $$select public.publish_announcement(current_setting('test.draft_club_announcement')::uuid)$$,
+  'Club President can publish a club-wide draft announcement'
+);
+select ok(
+  (select status = 'active'
+     and published_at is not null
+     and expires_at between published_at + interval '13 days 23 hours' and published_at + interval '14 days 1 hour'
+   from public.announcements
+   where id = current_setting('test.draft_club_announcement')::uuid),
+  'publishing a draft starts the expiry countdown from published_at'
+);
+
+-- Content edit in keep mode preserves exact expires_at; manual archive sets 7-day purge_after.
+select set_config(
+  'test.before_edit_expires',
+  (select expires_at::text from public.announcements where id = current_setting('test.draft_club_announcement')::uuid),
+  true
+);
+select lives_ok(
+  $$select public.update_announcement(
+    current_setting('test.draft_club_announcement')::uuid,
+    'Draft club notice updated',
+    'Updated copy without resetting expiry.',
+    'Copy clarity',
+    'important',
+    '14d',
+    null,
+    'keep'
+  )$$,
+  'editing content with keep mode succeeds'
+);
+select is(
+  (select expires_at from public.announcements where id = current_setting('test.draft_club_announcement')::uuid),
+  current_setting('test.before_edit_expires')::timestamptz,
+  'editing announcement content preserves existing expires_at'
+);
+select lives_ok(
+  $$select public.archive_announcement(current_setting('test.draft_club_announcement')::uuid, 'No longer needed')$$,
+  'authorized officer can manually archive an active announcement'
+);
+select ok(
+  (select status = 'archived'
+     and archive_reason = 'manual_delete'
+     and purge_after between archived_at + interval '6 days 23 hours' and archived_at + interval '7 days 1 hour'
+   from public.announcements
+   where id = current_setting('test.draft_club_announcement')::uuid),
+  'manual deletion moves announcement to archive with 7-day purge_after'
+);
+
+-- Expired archived announcement requires new future duration on restore; non-expired manual archive restores cleanly.
+select lives_ok(
+  $$select public.restore_announcement(current_setting('test.draft_club_announcement')::uuid, null, null, 'Restored by President')$$,
+  'unexpired manually deleted announcement restores cleanly without re-broadcast'
+);
+
+-- Simulate cron auto-archival and 7-day permanent purge while preserving audit_log.
+reset role;
+alter table public.announcements disable trigger announcements_write_guard;
+update public.announcements
+set expires_at = pg_catalog.clock_timestamp() - interval '1 hour',
+    archived_at = null,
+    archived_by = null,
+    archive_reason = null,
+    purge_after = null,
+    status = 'active'
+where id = current_setting('test.draft_club_announcement')::uuid;
+alter table public.announcements enable trigger announcements_write_guard;
+
+select lives_ok(
+  $$select private.process_announcement_lifecycle()$$,
+  'lifecycle worker auto-archives expired active announcements'
+);
+select ok(
+  (select status = 'archived' and archive_reason = 'expired' and purge_after > pg_catalog.clock_timestamp() + interval '6 days'
+   from public.announcements
+   where id = current_setting('test.draft_club_announcement')::uuid),
+  'expired active announcement moves automatically to archive for 7 days'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000002002', true);
+select throws_ok(
+  $$select public.restore_announcement(current_setting('test.draft_club_announcement')::uuid, null, null, 'Attempt keep expired')$$,
+  '22023', 'Expired announcements require a new future expiry duration before restoration.',
+  'restoring an expired archived announcement requires setting a new future duration'
+);
+
+reset role;
+alter table public.announcements disable trigger announcements_write_guard;
+update public.announcements
+set purge_after = pg_catalog.clock_timestamp() - interval '1 minute'
+where id = current_setting('test.draft_club_announcement')::uuid;
+alter table public.announcements enable trigger announcements_write_guard;
+
+select lives_ok(
+  $$select private.process_announcement_lifecycle()$$,
+  'lifecycle worker permanently purges archived announcements past 7-day retention'
+);
+select is(
+  (select count(*)::integer from public.announcements
+   where id = current_setting('test.draft_club_announcement')::uuid),
+  0,
+  'purged announcement is permanently deleted from public.announcements'
+);
+select ok(
+  exists (
+    select 1 from public.audit_log
+    where entity_type = 'announcement'
+      and entity_id = current_setting('test.draft_club_announcement')::uuid
+      and action = 'announcement.permanently_deleted'
+  ),
+  'permanent purge preserves full audit_log history'
+);
+
 select * from finish();
 rollback;
