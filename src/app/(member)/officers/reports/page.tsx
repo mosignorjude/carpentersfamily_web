@@ -5,10 +5,18 @@ import { DataUnavailableCard } from "@/components/ui/state-screen";
 import { isUuid } from "@/lib/ai/api-schemas";
 import { isDocumentDraftType } from "@/lib/ai/document-drafts";
 import { isAiReportsEnabled } from "@/lib/ai/provider.server";
-import { listMeetingsForDrafting } from "@/lib/reports/drafts.server";
+import {
+  listMeetingsForDrafting,
+  loadAgmStatementSnapshot,
+  loadTreasurerReportSnapshot,
+} from "@/lib/reports/drafts.server";
+import type { ReportsStudioMode } from "@/lib/reports/library-core";
+import { loadOfficerReportLibrary } from "@/lib/reports/library.server";
 import {
   loadActiveOfficerNarrative,
+  loadClubFinanceSnapshot,
   loadClubOverviewSnapshot,
+  loadDuesSnapshot,
 } from "@/lib/reports/loaders.server";
 import {
   currentMonthPeriodWAT,
@@ -25,6 +33,7 @@ export default async function OfficerReportsPage({
     period?: string;
     draftDoc?: string;
     event?: string;
+    mode?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -102,26 +111,72 @@ export default async function OfficerReportsPage({
 
   const selectedPeriod = parseOverviewPeriod(params.period) ?? currentMonth;
 
-  const [snap, customMetadata, meetings] = await Promise.all([
+  const currentYearNumber = Number(currentMonth.periodLabel.slice(0, 4));
+  const [
+    snap,
+    customMetadata,
+    meetings,
+    financeSnap,
+    duesSnap,
+    agmSnap,
+    treasurerSnap,
+  ] = await Promise.all([
     loadClubOverviewSnapshot(supabase, selectedPeriod),
     loadCustomReportMetadata(supabase),
     listMeetingsForDrafting(supabase),
+    loadClubFinanceSnapshot(supabase),
+    loadDuesSnapshot(supabase, currentYearNumber),
+    loadAgmStatementSnapshot(supabase, currentYearNumber),
+    loadTreasurerReportSnapshot(supabase, currentMonth),
   ]);
-  const initialNarrative =
+
+  const activeFingerprints: Record<string, string> = {};
+  if (snap.kind === "ok") {
+    activeFingerprints[`club_overview:${snap.periodStart}:${snap.periodEnd}`] =
+      snap.fingerprint;
+  }
+  if (financeSnap.kind === "ok") {
+    activeFingerprints.club_finance = financeSnap.fingerprint;
+  }
+  if (duesSnap.kind === "ok") {
+    activeFingerprints[`dues:${currentYearNumber}`] = duesSnap.fingerprint;
+  }
+  if (agmSnap.kind === "ok") {
+    activeFingerprints[`agm_statement:${currentYearNumber}`] =
+      agmSnap.fingerprint;
+  }
+  if (treasurerSnap.kind === "ok") {
+    activeFingerprints[
+      `treasurer_report:${currentMonth.periodStart.slice(0, 7)}`
+    ] = treasurerSnap.fingerprint;
+  }
+
+  const [initialNarrative, libraryItems] = await Promise.all([
     snap.kind === "ok"
-      ? await loadActiveOfficerNarrative(supabase, {
+      ? loadActiveOfficerNarrative(supabase, {
           reportType: "club_overview",
           scopeId: null,
           periodStart: snap.periodStart,
           periodEnd: snap.periodEnd,
           fingerprint: snap.fingerprint,
         })
-      : null;
+      : Promise.resolve(null),
+    loadOfficerReportLibrary(supabase, activeFingerprints),
+  ]);
 
   const initialDraftDoc = isDocumentDraftType(params.draftDoc)
     ? params.draftDoc
     : undefined;
   const initialMeetingId = isUuid(params.event) ? params.event : undefined;
+  const requestedMode: ReportsStudioMode | undefined =
+    params.mode === "brief" ||
+    params.mode === "drafts" ||
+    params.mode === "custom" ||
+    params.mode === "library"
+      ? params.mode
+      : initialDraftDoc || initialMeetingId
+        ? "drafts"
+        : undefined;
 
   return (
     <ClubOverviewClient
@@ -132,7 +187,9 @@ export default async function OfficerReportsPage({
       facts={snap.kind === "ok" ? snap.facts : null}
       initialDraftDoc={initialDraftDoc}
       initialMeetingId={initialMeetingId}
+      initialMode={requestedMode}
       initialNarrative={initialNarrative}
+      libraryItems={libraryItems}
       meetings={meetings}
       period={selectedPeriod}
       previousMonthParam={previousMonth.periodParam}

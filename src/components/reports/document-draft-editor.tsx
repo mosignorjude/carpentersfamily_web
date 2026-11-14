@@ -295,6 +295,14 @@ export function DocumentDraftEditor({
     void loadScope();
   }, [loadScope]);
 
+  useEffect(() => {
+    if (selectedMeetingId === undefined) return;
+    setRawNotes("");
+    setPreviewMaskedText("");
+    setPreviewStats(null);
+    setShowMaskedPreview(false);
+  }, [selectedMeetingId]);
+
   const handlePreviewMaskedNotes = async () => {
     if (!selectedMeetingId) return;
     setError(null);
