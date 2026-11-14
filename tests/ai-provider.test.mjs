@@ -118,4 +118,66 @@ describe("AI provider configuration & fallback", () => {
     );
     assert.throws(() => core.parseJsonResponse("not json at all"));
   });
+
+  it("bounds provider attempts inside a shared deadline budget under maxDuration=30", async () => {
+    const core = await loadProviderCore();
+    assert.equal(typeof core.TOTAL_AI_BUDGET_MS, "number");
+    assert.ok(core.TOTAL_AI_BUDGET_MS <= 26_000);
+
+    await assert.rejects(
+      () =>
+        core.runProvidersWithFallback(
+          [
+            {
+              name: "gemini",
+              model: "gemini-3.5-flash-lite",
+              async generateJson() {
+                return {};
+              },
+            },
+          ],
+          {
+            system: "sys",
+            facts: {},
+            schema: {},
+            deadlineAt: Date.now() - 10,
+          },
+        ),
+      (err) => err instanceof core.AiUnavailableError,
+    );
+
+    const seenTimeouts = [];
+    const result = await core.runProvidersWithFallback(
+      [
+        {
+          name: "gemini",
+          model: "gemini-3.5-flash-lite",
+          async generateJson(req) {
+            seenTimeouts.push(req.attemptTimeoutMs);
+            throw new Error("primary failed");
+          },
+        },
+        {
+          name: "groq",
+          model: "qwen/qwen3.8-27b",
+          async generateJson(req) {
+            seenTimeouts.push(req.attemptTimeoutMs);
+            return { headline: "Recovered within budget", highlights: ["Ok"] };
+          },
+        },
+      ],
+      {
+        system: "sys",
+        facts: {},
+        schema: {},
+        deadlineAt: Date.now() + 24_000,
+      },
+      24_000,
+    );
+
+    assert.equal(result.provider, "groq");
+    assert.equal(seenTimeouts.length, 2);
+    assert.ok(seenTimeouts[0] <= 12_500);
+    assert.ok(seenTimeouts[1] <= 24_000);
+  });
 });

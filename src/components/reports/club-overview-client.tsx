@@ -198,10 +198,10 @@ export function ClubOverviewClient({
         <div className="p-4 rounded-2xl bg-[#FDF8EE] border border-[#EED7A1] text-xs text-[#8D5B0E] flex items-center gap-2.5">
           <Sparkles className="w-4 h-4 shrink-0" />
           <span>
-            AI summaries are currently off. Set <code>GEMINI_API_KEY</code> (and
-            keep <code>AI_REPORTS_ENABLED=true</code>) in server environment
-            variables to enable AI drafts. Branded PDFs and CSV exports remain
-            available.
+            AI summaries are currently off. Set <code>GEMINI_API_KEY</code> or{" "}
+            <code>GROQ_API_KEY</code> (and keep{" "}
+            <code>AI_REPORTS_ENABLED=true</code>) in server environment variables
+            to enable AI drafts. Branded PDFs and CSV exports remain available.
           </span>
         </div>
       )}

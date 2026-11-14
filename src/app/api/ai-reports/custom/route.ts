@@ -122,6 +122,16 @@ export async function POST(request: Request) {
       return jsonError(translated.status, translated.error);
     }
 
+    const { error: quotaLogError } = await supabase.rpc(
+      "log_ai_custom_translation",
+    );
+    if (quotaLogError) {
+      console.warn(
+        "[AI Custom Query] Failed to record translation quota usage:",
+        quotaLogError.message,
+      );
+    }
+
     return Response.json(
       {
         spec: translated.spec,

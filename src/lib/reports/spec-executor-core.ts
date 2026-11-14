@@ -383,3 +383,60 @@ export function aggregateCustomReport(
     fingerprint,
   };
 }
+
+const DISALLOWED_PII_KEYS = new Set([
+  "member",
+  "members",
+  "member_id",
+  "memberid",
+  "full_name",
+  "fullname",
+  "username",
+  "email",
+  "phone",
+  "phone_number",
+  "payer_payee",
+  "buyer_name",
+]);
+
+function scrubPiiText(text: string): string {
+  return text
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[redacted]")
+    .replace(/(?:\+234|0[789][01]\d{8}|\+\d{8,15})/g, "[redacted]")
+    .replace(/(^|\s)@[a-zA-Z0-9_.-]{2,}/g, "$1[redacted]");
+}
+
+function scrubCustomNode(node: unknown): unknown {
+  if (typeof node === "string") {
+    return sanitizeLabel(scrubPiiText(node), "Redacted", 120);
+  }
+  if (Array.isArray(node)) {
+    return node.map((item) => scrubCustomNode(item));
+  }
+  if (typeof node === "object" && node !== null) {
+    const cleaned: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(node as Record<string, unknown>)) {
+      if (DISALLOWED_PII_KEYS.has(key.toLowerCase())) continue;
+      cleaned[key] = scrubCustomNode(val);
+    }
+    return cleaned;
+  }
+  return node;
+}
+
+/**
+ * Strips any accidental member/PII attributes from custom report facts
+ * and blocks member-level dues grouping before sending payloads to an AI provider.
+ */
+export function sanitizeCustomFactsForAi<T extends Record<string, unknown>>(
+  facts: T,
+): T {
+  const dataset = typeof facts.dataset === "string" ? facts.dataset : "";
+  const groupBy = typeof facts.group_by === "string" ? facts.group_by : "";
+  if (dataset === "dues" && groupBy === "member") {
+    throw new Error(
+      "Member-level dues breakdowns cannot be sent for AI narrative generation.",
+    );
+  }
+  return scrubCustomNode(facts) as T;
+}

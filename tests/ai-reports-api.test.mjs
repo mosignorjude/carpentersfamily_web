@@ -173,4 +173,33 @@ describe("AI report API schemas and route contracts", () => {
       },
     );
   });
+
+  it("counts custom NL-to-Spec translations against officer quota and documents GROQ_API_KEY in banner", async () => {
+    const [customRoute, overviewClient, quotaMigration] = await Promise.all([
+      readFile(
+        new URL("../src/app/api/ai-reports/custom/route.ts", import.meta.url),
+        "utf8",
+      ),
+      readFile(
+        new URL(
+          "../src/components/reports/club-overview-client.tsx",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+      readFile(
+        new URL(
+          "../supabase/migrations/20261114120000_ai_translation_quota.sql",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    ]);
+
+    assert.match(customRoute, /log_ai_custom_translation/);
+    assert.match(overviewClient, /GEMINI_API_KEY/);
+    assert.match(overviewClient, /GROQ_API_KEY/);
+    assert.match(quotaMigration, /log_ai_custom_translation/);
+    assert.match(quotaMigration, /ai_report_custom_translated/);
+  });
 });

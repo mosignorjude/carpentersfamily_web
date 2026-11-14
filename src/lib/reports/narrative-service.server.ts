@@ -6,7 +6,11 @@ import {
   validateNarrativeContent,
 } from "@/lib/ai/grounding";
 import { buildNarrativePrompt } from "@/lib/ai/prompts";
-import { generateNarrativeJson } from "@/lib/ai/provider.server";
+import {
+  generateNarrativeJson,
+  TOTAL_AI_BUDGET_MS,
+} from "@/lib/ai/provider.server";
+import { sanitizeCustomFactsForAi } from "@/lib/reports/spec-executor-core";
 
 export class AiGroundingError extends Error {
   readonly reasons: string[];
@@ -26,16 +30,25 @@ export async function generateGroundedNarrative(
   model: string;
   content: AiNarrativeContent;
 }> {
+  const safeFacts =
+    reportType === "custom" && typeof facts === "object" && facts !== null
+      ? sanitizeCustomFactsForAi(facts as Record<string, unknown>)
+      : facts;
+  const deadlineAt = Date.now() + TOTAL_AI_BUDGET_MS;
   let lastReasons: string[] = [];
 
   for (const strictRetry of [false, true]) {
+    if (strictRetry && deadlineAt - Date.now() < 3_500) {
+      break;
+    }
     const prompt = buildNarrativePrompt(reportType, strictRetry);
     const result = await generateNarrativeJson({
       system: prompt.system,
-      facts,
+      facts: safeFacts,
       schema: prompt.schema,
+      deadlineAt,
     });
-    const validated = validateNarrativeContent(result.data, facts);
+    const validated = validateNarrativeContent(result.data, safeFacts);
     if (validated.ok) {
       return {
         provider: result.provider,

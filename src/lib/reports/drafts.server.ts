@@ -23,7 +23,10 @@ import {
   buildFormalDraftPrompt,
   buildMinutesDraftPrompt,
 } from "@/lib/ai/prompts";
-import { generateNarrativeJson } from "@/lib/ai/provider.server";
+import {
+  generateNarrativeJson,
+  TOTAL_AI_BUDGET_MS,
+} from "@/lib/ai/provider.server";
 import { createRequestPseudonymSession } from "@/lib/ai/pseudonymise.server";
 import { getWATDate } from "@/lib/report-export";
 import {
@@ -327,15 +330,20 @@ export async function generateGroundedFormalDraft(
   model: string;
   content: FormalDocumentDraftContent;
 }> {
+  const deadlineAt = Date.now() + TOTAL_AI_BUDGET_MS;
   let lastReasons: string[] = [];
 
   for (const strictRetry of [false, true]) {
+    if (strictRetry && deadlineAt - Date.now() < 3_500) {
+      break;
+    }
     const prompt = buildFormalDraftPrompt(docType, strictRetry);
     const result = await generateNarrativeJson({
       system: prompt.system,
       facts,
       schema: prompt.schema,
       maxOutputTokens: 2000,
+      deadlineAt,
     });
     const validated = validateFormalDraftContent(docType, result.data, facts);
     if (validated.ok) {

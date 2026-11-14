@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { validateFinanceReceiptUpload } from "@/lib/finance-receipt-validation";
+import { buildReturnRedirectUrl, sanitizeReturnUrl } from "@/lib/receipt-redirect";
 import { buildReceiptObjectKey } from "@/lib/receipt-rules.mjs";
 import { getR2StorageAdapter } from "@/lib/receipt-storage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -18,8 +19,7 @@ export async function POST(request: NextRequest) {
   const scope = formData.get("scope") as string | null;
   const targetId = formData.get("target_id") as string | null;
   const file = formData.get("file") as File | null;
-  const returnUrl =
-    (formData.get("return_url") as string | null) || "/finances";
+  const returnUrl = sanitizeReturnUrl(formData.get("return_url"), "/finances");
 
   if (
     !scope ||
@@ -28,14 +28,18 @@ export async function POST(request: NextRequest) {
     !["club", "event", "event_ticket"].includes(scope)
   ) {
     return NextResponse.redirect(
-      new URL(`${returnUrl}?notice=invalid-request`, request.url),
+      buildReturnRedirectUrl(returnUrl, request.url, "invalid-request"),
     );
   }
 
   const storage = getR2StorageAdapter();
   if (!storage) {
     return NextResponse.redirect(
-      new URL(`${returnUrl}?notice=receipt-storage-unavailable`, request.url),
+      buildReturnRedirectUrl(
+        returnUrl,
+        request.url,
+        "receipt-storage-unavailable",
+      ),
     );
   }
 
@@ -43,7 +47,7 @@ export async function POST(request: NextRequest) {
   const validated = validateFinanceReceiptUpload(file.name, file.type, bytes);
   if (!validated) {
     return NextResponse.redirect(
-      new URL(`${returnUrl}?notice=receipt-invalid`, request.url),
+      buildReturnRedirectUrl(returnUrl, request.url, "receipt-invalid"),
     );
   }
 
@@ -62,7 +66,7 @@ export async function POST(request: NextRequest) {
     await storage.putObject(objectKey, bytes, validated.contentType);
   } catch {
     return NextResponse.redirect(
-      new URL(`${returnUrl}?notice=receipt-upload-failed`, request.url),
+      buildReturnRedirectUrl(returnUrl, request.url, "receipt-upload-failed"),
     );
   }
 
@@ -81,11 +85,11 @@ export async function POST(request: NextRequest) {
   if (rpcError) {
     await storage.deleteObject(objectKey).catch(() => undefined);
     return NextResponse.redirect(
-      new URL(`${returnUrl}?notice=operation-failed`, request.url),
+      buildReturnRedirectUrl(returnUrl, request.url, "operation-failed"),
     );
   }
 
   return NextResponse.redirect(
-    new URL(`${returnUrl}?notice=receipt-attached`, request.url),
+    buildReturnRedirectUrl(returnUrl, request.url, "receipt-attached"),
   );
 }

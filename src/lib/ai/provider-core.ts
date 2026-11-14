@@ -1,8 +1,14 @@
+export const TOTAL_AI_BUDGET_MS = 24_000;
+const MIN_ATTEMPT_BUDGET_MS = 500;
+const PRIMARY_ATTEMPT_CAP_MS = 12_000;
+
 export interface NarrativeRequest {
   system: string;
   facts: unknown;
   schema: Record<string, unknown>;
   maxOutputTokens?: number;
+  deadlineAt?: number;
+  attemptTimeoutMs?: number;
 }
 
 export interface AiProviderAdapter {
@@ -69,18 +75,34 @@ export function parseJsonResponse(rawText: string): unknown {
 export async function runProvidersWithFallback(
   providers: readonly AiProviderAdapter[],
   req: NarrativeRequest,
-  timeoutMs = 20_000,
+  totalBudgetMs = TOTAL_AI_BUDGET_MS,
 ): Promise<ProviderGenerationResult> {
   if (providers.length === 0) {
     throw new AiUnavailableError("No AI provider API keys are configured.");
   }
 
+  const deadlineAt = req.deadlineAt ?? Date.now() + totalBudgetMs;
   let lastError: unknown = null;
-  for (const provider of providers) {
+
+  for (let i = 0; i < providers.length; i += 1) {
+    const provider = providers[i];
+    const remainingMs = deadlineAt - Date.now();
+    if (remainingMs < MIN_ATTEMPT_BUDGET_MS) {
+      throw new AiUnavailableError(
+        "AI generation budget elapsed before request could finish.",
+      );
+    }
+
+    const providersLeft = providers.length - i;
+    const attemptTimeoutMs =
+      providersLeft > 1
+        ? Math.min(PRIMARY_ATTEMPT_CAP_MS, Math.max(MIN_ATTEMPT_BUDGET_MS, Math.floor(remainingMs / providersLeft)))
+        : remainingMs;
+
     try {
       const data = await provider.generateJson(
-        req,
-        AbortSignal.timeout(timeoutMs),
+        { ...req, deadlineAt, attemptTimeoutMs },
+        AbortSignal.timeout(attemptTimeoutMs),
       );
       return {
         provider: provider.name,

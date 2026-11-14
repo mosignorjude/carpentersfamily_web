@@ -350,4 +350,50 @@ describe("Phase 2 custom report executor core, branded PDF, API & UI", () => {
     );
     assert.match(overviewClient, /CustomReportBuilder/);
   });
+
+  it("strips member PII keys and blocks dues member grouping before AI narrative generation", async () => {
+    const dir = await buildModules();
+    const core = await import(
+      pathToFileURL(path.join(dir, "spec-executor-core.js")).href
+    );
+
+    assert.equal(typeof core.sanitizeCustomFactsForAi, "function");
+
+    assert.throws(
+      () =>
+        core.sanitizeCustomFactsForAi({
+          report: "custom",
+          dataset: "dues",
+          group_by: "member",
+          groups: [{ label: "Ada Obi", count: 2 }],
+        }),
+      /member/i,
+    );
+
+    const sanitized = core.sanitizeCustomFactsForAi({
+      report: "custom",
+      dataset: "club_transactions",
+      group_by: "category",
+      groups: [
+        {
+          label: "Venue Rent — contact ada@example.com or +2348012345678",
+          member_id: "uuid-123",
+          full_name: "Ada Obi",
+          email: "ada@example.com",
+          phone: "+2348012345678",
+          username: "@ada",
+          count: 1,
+          total_amount_ngn: 50000,
+        },
+      ],
+    });
+
+    assert.equal(sanitized.groups[0].member_id, undefined);
+    assert.equal(sanitized.groups[0].full_name, undefined);
+    assert.equal(sanitized.groups[0].email, undefined);
+    assert.equal(sanitized.groups[0].phone, undefined);
+    assert.equal(sanitized.groups[0].username, undefined);
+    assert.doesNotMatch(sanitized.groups[0].label, /ada@example\.com/);
+    assert.doesNotMatch(sanitized.groups[0].label, /\+2348012345678/);
+  });
 });

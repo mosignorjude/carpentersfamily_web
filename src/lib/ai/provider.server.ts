@@ -8,6 +8,7 @@ import {
   type ProviderGenerationResult,
   parseJsonResponse,
   runProvidersWithFallback,
+  TOTAL_AI_BUDGET_MS,
 } from "./provider-core";
 
 export {
@@ -16,11 +17,12 @@ export {
   isAiReportsEnabled,
   type NarrativeRequest,
   type ProviderGenerationResult,
+  TOTAL_AI_BUDGET_MS,
 } from "./provider-core";
 
 const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite";
 const DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b";
-const PROVIDER_TIMEOUT_MS = 20_000;
+const DEFAULT_ATTEMPT_TIMEOUT_MS = 12_000;
 
 function createGeminiProvider(
   apiKey: string,
@@ -47,7 +49,7 @@ function createGeminiProvider(
           store: false,
         },
         {
-          timeout_ms: PROVIDER_TIMEOUT_MS,
+          timeout_ms: req.attemptTimeoutMs ?? DEFAULT_ATTEMPT_TIMEOUT_MS,
           retries: { strategy: "none" },
           signal,
         },
@@ -133,11 +135,11 @@ export async function generateNarrativeJson(
   req: NarrativeRequest,
 ): Promise<ProviderGenerationResult> {
   if (!isAiReportsEnabled()) {
-    return runProvidersWithFallback([], req, PROVIDER_TIMEOUT_MS);
+    return runProvidersWithFallback([], req, TOTAL_AI_BUDGET_MS);
   }
   return runProvidersWithFallback(
     configuredProviders(),
     req,
-    PROVIDER_TIMEOUT_MS,
+    TOTAL_AI_BUDGET_MS,
   );
 }
