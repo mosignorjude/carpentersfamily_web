@@ -79,7 +79,7 @@ describe("Phase 3: Table-to-Card Responsive Transformation & Tap Floors", () => 
     assert.match(clubLedger, /md:hidden\s+divide-y/);
     assert.match(clubLedger, /hidden\s+md:block/);
     assert.match(clubLedger, /<table[^>]*w-full/);
-    assert.match(clubLedger, /min-h-\[38px\]/);
+    assert.match(clubLedger, /min-h-\[44px\]/);
   });
 
   it("attendance-roster-table implements mobile attendance cards and desktop table", () => {

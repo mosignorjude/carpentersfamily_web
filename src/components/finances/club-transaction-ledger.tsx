@@ -54,6 +54,13 @@ function financePageHref(page: number) {
   return `/finances?${new URLSearchParams({ page: String(page) }).toString()}`;
 }
 
+function formatPaymentMethodLabel(method?: string | null) {
+  if (!method) return null;
+  if (method === "bank_transfer") return "Bank Transfer";
+  if (method === "cash") return "Cash";
+  return method.replace(/_/g, " ");
+}
+
 export function ClubTransactionLedger({
   transactions,
   receiptsByTransaction,
@@ -134,7 +141,7 @@ export function ClubTransactionLedger({
           {/* Filter Pills */}
           <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-[#E5DDD3] text-xs shadow-2xs self-start overflow-x-auto">
             <button
-              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer min-h-[38px] ${
+              className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer min-h-[44px] ${
                 filterType === "all"
                   ? "bg-[#174C37] text-white shadow-2xs"
                   : "text-[#54433A] hover:bg-[#FAF6F0]"
@@ -145,7 +152,7 @@ export function ClubTransactionLedger({
               All
             </button>
             <button
-              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer min-h-[38px] ${
+              className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer min-h-[44px] ${
                 filterType === "income"
                   ? "bg-[#174C37] text-white shadow-2xs"
                   : "text-[#54433A] hover:bg-[#FAF6F0]"
@@ -156,7 +163,7 @@ export function ClubTransactionLedger({
               Income
             </button>
             <button
-              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer min-h-[38px] ${
+              className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer min-h-[44px] ${
                 filterType === "expense"
                   ? "bg-[#BA3C2A] text-white shadow-2xs"
                   : "text-[#54433A] hover:bg-[#FAF6F0]"
@@ -167,7 +174,7 @@ export function ClubTransactionLedger({
               Expenses
             </button>
             <button
-              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer min-h-[38px] ${
+              className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer min-h-[44px] ${
                 filterType === "voided"
                   ? "bg-[#7A685D] text-white shadow-2xs"
                   : "text-[#54433A] hover:bg-[#FAF6F0]"
@@ -254,6 +261,11 @@ export function ClubTransactionLedger({
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#FAF6F0] text-[#3D291F] border border-[#E5DDD3]">
                             <Tag className="w-2.5 h-2.5 text-[#6B5D53]" />
                             <span>{transaction.category_name_snapshot}</span>
+                          </span>
+                        )}
+                        {formatPaymentMethodLabel(transaction.payment_method) && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-white text-[#54433A] border border-[#E5DDD3]">
+                            {formatPaymentMethodLabel(transaction.payment_method)}
                           </span>
                         )}
                       </div>
@@ -426,6 +438,15 @@ export function ClubTransactionLedger({
                                   ? "Non-Dues Income"
                                   : "Expense"}
                           </span>
+                          {formatPaymentMethodLabel(
+                            transaction.payment_method,
+                          ) && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-white text-[#54433A] border border-[#E5DDD3]">
+                              {formatPaymentMethodLabel(
+                                transaction.payment_method,
+                              )}
+                            </span>
+                          )}
                           {isVoided && (
                             <span className="text-[10px] text-[#BA3C2A] font-semibold italic truncate">
                               Reason: {transaction.void_reason}
@@ -557,7 +578,7 @@ export function ClubTransactionLedger({
         <div className="p-4 border-t border-[#E5DDD3] bg-[#FAF6F0]/60 flex items-center justify-between text-xs font-semibold text-[#54433A]">
           {page > 0 ? (
             <Link
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-white text-[#3D291F] hover:bg-[#FAF6F0] shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5DDD3] bg-white text-[#3D291F] hover:bg-[#FAF6F0] shadow-2xs transition-colors min-h-[44px]"
               href={financePageHref(page - 1)}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -573,7 +594,7 @@ export function ClubTransactionLedger({
 
           {(page + 1) * pageSize < transactionCount ? (
             <Link
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-white text-[#3D291F] hover:bg-[#FAF6F0] shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5DDD3] bg-white text-[#3D291F] hover:bg-[#FAF6F0] shadow-2xs transition-colors min-h-[44px]"
               href={financePageHref(page + 1)}
             >
               <span>Older records</span>

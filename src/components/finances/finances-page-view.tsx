@@ -1,9 +1,13 @@
 "use client";
 
 import {
+  ArrowUpRight,
   Download,
   FileSpreadsheet,
   FileText,
+  MinusCircle,
+  PlusCircle,
+  Settings2,
   Shield,
   ShieldAlert,
   X,
@@ -41,7 +45,6 @@ import {
   type FinanceAuditRow,
   OfficerAuditHistory,
 } from "./officer-audit-history";
-import { OfficerFinanceControls } from "./officer-finance-controls";
 import {
   OpeningBalanceEntryCard,
   type OpeningBalanceTransaction,
@@ -90,6 +93,7 @@ interface FinancesPageViewProps {
   auditCount: number;
   pageSize: number;
   auditPageSize?: number;
+  initialTab?: "ledger" | "events" | "setup";
 }
 
 export function FinancesPageView({
@@ -125,7 +129,15 @@ export function FinancesPageView({
   auditCount,
   pageSize,
   auditPageSize = 20,
+  initialTab = "ledger",
 }: FinancesPageViewProps) {
+  const [activeTab, setActiveTab] = useState<"ledger" | "events" | "setup">(
+    initialTab === "setup" && isOfficer
+      ? "setup"
+      : initialTab === "events"
+        ? "events"
+        : "ledger",
+  );
   const [isRecordIncomeOpen, setIsRecordIncomeOpen] = useState(false);
   const [isRecordExpenseOpen, setIsRecordExpenseOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -187,13 +199,54 @@ export function FinancesPageView({
           </div>
 
           {/* Quick Action Station */}
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0 self-stretch sm:self-auto">
+          <div className="flex flex-wrap items-center gap-2 shrink-0 self-stretch sm:self-auto lg:justify-end">
+            {isOfficer && (
+              <>
+                <button
+                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer min-h-[44px] shadow-2xs"
+                  disabled={financeUnavailable}
+                  id="officer-record-income-btn"
+                  onClick={() => setIsRecordIncomeOpen(true)}
+                  type="button"
+                >
+                  <PlusCircle className="w-4 h-4 text-[#D6A23A] shrink-0" />
+                  <span>Record Income</span>
+                </button>
+                <button
+                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#BA3C2A] text-white text-xs font-bold hover:bg-[#992F20] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer min-h-[44px] shadow-2xs"
+                  disabled={financeUnavailable}
+                  id="officer-record-expense-btn"
+                  onClick={() => setIsRecordExpenseOpen(true)}
+                  type="button"
+                >
+                  <MinusCircle className="w-4 h-4 text-white/90 shrink-0" />
+                  <span>Record Expense</span>
+                </button>
+                <button
+                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] text-[#3D291F] text-xs font-bold hover:bg-white transition-colors cursor-pointer min-h-[44px]"
+                  id="officer-manage-categories-btn"
+                  onClick={() => setIsCategoryModalOpen(true)}
+                  type="button"
+                >
+                  <Settings2 className="w-4 h-4 text-[#174C37] shrink-0" />
+                  <span>Manage Categories</span>
+                </button>
+              </>
+            )}
             <button
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors cursor-pointer min-h-[42px] shadow-2xs"
+              className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer min-h-[44px] shadow-2xs ${
+                isOfficer
+                  ? "border border-[#E5DDD3] bg-white text-[#174C37] hover:bg-[#FAF6F0]"
+                  : "w-full sm:w-auto bg-[#174C37] text-white hover:bg-[#103D2B]"
+              }`}
               onClick={() => setIsDownloadReportOpen(true)}
               type="button"
             >
-              <Download className="w-4 h-4 text-[#D6A23A]" />
+              <Download
+                className={`w-4 h-4 shrink-0 ${
+                  isOfficer ? "text-[#174C37]" : "text-[#D6A23A]"
+                }`}
+              />
               <span>Download Report</span>
             </button>
           </div>
@@ -323,87 +376,177 @@ export function FinancesPageView({
           eventInflow={summary?.event_inflow}
           eventOutflow={summary?.event_outflow}
           isUnavailable={financeUnavailable}
+          openingBalanceTotal={openingBalanceTotal}
           otherIncome={summary?.other_income}
+          postLaunchDues={postLaunchDues}
+          preLaunchDues={preLaunchDues}
           totalExpenses={summary?.expenses}
         />
       </div>
 
-      {/* 2. Officer-Only Treasury Controls & Settlement Governance */}
-      {isOfficer && !financeUnavailable && (
-        <section aria-label="Officer Treasury Governance" className="space-y-6">
-          <div id="finance-controls" className="scroll-target">
-            <OfficerFinanceControls
+      {/* Workspace Segmented Tabs */}
+      <div
+        aria-label="Club finance sections"
+        className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 bg-[#FAF6F0] p-1.5 rounded-2xl border border-[#E5DDD3] shadow-2xs overflow-x-auto"
+        role="tablist"
+      >
+        <button
+          aria-selected={activeTab === "ledger"}
+          className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] whitespace-nowrap ${
+            activeTab === "ledger"
+              ? "bg-[#174C37] text-white shadow-xs"
+              : "text-[#54433A] hover:bg-white hover:text-[#3D291F]"
+          }`}
+          onClick={() => setActiveTab("ledger")}
+          role="tab"
+          type="button"
+        >
+          <span>Club Ledger</span>
+          <span
+            className={`px-2 py-0.5 rounded-full text-[10px] font-mono tabular-nums ${
+              activeTab === "ledger"
+                ? "bg-white/15 text-white"
+                : "bg-white text-[#7A685D] border border-[#E5DDD3]"
+            }`}
+          >
+            {transactionCount}
+          </span>
+        </button>
+
+        <button
+          aria-selected={activeTab === "events"}
+          className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] whitespace-nowrap ${
+            activeTab === "events"
+              ? "bg-[#174C37] text-white shadow-xs"
+              : "text-[#54433A] hover:bg-white hover:text-[#3D291F]"
+          }`}
+          onClick={() => setActiveTab("events")}
+          role="tab"
+          type="button"
+        >
+          <span>Event Cash Posts</span>
+          <span
+            className={`px-2 py-0.5 rounded-full text-[10px] font-mono tabular-nums ${
+              activeTab === "events"
+                ? "bg-white/15 text-white"
+                : "bg-white text-[#7A685D] border border-[#E5DDD3]"
+            }`}
+          >
+            {eventLedgerEntries.length}
+          </span>
+        </button>
+
+        {isOfficer && (
+          <button
+            aria-selected={activeTab === "setup"}
+            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] whitespace-nowrap ${
+              activeTab === "setup"
+                ? "bg-[#174C37] text-white shadow-xs"
+                : "text-[#54433A] hover:bg-white hover:text-[#3D291F]"
+            }`}
+            onClick={() => setActiveTab("setup")}
+            role="tab"
+            type="button"
+          >
+            <span>Treasury Setup &amp; Audit</span>
+            <span
+              className={`px-2 py-0.5 rounded-full text-[10px] font-mono tabular-nums ${
+                activeTab === "setup"
+                  ? "bg-white/15 text-white"
+                  : "bg-white text-[#7A685D] border border-[#E5DDD3]"
+              }`}
+            >
+              {auditCount}
+            </span>
+          </button>
+        )}
+      </div>
+
+      {/* Active Tab Panel */}
+      <div role="tabpanel">
+        {activeTab === "ledger" && (
+          <div id="finance-ledger" className="scroll-target">
+            <ClubTransactionLedger
               canCorrect={canCorrect}
+              financeUnavailable={financeUnavailable}
               isOfficer={isOfficer}
-              onOpenCategoryManagement={() => setIsCategoryModalOpen(true)}
-              onOpenRecordExpense={() => setIsRecordExpenseOpen(true)}
-              onOpenRecordIncome={() => setIsRecordIncomeOpen(true)}
+              onInitiateCorrect={(txn) => setCorrectingTransaction(txn)}
+              onInitiateVoid={(txn) => setVoidingTransaction(txn)}
+              onViewReceipt={(txn) => setReceiptViewingTransaction(txn)}
+              page={page}
+              pageCount={pageCount}
+              pageSize={pageSize}
+              receiptsByTransaction={receiptsByTransaction}
+              transactionCount={transactionCount}
+              transactions={transactions}
             />
           </div>
+        )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ClubBankSettingsCard
-              isAdmin={isAdmin}
-              paymentSettings={paymentSettings}
-            />
-            <OpeningBalanceEntryCard
-              canRecord={isAdmin}
-              existingOpeningBalance={existingOpeningBalance}
-              today={today}
+        {activeTab === "events" && (
+          <div id="finance-event-ledger" className="scroll-target">
+            <EventLedgerSection
+              entries={eventLedgerEntries}
+              eventTitles={eventTitles}
+              isUnavailable={financeUnavailable}
             />
           </div>
+        )}
 
-          {isOfficer && aiEnabled && (
-            <AiSummaryPanel
-              aiEnabled={aiEnabled}
-              reportType="club_finance"
-              title="Club Finance AI Summary"
-            />
-          )}
-        </section>
-      )}
+        {isOfficer && activeTab === "setup" && (
+          <section
+            aria-label="Treasury Setup & Audit"
+            className="space-y-6"
+            id="finance-controls"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ClubBankSettingsCard
+                isAdmin={isAdmin}
+                paymentSettings={paymentSettings}
+              />
+              <OpeningBalanceEntryCard
+                canRecord={isAdmin}
+                existingOpeningBalance={existingOpeningBalance}
+                today={today}
+              />
+            </div>
 
-      {/* 3. Member-Visible Transaction Ledger */}
-      <div id="finance-ledger" className="scroll-target">
-        <ClubTransactionLedger
-          canCorrect={canCorrect}
-          financeUnavailable={financeUnavailable}
-          isOfficer={isOfficer}
-          onInitiateCorrect={(txn) => setCorrectingTransaction(txn)}
-          onInitiateVoid={(txn) => setVoidingTransaction(txn)}
-          onViewReceipt={(txn) => setReceiptViewingTransaction(txn)}
-          page={page}
-          pageCount={pageCount}
-          pageSize={pageSize}
-          receiptsByTransaction={receiptsByTransaction}
-          transactionCount={transactionCount}
-          transactions={transactions}
-        />
+            {isOfficer && aiEnabled && (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#7A685D]">
+                    Treasury AI Narrative &amp; Reporting
+                  </span>
+                  <Link
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#E5DDD3] text-xs font-bold text-[#174C37] hover:bg-[#FAF6F0] transition-colors min-h-[44px]"
+                    href="/officers/reports"
+                  >
+                    <span>Open AI Reports Centre</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                  </Link>
+                </div>
+                <AiSummaryPanel
+                  aiEnabled={aiEnabled}
+                  reportType="club_finance"
+                  title="Club Finance AI Summary"
+                />
+              </div>
+            )}
+
+            <div id="finance-audit" className="scroll-target">
+              <OfficerAuditHistory
+                actorNames={actorNames}
+                auditCount={auditCount}
+                auditError={auditError}
+                auditPage={auditPage}
+                auditPageCount={auditPageCount}
+                auditRows={auditRows}
+                pageSize={auditPageSize}
+              />
+            </div>
+          </section>
+        )}
       </div>
-
-      {/* 4. Event Ledger Posts & Reversals */}
-      <div id="finance-event-ledger" className="scroll-target">
-        <EventLedgerSection
-          entries={eventLedgerEntries}
-          eventTitles={eventTitles}
-          isUnavailable={financeUnavailable}
-        />
-      </div>
-
-      {/* 5. Officer-Only Financial Audit Trail */}
-      {isOfficer && (
-        <div id="finance-audit" className="scroll-target">
-          <OfficerAuditHistory
-            actorNames={actorNames}
-            auditCount={auditCount}
-            auditError={auditError}
-            auditPage={auditPage}
-            auditPageCount={auditPageCount}
-            auditRows={auditRows}
-            pageSize={auditPageSize}
-          />
-        </div>
-      )}
 
       {/* Footer Policy & Credentials */}
       <footer className="pt-6 pb-4 border-t border-[#E5DDD3] space-y-4 text-xs text-[#7A685D]">

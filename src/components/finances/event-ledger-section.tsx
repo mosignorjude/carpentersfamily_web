@@ -80,47 +80,22 @@ export function EventLedgerSection({
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-[#E5DDD3] bg-[#FAF6F0]/60 text-[11px] font-bold text-[#54433A] uppercase tracking-wider">
-                <th className="py-3 px-4 sm:px-6">Timestamp</th>
-                <th className="py-3 px-4">Event & Workspace</th>
-                <th className="py-3 px-4">Generation / Kind</th>
-                <th className="py-3 px-4">Status & Policy Note</th>
-                <th className="py-3 px-4 sm:px-6 text-right">
-                  Net Posted Result
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5DDD3]">
-              {entries.map((entry) => {
-                const title =
-                  eventTitles.get(entry.event_id) ?? "Retained Event";
-                const isReversal = entry.entry_kind === "reversal";
-                const amount = Number(entry.signed_amount_ngn);
+        <>
+          {/* Mobile Cards (md:hidden) */}
+          <div className="md:hidden divide-y divide-[#E5DDD3]">
+            {entries.map((entry) => {
+              const title = eventTitles.get(entry.event_id) ?? "Retained Event";
+              const isReversal = entry.entry_kind === "reversal";
+              const amount = Number(entry.signed_amount_ngn);
 
-                return (
-                  <tr
-                    className="hover:bg-[#FAF6F0]/40 transition-colors"
-                    key={entry.id}
-                  >
-                    <td className="py-3.5 px-4 sm:px-6 text-[11px] font-mono text-[#7A685D] whitespace-nowrap">
-                      {formatTimestamp(entry.created_at)}
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <Link
-                        className="font-bold text-[#174C37] hover:underline flex items-center gap-1 group"
-                        href={`/events/${entry.event_id}/finance`}
-                      >
-                        <span>{title}</span>
-                        <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </Link>
-                    </td>
-
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
+              return (
+                <div
+                  className="p-4 space-y-2.5 bg-white"
+                  key={`mobile-event-post-${entry.id}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${
                             isReversal
@@ -138,39 +113,135 @@ export function EventLedgerSection({
                         <span className="text-[10px] text-[#7A685D] font-mono font-medium">
                           Gen {entry.generation}
                         </span>
-                      </div>
-                    </td>
-
-                    <td className="py-3.5 px-4 text-[#54433A]">
-                      <div className="flex items-center gap-1.5">
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#174C37]" />
-                        <span className="font-semibold text-[#3D291F] capitalize">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-[#FAF6F0] text-[#3D291F] border border-[#E5DDD3] capitalize">
                           {entry.event_status}
                         </span>
                       </div>
-                      <p className="text-[11px] text-[#7A685D] mt-0.5">
-                        {isReversal
-                          ? "Offsets original post result; both records remain in immutable history."
-                          : "Posted upon event conclusion and financial reconciliation."}
-                      </p>
-                    </td>
-
-                    <td className="py-3.5 px-4 sm:px-6 text-right whitespace-nowrap">
-                      <span
-                        className={`font-mono font-bold text-sm tabular-nums ${
-                          amount >= 0 ? "text-[#174C37]" : "text-[#BA3C2A]"
-                        }`}
+                      <Link
+                        className="font-bold text-sm text-[#174C37] hover:underline flex items-center gap-1"
+                        href={`/events/${entry.event_id}/finance`}
                       >
-                        {amount >= 0 ? "+" : ""}
-                        {formatNaira(entry.signed_amount_ngn)}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                        <span className="truncate">{title}</span>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                      </Link>
+                    </div>
+
+                    <span
+                      className={`font-mono font-bold text-sm tabular-nums shrink-0 ${
+                        amount >= 0 ? "text-[#174C37]" : "text-[#BA3C2A]"
+                      }`}
+                    >
+                      {amount >= 0 ? "+" : ""}
+                      {formatNaira(entry.signed_amount_ngn)}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-[#7A685D]">
+                    {isReversal
+                      ? "Offsets original post result; both records remain in immutable history."
+                      : "Posted upon event conclusion and financial reconciliation."}
+                  </p>
+                  <div className="text-[11px] font-mono text-[#7A685D]">
+                    {formatTimestamp(entry.created_at)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table (hidden md:block) */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-[#E5DDD3] bg-[#FAF6F0]/60 text-[11px] font-bold text-[#54433A] uppercase tracking-wider">
+                  <th className="py-3 px-4 sm:px-6">Timestamp</th>
+                  <th className="py-3 px-4">Event & Workspace</th>
+                  <th className="py-3 px-4">Generation / Kind</th>
+                  <th className="py-3 px-4">Status & Policy Note</th>
+                  <th className="py-3 px-4 sm:px-6 text-right">
+                    Net Posted Result
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E5DDD3]">
+                {entries.map((entry) => {
+                  const title =
+                    eventTitles.get(entry.event_id) ?? "Retained Event";
+                  const isReversal = entry.entry_kind === "reversal";
+                  const amount = Number(entry.signed_amount_ngn);
+
+                  return (
+                    <tr
+                      className="hover:bg-[#FAF6F0]/40 transition-colors"
+                      key={entry.id}
+                    >
+                      <td className="py-3.5 px-4 sm:px-6 text-[11px] font-mono text-[#7A685D] whitespace-nowrap">
+                        {formatTimestamp(entry.created_at)}
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <Link
+                          className="font-bold text-[#174C37] hover:underline flex items-center gap-1 group"
+                          href={`/events/${entry.event_id}/finance`}
+                        >
+                          <span>{title}</span>
+                          <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </Link>
+                      </td>
+
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${
+                              isReversal
+                                ? "bg-[#D6A23A]/15 text-[#3D291F] border border-[#D6A23A]/30"
+                                : "bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20"
+                            }`}
+                          >
+                            {isReversal ? (
+                              <RotateCcw className="w-3 h-3 text-[#D6A23A]" />
+                            ) : (
+                              <Layers className="w-3 h-3 text-[#174C37]" />
+                            )}
+                            <span className="capitalize">{entry.entry_kind}</span>
+                          </span>
+                          <span className="text-[10px] text-[#7A685D] font-mono font-medium">
+                            Gen {entry.generation}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-[#54433A]">
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#174C37]" />
+                          <span className="font-semibold text-[#3D291F] capitalize">
+                            {entry.event_status}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#7A685D] mt-0.5">
+                          {isReversal
+                            ? "Offsets original post result; both records remain in immutable history."
+                            : "Posted upon event conclusion and financial reconciliation."}
+                        </p>
+                      </td>
+
+                      <td className="py-3.5 px-4 sm:px-6 text-right whitespace-nowrap">
+                        <span
+                          className={`font-mono font-bold text-sm tabular-nums ${
+                            amount >= 0 ? "text-[#174C37]" : "text-[#BA3C2A]"
+                          }`}
+                        >
+                          {amount >= 0 ? "+" : ""}
+                          {formatNaira(entry.signed_amount_ngn)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </section>
   );

@@ -29,13 +29,24 @@ describe("Club event shared balance UI", () => {
     );
     assert.match(viewSource, /eventInflow=\{summary\?\.event_inflow\}/);
     assert.match(viewSource, /eventOutflow=\{summary\?\.event_outflow\}/);
+    assert.match(viewSource, /openingBalanceTotal=\{openingBalanceTotal\}/);
+    assert.match(viewSource, /postLaunchDues=\{postLaunchDues\}/);
+    assert.match(viewSource, /preLaunchDues=\{preLaunchDues\}/);
   });
 
-  it("renders event cash as its own card without touching the club lines", () => {
+  it("renders Verified Current Balance hero with reconciliation formula and 4-up supporting grid", () => {
+    assert.match(summarySource, /Verified Current Balance/);
+    assert.match(summarySource, /Opening Reserve/);
+    assert.match(summarySource, /Post-Launch Dues/);
+    assert.match(summarySource, /Other Income/);
+    assert.match(summarySource, /Live Event Net/);
+    assert.match(summarySource, /Club Expenses/);
     assert.match(summarySource, /eventInflow,\s*\n\s*eventOutflow,/);
-    assert.match(summarySource, /lg:grid-cols-5/);
-    assert.doesNotMatch(summarySource, /lg:grid-cols-4/);
-    assert.match(summarySource, /Event Cash/);
+    assert.match(summarySource, /lg:grid-cols-4/);
+    assert.doesNotMatch(summarySource, /lg:grid-cols-5/);
+    assert.match(summarySource, /Event Cash \(Live\)/);
+    assert.match(summarySource, /Post-launch/);
+    assert.match(summarySource, /Pre-launch/);
     assert.match(summarySource, /formatNaira\(eventNet\)/);
     assert.match(summarySource, /formatNaira\(eventInflow\)/);
     assert.match(summarySource, /formatNaira\(eventOutflow\)/);

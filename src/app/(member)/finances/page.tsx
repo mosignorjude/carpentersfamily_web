@@ -62,6 +62,7 @@ export default async function FinancesPage({
     notice?: string;
     page?: string;
     audit_page?: string;
+    tab?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -344,6 +345,13 @@ export default async function FinancesPage({
       postLaunchDues={postLaunchDues}
       preLaunchDues={preLaunchDues}
       financeUnavailable={financeUnavailable}
+      initialTab={
+        params.tab === "events"
+          ? "events"
+          : isOfficer && (params.tab === "setup" || Boolean(params.audit_page))
+            ? "setup"
+            : "ledger"
+      }
       isAdmin={isAdmin}
       isOfficer={isOfficer}
       aiEnabled={isAiReportsEnabled()}
