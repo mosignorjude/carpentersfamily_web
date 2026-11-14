@@ -106,29 +106,29 @@ export function ClubTransactionLedger({
   return (
     <section
       aria-labelledby="ledger-heading"
-      className="bg-white rounded-2xl border border-[#E5DDD3] overflow-hidden shadow-xs"
+      className="bg-white rounded-xl border border-[#E5DDD3] overflow-hidden shadow-2xs"
     >
       {/* Header & Controls */}
-      <div className="p-5 sm:p-6 border-b border-[#E5DDD3] bg-[#FAF6F0] space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#174C37] text-white flex items-center justify-center shadow-xs">
-              <FileText className="w-5 h-5 text-[#D6A23A]" />
+      <div className="p-4 sm:p-6 border-b border-[#E5DDD3] bg-[#FAF6F0]/70 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-[10px] bg-[#174C37] text-white flex items-center justify-center shadow-2xs shrink-0">
+              <FileText className="w-4 h-4 text-[#D6A23A]" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h2
                 className="text-base sm:text-lg font-extrabold text-[#3D291F]"
                 id="ledger-heading"
               >
                 Club Transaction Ledger
               </h2>
-              <p className="text-xs text-[#54433A] font-medium">
+              <p className="text-xs text-[#5C4638] font-medium">
                 Recorded club expenses and non-dues income
               </p>
             </div>
           </div>
 
-          <div className="text-xs text-[#7A685D] font-medium self-start sm:self-center">
+          <div className="text-xs text-[#5C4638] font-medium self-start sm:self-center">
             Showing page{" "}
             <strong className="text-[#3D291F] font-bold">{page + 1}</strong> of{" "}
             <strong className="text-[#3D291F] font-bold">{pageCount}</strong> (
@@ -137,14 +137,14 @@ export function ClubTransactionLedger({
         </div>
 
         {/* Filter Tabs & Search Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-2">
-          {/* Filter Pills */}
-          <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-[#E5DDD3] text-xs shadow-2xs self-start overflow-x-auto">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
+          {/* Filter Pills — 2x2 grid on tiny screens prevents 320px horizontal clip */}
+          <div className="grid grid-cols-2 sm:inline-flex items-center gap-1 bg-white p-1 rounded-[10px] border border-[#E5DDD3] text-xs shadow-2xs w-full sm:w-auto">
             <button
-              className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer min-h-[44px] ${
+              className={`px-2 sm:px-3.5 py-2 rounded-[8px] font-bold transition-colors cursor-pointer min-h-[44px] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] ${
                 filterType === "all"
                   ? "bg-[#174C37] text-white shadow-2xs"
-                  : "text-[#54433A] hover:bg-[#FAF6F0]"
+                  : "text-[#5C4638] hover:bg-[#FAF6F0]"
               }`}
               onClick={() => setFilterType("all")}
               type="button"
@@ -152,10 +152,10 @@ export function ClubTransactionLedger({
               All
             </button>
             <button
-              className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer min-h-[44px] ${
+              className={`px-2 sm:px-3.5 py-2 rounded-[8px] font-bold transition-colors cursor-pointer min-h-[44px] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] ${
                 filterType === "income"
                   ? "bg-[#174C37] text-white shadow-2xs"
-                  : "text-[#54433A] hover:bg-[#FAF6F0]"
+                  : "text-[#5C4638] hover:bg-[#FAF6F0]"
               }`}
               onClick={() => setFilterType("income")}
               type="button"
@@ -163,10 +163,10 @@ export function ClubTransactionLedger({
               Income
             </button>
             <button
-              className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer min-h-[44px] ${
+              className={`px-2 sm:px-3.5 py-2 rounded-[8px] font-bold transition-colors cursor-pointer min-h-[44px] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BA3C2A] ${
                 filterType === "expense"
                   ? "bg-[#BA3C2A] text-white shadow-2xs"
-                  : "text-[#54433A] hover:bg-[#FAF6F0]"
+                  : "text-[#5C4638] hover:bg-[#FAF6F0]"
               }`}
               onClick={() => setFilterType("expense")}
               type="button"
@@ -174,10 +174,10 @@ export function ClubTransactionLedger({
               Expenses
             </button>
             <button
-              className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer min-h-[44px] ${
+              className={`px-2 sm:px-3.5 py-2 rounded-[8px] font-bold transition-colors cursor-pointer min-h-[44px] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] ${
                 filterType === "voided"
-                  ? "bg-[#7A685D] text-white shadow-2xs"
-                  : "text-[#54433A] hover:bg-[#FAF6F0]"
+                  ? "bg-[#5C4638] text-white shadow-2xs"
+                  : "text-[#5C4638] hover:bg-[#FAF6F0]"
               }`}
               onClick={() => setFilterType("voided")}
               type="button"
@@ -187,10 +187,11 @@ export function ClubTransactionLedger({
           </div>
 
           {/* Search Box */}
-          <div className="relative w-full md:w-64">
-            <Search className="w-4 h-4 text-[#7A685D] absolute left-3 top-1/2 -translate-y-1/2" />
+          <div className="relative w-full md:w-72">
+            <Search className="w-4 h-4 text-[#5C4638] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
-              className="w-full h-9 pl-9 pr-3 bg-white border border-[#E5DDD3] rounded-xl text-xs text-[#3D291F] placeholder:text-[#B8ACA0] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+              aria-label="Search club transaction ledger"
+              className="w-full min-h-[44px] pl-9 pr-3 bg-white border border-[#E5DDD3] rounded-[10px] text-sm sm:text-xs text-[#3D291F] placeholder:text-[#7A685D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search ledger records..."
               type="search"
@@ -239,11 +240,11 @@ export function ClubTransactionLedger({
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
                             isVoided
-                              ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3] line-through"
+                              ? "bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3] line-through"
                               : transaction.is_opening_balance
-                                ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]"
+                                ? "bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3]"
                                 : transaction.kind === "income"
                                   ? "bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20"
                                   : "bg-[#BA3C2A]/10 text-[#BA3C2A] border border-[#BA3C2A]/20"
@@ -258,22 +259,22 @@ export function ClubTransactionLedger({
                                 : "Expense"}
                         </span>
                         {transaction.category_name_snapshot && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#FAF6F0] text-[#3D291F] border border-[#E5DDD3]">
-                            <Tag className="w-2.5 h-2.5 text-[#6B5D53]" />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-[#FAF6F0] text-[#3D291F] border border-[#E5DDD3]">
+                            <Tag className="w-3 h-3 text-[#5C4638]" />
                             <span>{transaction.category_name_snapshot}</span>
                           </span>
                         )}
                         {formatPaymentMethodLabel(
                           transaction.payment_method,
                         ) && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-white text-[#54433A] border border-[#E5DDD3]">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-white text-[#54433A] border border-[#E5DDD3]">
                             {formatPaymentMethodLabel(
                               transaction.payment_method,
                             )}
                           </span>
                         )}
                       </div>
-                      <span className="text-[11px] text-[#6B5D53] font-mono mt-1 block">
+                      <span className="text-xs text-[#5C4638] font-mono mt-1 block">
                         {formatDate(transaction.transaction_date)}
                       </span>
                     </div>
@@ -415,7 +416,7 @@ export function ClubTransactionLedger({
                         <div className="font-semibold text-[#3D291F]">
                           {formatDate(transaction.transaction_date)}
                         </div>
-                        <div className="text-[10px] text-[#7A685D] font-mono">
+                        <div className="text-xs text-[#5C4638] font-mono">
                           {formatTimestamp(transaction.created_at)}
                         </div>
                       </td>
@@ -424,11 +425,11 @@ export function ClubTransactionLedger({
                       <td className="py-3.5 px-4 max-w-xs">
                         <div className="flex items-center gap-1.5 mb-1">
                           <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
                               isVoided
-                                ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3] line-through"
+                                ? "bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3] line-through"
                                 : transaction.is_opening_balance
-                                  ? "bg-[#FAF6F0] text-[#7A685D] border border-[#E5DDD3]"
+                                  ? "bg-[#FAF6F0] text-[#5C4638] border border-[#E5DDD3]"
                                   : transaction.kind === "income"
                                     ? "bg-[#174C37]/10 text-[#174C37] border border-[#174C37]/20"
                                     : "bg-[#BA3C2A]/10 text-[#BA3C2A] border border-[#BA3C2A]/20"
@@ -445,21 +446,21 @@ export function ClubTransactionLedger({
                           {formatPaymentMethodLabel(
                             transaction.payment_method,
                           ) && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-white text-[#54433A] border border-[#E5DDD3]">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-white text-[#54433A] border border-[#E5DDD3]">
                               {formatPaymentMethodLabel(
                                 transaction.payment_method,
                               )}
                             </span>
                           )}
                           {isVoided && (
-                            <span className="text-[10px] text-[#BA3C2A] font-semibold italic truncate">
+                            <span className="text-xs text-[#BA3C2A] font-semibold italic truncate">
                               Reason: {transaction.void_reason}
                             </span>
                           )}
                         </div>
                         <div
                           className={`font-bold text-[#3D291F] leading-snug ${
-                            isVoided ? "line-through text-[#7A685D]" : ""
+                            isVoided ? "line-through text-[#5C4638]" : ""
                           }`}
                         >
                           {transaction.kind === "income"
@@ -471,12 +472,12 @@ export function ClubTransactionLedger({
                       {/* Cost Center / Category */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         {transaction.category_name_snapshot ? (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#FAF6F0] text-[#3D291F] border border-[#E5DDD3]">
-                            <Tag className="w-3 h-3 text-[#7A685D]" />
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#FAF6F0] text-[#3D291F] border border-[#E5DDD3]">
+                            <Tag className="w-3 h-3 text-[#5C4638]" />
                             <span>{transaction.category_name_snapshot}</span>
                           </div>
                         ) : (
-                          <span className="text-[11px] text-[#7A685D] italic">
+                          <span className="text-xs text-[#5C4638] italic">
                             {transaction.is_opening_balance
                               ? "Opening Reserve"
                               : transaction.kind === "income"
@@ -516,12 +517,12 @@ export function ClubTransactionLedger({
                       {/* Receipts Button */}
                       <td className="py-3.5 px-4 text-center whitespace-nowrap">
                         <button
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          className={`inline-flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 rounded-[10px] text-xs font-bold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] ${
                             linkedReceipts.length > 0
                               ? "bg-[#174C37]/10 text-[#174C37] hover:bg-[#174C37] hover:text-white"
                               : isOfficer && !isVoided
-                                ? "bg-[#FAF6F0] text-[#7A685D] hover:bg-white hover:text-[#3D291F] border border-[#E5DDD3]"
-                                : "text-[#B8ACA0] cursor-default"
+                                ? "bg-[#FAF6F0] text-[#5C4638] hover:bg-white hover:text-[#3D291F] border border-[#E5DDD3]"
+                                : "text-[#7A685D] cursor-default"
                           }`}
                           onClick={() => onViewReceipt(transaction)}
                           type="button"
@@ -544,25 +545,25 @@ export function ClubTransactionLedger({
                             <div className="inline-flex items-center gap-1.5">
                               <button
                                 aria-label={`Correct transaction ${transaction.id}`}
-                                className="p-1.5 text-[#54433A] hover:text-[#174C37] hover:bg-[#FAF6F0] rounded-lg transition-colors cursor-pointer"
+                                className="min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-[#5C4638] hover:text-[#174C37] hover:bg-[#FAF6F0] rounded-[10px] border border-transparent hover:border-[#E5DDD3] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                                 onClick={() => onInitiateCorrect(transaction)}
                                 title="Correct Record"
                                 type="button"
                               >
-                                <Edit3 className="w-3.5 h-3.5" />
+                                <Edit3 className="w-4 h-4" />
                               </button>
                               <button
                                 aria-label={`Void transaction ${transaction.id}`}
-                                className="p-1.5 text-[#BA3C2A] hover:bg-[#FDF2F2] rounded-lg transition-colors cursor-pointer"
+                                className="min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-[#BA3C2A] hover:bg-[#FDF2F2] rounded-[10px] border border-transparent hover:border-[#BA3C2A]/25 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BA3C2A]"
                                 onClick={() => onInitiateVoid(transaction)}
                                 title="Void Record"
                                 type="button"
                               >
-                                <AlertTriangle className="w-3.5 h-3.5" />
+                                <AlertTriangle className="w-4 h-4" />
                               </button>
                             </div>
                           ) : (
-                            <span className="text-[11px] text-[#7A685D] italic">
+                            <span className="text-xs text-[#5C4638] italic">
                               Retained
                             </span>
                           )}

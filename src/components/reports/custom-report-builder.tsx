@@ -343,19 +343,16 @@ export function CustomReportBuilder({
   return (
     <section
       aria-label="Custom Plain-English Reports"
-      className="bg-white rounded-2xl border border-[#E5DDD3] p-5 sm:p-6 shadow-xs space-y-5"
+      className="bg-white rounded-xl border border-[#E5DDD3] p-4 sm:p-6 shadow-2xs space-y-5"
     >
       <div className="space-y-1">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-[#174C37] shrink-0" />
-          <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#174C37]">
-            Custom Query Builder
-          </span>
+          <h2 className="text-lg sm:text-xl font-extrabold text-[#3D291F]">
+            Plain-English Custom Reports
+          </h2>
         </div>
-        <h2 className="text-lg sm:text-xl font-extrabold text-[#3D291F]">
-          Plain-English Custom Reports
-        </h2>
-        <p className="text-xs text-[#5C4638]">
+        <p className="text-xs sm:text-[13px] text-[#5C4638]">
           Ask a question in plain English or adjust the structured filters
           below. All queries run strictly against verified club datasets with
           Dues and Attendance anonymised.
@@ -370,7 +367,7 @@ export function CustomReportBuilder({
               Ask a plain-English report question
             </label>
             <input
-              className="flex-1 min-h-[44px] px-3.5 py-2 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0]/60 text-sm text-[#3D291F] placeholder:text-[#7A685D] focus:outline-none focus:ring-2 focus:ring-[#174C37]/30"
+              className="flex-1 min-h-[44px] px-3.5 py-2 rounded-[10px] border border-[#E5DDD3] bg-[#FAF6F0]/60 text-sm text-[#3D291F] placeholder:text-[#7A685D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus:bg-white"
               id="custom-report-question"
               maxLength={300}
               onChange={(e) => setQuestion(e.target.value)}
@@ -401,7 +398,7 @@ export function CustomReportBuilder({
             {QUICK_PROMPTS.map((sample) => (
               <button
                 key={sample}
-                className="min-h-[44px] px-3 py-1.5 rounded-xl bg-[#FAF6F0] hover:bg-[#F3ECE2] border border-[#E5DDD3] text-xs font-medium text-[#5C4638] transition-colors cursor-pointer"
+                className="min-h-[44px] px-3 py-1.5 rounded-[10px] bg-[#FAF6F0] hover:bg-[#F3ECE2] border border-[#E5DDD3] text-xs font-medium text-[#5C4638] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                 onClick={() => {
                   setQuestion(sample);
                   void handleTranslate(sample);
@@ -416,7 +413,7 @@ export function CustomReportBuilder({
       )}
 
       {/* Confirmation / Spec editor */}
-      <div className="rounded-xl border border-[#E5DDD3] bg-[#FAF6F0]/50 p-4 space-y-4">
+      <div className="rounded-[10px] border border-[#E5DDD3] bg-[#FAF6F0]/50 p-4 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs font-bold text-[#3D291F]">
             <SlidersHorizontal className="w-3.5 h-3.5 text-[#174C37]" />
@@ -442,7 +439,7 @@ export function CustomReportBuilder({
           {understoodChips.map((chip) => (
             <span
               key={chip.label}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-[#E5DDD3] text-[11px] text-[#3D291F]"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-[#E5DDD3] text-xs text-[#3D291F]"
             >
               <strong className="font-bold text-[#174C37]">
                 {chip.label}:
@@ -457,7 +454,7 @@ export function CustomReportBuilder({
           <label className="space-y-1 text-xs">
             <span className="font-semibold text-[#5C4638] block">Dataset</span>
             <select
-              className="w-full min-h-[44px] px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F]"
+              className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
               onChange={(e) => updateDataset(e.target.value as ReportDataset)}
               value={draftSpec.dataset}
             >
@@ -472,7 +469,7 @@ export function CustomReportBuilder({
           <label className="space-y-1 text-xs">
             <span className="font-semibold text-[#5C4638] block">From</span>
             <input
-              className="w-full min-h-[44px] px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F]"
+              className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
               onChange={(e) =>
                 setDraftSpec({
                   ...draftSpec,
@@ -487,7 +484,7 @@ export function CustomReportBuilder({
           <label className="space-y-1 text-xs">
             <span className="font-semibold text-[#5C4638] block">To</span>
             <input
-              className="w-full min-h-[44px] px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F]"
+              className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
               onChange={(e) =>
                 setDraftSpec({
                   ...draftSpec,
@@ -502,7 +499,7 @@ export function CustomReportBuilder({
           <label className="space-y-1 text-xs">
             <span className="font-semibold text-[#5C4638] block">Group by</span>
             <select
-              className="w-full min-h-[44px] px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F]"
+              className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
               onChange={(e) =>
                 setDraftSpec({
                   ...draftSpec,
@@ -525,7 +522,7 @@ export function CustomReportBuilder({
           <label className="space-y-1 text-xs">
             <span className="font-semibold text-[#5C4638] block">Metric</span>
             <select
-              className="w-full min-h-[44px] px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F]"
+              className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
               onChange={(e) =>
                 setDraftSpec({
                   ...draftSpec,
@@ -545,7 +542,7 @@ export function CustomReportBuilder({
           <label className="space-y-1 text-xs">
             <span className="font-semibold text-[#5C4638] block">Chart</span>
             <select
-              className="w-full min-h-[44px] px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F]"
+              className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
               onChange={(e) =>
                 setDraftSpec({
                   ...draftSpec,
@@ -566,7 +563,7 @@ export function CustomReportBuilder({
             <label className="space-y-1 text-xs">
               <span className="font-semibold text-[#5C4638] block">Event</span>
               <select
-                className="w-full min-h-[44px] px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F]"
+                className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                 onChange={(e) =>
                   setDraftSpec({
                     ...draftSpec,
@@ -589,7 +586,7 @@ export function CustomReportBuilder({
             <label className="space-y-1 text-xs">
               <span className="font-semibold text-[#5C4638] block">Kind</span>
               <select
-                className="w-full min-h-[44px] px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F]"
+                className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                 onChange={(e) =>
                   setDraftSpec({
                     ...draftSpec,
@@ -616,7 +613,7 @@ export function CustomReportBuilder({
                 Category
               </span>
               <select
-                className="w-full min-h-[44px] px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F]"
+                className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                 onChange={(e) =>
                   setDraftSpec({
                     ...draftSpec,
@@ -642,7 +639,7 @@ export function CustomReportBuilder({
             <label className="space-y-1 text-xs">
               <span className="font-semibold text-[#5C4638] block">Status</span>
               <select
-                className="w-full min-h-[44px] px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F]"
+                className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-xs font-medium text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                 onChange={(e) =>
                   setDraftSpec({
                     ...draftSpec,
@@ -707,7 +704,7 @@ export function CustomReportBuilder({
                 </label>
               )}
               <a
-                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors"
+                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-[10px] bg-[#174C37] text-white text-xs sm:text-sm font-bold hover:bg-[#103D2B] transition-colors whitespace-nowrap focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/40"
                 href={pdfHref}
                 rel="noopener"
                 target="_blank"
@@ -716,7 +713,7 @@ export function CustomReportBuilder({
                 <span>Download PDF</span>
               </a>
               <a
-                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F] text-xs font-bold hover:bg-white transition-colors"
+                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-[10px] bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F] text-xs sm:text-sm font-bold hover:bg-white transition-colors whitespace-nowrap focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/30"
                 href={csvHref}
                 rel="noopener"
                 target="_blank"
@@ -732,7 +729,7 @@ export function CustomReportBuilder({
           <div className="overflow-x-auto rounded-xl border border-[#E5DDD3]">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-[#FAF6F0] border-b border-[#E5DDD3] text-[#5C4638] uppercase tracking-wider text-[10px]">
+                <tr className="bg-[#FAF6F0] border-b border-[#E5DDD3] text-[#5C4638] uppercase tracking-wider text-xs">
                   <th className="py-2.5 px-3 font-bold">Group</th>
                   <th className="py-2.5 px-3 font-bold text-right">Count</th>
                   {executedResult.summary.isMonetary && (

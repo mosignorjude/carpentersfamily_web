@@ -138,6 +138,19 @@ export function FinancesPageView({
         ? "events"
         : "ledger",
   );
+  const switchTab = (nextTab: "ledger" | "events" | "setup") => {
+    setActiveTab(nextTab);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (nextTab === "ledger") url.searchParams.delete("tab");
+      else url.searchParams.set("tab", nextTab);
+      window.history.replaceState(
+        null,
+        "",
+        url.pathname + url.search + url.hash,
+      );
+    }
+  };
   const [isRecordIncomeOpen, setIsRecordIncomeOpen] = useState(false);
   const [isRecordExpenseOpen, setIsRecordExpenseOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -178,80 +191,78 @@ export function FinancesPageView({
   });
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-in fade-in duration-150">
-      {/* Hero Header */}
-      <section className="bg-white rounded-2xl border border-[#E5DDD3] p-6 sm:p-8 shadow-xs space-y-6">
-        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
-          <div className="space-y-2 max-w-3xl">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#174C37]">
-                Club Treasury
-              </span>
-            </div>
+    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-in fade-in duration-150">
+      {/* Page Header & Action Bar */}
+      <header className="pb-5 border-b border-[#E5DDD3] flex flex-col 2xl:flex-row 2xl:items-end justify-between gap-4 sm:gap-6">
+        <div className="space-y-1.5 max-w-2xl min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#3D291F] tracking-tight leading-tight">
+            Club Finances
+          </h1>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#3D291F] tracking-tight">
-              Club Finances
-            </h1>
-
-            <p className="text-xs sm:text-sm text-[#443A33] leading-relaxed font-normal">
-              Club balances, recorded income, and verified expenses.
-            </p>
-          </div>
-
-          {/* Quick Action Station */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0 self-stretch sm:self-auto lg:justify-end">
-            {isOfficer && (
-              <>
-                <button
-                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer min-h-[44px] shadow-2xs"
-                  disabled={financeUnavailable}
-                  id="officer-record-income-btn"
-                  onClick={() => setIsRecordIncomeOpen(true)}
-                  type="button"
-                >
-                  <PlusCircle className="w-4 h-4 text-[#D6A23A] shrink-0" />
-                  <span>Record Income</span>
-                </button>
-                <button
-                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#BA3C2A] text-white text-xs font-bold hover:bg-[#992F20] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer min-h-[44px] shadow-2xs"
-                  disabled={financeUnavailable}
-                  id="officer-record-expense-btn"
-                  onClick={() => setIsRecordExpenseOpen(true)}
-                  type="button"
-                >
-                  <MinusCircle className="w-4 h-4 text-white/90 shrink-0" />
-                  <span>Record Expense</span>
-                </button>
-                <button
-                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] text-[#3D291F] text-xs font-bold hover:bg-white transition-colors cursor-pointer min-h-[44px]"
-                  id="officer-manage-categories-btn"
-                  onClick={() => setIsCategoryModalOpen(true)}
-                  type="button"
-                >
-                  <Settings2 className="w-4 h-4 text-[#174C37] shrink-0" />
-                  <span>Manage Categories</span>
-                </button>
-              </>
-            )}
-            <button
-              className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer min-h-[44px] shadow-2xs ${
-                isOfficer
-                  ? "border border-[#E5DDD3] bg-white text-[#174C37] hover:bg-[#FAF6F0]"
-                  : "w-full sm:w-auto bg-[#174C37] text-white hover:bg-[#103D2B]"
-              }`}
-              onClick={() => setIsDownloadReportOpen(true)}
-              type="button"
-            >
-              <Download
-                className={`w-4 h-4 shrink-0 ${
-                  isOfficer ? "text-[#174C37]" : "text-[#D6A23A]"
-                }`}
-              />
-              <span>Download Report</span>
-            </button>
-          </div>
+          <p className="text-sm text-[#5C4638] leading-relaxed font-normal">
+            Club balances, recorded income, and verified expenses.
+          </p>
         </div>
-      </section>
+
+        {/* Action Station — Single Primary CTA + Structured Secondary Actions */}
+        <div
+          className={
+            isOfficer
+              ? "grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 min-w-0 self-stretch sm:self-auto 2xl:justify-end"
+              : "flex items-center gap-2 min-w-0 self-stretch sm:self-auto 2xl:justify-end"
+          }
+        >
+          {isOfficer && (
+            <>
+              <button
+                className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-[10px] bg-[#174C37] text-white text-xs sm:text-[13px] font-bold hover:bg-[#103D2B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer min-h-[44px] whitespace-nowrap shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-1"
+                disabled={financeUnavailable}
+                id="officer-record-income-btn"
+                onClick={() => setIsRecordIncomeOpen(true)}
+                type="button"
+              >
+                <PlusCircle className="w-4 h-4 text-[#D6A23A] shrink-0" />
+                <span>Record Income</span>
+              </button>
+              <button
+                className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-[10px] border border-[#BA3C2A]/35 bg-white text-[#BA3C2A] text-xs sm:text-[13px] font-bold hover:bg-[#FDF2F0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer min-h-[44px] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BA3C2A] focus-visible:ring-offset-1"
+                disabled={financeUnavailable}
+                id="officer-record-expense-btn"
+                onClick={() => setIsRecordExpenseOpen(true)}
+                type="button"
+              >
+                <MinusCircle className="w-4 h-4 shrink-0" />
+                <span>Record Expense</span>
+              </button>
+              <button
+                className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-[10px] border border-[#E5DDD3] bg-white text-[#3D291F] text-xs sm:text-[13px] font-bold hover:bg-[#FAF6F0] transition-colors cursor-pointer min-h-[44px] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-1"
+                id="officer-manage-categories-btn"
+                onClick={() => setIsCategoryModalOpen(true)}
+                type="button"
+              >
+                <Settings2 className="w-4 h-4 text-[#174C37] shrink-0" />
+                <span>Manage Categories</span>
+              </button>
+            </>
+          )}
+          <button
+            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[10px] text-xs sm:text-[13px] font-bold transition-colors cursor-pointer min-h-[44px] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-1 ${
+              isOfficer
+                ? "border border-[#E5DDD3] bg-white text-[#174C37] hover:bg-[#FAF6F0]"
+                : "w-full sm:w-auto bg-[#174C37] text-white hover:bg-[#103D2B] shadow-2xs"
+            }`}
+            onClick={() => setIsDownloadReportOpen(true)}
+            type="button"
+          >
+            <Download
+              className={`w-4 h-4 shrink-0 ${
+                isOfficer ? "text-[#174C37]" : "text-[#D6A23A]"
+              }`}
+            />
+            <span>Download Report</span>
+          </button>
+        </div>
+      </header>
 
       {isDownloadReportOpen && (
         <div
@@ -266,17 +277,17 @@ export function FinancesPageView({
             onClick={() => setIsDownloadReportOpen(false)}
             type="button"
           />
-          <div className="relative z-10 bg-white w-full max-w-sm rounded-[22px] border border-[#E5DDD3] p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="relative z-10 bg-white w-full max-w-sm rounded-xl border border-[#E5DDD3] p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD3]">
               <h3
-                className="text-lg font-bold text-[#231F1D] tracking-tight"
+                className="text-lg font-bold text-[#3D291F] tracking-tight"
                 id="finance-report-modal-title"
               >
                 Download Finance Report
               </h3>
               <button
                 aria-label="Close dialog"
-                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[#7A685D] hover:text-[#231F1D] hover:bg-[#FAF6F0] transition-colors cursor-pointer border-0 bg-transparent"
+                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[10px] text-[#5C4638] hover:text-[#3D291F] hover:bg-[#FAF6F0] transition-colors cursor-pointer border-0 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                 onClick={() => setIsDownloadReportOpen(false)}
                 type="button"
               >
@@ -316,11 +327,11 @@ export function FinancesPageView({
                   value={includeAiInPdf ? "true" : "false"}
                 />
                 <button
-                  className="w-full py-3 px-4 rounded-xl bg-[#174C37] text-white text-sm font-semibold flex items-center justify-between hover:bg-[#103D2B] active:scale-[0.99] transition shadow-xs cursor-pointer border-0 min-h-[44px]"
+                  className="w-full py-3 px-4 rounded-[10px] bg-[#174C37] text-white text-sm font-semibold flex items-center justify-between hover:bg-[#103D2B] active:scale-[0.99] transition shadow-xs cursor-pointer border-0 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-1"
                   type="submit"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FileText className="w-4 h-4 text-[#85B89A] shrink-0" />
+                    <FileText className="w-4 h-4 text-[#D6A23A] shrink-0" />
                     <span>Full Audit Report (PDF)</span>
                   </div>
                   <span className="text-xs bg-[#103D2B] px-2 py-0.5 rounded text-white/90 font-mono">
@@ -338,7 +349,7 @@ export function FinancesPageView({
               >
                 <input name="format" type="hidden" value="csv" />
                 <button
-                  className="w-full py-3 px-4 rounded-xl border border-[#CFD5D0] bg-white text-[#231F1D] text-sm font-semibold flex items-center justify-between hover:bg-[#FAF6F0] active:scale-[0.99] transition shadow-xs cursor-pointer min-h-[44px]"
+                  className="w-full py-3 px-4 rounded-[10px] border border-[#E5DDD3] bg-white text-[#3D291F] text-sm font-semibold flex items-center justify-between hover:bg-[#FAF6F0] active:scale-[0.99] transition shadow-2xs cursor-pointer min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-1"
                   type="submit"
                 >
                   <div className="flex items-center gap-2.5">
@@ -384,29 +395,29 @@ export function FinancesPageView({
         />
       </div>
 
-      {/* Workspace Segmented Tabs */}
+      {/* Workspace Underline Tabs */}
       <div
         aria-label="Club finance sections"
-        className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 bg-[#FAF6F0] p-1.5 rounded-2xl border border-[#E5DDD3] shadow-2xs overflow-x-auto"
+        className="flex items-center gap-1 sm:gap-2 border-b border-[#E5DDD3] overflow-x-auto"
         role="tablist"
       >
         <button
           aria-selected={activeTab === "ledger"}
-          className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] whitespace-nowrap ${
+          className={`inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold transition-colors cursor-pointer min-h-[44px] whitespace-nowrap border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] ${
             activeTab === "ledger"
-              ? "bg-[#174C37] text-white shadow-xs"
-              : "text-[#54433A] hover:bg-white hover:text-[#3D291F]"
+              ? "border-[#174C37] text-[#174C37]"
+              : "border-transparent text-[#5C4638] hover:text-[#3D291F]"
           }`}
-          onClick={() => setActiveTab("ledger")}
+          onClick={() => switchTab("ledger")}
           role="tab"
           type="button"
         >
           <span>Club Ledger</span>
           <span
-            className={`px-2 py-0.5 rounded-full text-[10px] font-mono tabular-nums ${
+            className={`px-2 py-0.5 rounded-full text-xs font-mono tabular-nums ${
               activeTab === "ledger"
-                ? "bg-white/15 text-white"
-                : "bg-white text-[#7A685D] border border-[#E5DDD3]"
+                ? "bg-[#174C37]/10 text-[#174C37]"
+                : "bg-white text-[#5C4638] border border-[#E5DDD3]"
             }`}
           >
             {transactionCount}
@@ -415,21 +426,21 @@ export function FinancesPageView({
 
         <button
           aria-selected={activeTab === "events"}
-          className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] whitespace-nowrap ${
+          className={`inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold transition-colors cursor-pointer min-h-[44px] whitespace-nowrap border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] ${
             activeTab === "events"
-              ? "bg-[#174C37] text-white shadow-xs"
-              : "text-[#54433A] hover:bg-white hover:text-[#3D291F]"
+              ? "border-[#174C37] text-[#174C37]"
+              : "border-transparent text-[#5C4638] hover:text-[#3D291F]"
           }`}
-          onClick={() => setActiveTab("events")}
+          onClick={() => switchTab("events")}
           role="tab"
           type="button"
         >
           <span>Event Cash Posts</span>
           <span
-            className={`px-2 py-0.5 rounded-full text-[10px] font-mono tabular-nums ${
+            className={`px-2 py-0.5 rounded-full text-xs font-mono tabular-nums ${
               activeTab === "events"
-                ? "bg-white/15 text-white"
-                : "bg-white text-[#7A685D] border border-[#E5DDD3]"
+                ? "bg-[#174C37]/10 text-[#174C37]"
+                : "bg-white text-[#5C4638] border border-[#E5DDD3]"
             }`}
           >
             {eventLedgerEntries.length}
@@ -439,21 +450,21 @@ export function FinancesPageView({
         {isOfficer && (
           <button
             aria-selected={activeTab === "setup"}
-            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] whitespace-nowrap ${
+            className={`inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold transition-colors cursor-pointer min-h-[44px] whitespace-nowrap border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] ${
               activeTab === "setup"
-                ? "bg-[#174C37] text-white shadow-xs"
-                : "text-[#54433A] hover:bg-white hover:text-[#3D291F]"
+                ? "border-[#174C37] text-[#174C37]"
+                : "border-transparent text-[#5C4638] hover:text-[#3D291F]"
             }`}
-            onClick={() => setActiveTab("setup")}
+            onClick={() => switchTab("setup")}
             role="tab"
             type="button"
           >
             <span>Treasury Setup &amp; Audit</span>
             <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-mono tabular-nums ${
+              className={`px-2 py-0.5 rounded-full text-xs font-mono tabular-nums ${
                 activeTab === "setup"
-                  ? "bg-white/15 text-white"
-                  : "bg-white text-[#7A685D] border border-[#E5DDD3]"
+                  ? "bg-[#174C37]/10 text-[#174C37]"
+                  : "bg-white text-[#5C4638] border border-[#E5DDD3]"
               }`}
             >
               {auditCount}
@@ -514,11 +525,11 @@ export function FinancesPageView({
             {isOfficer && aiEnabled && (
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#7A685D]">
+                  <h2 className="text-sm font-bold text-[#3D291F]">
                     Treasury AI Narrative &amp; Reporting
-                  </span>
+                  </h2>
                   <Link
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#E5DDD3] text-xs font-bold text-[#174C37] hover:bg-[#FAF6F0] transition-colors min-h-[44px]"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] bg-white border border-[#E5DDD3] text-xs font-bold text-[#174C37] hover:bg-[#FAF6F0] transition-colors min-h-[44px] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                     href="/officers/reports"
                   >
                     <span>Open AI Reports Centre</span>
@@ -549,25 +560,25 @@ export function FinancesPageView({
       </div>
 
       {/* Footer Policy & Credentials */}
-      <footer className="pt-6 pb-4 border-t border-[#E5DDD3] space-y-4 text-xs text-[#7A685D]">
-        <details className="bg-white rounded-xl border border-[#E5DDD3] p-3.5 sm:p-4 text-xs text-[#7A685D] shadow-2xs group">
-          <summary className="flex items-center justify-between cursor-pointer list-none select-none min-h-[36px]">
-            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+      <footer className="pt-6 pb-4 border-t border-[#E5DDD3] space-y-4 text-xs text-[#5C4638]">
+        <details className="bg-white rounded-xl border border-[#E5DDD3] px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs text-[#5C4638] shadow-2xs group">
+          <summary className="flex flex-wrap items-center justify-between gap-2 cursor-pointer list-none select-none min-h-[44px] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] rounded-[10px]">
+            <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] flex items-center justify-center text-[#174C37] shrink-0">
                 <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#174C37]" />
               </div>
-              <span className="font-bold text-[#3D291F] truncate">
+              <span className="font-bold text-[#3D291F] leading-snug">
                 Financial Privacy &amp; Transparency
               </span>
             </div>
-            <span className="text-[11px] font-semibold text-[#174C37] group-open:hidden shrink-0">
+            <span className="text-xs font-semibold text-[#174C37] group-open:hidden shrink-0 whitespace-nowrap">
               View Policy ▾
             </span>
-            <span className="text-[11px] font-semibold text-[#7A685D] hidden group-open:inline shrink-0">
+            <span className="text-xs font-semibold text-[#5C4638] hidden group-open:inline shrink-0 whitespace-nowrap">
               Hide ▴
             </span>
           </summary>
-          <div className="mt-2.5 pt-2.5 border-t border-[#E5DDD3] space-y-2 animate-in fade-in duration-150 text-[#5C4638] leading-relaxed">
+          <div className="mt-2 pt-2.5 border-t border-[#E5DDD3] space-y-2 animate-in fade-in duration-150 text-[#5C4638] leading-relaxed">
             <p>
               Members can review recorded club income and expenses. Individual
               member dues records and personal payment histories remain strictly
@@ -576,12 +587,12 @@ export function FinancesPageView({
           </div>
         </details>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+          <div className="space-y-0.5">
             <p className="font-bold text-[#3D291F]">
               Carpenters Family Social Club — Asaba, Delta State, Nigeria
             </p>
-            <p className="text-[11px] text-[#7A685D]">
+            <p className="text-xs text-[#5C4638]">
               Private Members Portal · Fobbs Apartment, Michael Fidelis Nwaefulu
               Street, GRA Phase 1, Asaba
             </p>
@@ -589,7 +600,7 @@ export function FinancesPageView({
 
           <div className="flex items-center gap-4 text-xs font-medium">
             <Link
-              className="text-[#174C37] font-bold hover:underline"
+              className="inline-flex items-center min-h-[44px] text-[#174C37] font-bold hover:underline whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] rounded"
               href="/dues"
             >
               Member Dues &amp; Contributions

@@ -39,25 +39,25 @@ export function ClubBankSettingsCard({
   if (!canEdit) {
     return (
       <div
-        className="bg-white rounded-2xl border border-[#E5DDD3] p-5 sm:p-6 shadow-xs space-y-4"
+        className="bg-white rounded-xl border border-[#E5DDD3] p-5 sm:p-6 shadow-2xs space-y-4"
         data-testid="club-bank-settings-read-only"
       >
-        <div className="flex items-center justify-between pb-3.5 border-b border-[#E5DDD3]">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3.5 border-b border-[#E5DDD3]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-[#174C37] flex items-center justify-center shadow-xs">
+            <div className="w-9 h-9 rounded-[10px] bg-[#FAF6F0] border border-[#E5DDD3] text-[#174C37] flex items-center justify-center shadow-2xs shrink-0">
               <Building2 className="w-4 h-4 text-[#174C37]" />
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
                 Club Bank Account
               </h3>
-              <p className="text-xs text-[#7A685D] font-medium">
+              <p className="text-xs text-[#5C4638] font-medium">
                 Official bank account for member dues and club transfers
               </p>
             </div>
           </div>
-          <span className="text-[11px] font-mono font-bold text-[#7A685D] bg-[#FAF6F0] px-2.5 py-1 rounded-md border border-[#E5DDD3] flex items-center gap-1.5">
-            <Lock className="w-3 h-3 text-[#7A685D]" />
+          <span className="text-xs font-mono font-bold text-[#5C4638] bg-[#FAF6F0] px-2.5 py-1 rounded-[10px] border border-[#E5DDD3] flex items-center gap-1.5">
+            <Lock className="w-3 h-3 text-[#5C4638]" />
             Read Only
           </span>
         </div>
@@ -65,16 +65,16 @@ export function ClubBankSettingsCard({
         {isConfigured ? (
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-[#7A685D] block mb-1">
+              <div className="p-3 rounded-[10px] bg-[#FAF6F0] border border-[#E5DDD3]">
+                <span className="text-xs font-semibold text-[#5C4638] block mb-1">
                   Bank Name
                 </span>
                 <span className="font-bold text-[#3D291F] text-sm block">
                   {bankName}
                 </span>
               </div>
-              <div className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-[#7A685D] block mb-1">
+              <div className="p-3 rounded-[10px] bg-[#FAF6F0] border border-[#E5DDD3]">
+                <span className="text-xs font-semibold text-[#5C4638] block mb-1">
                   Account Number (NUBAN)
                 </span>
                 <span className="font-mono font-extrabold text-[#174C37] text-sm tracking-wider block">
@@ -83,18 +83,18 @@ export function ClubBankSettingsCard({
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-[#7A685D] block mb-1">
+            <div className="p-3 rounded-[10px] bg-[#FAF6F0] border border-[#E5DDD3] text-xs">
+              <span className="text-xs font-semibold text-[#5C4638] block mb-1">
                 Account Name
               </span>
-              <span className="font-bold text-[#3D291F] block">
+              <span className="font-bold text-[#3D291F] text-sm block">
                 {accountName}
               </span>
             </div>
 
             {instructions && (
-              <div className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-xs">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-[#7A685D] block mb-1">
+              <div className="p-3 rounded-[10px] bg-[#FAF6F0] border border-[#E5DDD3] text-xs">
+                <span className="text-xs font-semibold text-[#5C4638] block mb-1">
                   Deposit / Transfer Instructions
                 </span>
                 <p className="text-[#5C4638] whitespace-pre-wrap leading-relaxed">
@@ -115,25 +115,25 @@ export function ClubBankSettingsCard({
 
   return (
     <div
-      className="bg-white rounded-2xl border border-[#174C37]/30 p-5 sm:p-6 shadow-xs space-y-4"
+      className="bg-white rounded-xl border border-[#E5DDD3] p-5 sm:p-6 shadow-2xs space-y-4"
       data-testid="club-bank-settings-editable"
     >
-      <div className="flex items-center justify-between pb-3.5 border-b border-[#E5DDD3]">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-3.5 border-b border-[#E5DDD3]">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#174C37] text-white flex items-center justify-center shadow-xs">
+          <div className="w-9 h-9 rounded-[10px] bg-[#174C37] text-white flex items-center justify-center shadow-2xs shrink-0">
             <Building2 className="w-4 h-4 text-[#D6A23A]" />
           </div>
           <div>
             <h3 className="text-sm sm:text-base font-extrabold text-[#3D291F]">
               Club Bank Account
             </h3>
-            <p className="text-xs text-[#7A685D] font-medium">
+            <p className="text-xs text-[#5C4638] font-medium">
               Official bank account for member dues and club transfers
             </p>
           </div>
         </div>
-        <span className="text-[11px] font-mono font-bold text-[#174C37] bg-[#FAF6F0] px-2.5 py-1 rounded-md border border-[#E5DDD3] flex items-center gap-1.5">
-          <Edit3 className="w-3 h-3 text-[#174C37]" />
+        <span className="text-xs font-mono font-bold text-[#174C37] bg-[#FAF6F0] px-2.5 py-1 rounded-[10px] border border-[#E5DDD3] flex items-center gap-1.5">
+          <Edit3 className="w-3.5 h-3.5 text-[#174C37]" />
           Admin Controlled
         </span>
       </div>
@@ -154,7 +154,7 @@ export function ClubBankSettingsCard({
               Bank Name <span className="text-[#BA3C2A]">*</span>
             </label>
             <input
-              className="w-full h-10 px-3 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] text-xs font-semibold text-[#3D291F] focus:outline-none focus:border-[#174C37] focus:bg-white transition-colors"
+              className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-[#FAF6F0]/60 text-sm font-semibold text-[#3D291F] focus:outline-none focus:ring-2 focus:ring-[#174C37] focus:bg-white transition-colors"
               defaultValue={bankName}
               id="bank_name"
               maxLength={100}
@@ -174,7 +174,7 @@ export function ClubBankSettingsCard({
               <span className="text-[#BA3C2A]">*</span>
             </label>
             <input
-              className="w-full h-10 px-3 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] text-xs font-mono font-bold text-[#174C37] focus:outline-none focus:border-[#174C37] focus:bg-white transition-colors"
+              className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-[#FAF6F0]/60 text-sm font-mono font-bold text-[#174C37] focus:outline-none focus:ring-2 focus:ring-[#174C37] focus:bg-white transition-colors"
               defaultValue={accountNumber}
               id="account_number"
               inputMode="numeric"
@@ -196,7 +196,7 @@ export function ClubBankSettingsCard({
             Account Name <span className="text-[#BA3C2A]">*</span>
           </label>
           <input
-            className="w-full h-10 px-3 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] text-xs font-semibold text-[#3D291F] focus:outline-none focus:border-[#174C37] focus:bg-white transition-colors"
+            className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-[#FAF6F0]/60 text-sm font-semibold text-[#3D291F] focus:outline-none focus:ring-2 focus:ring-[#174C37] focus:bg-white transition-colors"
             defaultValue={accountName}
             id="account_name"
             maxLength={150}
@@ -213,12 +213,12 @@ export function ClubBankSettingsCard({
             htmlFor="instructions"
           >
             Transfer Instructions / Narration Guide{" "}
-            <span className="text-[11px] font-normal text-[#7A685D]">
+            <span className="text-xs font-normal text-[#5C4638]">
               (optional)
             </span>
           </label>
           <textarea
-            className="w-full p-3 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] text-xs text-[#3D291F] focus:outline-none focus:border-[#174C37] focus:bg-white transition-colors resize-none leading-relaxed"
+            className="w-full p-3 rounded-[10px] border border-[#E5DDD3] bg-[#FAF6F0]/60 text-sm text-[#3D291F] focus:outline-none focus:ring-2 focus:ring-[#174C37] focus:bg-white transition-colors resize-none leading-relaxed"
             defaultValue={instructions}
             id="instructions"
             maxLength={500}
@@ -230,7 +230,7 @@ export function ClubBankSettingsCard({
 
         <div className="pt-2 flex items-center justify-end">
           <FormSubmitButton
-            className="px-5 py-2.5 rounded-xl bg-[#174C37] hover:bg-[#103D2B] text-white text-xs font-bold transition-colors cursor-pointer shadow-xs min-h-[40px]"
+            className="px-5 py-2.5 rounded-[10px] bg-[#174C37] hover:bg-[#103D2B] text-white text-xs sm:text-sm font-bold transition-colors cursor-pointer shadow-2xs min-h-[44px]"
             loadingText="Saving Bank Details..."
           >
             Save Bank Details

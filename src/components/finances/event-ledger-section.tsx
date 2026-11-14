@@ -36,13 +36,13 @@ export function EventLedgerSection({
   return (
     <section
       aria-labelledby="event-ledger-heading"
-      className="bg-white rounded-2xl border border-[#E5DDD3] overflow-hidden shadow-xs"
+      className="bg-white rounded-xl border border-[#E5DDD3] overflow-hidden shadow-2xs"
     >
       {/* Header */}
-      <div className="p-5 sm:p-6 border-b border-[#E5DDD3] bg-[#FAF6F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="p-4 sm:p-6 border-b border-[#E5DDD3] bg-[#FAF6F0]/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-[#174C37] text-white flex items-center justify-center shadow-xs">
-            <Layers className="w-5 h-5 text-[#D6A23A]" />
+          <div className="w-9 h-9 rounded-[10px] bg-[#174C37] text-white flex items-center justify-center shadow-2xs shrink-0">
+            <Layers className="w-4 h-4 text-[#D6A23A]" />
           </div>
           <div>
             <h2
@@ -51,7 +51,7 @@ export function EventLedgerSection({
             >
               Event Close Postings
             </h2>
-            <p className="text-xs text-[#54433A] font-medium">
+            <p className="text-xs text-[#5C4638] font-medium">
               {
                 "Audit snapshot of each completed or cancelled event - not counted in the balance"
               }
@@ -59,7 +59,7 @@ export function EventLedgerSection({
           </div>
         </div>
 
-        <span className="text-[11px] font-mono font-medium text-[#7A685D] self-start sm:self-center">
+        <span className="text-xs font-mono font-medium text-[#5C4638] self-start sm:self-center">
           Latest {entries.length} posts
         </span>
       </div>

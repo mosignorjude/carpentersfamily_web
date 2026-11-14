@@ -512,22 +512,18 @@ export function DocumentDraftEditor({
   return (
     <section
       aria-labelledby="document-drafting-heading"
-      className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-5"
+      className="bg-white rounded-xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-5"
       id="document-drafting"
     >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-[#E5DDD3]">
         <div>
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#174C37]">
-            <Sparkles className="w-3.5 h-3.5 text-[#D6A23A]" />
-            Formal Governance Drafting
-          </span>
           <h2
-            className="text-lg font-extrabold text-[#3D291F] mt-0.5"
+            className="text-lg font-extrabold text-[#3D291F] tracking-tight"
             id="document-drafting-heading"
           >
             AGM, Treasurer &amp; Meeting Minutes Drafter
           </h2>
-          <p className="text-xs text-[#5C4638]">
+          <p className="text-xs sm:text-sm text-[#5C4638] mt-1">
             Draft structured formal reports from verified figures or
             privacy-masked meeting notes. Nothing enters official PDFs or
             Meeting Hub until an officer approves it.
@@ -538,10 +534,10 @@ export function DocumentDraftEditor({
           Boolean(draft?.status === "approved") ||
           Boolean(meetingCtx?.publishedContent)) && (
           <a
-            className="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-4 rounded-xl bg-[#0C3325] text-white text-xs font-bold hover:bg-[#174C37] transition-colors shrink-0"
+            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-[10px] bg-[#0C3325] text-white text-xs sm:text-sm font-bold hover:bg-[#174C37] transition-colors shrink-0 whitespace-nowrap focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/40"
             href={pdfDownloadHref}
           >
-            <FileText className="w-3.5 h-3.5 text-[#D6A23A]" />
+            <FileText className="w-4 h-4 text-[#D6A23A] shrink-0" />
             <span>
               Download{" "}
               {docType === "agm_statement"
@@ -563,7 +559,7 @@ export function DocumentDraftEditor({
             <button
               key={tab.key}
               aria-pressed={active}
-              className={`text-left p-3.5 rounded-xl border transition-colors cursor-pointer ${
+              className={`text-left min-h-[56px] p-3.5 rounded-[10px] border transition-colors cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/30 ${
                 active
                   ? "bg-[#0C3325] text-white border-[#0C3325]"
                   : "bg-[#FAF6F0] text-[#3D291F] border-[#E5DDD3] hover:border-[#174C37]/50"
@@ -574,10 +570,10 @@ export function DocumentDraftEditor({
               }}
               type="button"
             >
-              <div className="text-xs font-extrabold">{tab.label}</div>
+              <div className="text-sm font-extrabold">{tab.label}</div>
               <div
-                className={`text-[11px] mt-0.5 ${
-                  active ? "text-[#FAF6F0]/80" : "text-[#7A685D]"
+                className={`text-xs mt-0.5 ${
+                  active ? "text-[#FAF6F0]/85" : "text-[#5C4638]"
                 }`}
               >
                 {tab.subtitle}
@@ -590,16 +586,16 @@ export function DocumentDraftEditor({
       {/* Scope Controls per Document Type */}
       <div className="bg-[#FAF6F0] rounded-xl border border-[#E5DDD3] p-4 space-y-3">
         {docType === "agm_statement" && (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="min-w-0 w-full sm:w-auto">
               <label
-                className="block text-[11px] font-bold uppercase tracking-wider text-[#5C4638]"
+                className="block text-xs font-bold uppercase tracking-wider text-[#5C4638]"
                 htmlFor="agm-year-select"
               >
                 Financial Year (Compared vs Prior FY)
               </label>
               <select
-                className="mt-1 h-10 px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-bold text-[#3D291F]"
+                className="mt-1.5 w-full sm:w-auto max-w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-sm font-bold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/30"
                 id="agm-year-select"
                 onChange={(e) => setFiscalYear(Number(e.target.value))}
                 value={fiscalYear}
@@ -614,17 +610,17 @@ export function DocumentDraftEditor({
 
             {aiEnabled && (
               <button
-                className="inline-flex items-center gap-1.5 min-h-[40px] px-4 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#0C3325] disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-[10px] bg-[#174C37] text-white text-xs sm:text-sm font-bold hover:bg-[#0C3325] disabled:opacity-50 cursor-pointer whitespace-nowrap focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/40"
                 disabled={working || loading}
                 onClick={() => void handleGenerate(Boolean(draft))}
                 type="button"
               >
                 {working ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                 ) : draft ? (
-                  <RefreshCw className="w-3.5 h-3.5" />
+                  <RefreshCw className="w-4 h-4 shrink-0" />
                 ) : (
-                  <Sparkles className="w-3.5 h-3.5 text-[#D6A23A]" />
+                  <Sparkles className="w-4 h-4 text-[#D6A23A] shrink-0" />
                 )}
                 <span>
                   {draft
@@ -637,16 +633,16 @@ export function DocumentDraftEditor({
         )}
 
         {docType === "treasurer_report" && (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="min-w-0 w-full sm:w-auto">
               <label
-                className="block text-[11px] font-bold uppercase tracking-wider text-[#5C4638]"
+                className="block text-xs font-bold uppercase tracking-wider text-[#5C4638]"
                 htmlFor="treasurer-period-select"
               >
                 Reporting Period
               </label>
               <select
-                className="mt-1 h-10 px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-bold text-[#3D291F]"
+                className="mt-1.5 w-full sm:w-auto max-w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-sm font-bold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/30"
                 id="treasurer-period-select"
                 onChange={(e) => setTreasurerPeriod(e.target.value)}
                 value={treasurerPeriod}
@@ -661,17 +657,17 @@ export function DocumentDraftEditor({
 
             {aiEnabled && (
               <button
-                className="inline-flex items-center gap-1.5 min-h-[40px] px-4 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#0C3325] disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-[10px] bg-[#174C37] text-white text-xs sm:text-sm font-bold hover:bg-[#0C3325] disabled:opacity-50 cursor-pointer whitespace-nowrap focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/40"
                 disabled={working || loading}
                 onClick={() => void handleGenerate(Boolean(draft))}
                 type="button"
               >
                 {working ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                 ) : draft ? (
-                  <RefreshCw className="w-3.5 h-3.5" />
+                  <RefreshCw className="w-4 h-4 shrink-0" />
                 ) : (
-                  <Sparkles className="w-3.5 h-3.5 text-[#D6A23A]" />
+                  <Sparkles className="w-4 h-4 text-[#D6A23A] shrink-0" />
                 )}
                 <span>
                   {draft
@@ -688,19 +684,19 @@ export function DocumentDraftEditor({
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div className="flex-1 min-w-[220px]">
                 <label
-                  className="block text-[11px] font-bold uppercase tracking-wider text-[#5C4638]"
+                  className="block text-xs font-bold uppercase tracking-wider text-[#5C4638]"
                   htmlFor="minutes-meeting-select"
                 >
                   Select Club Meeting
                 </label>
                 {meetings.length === 0 ? (
-                  <p className="text-xs text-[#7A685D] mt-1">
+                  <p className="text-xs text-[#5C4638] mt-1">
                     No active meetings with minutes enabled were found. Create a
                     meeting in the Meeting Hub first.
                   </p>
                 ) : (
                   <select
-                    className="mt-1 w-full max-w-md h-10 px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs font-bold text-[#3D291F]"
+                    className="mt-1.5 w-full max-w-md min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-sm font-bold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/30"
                     id="minutes-meeting-select"
                     onChange={(e) => {
                       setSelectedMeetingId(e.target.value);
@@ -719,7 +715,7 @@ export function DocumentDraftEditor({
               </div>
 
               {meetingCtx && (
-                <div className="text-xs text-[#5C4638] space-x-2">
+                <div className="text-xs text-[#5C4638] flex flex-wrap gap-2">
                   <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white border border-[#E5DDD3] font-semibold">
                     Attendance: {meetingCtx.attendanceCounts.present} present,{" "}
                     {meetingCtx.attendanceCounts.late} late
@@ -737,14 +733,14 @@ export function DocumentDraftEditor({
               <div className="space-y-3">
                 <div>
                   <label
-                    className="block text-[11px] font-bold uppercase tracking-wider text-[#5C4638] mb-1"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#5C4638] mb-1.5"
                     htmlFor="minutes-raw-notes"
                   >
                     Officer Meeting Notes (stays private on club server — names
                     masked automatically before AI)
                   </label>
                   <textarea
-                    className="w-full h-36 p-3 rounded-xl border border-[#E5DDD3] bg-white text-xs text-[#3D291F] leading-relaxed focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
+                    className="w-full h-36 p-3 rounded-[10px] border border-[#E5DDD3] bg-white text-sm text-[#3D291F] leading-relaxed focus:outline-hidden focus:ring-2 focus:ring-[#174C37]"
                     id="minutes-raw-notes"
                     maxLength={15000}
                     onChange={(e) => {
@@ -758,26 +754,26 @@ export function DocumentDraftEditor({
 
                 <div className="flex flex-wrap items-center gap-2">
                   <button
-                    className="inline-flex items-center gap-1.5 min-h-[38px] px-3.5 rounded-xl border border-[#174C37]/40 bg-white text-[#174C37] text-xs font-bold hover:bg-[#FAF6F0] disabled:opacity-50 cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2 rounded-[10px] border border-[#174C37]/40 bg-white text-[#174C37] text-xs sm:text-sm font-bold hover:bg-[#FAF6F0] disabled:opacity-50 cursor-pointer whitespace-nowrap focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/30"
                     disabled={working || rawNotes.trim().length < 10}
                     onClick={() => void handlePreviewMaskedNotes()}
                     type="button"
                   >
-                    <Eye className="w-3.5 h-3.5" />
+                    <Eye className="w-4 h-4 shrink-0" />
                     <span>What the AI Will See</span>
                   </button>
 
                   {aiEnabled && (
                     <button
-                      className="inline-flex items-center gap-1.5 min-h-[38px] px-4 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#0C3325] disabled:opacity-50 cursor-pointer"
+                      className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-[10px] bg-[#174C37] text-white text-xs sm:text-sm font-bold hover:bg-[#0C3325] disabled:opacity-50 cursor-pointer whitespace-nowrap focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/40"
                       disabled={working || rawNotes.trim().length < 10}
                       onClick={() => void handleGenerate(Boolean(draft))}
                       type="button"
                     >
                       {working ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                       ) : (
-                        <Sparkles className="w-3.5 h-3.5 text-[#D6A23A]" />
+                        <Sparkles className="w-4 h-4 text-[#D6A23A] shrink-0" />
                       )}
                       <span>
                         {draft
@@ -791,15 +787,15 @@ export function DocumentDraftEditor({
                 {showMaskedPreview && (
                   <div className="p-3.5 rounded-xl bg-white border border-[#174C37]/40 space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#174C37] flex items-center gap-1.5">
-                        <ShieldCheck className="w-3.5 h-3.5" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#174C37] flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 shrink-0" />
                         <span>
                           Privacy Preview — Exact Text Sent to AI (editable to
                           mask non-member guests by hand)
                         </span>
                       </span>
                       {previewStats && (
-                        <span className="text-[11px] text-[#5C4638]">
+                        <span className="text-xs text-[#5C4638]">
                           Masked: {previewStats.membersMatched} member tokens,{" "}
                           {previewStats.emailsMasked} emails,{" "}
                           {previewStats.phonesMasked} phones,{" "}
@@ -809,7 +805,7 @@ export function DocumentDraftEditor({
                     </div>
                     <textarea
                       aria-label="What the AI will see"
-                      className="w-full h-32 p-3 rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] font-mono text-xs text-[#3D291F] leading-relaxed"
+                      className="w-full h-32 p-3 rounded-[10px] border border-[#E5DDD3] bg-[#FAF6F0] font-mono text-xs text-[#3D291F] leading-relaxed focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/30"
                       maxLength={15000}
                       onChange={(e) => setPreviewMaskedText(e.target.value)}
                       value={previewMaskedText}
@@ -866,36 +862,36 @@ export function DocumentDraftEditor({
       {docType === "treasurer_report" && treasurerFacts && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
-            <div className="text-[10px] font-bold uppercase text-[#5C4638]">
+            <div className="text-xs font-bold uppercase text-[#5C4638]">
               Closing Balance
             </div>
-            <div className="text-sm font-extrabold text-[#174C37] font-mono mt-0.5">
+            <div className="text-sm font-extrabold text-[#174C37] font-mono tabular-nums mt-0.5">
               {formatNaira(
                 treasurerFacts.treasury_totals.closing_club_balance_ngn,
               )}
             </div>
           </div>
           <div className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
-            <div className="text-[10px] font-bold uppercase text-[#5C4638]">
+            <div className="text-xs font-bold uppercase text-[#5C4638]">
               Period Inflows
             </div>
-            <div className="text-sm font-extrabold text-[#3D291F] font-mono mt-0.5">
+            <div className="text-sm font-extrabold text-[#3D291F] font-mono tabular-nums mt-0.5">
               {formatNaira(treasurerFacts.treasury_totals.total_inflows_ngn)}
             </div>
           </div>
           <div className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
-            <div className="text-[10px] font-bold uppercase text-[#5C4638]">
+            <div className="text-xs font-bold uppercase text-[#5C4638]">
               Period Outflows
             </div>
-            <div className="text-sm font-extrabold text-[#BA3C2A] font-mono mt-0.5">
+            <div className="text-sm font-extrabold text-[#BA3C2A] font-mono tabular-nums mt-0.5">
               {formatNaira(treasurerFacts.treasury_totals.total_outflows_ngn)}
             </div>
           </div>
           <div className="p-3 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3]">
-            <div className="text-[10px] font-bold uppercase text-[#5C4638]">
+            <div className="text-xs font-bold uppercase text-[#5C4638]">
               Dues Collection
             </div>
-            <div className="text-sm font-extrabold text-[#174C37] font-mono mt-0.5">
+            <div className="text-sm font-extrabold text-[#174C37] font-mono tabular-nums mt-0.5">
               {treasurerFacts.dues.collection_rate_pct}%
             </div>
           </div>
@@ -935,13 +931,13 @@ export function DocumentDraftEditor({
           role="alert"
         >
           <div className="font-extrabold flex items-center gap-1.5">
-            <AlertTriangle className="w-4 h-4 text-[#8D5B0E]" />
+            <AlertTriangle className="w-4 h-4 text-[#8D5B0E] shrink-0" />
             <span>
               Unresolved placeholder tokens detected — edit before approving or
               publishing:
             </span>
           </div>
-          <div className="font-mono text-[11px] font-bold text-[#8D5B0E]">
+          <div className="font-mono text-xs font-bold text-[#8D5B0E]">
             {unresolvedTokens.join(" · ")}
           </div>
         </div>
@@ -949,16 +945,16 @@ export function DocumentDraftEditor({
 
       {/* Section-by-Section Editor */}
       {loading ? (
-        <div className="p-6 text-center text-xs text-[#7A685D]">
+        <div className="p-6 text-center text-xs sm:text-sm text-[#5C4638]">
           Loading document workspace...
         </div>
       ) : draft ? (
-        <div className="space-y-4 pt-2 border-t border-[#E5DDD3]">
+        <div className="space-y-4 pt-3 border-t border-[#E5DDD3]">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
               {draft.status === "approved" ? (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#174C37]/10 text-[#174C37] font-bold">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                   Approved by {draft.approvedByName} ({draft.approvedAt})
                 </span>
               ) : (
@@ -967,7 +963,7 @@ export function DocumentDraftEditor({
                   approved
                 </span>
               )}
-              <span className="text-[11px] text-[#7A685D]">
+              <span className="text-xs text-[#5C4638]">
                 Model: {draft.provider} ({draft.model})
               </span>
             </div>
@@ -976,13 +972,13 @@ export function DocumentDraftEditor({
           <div className="grid grid-cols-1 gap-3">
             <div>
               <label
-                className="block text-[11px] font-bold uppercase tracking-wider text-[#5C4638] mb-1"
+                className="block text-xs font-bold uppercase tracking-wider text-[#5C4638] mb-1.5"
                 htmlFor="draft-title-input"
               >
                 Document Title
               </label>
               <input
-                className="w-full h-10 px-3 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0]/50 text-xs font-bold text-[#3D291F]"
+                className="w-full min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-[#FAF6F0]/50 text-sm font-bold text-[#3D291F] focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/30"
                 id="draft-title-input"
                 maxLength={160}
                 onChange={(e) => {
@@ -995,13 +991,13 @@ export function DocumentDraftEditor({
 
             <div>
               <label
-                className="block text-[11px] font-bold uppercase tracking-wider text-[#5C4638] mb-1"
+                className="block text-xs font-bold uppercase tracking-wider text-[#5C4638] mb-1.5"
                 htmlFor="draft-summary-input"
               >
                 Executive Summary / Opening Note
               </label>
               <textarea
-                className="w-full h-20 p-3 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0]/50 text-xs text-[#3D291F] leading-relaxed"
+                className="w-full h-24 p-3 rounded-[10px] border border-[#E5DDD3] bg-[#FAF6F0]/50 text-sm text-[#3D291F] leading-relaxed focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/30"
                 id="draft-summary-input"
                 maxLength={800}
                 onChange={(e) => {
@@ -1019,7 +1015,7 @@ export function DocumentDraftEditor({
               return (
                 <div key={section.key}>
                   <label
-                    className="block text-[11px] font-bold uppercase tracking-wider text-[#5C4638] mb-1"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#5C4638] mb-1.5"
                     htmlFor={`draft-sec-${section.key}`}
                   >
                     {section.heading}
@@ -1030,7 +1026,7 @@ export function DocumentDraftEditor({
                     )}
                   </label>
                   <textarea
-                    className={`w-full h-28 p-3 rounded-xl border text-xs text-[#3D291F] leading-relaxed ${
+                    className={`w-full h-28 p-3 rounded-[10px] border text-sm text-[#3D291F] leading-relaxed focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/30 ${
                       hasUnresolved
                         ? "border-[#BA3C2A] bg-[#BA3C2A]/5"
                         : "border-[#E5DDD3] bg-white"
@@ -1048,13 +1044,13 @@ export function DocumentDraftEditor({
 
             <div>
               <label
-                className="block text-[11px] font-bold uppercase tracking-wider text-[#5C4638] mb-1"
+                className="block text-xs font-bold uppercase tracking-wider text-[#5C4638] mb-1.5"
                 htmlFor="draft-recs-input"
               >
                 Recommendations / Notes (one per line, optional)
               </label>
               <textarea
-                className="w-full h-20 p-3 rounded-xl border border-[#E5DDD3] bg-white text-xs text-[#3D291F] leading-relaxed"
+                className="w-full h-24 p-3 rounded-[10px] border border-[#E5DDD3] bg-white text-sm text-[#3D291F] leading-relaxed focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/30"
                 id="draft-recs-input"
                 onChange={(e) => {
                   setDirtyEdits(true);
@@ -1069,7 +1065,7 @@ export function DocumentDraftEditor({
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
             <div className="flex flex-wrap items-center gap-2">
               <button
-                className="inline-flex items-center gap-1.5 min-h-[38px] px-4 rounded-xl border border-[#E5DDD3] bg-white text-xs font-bold text-[#3D291F] hover:bg-[#FAF6F0] disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2 rounded-[10px] border border-[#E5DDD3] bg-white text-xs sm:text-sm font-bold text-[#3D291F] hover:bg-[#FAF6F0] disabled:opacity-50 cursor-pointer whitespace-nowrap focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/30"
                 disabled={working || !dirtyEdits}
                 onClick={() => void handleSaveEdits()}
                 type="button"
@@ -1079,14 +1075,14 @@ export function DocumentDraftEditor({
 
               {draft.status !== "approved" && (
                 <button
-                  className="inline-flex items-center gap-1.5 min-h-[38px] px-4 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#0C3325] disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-[10px] bg-[#174C37] text-white text-xs sm:text-sm font-bold hover:bg-[#0C3325] disabled:opacity-50 cursor-pointer whitespace-nowrap focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/40"
                   disabled={
                     working || dirtyEdits || unresolvedTokens.length > 0
                   }
                   onClick={() => void handleApprove()}
                   type="button"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>Approve Draft</span>
                 </button>
               )}
@@ -1099,19 +1095,19 @@ export function DocumentDraftEditor({
                 <div className="flex flex-wrap items-center gap-2">
                   <input
                     aria-label="Revision reason for Meeting Hub"
-                    className="h-9 px-3 rounded-xl border border-[#E5DDD3] bg-white text-xs text-[#3D291F] w-60"
+                    className="min-h-[44px] px-3 rounded-[10px] border border-[#E5DDD3] bg-white text-sm text-[#3D291F] w-full sm:w-64 focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/30"
                     maxLength={500}
                     onChange={(e) => setPublishReason(e.target.value)}
                     placeholder="Reason for Meeting Hub revision"
                     value={publishReason}
                   />
                   <button
-                    className="inline-flex items-center gap-1.5 min-h-[38px] px-4 rounded-xl bg-[#0C3325] text-white text-xs font-bold hover:bg-[#174C37] disabled:opacity-50 cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-[10px] bg-[#0C3325] text-white text-xs sm:text-sm font-bold hover:bg-[#174C37] disabled:opacity-50 cursor-pointer whitespace-nowrap focus:outline-hidden focus:ring-2 focus:ring-[#174C37]/40"
                     disabled={working}
                     onClick={() => void handlePublishMinutes()}
                     type="button"
                   >
-                    <Send className="w-3.5 h-3.5 text-[#D6A23A]" />
+                    <Send className="w-4 h-4 text-[#D6A23A] shrink-0" />
                     <span>Save &amp; Publish to Meeting Hub</span>
                   </button>
                 </div>
@@ -1119,7 +1115,7 @@ export function DocumentDraftEditor({
           </div>
         </div>
       ) : (
-        <div className="p-5 rounded-xl bg-[#FAF6F0]/70 border border-dashed border-[#E5DDD3] text-xs text-[#5C4638]">
+        <div className="p-5 rounded-xl bg-[#FAF6F0]/70 border border-dashed border-[#E5DDD3] text-xs sm:text-sm text-[#5C4638]">
           {docType === "minutes"
             ? "Paste or type meeting notes above, preview privacy masking, and click 'Draft Structured Minutes' to populate section editors."
             : "No AI draft has been generated for this scope yet. You can download the deterministic PDF immediately or click Draft above to add AI commentary."}

@@ -308,7 +308,7 @@ export function AiSummaryPanel({
   return (
     <section
       aria-label={title}
-      className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-5 shadow-2xs space-y-3"
+      className="bg-white rounded-xl border border-[#E5DDD3] p-4 sm:p-5 shadow-2xs space-y-3"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-0.5 min-w-0">
@@ -341,7 +341,7 @@ export function AiSummaryPanel({
 
       {errorMsg && (
         <div
-          className="p-3 rounded-xl bg-[#FFF9F8] border border-[#F5C2C2] text-xs font-medium text-[#BA3C2A] flex items-start gap-2"
+          className="p-3 rounded-[10px] bg-[#FFF9F8] border border-[#F5C2C2] text-xs font-medium text-[#BA3C2A] flex items-start gap-2"
           role="alert"
         >
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -350,7 +350,7 @@ export function AiSummaryPanel({
       )}
 
       {loadingInitial && (
-        <div className="p-4 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] animate-pulse space-y-2">
+        <div className="p-4 rounded-[10px] bg-[#FAF6F0] border border-[#E5DDD3] animate-pulse space-y-2">
           <div className="h-3.5 w-2/3 bg-[#E5DDD3] rounded" />
           <div className="h-3 w-full bg-[#E5DDD3] rounded" />
           <div className="h-3 w-5/6 bg-[#E5DDD3] rounded" />
@@ -358,10 +358,10 @@ export function AiSummaryPanel({
       )}
 
       {!loadingInitial && narrative && (
-        <div className="rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] p-4 space-y-3">
+        <div className="rounded-[10px] bg-[#FAF6F0] border border-[#E5DDD3] p-4 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[#E5DDD3]">
             {narrative.status === "approved" ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EAF4EE] border border-[#BBDAC6] text-[#174C37] text-[11px] font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EAF4EE] border border-[#BBDAC6] text-[#174C37] text-xs font-semibold">
                 <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                 <span>
                   Approved · Included in PDFs (Reviewed by{" "}
@@ -370,28 +370,28 @@ export function AiSummaryPanel({
                 </span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FDF8EE] border border-[#EED7A1] text-[#8D5B0E] text-[11px] font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FDF8EE] border border-[#EED7A1] text-[#8D5B0E] text-xs font-semibold">
                 <span>Draft — not included in PDFs until approved</span>
               </span>
             )}
 
-            <span className="text-[11px] font-mono text-[#7A685D]">
+            <span className="text-xs font-mono text-[#5C4638]">
               {narrative.provider} · {narrative.model}
             </span>
           </div>
 
           {!isEditing ? (
-            <div className="space-y-3 text-xs sm:text-sm text-[#3D291F]">
+            <div className="space-y-3 text-sm text-[#3D291F] max-w-4xl">
               <p className="font-bold leading-snug">
                 {narrative.content.headline}
               </p>
 
               {narrative.content.highlights.length > 0 && (
                 <div>
-                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#174C37] mb-1">
+                  <h3 className="text-xs font-bold text-[#174C37] mb-1">
                     Highlights
                   </h3>
-                  <ul className="list-disc pl-4 space-y-1 text-xs text-[#3D291F]">
+                  <ul className="list-disc pl-4 space-y-1 text-xs sm:text-[13px] text-[#3D291F] leading-relaxed">
                     {narrative.content.highlights.map((line) => (
                       <li key={`h:${line}`}>{line}</li>
                     ))}
@@ -401,10 +401,10 @@ export function AiSummaryPanel({
 
               {narrative.content.risks.length > 0 && (
                 <div>
-                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8D5B0E] mb-1">
+                  <h3 className="text-xs font-bold text-[#8D5B0E] mb-1">
                     Watchpoints
                   </h3>
-                  <ul className="list-disc pl-4 space-y-1 text-xs text-[#3D291F]">
+                  <ul className="list-disc pl-4 space-y-1 text-xs sm:text-[13px] text-[#3D291F] leading-relaxed">
                     {narrative.content.risks.map((line) => (
                       <li key={`r:${line}`}>{line}</li>
                     ))}
@@ -414,10 +414,10 @@ export function AiSummaryPanel({
 
               {narrative.content.recommendations.length > 0 && (
                 <div>
-                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#5C4638] mb-1">
+                  <h3 className="text-xs font-bold text-[#5C4638] mb-1">
                     Recommendations
                   </h3>
-                  <ul className="list-disc pl-4 space-y-1 text-xs text-[#3D291F]">
+                  <ul className="list-disc pl-4 space-y-1 text-xs sm:text-[13px] text-[#3D291F] leading-relaxed">
                     {narrative.content.recommendations.map((line) => (
                       <li key={`rec:${line}`}>{line}</li>
                     ))}
@@ -476,7 +476,7 @@ export function AiSummaryPanel({
                   Headline
                 </label>
                 <input
-                  className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#E5DDD3] bg-white text-xs text-[#3D291F]"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-[10px] border border-[#E5DDD3] bg-white text-sm text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                   id={`ai-headline-${reportType}`}
                   maxLength={220}
                   onChange={(e) => setEditHeadline(e.target.value)}
@@ -493,7 +493,7 @@ export function AiSummaryPanel({
                   Highlights (one per line, up to 5)
                 </label>
                 <textarea
-                  className="w-full min-h-[88px] px-3 py-2 rounded-xl border border-[#E5DDD3] bg-white text-xs text-[#3D291F]"
+                  className="w-full min-h-[88px] px-3 py-2 rounded-[10px] border border-[#E5DDD3] bg-white text-sm text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                   id={`ai-highlights-${reportType}`}
                   onChange={(e) => setEditHighlights(e.target.value)}
                   rows={3}
@@ -509,7 +509,7 @@ export function AiSummaryPanel({
                   Watchpoints (one per line, up to 4)
                 </label>
                 <textarea
-                  className="w-full min-h-[72px] px-3 py-2 rounded-xl border border-[#E5DDD3] bg-white text-xs text-[#3D291F]"
+                  className="w-full min-h-[72px] px-3 py-2 rounded-[10px] border border-[#E5DDD3] bg-white text-sm text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                   id={`ai-risks-${reportType}`}
                   onChange={(e) => setEditRisks(e.target.value)}
                   rows={2}
@@ -525,7 +525,7 @@ export function AiSummaryPanel({
                   Recommendations (one per line, up to 3)
                 </label>
                 <textarea
-                  className="w-full min-h-[72px] px-3 py-2 rounded-xl border border-[#E5DDD3] bg-white text-xs text-[#3D291F]"
+                  className="w-full min-h-[72px] px-3 py-2 rounded-[10px] border border-[#E5DDD3] bg-white text-sm text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                   id={`ai-recs-${reportType}`}
                   onChange={(e) => setEditRecommendations(e.target.value)}
                   rows={2}

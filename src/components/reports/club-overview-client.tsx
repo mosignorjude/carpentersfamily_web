@@ -101,6 +101,18 @@ export function ClubOverviewClient({
   const [mode, setMode] = useState<ReportsStudioMode>(
     initialMode ?? (initialDraftDoc || initialMeetingId ? "drafts" : "brief"),
   );
+  const switchMode = (nextMode: ReportsStudioMode) => {
+    setMode(nextMode);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("mode", nextMode);
+      window.history.replaceState(
+        null,
+        "",
+        url.pathname + url.search + url.hash,
+      );
+    }
+  };
   const [draftDocOverride, setDraftDocOverride] = useState<
     DocumentDraftType | undefined
   >(initialDraftDoc);
@@ -129,7 +141,7 @@ export function ClubOverviewClient({
       const targetPeriodParam = isWholeYear
         ? `year:${item.periodStart.slice(0, 4)}`
         : `month:${item.periodStart.slice(0, 7)}`;
-      setMode("brief");
+      switchMode("brief");
       if (targetPeriodParam !== period.periodParam) {
         navigatePeriod(targetPeriodParam);
       }
@@ -146,12 +158,12 @@ export function ClubOverviewClient({
         item.reportType === "minutes" ? (item.scopeId ?? undefined) : undefined,
       );
       setDraftOpenNonce((n) => n + 1);
-      setMode("drafts");
+      switchMode("drafts");
       return;
     }
 
     if (item.reportType === "custom") {
-      setMode("custom");
+      switchMode("custom");
     }
   };
 
@@ -167,14 +179,11 @@ export function ClubOverviewClient({
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto w-full p-4 sm:p-6 lg:p-8">
-      {/* Studio Header */}
-      <section className="bg-white rounded-2xl border border-[#E5DDD3] p-5 sm:p-6 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* Studio Editorial Header + Horizontal Underline Mode Rail */}
+      <header className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div className="space-y-1">
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#174C37]">
-              Officer Reports Workspace
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#3D291F] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#3D291F] tracking-tight leading-tight">
               AI Reports Centre
             </h1>
             <p className="text-xs sm:text-sm text-[#5C4638]">
@@ -198,90 +207,90 @@ export function ClubOverviewClient({
           </div>
         )}
 
-        {/* 4-Mode Segmented Navigation */}
+        {/* 4-Mode Horizontal Underline Workspace Navigation */}
         <div
           aria-label="AI Reports Centre modes"
-          className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 bg-[#FAF6F0] p-1.5 rounded-2xl border border-[#E5DDD3] overflow-x-auto"
+          className="flex items-center gap-1 sm:gap-2 border-b border-[#E5DDD3] overflow-x-auto"
           role="tablist"
         >
           <button
             aria-selected={mode === "brief"}
-            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] whitespace-nowrap ${
+            className={`inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold transition-colors cursor-pointer min-h-[44px] whitespace-nowrap border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] ${
               mode === "brief"
-                ? "bg-[#174C37] text-white shadow-xs"
-                : "text-[#54433A] hover:bg-white hover:text-[#3D291F]"
+                ? "border-[#174C37] text-[#174C37]"
+                : "border-transparent text-[#5C4638] hover:text-[#3D291F]"
             }`}
-            onClick={() => setMode("brief")}
+            onClick={() => switchMode("brief")}
             role="tab"
             type="button"
           >
-            <Sparkles className="w-3.5 h-3.5 shrink-0" />
+            <Sparkles className="w-4 h-4 shrink-0" />
             <span>Executive Brief</span>
           </button>
 
           <button
             aria-selected={mode === "drafts"}
-            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] whitespace-nowrap ${
+            className={`inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold transition-colors cursor-pointer min-h-[44px] whitespace-nowrap border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] ${
               mode === "drafts"
-                ? "bg-[#174C37] text-white shadow-xs"
-                : "text-[#54433A] hover:bg-white hover:text-[#3D291F]"
+                ? "border-[#174C37] text-[#174C37]"
+                : "border-transparent text-[#5C4638] hover:text-[#3D291F]"
             }`}
-            onClick={() => setMode("drafts")}
+            onClick={() => switchMode("drafts")}
             role="tab"
             type="button"
           >
-            <FileText className="w-3.5 h-3.5 shrink-0" />
+            <FileText className="w-4 h-4 shrink-0" />
             <span>Document Studio</span>
           </button>
 
           <button
             aria-selected={mode === "custom"}
-            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] whitespace-nowrap ${
+            className={`inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold transition-colors cursor-pointer min-h-[44px] whitespace-nowrap border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] ${
               mode === "custom"
-                ? "bg-[#174C37] text-white shadow-xs"
-                : "text-[#54433A] hover:bg-white hover:text-[#3D291F]"
+                ? "border-[#174C37] text-[#174C37]"
+                : "border-transparent text-[#5C4638] hover:text-[#3D291F]"
             }`}
-            onClick={() => setMode("custom")}
+            onClick={() => switchMode("custom")}
             role="tab"
             type="button"
           >
-            <SearchCode className="w-3.5 h-3.5 shrink-0" />
+            <SearchCode className="w-4 h-4 shrink-0" />
             <span>Custom Query</span>
           </button>
 
           <button
             aria-selected={mode === "library"}
-            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] whitespace-nowrap ${
+            className={`inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold transition-colors cursor-pointer min-h-[44px] whitespace-nowrap border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] ${
               mode === "library"
-                ? "bg-[#174C37] text-white shadow-xs"
-                : "text-[#54433A] hover:bg-white hover:text-[#3D291F]"
+                ? "border-[#174C37] text-[#174C37]"
+                : "border-transparent text-[#5C4638] hover:text-[#3D291F]"
             }`}
-            onClick={() => setMode("library")}
+            onClick={() => switchMode("library")}
             role="tab"
             type="button"
           >
-            <Archive className="w-3.5 h-3.5 shrink-0" />
+            <Archive className="w-4 h-4 shrink-0" />
             <span>Saved Library</span>
             <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-mono tabular-nums ${
+              className={`px-2 py-0.5 rounded-full text-xs font-mono tabular-nums ${
                 mode === "library"
-                  ? "bg-white/15 text-white"
-                  : "bg-white text-[#7A685D] border border-[#E5DDD3]"
+                  ? "bg-[#174C37]/10 text-[#174C37]"
+                  : "bg-white text-[#5C4638] border border-[#E5DDD3]"
               }`}
             >
               {libraryItems.length}
             </span>
           </button>
         </div>
-      </section>
+      </header>
 
       {/* Active Studio Mode Panel */}
       <div className="space-y-6" role="tabpanel">
         {mode === "brief" && (
           <>
             {/* Period Controls + Exports */}
-            <section className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-5 shadow-xs space-y-3">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <section className="bg-white rounded-xl border border-[#E5DDD3] p-4 sm:p-5 shadow-2xs space-y-3">
+              <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <CfFilterPill
                     active={period.periodParam === currentMonthParam}
@@ -302,12 +311,12 @@ export function ClubOverviewClient({
                     Full Year ({currentYearParam.slice(5)})
                   </CfFilterPill>
 
-                  <div className="flex items-center gap-1.5 pl-1">
+                  <div className="flex items-center">
                     <label className="sr-only" htmlFor="overview-month-picker">
                       Choose month
                     </label>
                     <input
-                      className="min-h-[44px] px-3 py-1.5 rounded-xl border border-[#E5DDD3] bg-[#FAF6F0] text-xs font-semibold text-[#3D291F]"
+                      className="min-h-[44px] px-3 py-1.5 rounded-[10px] border border-[#E5DDD3] bg-[#FAF6F0] text-xs font-semibold text-[#3D291F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                       id="overview-month-picker"
                       onChange={(e) => {
                         const val = e.target.value;
@@ -322,7 +331,7 @@ export function ClubOverviewClient({
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
                   <label className="inline-flex items-center gap-2 min-h-[44px] px-2 text-xs text-[#5C4638] cursor-pointer select-none">
                     <input
                       checked={includeAi}
@@ -333,7 +342,7 @@ export function ClubOverviewClient({
                     <span>Include approved AI summary in PDF</span>
                   </label>
                   <a
-                    className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs"
+                    className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-[10px] bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors whitespace-nowrap shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-1"
                     href={pdfHref}
                     rel="noopener"
                     target="_blank"
@@ -342,7 +351,7 @@ export function ClubOverviewClient({
                     <span>Download Branded PDF</span>
                   </a>
                   <a
-                    className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-[#FAF6F0] border border-[#E5DDD3] text-[#3D291F] text-xs font-bold hover:bg-white transition-colors shadow-2xs"
+                    className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-[10px] bg-white border border-[#E5DDD3] text-[#3D291F] text-xs font-bold hover:bg-[#FAF6F0] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37] focus-visible:ring-offset-1"
                     href={csvHref}
                     rel="noopener"
                     target="_blank"
@@ -366,85 +375,85 @@ export function ClubOverviewClient({
 
                 <section
                   aria-label="Key Overview Totals"
-                  className="grid grid-cols-2 lg:grid-cols-3 gap-3"
+                  className="grid grid-cols-2 lg:grid-cols-3 gap-3.5"
                 >
-                  <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#5C4638]">
+                  <div className="bg-white rounded-xl border border-[#E5DDD3] p-4 sm:p-5">
+                    <span className="text-xs font-semibold text-[#5C4638]">
                       Current Club Balance
                     </span>
-                    <p className="text-lg sm:text-xl font-extrabold text-[#174C37] mt-1 tabular-nums">
+                    <p className="text-lg sm:text-xl font-extrabold font-mono text-[#174C37] mt-1 tabular-nums">
                       {formatNaira(facts.club_finance.current_club_balance_ngn)}
                     </p>
                   </div>
-                  <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#5C4638]">
+                  <div className="bg-white rounded-xl border border-[#E5DDD3] p-4 sm:p-5">
+                    <span className="text-xs font-semibold text-[#5C4638]">
                       Period Dues Collected
                     </span>
-                    <p className="text-lg sm:text-xl font-extrabold text-[#3D291F] mt-1 tabular-nums">
+                    <p className="text-lg sm:text-xl font-extrabold font-mono text-[#3D291F] mt-1 tabular-nums">
                       {formatNaira(
                         facts.club_finance.period_dues_collected_ngn,
                       )}
                     </p>
                   </div>
-                  <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#5C4638]">
+                  <div className="bg-white rounded-xl border border-[#E5DDD3] p-4 sm:p-5">
+                    <span className="text-xs font-semibold text-[#5C4638]">
                       Period Operating Expenses
                     </span>
-                    <p className="text-lg sm:text-xl font-extrabold text-[#BA3C2A] mt-1 tabular-nums">
+                    <p className="text-lg sm:text-xl font-extrabold font-mono text-[#BA3C2A] mt-1 tabular-nums">
                       {formatNaira(facts.club_finance.period_expenses_ngn)}
                     </p>
                   </div>
-                  <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#5C4638]">
+                  <div className="bg-white rounded-xl border border-[#E5DDD3] p-4 sm:p-5">
+                    <span className="text-xs font-semibold text-[#5C4638]">
                       Dues Collection Rate
                     </span>
-                    <p className="text-lg sm:text-xl font-extrabold text-[#3D291F] mt-1 tabular-nums">
+                    <p className="text-lg sm:text-xl font-extrabold font-mono text-[#3D291F] mt-1 tabular-nums">
                       {facts.dues.collection_rate_pct}%
                     </p>
-                    <span className="text-[11px] text-[#7A685D]">
+                    <span className="text-xs text-[#5C4638]">
                       {facts.dues.overdue_three_plus_members} members 3+ mos
                       overdue
                     </span>
                   </div>
-                  <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#5C4638]">
+                  <div className="bg-white rounded-xl border border-[#E5DDD3] p-4 sm:p-5">
+                    <span className="text-xs font-semibold text-[#5C4638]">
                       Net Event Cash
                     </span>
-                    <p className="text-lg sm:text-xl font-extrabold text-[#174C37] mt-1 tabular-nums">
+                    <p className="text-lg sm:text-xl font-extrabold font-mono text-[#174C37] mt-1 tabular-nums">
                       {formatNaira(facts.events.net_event_cash_ngn)}
                     </p>
-                    <span className="text-[11px] text-[#7A685D]">
+                    <span className="text-xs text-[#5C4638]">
                       {facts.events.events_count} events ·{" "}
                       {facts.events.tickets_sold} tickets sold
                     </span>
                   </div>
-                  <div className="bg-white rounded-2xl border border-[#E5DDD3] p-4">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#5C4638]">
+                  <div className="bg-white rounded-xl border border-[#E5DDD3] p-4 sm:p-5">
+                    <span className="text-xs font-semibold text-[#5C4638]">
                       Attendance Check-ins
                     </span>
-                    <p className="text-lg sm:text-xl font-extrabold text-[#3D291F] mt-1 tabular-nums">
+                    <p className="text-lg sm:text-xl font-extrabold font-mono text-[#3D291F] mt-1 tabular-nums">
                       {facts.attendance.total_checkins}
                     </p>
-                    <span className="text-[11px] text-[#7A685D]">
+                    <span className="text-xs text-[#5C4638]">
                       Across {facts.attendance.sessions_count} sessions
                     </span>
                   </div>
                 </section>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <section className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-5 space-y-3">
+                  <section className="bg-white rounded-xl border border-[#E5DDD3] p-4 sm:p-5 space-y-3">
                     <h2 className="text-sm font-bold text-[#3D291F]">
                       Operating Expenses by Category
                     </h2>
                     {facts.club_finance.expense_by_category.length === 0 ? (
-                      <p className="text-xs text-[#7A685D] py-3">
+                      <p className="text-xs text-[#5C4638] py-3">
                         No club operating expenses were recorded in this period.
                       </p>
                     ) : (
                       <div className="divide-y divide-[#E5DDD3]">
                         {facts.club_finance.expense_by_category.map((cat) => (
                           <div
-                            className="py-2 flex items-center justify-between gap-2 text-xs"
+                            className="py-2.5 flex items-center justify-between gap-2 text-xs sm:text-[13px]"
                             key={cat.category}
                           >
                             <span className="font-semibold text-[#3D291F]">
@@ -459,19 +468,19 @@ export function ClubOverviewClient({
                     )}
                   </section>
 
-                  <section className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-5 space-y-3">
+                  <section className="bg-white rounded-xl border border-[#E5DDD3] p-4 sm:p-5 space-y-3">
                     <h2 className="text-sm font-bold text-[#3D291F]">
                       Event Cash Results in Period
                     </h2>
                     {facts.events.top_events.length === 0 ? (
-                      <p className="text-xs text-[#7A685D] py-3">
+                      <p className="text-xs text-[#5C4638] py-3">
                         No scheduled events fell within this period.
                       </p>
                     ) : (
                       <div className="divide-y divide-[#E5DDD3]">
                         {facts.events.top_events.map((ev) => (
                           <div
-                            className="py-2 flex items-center justify-between gap-2 text-xs"
+                            className="py-2.5 flex items-center justify-between gap-2 text-xs sm:text-[13px]"
                             key={ev.title}
                           >
                             <span className="font-semibold text-[#3D291F]">

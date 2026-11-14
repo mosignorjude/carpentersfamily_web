@@ -54,7 +54,7 @@ export function ReceiptModal({
         onClick={onClose}
         type="button"
       />
-      <div className="relative z-10 bg-white rounded-2xl border border-[#E5DDD3] w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-150">
+      <div className="relative z-10 bg-white rounded-xl border border-[#E5DDD3] w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="p-5 border-b border-[#E5DDD3] bg-[#FAF6F0] flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -161,7 +161,7 @@ export function ReceiptModal({
                     </div>
 
                     <a
-                      className="px-3 py-1.5 rounded-lg bg-[#FAF6F0] border border-[#E5DDD3] text-[#174C37] hover:bg-[#174C37] hover:text-white font-bold text-xs transition-colors flex items-center gap-1.5 shrink-0"
+                      className="min-h-[44px] px-3.5 py-2 rounded-[10px] bg-[#FAF6F0] border border-[#E5DDD3] text-[#174C37] hover:bg-[#174C37] hover:text-white font-bold text-xs transition-colors inline-flex items-center gap-1.5 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#174C37]"
                       download
                       href={`/api/receipts/${receipt.id}`}
                     >
