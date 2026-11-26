@@ -1032,3 +1032,42 @@ export function announcementPreview(message, maximumLength = 240) {
   if (normalized.length <= maximumLength) return normalized;
   return `${normalized.slice(0, maximumLength).trimEnd()}…`;
 }
+
+/**
+ * Resolve the destination URL for an upcoming club event or meeting on Home.
+ * Meetings open in Meeting Hub; non-meeting events open the event dashboard
+ * for officers (when dashboard modules are enabled) or the Events card anchor.
+ *
+ * @param {{
+ *   id?: string | null;
+ *   eventType?: string | null;
+ *   budgetEnabled?: boolean | null;
+ *   incomeEnabled?: boolean | null;
+ *   expensesEnabled?: boolean | null;
+ *   ticketingEnabled?: boolean | null;
+ * } | null | undefined} event
+ * @param {{ isOfficer?: boolean }} [options]
+ * @returns {string}
+ */
+export function getHomeEventDetailsHref(event, { isOfficer = false } = {}) {
+  if (!event || typeof event.id !== "string" || event.id.length === 0) {
+    return "/events";
+  }
+
+  const encodedId = encodeURIComponent(event.id);
+  if (event.eventType === "meeting") {
+    return `/meeting-hub?event=${encodedId}`;
+  }
+
+  const hasDashboardFeatures = Boolean(
+    event.budgetEnabled ||
+      event.incomeEnabled ||
+      event.expensesEnabled ||
+      event.ticketingEnabled,
+  );
+  if (isOfficer && hasDashboardFeatures) {
+    return `/events/${encodedId}/dashboard`;
+  }
+
+  return `/events#event-${encodedId}`;
+}

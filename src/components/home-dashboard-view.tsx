@@ -12,6 +12,7 @@ import QuickLinksSection from "@/components/home/quick-links-section";
 import RecentAnnouncementsCard from "@/components/home/recent-announcements-card";
 import { clubBrand } from "@/lib/brand";
 import { formatGreetingUsername, getTimeOfDayGreeting } from "@/lib/greeting";
+import { getHomeEventDetailsHref } from "@/lib/home-dashboard.mjs";
 import type {
   HomeDashboardAnnouncement,
   HomeDashboardData,
@@ -63,10 +64,14 @@ export default function HomeDashboardView({
             id: `evt-${evt.id}`,
             category: "event_activity",
             title: evt.title,
-            body: `${evt.location} - Scheduled club event`,
+            body: `${evt.location} - ${
+              evt.eventType === "meeting"
+                ? "Scheduled club meeting"
+                : "Scheduled club event"
+            }`,
             createdAt: evt.startsAt,
             readAt: null,
-            href: `/events#event-${evt.id}`,
+            href: getHomeEventDetailsHref(evt),
           })),
         ].slice(0, 5)
       : dashboard.activity.rows;

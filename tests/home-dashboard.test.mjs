@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   announcementPreview,
   getHomeDashboardData,
+  getHomeEventDetailsHref,
 } from "../src/lib/home-dashboard.mjs";
 
 const memberId = "d5d0ea41-f8f1-4d12-b841-47c79cf4ac01";
@@ -776,4 +778,79 @@ test("dashboard attaches uploaded officer dues receipts to paid months", async (
       sizeBytes: 2048,
     },
   });
+});
+
+test("getHomeEventDetailsHref routes meetings to Meeting Hub and events to /events or event dashboard", () => {
+  const meetingEvent = {
+    id: eventId,
+    eventType: "meeting",
+    budgetEnabled: true,
+    incomeEnabled: true,
+    expensesEnabled: true,
+    ticketingEnabled: true,
+  };
+  assert.equal(
+    getHomeEventDetailsHref(meetingEvent, { isOfficer: false }),
+    `/meeting-hub?event=${eventId}`,
+  );
+  assert.equal(
+    getHomeEventDetailsHref(meetingEvent, { isOfficer: true }),
+    `/meeting-hub?event=${eventId}`,
+  );
+
+  const partyWithDashboard = {
+    id: eventId,
+    eventType: "party",
+    budgetEnabled: true,
+    incomeEnabled: false,
+    expensesEnabled: false,
+    ticketingEnabled: true,
+  };
+  assert.equal(
+    getHomeEventDetailsHref(partyWithDashboard, { isOfficer: true }),
+    `/events/${eventId}/dashboard`,
+  );
+  assert.equal(
+    getHomeEventDetailsHref(partyWithDashboard, { isOfficer: false }),
+    `/events#event-${eventId}`,
+  );
+
+  const simpleEvent = {
+    id: eventId,
+    eventType: "other",
+    budgetEnabled: false,
+    incomeEnabled: false,
+    expensesEnabled: false,
+    ticketingEnabled: false,
+  };
+  assert.equal(
+    getHomeEventDetailsHref(simpleEvent, { isOfficer: true }),
+    `/events#event-${eventId}`,
+  );
+  assert.equal(
+    getHomeEventDetailsHref(simpleEvent, { isOfficer: false }),
+    `/events#event-${eventId}`,
+  );
+  assert.equal(getHomeEventDetailsHref(null), "/events");
+});
+
+test("Home components wire getHomeEventDetailsHref for View Details and fallback event activity", () => {
+  const nextUpSource = readFileSync(
+    new URL("../src/components/home/next-up-events-card.tsx", import.meta.url),
+    "utf8",
+  );
+  const homeViewSource = readFileSync(
+    new URL("../src/components/home-dashboard-view.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    nextUpSource,
+    /getHomeEventDetailsHref\(evt,\s*\{\s*isOfficer\s*\}\)/,
+  );
+  assert.match(homeViewSource, /getHomeEventDetailsHref\(evt\)/);
+  assert.match(
+    homeViewSource,
+    /evt\.eventType === "meeting"\s*\?\s*"Scheduled club meeting"\s*:\s*"Scheduled club event"/,
+  );
 });

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { formatEventTime } from "@/lib/event-times.mjs";
+import { getHomeEventDetailsHref } from "@/lib/home-dashboard.mjs";
 import type { HomeDashboardEvent } from "@/lib/home-dashboard.server";
 
 const dateFormatter = new Intl.DateTimeFormat("en-NG", {
@@ -138,22 +139,13 @@ export function NextUpEventsCard({ events, roles }: NextUpEventsCardProps) {
                   ? "Status Unavailable"
                   : "Check In";
 
-          const hasDashboardFeatures = Boolean(
-            evt.budgetEnabled ||
-              evt.incomeEnabled ||
-              evt.expensesEnabled ||
-              evt.ticketingEnabled,
-          );
           const canTransact = Boolean(
             isOfficer &&
               (evt.ticketingEnabled ||
                 evt.incomeEnabled ||
                 evt.expensesEnabled),
           );
-          const detailsHref =
-            isOfficer && hasDashboardFeatures
-              ? `/events/${evt.id}/dashboard`
-              : "/events";
+          const detailsHref = getHomeEventDetailsHref(evt, { isOfficer });
           const showAttendance =
             evt.attendanceEnabled && evt.eventType !== "party";
 
