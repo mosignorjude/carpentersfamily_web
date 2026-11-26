@@ -85,6 +85,63 @@ export function canReviewDuesRequest({
 }
 
 /**
+ * Evaluates whether an officer can directly record a dues payment or attach a
+ * dues payment receipt for a specific target member.
+ * @param {Object} params
+ * @param {string} [params.actorId]
+ * @param {string[] | Set<string>} params.actorRoles
+ * @param {string} [params.targetMemberId]
+ * @param {string[] | Set<string>} [params.targetRoles]
+ * @returns {{ allowed: boolean, reason: string | null }}
+ */
+export function canRecordDuesForMember({
+  actorId,
+  actorRoles,
+  targetMemberId,
+  targetRoles = [],
+}) {
+  const actorRoleSet = new Set(actorRoles || []);
+  const targetRoleSet = new Set(targetRoles || []);
+
+  if (!canManageDues(actorRoleSet)) {
+    return {
+      allowed: false,
+      reason: "Only an Executive, Club Admin, or President may record dues.",
+    };
+  }
+
+  if (targetRoleSet.has("admin")) {
+    return {
+      allowed: false,
+      reason:
+        "Club Admins are exempt from statutory dues while holding the Admin role.",
+    };
+  }
+
+  if (actorId && targetMemberId && actorId === targetMemberId) {
+    return {
+      allowed: false,
+      reason:
+        "Officers cannot record their own dues payments. Submit your payment via Pay Dues so another officer can review it.",
+    };
+  }
+
+  if (
+    targetRoleSet.has("president") &&
+    !actorRoleSet.has("executive") &&
+    !actorRoleSet.has("admin")
+  ) {
+    return {
+      allowed: false,
+      reason:
+        "Only an Executive or Club Admin may record the President's dues payments.",
+    };
+  }
+
+  return { allowed: true, reason: null };
+}
+
+/**
  * Formats covered months array for human-readable display.
  * @param {string[]} months
  * @returns {string}

@@ -45,13 +45,16 @@ describe("Issue 03: prelaunch dues scope and October continuity for reconciled m
       "backfill_member_historical_dues must align post-launch approved prelaunch members to starts_month = 2026-10-01",
     );
 
-    // 3. Reconciles Shedrach and Nwosu Daniel Ogechukwu cleanly
+    // 3. Reconciles Shedrach and Nwosu Daniel Ogechukwu cleanly without mutating historical dues tables in 20261113234828
+    const issue03MigrationSql =
+      contents[files.indexOf("20261113234828_prelaunch_october_dues_reconciliation_and_scope.sql")] ??
+      "";
     assert.match(sql, /e3d3c724-71e1-4f82-8532-f5da8330147d/);
     assert.match(sql, /d5850893-6592-423c-8472-9802da999d37/);
     assert.doesNotMatch(
-      sql,
+      issue03MigrationSql,
       /\b(?:delete|update)\s+(?:from\s+)?public\.(?:dues_payments|dues_month_dispositions)\b/i,
-      "migration must not modify or delete existing dues_payments or dues_month_dispositions rows",
+      "20261113234828 migration must not modify or delete existing dues_payments or dues_month_dispositions rows",
     );
   });
 

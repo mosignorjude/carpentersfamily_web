@@ -14,9 +14,13 @@ import type { DuesPaymentRequestItem } from "./officer-dues-approvals-card";
 
 interface MyDuesRequestsCardProps {
   requests: DuesPaymentRequestItem[];
+  title?: string;
 }
 
-export function MyDuesRequestsCard({ requests = [] }: MyDuesRequestsCardProps) {
+export function MyDuesRequestsCard({
+  requests = [],
+  title = "My Submitted Payments",
+}: MyDuesRequestsCardProps) {
   if (requests.length === 0) return null;
 
   const formatNaira = (amount: number | string) =>
@@ -113,7 +117,7 @@ export function MyDuesRequestsCard({ requests = [] }: MyDuesRequestsCardProps) {
             className="text-base font-extrabold text-[#3D291F] tracking-tight"
             id="my-requests-heading"
           >
-            My Submitted Payments
+            {title}
           </h2>
         </div>
         <span className="text-xs text-[#54433A]">

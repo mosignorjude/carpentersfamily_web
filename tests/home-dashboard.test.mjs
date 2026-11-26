@@ -54,6 +54,10 @@ function createSupabase({ tables = {}, rpcs = {} } = {}) {
           call.filters.push({ method: "gt", column, value });
           return builder;
         },
+        in(column, values) {
+          call.filters.push({ method: "in", column, values });
+          return builder;
+        },
         lt(column, value) {
           call.filters.push({ method: "lt", column, value });
           return builder;
@@ -693,4 +697,83 @@ test("activity accepts 300-codepoint notification bodies containing surrogate-pa
   assert.equal(dashboard.activity.unavailable, false);
   assert.equal(dashboard.activity.rows.length, 1);
   assert.equal(dashboard.activity.rows[0].body, emojiBody);
+});
+
+test("dashboard attaches uploaded officer dues receipts to paid months", async () => {
+  const paymentId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const receiptId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  const supabase = createSupabase({
+    tables: {
+      dues_month_status: {
+        data: [
+          {
+            member_id: memberId,
+            covered_month: "2026-10-01",
+            amount_ngn: "5000",
+            status: "paid",
+            due_date: "2026-10-31",
+            is_overdue: false,
+          },
+        ],
+        error: null,
+      },
+      dues_month_dispositions: {
+        data: [
+          {
+            member_id: memberId,
+            covered_month: "2026-10-01",
+            disposition: "paid",
+            payment_id: paymentId,
+          },
+        ],
+        error: null,
+      },
+      dues_payments: {
+        data: [
+          {
+            id: paymentId,
+            member_id: memberId,
+            amount_ngn: "5000",
+            payment_date: "2026-10-15",
+            payment_method: "bank_transfer",
+            request_id: null,
+            recorded_at: "2026-10-15T12:00:00.000Z",
+            corrected_at: null,
+          },
+        ],
+        error: null,
+      },
+      finance_receipts: {
+        data: [
+          {
+            id: receiptId,
+            dues_payment_id: paymentId,
+            dues_request_id: null,
+            original_filename: "october-transfer.pdf",
+            content_type: "application/pdf",
+            size_bytes: 2048,
+          },
+        ],
+        error: null,
+      },
+    },
+  });
+
+  const dashboard = await getHomeDashboardData(supabase, memberId, now);
+  assert.equal(dashboard.dues.unavailable, false);
+  assert.equal(dashboard.dues.rows.length, 1);
+  assert.deepEqual(dashboard.dues.rows[0].receipt, {
+    paymentId,
+    amountNgn: 5000,
+    paymentDate: "2026-10-15",
+    paymentMethod: "bank_transfer",
+    recordedAt: "2026-10-15T12:00:00.000Z",
+    correctedAt: null,
+    fileReceipt: {
+      id: receiptId,
+      filename: "october-transfer.pdf",
+      contentType: "application/pdf",
+      sizeBytes: 2048,
+    },
+  });
 });

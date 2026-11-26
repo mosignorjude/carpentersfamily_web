@@ -4,12 +4,14 @@ import {
   Building2,
   CheckCircle2,
   CreditCard,
+  ExternalLink,
   Receipt,
   ShieldAlert,
   ShieldCheck,
   User,
   XCircle,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import {
   approveDuesPaymentRequestAction,
@@ -200,13 +202,20 @@ export function OfficerDuesApprovalsCard({
                     </div>
                   </div>
 
-                  <div className="text-right">
+                  <div className="text-right space-y-1">
                     <span className="text-lg font-black font-mono text-[#174C37] tabular-nums block">
                       {formatNaira(req.amount_ngn)}
                     </span>
-                    <span className="text-[11px] font-bold text-[#54433A]">
+                    <span className="text-[11px] font-bold text-[#54433A] block">
                       {formatCoveredMonthsDisplay(req.covered_months)}
                     </span>
+                    <Link
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-[#174C37] hover:underline"
+                      href={`/dues/members/${req.member_id}`}
+                    >
+                      <span>Open Ledger</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </Link>
                   </div>
                 </div>
 

@@ -5,67 +5,17 @@ import type { DuesPaymentRequestItem } from "@/components/dues/officer-dues-appr
 import type { ReconciliationMember } from "@/components/dues/pre-launch-dues-reconciliation-card";
 import { isAiReportsEnabled } from "@/lib/ai/provider.server";
 import { canManageDues } from "@/lib/dues-governance.mjs";
+import {
+  type DuesStatusRow,
+  loadMemberDuesLedger,
+} from "@/lib/dues-ledger.server";
+import { getDuesNotice } from "@/lib/dues-notices";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { DuesMemberOption, DuesMonthOption } from "./dues-forms";
-
-type DuesStatusRow = {
-  member_id: string;
-  covered_month: string;
-  amount_ngn: number | string | null;
-  status: string;
-  due_date: string;
-  is_overdue: boolean;
-};
-
-type PaymentRow = {
-  id: string;
-  member_id: string;
-  amount_ngn: number | string;
-  payment_date: string;
-  recorded_by: string;
-  recorded_at: string;
-  corrected_at: string | null;
-};
-
-type DispositionRow = {
-  payment_id: string | null;
-  covered_month: string;
-  amount_ngn: number | string;
-  is_current: boolean;
-};
-
-type AuditRow = {
-  id: string;
-  actor_id: string;
-  action: string;
-  entity_type: string;
-  entity_id: string;
-  target_member_id: string | null;
-  before_data: Record<string, unknown> | null;
-  after_data: Record<string, unknown> | null;
-  reason: string;
-  occurred_at: string;
-};
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HISTORY_PAGE_SIZE = 50;
-
-const notices: Record<string, string> = {
-  saved: "Payment recorded.",
-  "rate-saved": "Monthly rate updated.",
-  denied: "You do not have permission to do that.",
-  "invalid-request": "Please check the details and try again.",
-  "operation-failed":
-    "Could not complete the request. Please check the details and try again.",
-  "dues-request-submitted":
-    "Payment submitted. An officer will review it soon.",
-  "dues-request-approved": "Payment approved.",
-  "dues-request-rejected": "Payment request declined.",
-  "historical-dues-reconciled": "Past dues cleared.",
-  "invalid-reconciliation-months":
-    "Selected months are outside the pre-launch period (Feb–Sep 2026).",
-};
 
 function todayInWAT() {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -173,9 +123,28 @@ export default async function DuesPage({
     !roleError &&
     (roles.has("executive") || roles.has("admin") || roles.has("president"));
   const canRecord = canManageDues(roles);
-  const canWriteOff = isOfficer;
   const canCorrect = roles.has("admin") || roles.has("president");
   const canChangeRate = canCorrect;
+
+  // Dedicated route redirect for legacy /dues?member_id=<otherUuid> links.
+  if (
+    isOfficer &&
+    params.member_id &&
+    uuidPattern.test(params.member_id) &&
+    params.member_id !== ownProfile.id
+  ) {
+    const forward = new URLSearchParams();
+    if (params.notice) forward.set("notice", params.notice);
+    if (
+      params.tab === "overview" ||
+      params.tab === "history" ||
+      params.tab === "audit"
+    ) {
+      forward.set("tab", params.tab);
+    }
+    const qs = forward.toString();
+    redirect(`/dues/members/${params.member_id}${qs ? `?${qs}` : ""}`);
+  }
 
   let members: DuesMemberOption[] = [
     {
@@ -197,61 +166,28 @@ export default async function DuesPage({
     if (memberRows) members = memberRows as DuesMemberOption[];
   }
 
-  const requestedMemberId =
-    isOfficer && params.member_id && uuidPattern.test(params.member_id)
-      ? params.member_id
-      : ownProfile.id;
-  const selectedMember = members.find(
-    (member) => member.id === requestedMemberId,
-  );
-  const member = selectedMember ?? {
+  const member: DuesMemberOption = {
     id: ownProfile.id,
     full_name: ownProfile.full_name,
     username: ownProfile.username,
     status: ownProfile.status,
   };
-  const targetMemberId = selectedMember ? requestedMemberId : ownProfile.id;
+  const targetMemberId = ownProfile.id;
   const invalidSelection = Boolean(
-    isOfficer && params.member_id && !selectedMember,
+    isOfficer && params.member_id && !uuidPattern.test(params.member_id),
   );
   const paymentPage = pageNumber(params.payment_page);
   const auditPage = pageNumber(params.audit_page);
 
-  const [
-    statusResult,
-    paymentResult,
-    rateResult,
-    incomeResult,
-    paymentSettingsResult,
-  ] = await Promise.all([
-    supabase
-      .from("dues_month_status")
-      .select(
-        "member_id, covered_month, amount_ngn, status, due_date, is_overdue",
-      )
-      .eq("member_id", targetMemberId)
-      .order("covered_month", { ascending: true })
-      .limit(1200),
-    supabase
-      .from("dues_payments")
-      .select(
-        "id, member_id, amount_ngn, payment_date, recorded_by, recorded_at, corrected_at",
-        { count: "exact" },
-      )
-      .eq("member_id", targetMemberId)
-      .order("payment_date", { ascending: false })
-      .order("recorded_at", { ascending: false })
-      .range(
-        paymentPage * HISTORY_PAGE_SIZE,
-        (paymentPage + 1) * HISTORY_PAGE_SIZE - 1,
-      ),
-    supabase
-      .from("dues_rates")
-      .select(
-        "id, effective_month, monthly_amount_ngn, changed_by, changed_at, reason",
-      )
-      .order("effective_month", { ascending: true })
-      .limit(1200),
+  const [ledger, incomeResult, paymentSettingsResult] = await Promise.all([
+    loadMemberDuesLedger({
+      supabase,
+      targetMemberId,
+      paymentPage,
+      auditPage,
+      pageSize: HISTORY_PAGE_SIZE,
+      includeAudit: isOfficer,
+    }),
     supabase.rpc("club_dues_income_total"),
     supabase
       .from("club_payment_settings")
@@ -269,23 +205,6 @@ export default async function DuesPage({
         instructions: paymentSettingsData.instructions ?? undefined,
       }
     : null;
-
-  const duesRows = (statusResult.data ?? []) as DuesStatusRow[];
-  const payments = (paymentResult.data ?? []) as PaymentRow[];
-  const rates = rateResult.data ?? [];
-  const paymentIds = payments.map((payment) => payment.id);
-  let coverageRows: DispositionRow[] = [];
-  let coverageError = false;
-  if (paymentIds.length > 0) {
-    const { data, error } = await supabase
-      .from("dues_month_dispositions")
-      .select("payment_id, covered_month, amount_ngn, is_current")
-      .in("payment_id", paymentIds)
-      .eq("is_current", true)
-      .order("covered_month", { ascending: true });
-    coverageError = Boolean(error);
-    coverageRows = (data ?? []) as DispositionRow[];
-  }
 
   let pendingRequests: DuesPaymentRequestItem[] = [];
   const pendingMembersMap: Record<
@@ -309,7 +228,7 @@ export default async function DuesPage({
         ...new Set(pendingRequests.map((r) => r.member_id)),
       ];
       if (pendingMemberIds.length > 0) {
-        const [profilesRes, rolesRes] = await Promise.all([
+        const [profilesRes, rolesRes, receiptsRes] = await Promise.all([
           supabase
             .from("member_profiles")
             .select("id, full_name, username")
@@ -319,6 +238,15 @@ export default async function DuesPage({
             .select("member_id, role")
             .in("member_id", pendingMemberIds)
             .is("revoked_at", null),
+          supabase
+            .from("finance_receipts")
+            .select(
+              "id, dues_request_id, original_filename, content_type, size_bytes",
+            )
+            .in(
+              "dues_request_id",
+              pendingRequests.map((r) => r.id),
+            ),
         ]);
         const rolesByMember = new Map<string, string[]>();
         for (const row of rolesRes.data ?? []) {
@@ -333,101 +261,27 @@ export default async function DuesPage({
             roles: rolesByMember.get(p.id) ?? [],
           };
         }
+
+        if (receiptsRes.error) {
+          for (const req of pendingRequests) req.receiptUnavailable = true;
+        } else {
+          const receiptsByReq = new Map(
+            (receiptsRes.data ?? []).map((r) => [
+              r.dues_request_id,
+              {
+                id: r.id,
+                filename: r.original_filename,
+                contentType: r.content_type,
+                sizeBytes: r.size_bytes,
+              },
+            ]),
+          );
+          for (const req of pendingRequests) {
+            req.receipt = receiptsByReq.get(req.id) ?? null;
+          }
+        }
       }
     }
-  }
-
-  let ownRequests: DuesPaymentRequestItem[] = [];
-  const { data: ownRequestsData } = await supabase
-    .from("dues_payment_requests")
-    .select(
-      "id, member_id, amount_ngn, covered_months, payment_method, notes, status, created_at, reviewed_by, reviewed_at, review_reason",
-    )
-    .eq("member_id", authData.user.id)
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  if (ownRequestsData) {
-    ownRequests = ownRequestsData as DuesPaymentRequestItem[];
-  }
-
-  const allReqIds = [
-    ...pendingRequests.map((r) => r.id),
-    ...ownRequests.map((r) => r.id),
-  ];
-  if (allReqIds.length > 0) {
-    const { data: receipts, error: receiptQueryError } = await supabase
-      .from("finance_receipts")
-      .select(
-        "id, dues_request_id, original_filename, content_type, size_bytes",
-      )
-      .in("dues_request_id", allReqIds);
-    if (receiptQueryError) {
-      console.error("Could not load dues receipt metadata", receiptQueryError);
-      for (const req of pendingRequests) req.receiptUnavailable = true;
-      for (const req of ownRequests) req.receiptUnavailable = true;
-    }
-    if (receipts) {
-      const receiptsByReq = new Map(
-        receipts.map((r) => [
-          r.dues_request_id,
-          {
-            id: r.id,
-            filename: r.original_filename,
-            contentType: r.content_type,
-            sizeBytes: r.size_bytes,
-          },
-        ]),
-      );
-      for (const req of pendingRequests) {
-        req.receipt = receiptsByReq.get(req.id) ?? null;
-      }
-      for (const req of ownRequests) {
-        req.receipt = receiptsByReq.get(req.id) ?? null;
-      }
-    }
-  }
-
-  let duesAudit: AuditRow[] = [];
-  let auditError = false;
-  let auditCount = 0;
-  if (isOfficer) {
-    const auditResult = await supabase
-      .from("audit_log")
-      .select(
-        "id, actor_id, action, entity_type, entity_id, target_member_id, before_data, after_data, reason, occurred_at",
-        { count: "exact" },
-      )
-      .in("action", [
-        "dues_payment_recorded",
-        "dues_payment_corrected",
-        "dues_month_written_off",
-        "dues_rate_changed",
-        "dues_payment_request_submitted",
-        "dues_payment_request_approved",
-        "dues_payment_request_rejected",
-      ])
-      .or(`target_member_id.eq.${targetMemberId},action.eq.dues_rate_changed`)
-      .order("occurred_at", { ascending: false })
-      .range(
-        auditPage * HISTORY_PAGE_SIZE,
-        (auditPage + 1) * HISTORY_PAGE_SIZE - 1,
-      );
-    auditError = Boolean(auditResult.error);
-    duesAudit = (auditResult.data ?? []) as AuditRow[];
-    auditCount = auditResult.count ?? 0;
-  }
-
-  const actorIds = [...new Set(duesAudit.map((entry) => entry.actor_id))];
-  let actorNames = new Map<string, string>();
-  if (isOfficer && actorIds.length > 0) {
-    const { data } = await supabase
-      .from("member_profiles")
-      .select("id, full_name")
-      .in("id", actorIds);
-    actorNames = new Map(
-      (data ?? []).map((entry) => [entry.id, entry.full_name]),
-    );
   }
 
   let reconciliationMembers: ReconciliationMember[] = [];
@@ -476,29 +330,14 @@ export default async function DuesPage({
     }));
   }
 
-  const notice = params.notice ? notices[params.notice] : undefined;
   const today = todayInWAT();
   const currentMonth = `${today.slice(0, 7)}-01`;
   const nextMonth = monthAfter(today.slice(0, 7));
-  const unpaidMonths = duesRows.filter((row) => row.status === "unpaid");
-  const pastUnpaidMonths = unpaidMonths
-    .filter((row) => row.covered_month < currentMonth)
-    .map(toMonthOption);
+  const unpaidMonths = ledger.duesRows.filter((row) => row.status === "unpaid");
   const availableMonths = unpaidMonths.map(toMonthOption);
-  const coverageByPayment = new Map<string, string[]>();
-  for (const coverage of coverageRows) {
-    if (!coverage.payment_id) continue;
-    const months = coverageByPayment.get(coverage.payment_id) ?? [];
-    months.push(coverage.covered_month);
-    coverageByPayment.set(coverage.payment_id, months);
-  }
-  const combinedAudit = duesAudit;
   const openTotal = unpaidMonths.reduce(
     (total, row) => total + Number(row.amount_ngn ?? 0),
     0,
-  );
-  const detailedDataError = Boolean(
-    statusResult.error || paymentResult.error || coverageError,
   );
 
   const isAdmin = !roleError && (roles.has("admin") || roles.has("president"));
@@ -506,47 +345,44 @@ export default async function DuesPage({
 
   return (
     <DuesPageView
-      actorNames={actorNames}
-      auditError={auditError}
+      actorNames={ledger.actorNames}
+      aiEnabled={isAiReportsEnabled()}
+      auditError={ledger.auditError}
       auditPage={auditPage}
       availableMonths={availableMonths}
       canChangeRate={canChangeRate}
       canCorrect={canCorrect}
       canRecord={canRecord}
-      canWriteOff={canWriteOff}
       clubTotalIncome={incomeResult.error ? null : incomeResult.data}
-      combinedAudit={combinedAudit}
-      coverageByPayment={coverageByPayment}
+      combinedAudit={ledger.duesAudit}
+      coverageByPayment={ledger.coverageByPayment}
       currentMonth={currentMonth}
-      detailedDataError={detailedDataError}
-      duesRows={duesRows}
+      detailedDataError={ledger.detailedDataError}
+      duesRows={ledger.duesRows}
       initialTab={params.tab}
       invalidSelection={invalidSelection}
       isAdmin={isAdmin}
       isDuesExempt={isDuesExempt}
       isOfficer={isOfficer}
-      aiEnabled={isAiReportsEnabled()}
       member={member}
       memberListError={memberListError}
       members={members}
       nextMonth={nextMonth}
-      notice={notice}
+      notice={getDuesNotice(params.notice)}
       openTotal={openTotal}
-      ownRequests={ownRequests}
+      ownRequests={ledger.memberRequests}
       pageSize={HISTORY_PAGE_SIZE}
-      pastUnpaidMonths={pastUnpaidMonths}
       paymentPage={paymentPage}
       paymentSettings={paymentSettings}
-      payments={payments}
+      payments={ledger.payments}
       pendingMembersMap={pendingMembersMap}
       pendingRequests={pendingRequests}
-      rates={rates}
+      rates={ledger.rates}
       reconciliationMembers={reconciliationMembers}
       roleError={Boolean(roleError)}
       targetMemberId={targetMemberId}
-      today={today}
-      totalAuditCount={auditCount}
-      totalPaymentsCount={paymentResult.count ?? 0}
+      totalAuditCount={ledger.auditCount}
+      totalPaymentsCount={ledger.totalPaymentsCount}
       viewerId={authData.user.id}
       viewerRoles={Array.from(roles)}
     />

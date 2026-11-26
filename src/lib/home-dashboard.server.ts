@@ -22,6 +22,13 @@ export interface HomeDashboardDues {
     paymentDate: string;
     recordedAt: string;
     correctedAt: string | null;
+    paymentMethod?: string | null;
+    fileReceipt?: {
+      id: string;
+      filename: string;
+      contentType: string;
+      sizeBytes?: number;
+    } | null;
   };
 }
 

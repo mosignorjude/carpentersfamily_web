@@ -7,7 +7,11 @@ import test from "node:test";
 // the whole query, which emptied the dues page and silently suppressed the
 // approval and rejection notifications.
 
-const FILES = ["src/app/actions.ts", "src/app/(member)/dues/page.tsx"];
+const FILES = [
+  "src/app/actions.ts",
+  "src/app/(member)/dues/page.tsx",
+  "src/lib/dues-ledger.server.ts",
+];
 
 const EXISTING_COLUMNS = new Set([
   "id",

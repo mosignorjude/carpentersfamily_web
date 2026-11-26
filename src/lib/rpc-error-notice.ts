@@ -65,6 +65,9 @@ const MESSAGE_RULES: ReadonlyArray<readonly [RegExp, string]> = [
   [/too many pending ticket orders/i, "ticket-order-limit-reached"],
   [/no longer accepting ticket orders/i, "box-office-closed"],
   [/box office has reached its limit/i, "box-office-at-capacity"],
+  [/must exactly equal the configured rate total/i, "dues-amount-mismatch"],
+  [/outside the member dues period/i, "dues-month-outside-period"],
+  [/exempt from statutory dues/i, "dues-member-exempt"],
 ];
 
 export function rpcErrorNotice(

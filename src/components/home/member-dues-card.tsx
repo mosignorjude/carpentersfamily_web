@@ -16,6 +16,7 @@ import {
   type DuesPaymentSettings,
   PayDuesModal,
 } from "@/components/dues/pay-dues-modal";
+import { ReceiptCell } from "@/components/finances/receipt-cell";
 import { formatNaira } from "@/lib/format";
 import type { HomeDashboardDues } from "@/lib/home-dashboard.server";
 
@@ -517,6 +518,23 @@ export function MemberDuesCard({
                       {formatRecordedAt(selectedPaidMonth.receipt.recordedAt)}
                     </dd>
                   </div>
+                  {selectedPaidMonth.receipt.fileReceipt && (
+                    <div className="sm:col-span-2 pt-1 flex items-center gap-2">
+                      <dt className="inline text-[#7A685D]">
+                        Uploaded Receipt:{" "}
+                      </dt>
+                      <dd className="inline-flex">
+                        <ReceiptCell
+                          paymentMethod={
+                            selectedPaidMonth.receipt.paymentMethod ??
+                            "bank_transfer"
+                          }
+                          paymentStatus="paid"
+                          receipt={selectedPaidMonth.receipt.fileReceipt}
+                        />
+                      </dd>
+                    </div>
+                  )}
                 </dl>
               </div>
             </div>

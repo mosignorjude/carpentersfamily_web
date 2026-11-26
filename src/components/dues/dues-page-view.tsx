@@ -16,13 +16,15 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { type FormEvent, useState } from "react";
 import type {
   DuesMemberOption,
   DuesMonthOption,
 } from "@/app/(member)/dues/dues-forms";
 import { AiSummaryPanel } from "@/components/reports/ai-summary-panel";
 import { clubBrand } from "@/lib/brand";
+import type { DuesNotice } from "@/lib/dues-notices";
 import { formatNaira } from "@/lib/format";
 import { useModalHygiene } from "@/lib/use-modal-hygiene";
 import { type AuditRow, DuesAuditHistoryCard } from "./dues-audit-history-card";
@@ -38,7 +40,6 @@ import {
   type DuesPaymentRequestItem,
   OfficerDuesApprovalsCard,
 } from "./officer-dues-approvals-card";
-import { OfficerDuesControlsCard } from "./officer-dues-controls-card";
 import { type DuesPaymentSettings, PayDuesModal } from "./pay-dues-modal";
 import {
   PreLaunchDuesReconciliationCard,
@@ -54,7 +55,6 @@ interface DuesPageViewProps {
   isOfficer: boolean;
   aiEnabled?: boolean;
   canRecord: boolean;
-  canWriteOff: boolean;
   canCorrect: boolean;
   canChangeRate: boolean;
   members: DuesMemberOption[];
@@ -66,17 +66,15 @@ interface DuesPageViewProps {
   combinedAudit: AuditRow[];
   actorNames: Map<string, string>;
   clubTotalIncome: number | null;
-  notice?: string;
+  notice?: DuesNotice;
   invalidSelection: boolean;
   roleError: boolean;
   memberListError: boolean;
   detailedDataError: boolean;
   auditError: boolean;
-  today: string;
   currentMonth: string;
   nextMonth: string;
   availableMonths: DuesMonthOption[];
-  pastUnpaidMonths: DuesMonthOption[];
   openTotal: number;
   paymentPage: number;
   totalPaymentsCount: number;
@@ -100,9 +98,8 @@ export function DuesPageView({
   member,
   isOfficer,
   aiEnabled = false,
-  canRecord,
-  canWriteOff,
-  canCorrect,
+  canRecord: _canRecord,
+  canCorrect: _canCorrect,
   canChangeRate,
   members,
   targetMemberId,
@@ -119,11 +116,9 @@ export function DuesPageView({
   memberListError,
   detailedDataError,
   auditError,
-  today,
   currentMonth,
   nextMonth,
   availableMonths,
-  pastUnpaidMonths,
   openTotal,
   paymentPage,
   totalPaymentsCount,
@@ -141,9 +136,15 @@ export function DuesPageView({
   reconciliationMembers = [],
   initialTab,
 }: DuesPageViewProps) {
+  const router = useRouter();
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [isDownloadReportOpen, setIsDownloadReportOpen] = useState(false);
   const [includeAiInPdf, setIncludeAiInPdf] = useState(true);
+  const [selectedLedgerMemberId, setSelectedLedgerMemberId] = useState(
+    () =>
+      members.find((option) => option.id !== targetMemberId)?.id ??
+      targetMemberId,
+  );
   useModalHygiene({
     isOpen: isDownloadReportOpen,
     onClose: () => setIsDownloadReportOpen(false),
@@ -166,9 +167,15 @@ export function DuesPageView({
     }
   };
 
+  const handleOpenMemberLedger = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedLedgerMemberId) return;
+    router.push(`/dues/members/${selectedLedgerMemberId}`);
+  };
+
   const paidRows = duesRows.filter((r) => r.status === "paid");
   const paidMonthsCount = paidRows.length;
-  const standardMonthlyRate = 10000;
+  const standardMonthlyRate = 5000;
   const currentMonthlyRate =
     rates.length > 0
       ? Number(rates[rates.length - 1].monthly_amount_ngn) ||
@@ -190,15 +197,26 @@ export function DuesPageView({
       {/* Notice Banner */}
       {notice && (
         <div
-          className="flex items-center justify-between gap-3 rounded-xl border border-[#174C37]/30 bg-white px-4 py-3 text-xs sm:text-sm font-semibold text-[#174C37] shadow-2xs animate-in fade-in duration-150"
-          role="status"
+          className={`flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-xs sm:text-sm font-semibold shadow-2xs animate-in fade-in duration-150 ${
+            notice.variant === "error"
+              ? "border border-[#F5C2C2] bg-[#FFF9F8] text-[#BA3C2A]"
+              : "border border-[#174C37]/30 bg-white text-[#174C37]"
+          }`}
+          role={notice.variant === "error" ? "alert" : "status"}
         >
           <div className="flex items-center gap-2.5 min-w-0">
-            <CheckCircle2
-              aria-hidden="true"
-              className="w-4 h-4 shrink-0 text-[#174C37]"
-            />
-            <span className="truncate">{notice}</span>
+            {notice.variant === "error" ? (
+              <AlertCircle
+                aria-hidden="true"
+                className="w-4 h-4 shrink-0 text-[#BA3C2A]"
+              />
+            ) : (
+              <CheckCircle2
+                aria-hidden="true"
+                className="w-4 h-4 shrink-0 text-[#174C37]"
+              />
+            )}
+            <span>{notice.message}</span>
           </div>
         </div>
       )}
@@ -218,9 +236,7 @@ export function DuesPageView({
               className="text-xl sm:text-3xl font-extrabold text-[#3D291F] tracking-tight"
               id="dues-hero-heading"
             >
-              {member.id === targetMemberId && !isOfficer
-                ? "Member Dues"
-                : `Member Dues: ${member.full_name}`}
+              Member Dues
             </h1>
 
             <p className="hidden sm:block text-xs sm:text-sm text-[#443A33] max-w-2xl leading-relaxed font-normal">
@@ -402,58 +418,6 @@ export function DuesPageView({
         </div>
       )}
 
-      {/* Officer Member Switcher (Compact Toolbar) */}
-      {isOfficer && (
-        <section
-          aria-labelledby="officer-picker-heading"
-          className="bg-white rounded-2xl border border-[#E5DDD3] p-3.5 sm:p-4 shadow-2xs"
-        >
-          <form
-            action="/dues"
-            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-            method="get"
-          >
-            <input name="tab" type="hidden" value={activeTab} />
-            <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2.5">
-              <label
-                className="flex items-center gap-2 text-xs font-bold text-[#3D291F] shrink-0"
-                htmlFor="officer-member-select"
-                id="officer-picker-heading"
-              >
-                <Users className="w-4 h-4 text-[#174C37]" />
-                <span>Viewing Member:</span>
-              </label>
-              <select
-                className="w-full sm:max-w-md rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] px-3 py-2 text-xs text-[#3D291F] font-semibold focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden cursor-pointer"
-                defaultValue={targetMemberId}
-                id="officer-member-select"
-                name="member_id"
-              >
-                {members.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.full_name} (@{option.username}) · {option.status}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[44px] sm:min-h-[38px]"
-              type="submit"
-            >
-              View Member
-            </button>
-          </form>
-
-          {memberListError && (
-            <p className="text-xs text-[#BA3C2A] mt-2 font-medium" role="alert">
-              Could not load the full member list. Only confirmed members are
-              shown.
-            </p>
-          )}
-        </section>
-      )}
-
       {/* Workspace Tabs Navigation Bar */}
       <nav
         aria-label="Dues sections"
@@ -586,12 +550,14 @@ export function DuesPageView({
           {/* Recorded Payment History */}
           <div className="scroll-target" id="dues-payments">
             <DuesPaymentsHistoryCard
-              canCorrect={canCorrect}
+              baseHref="/dues"
+              canCorrect={false}
               coverageByPayment={coverageByPayment}
               members={members}
               pageSize={pageSize}
               paymentPage={paymentPage}
               payments={payments}
+              returnUrl="/dues?tab=history"
               targetMemberId={targetMemberId}
               totalPaymentsCount={totalPaymentsCount}
             />
@@ -609,6 +575,74 @@ export function DuesPageView({
               title="Club Dues AI Summary"
             />
           )}
+
+          {/* Member Dues Ledger Launcher (opens dedicated /dues/members/[memberId] page) */}
+          <section
+            aria-labelledby="officer-picker-heading"
+            className="bg-white rounded-2xl border border-[#E5DDD3] p-4 sm:p-6 shadow-xs space-y-3"
+          >
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-[#174C37]" />
+                <h2
+                  className="text-base sm:text-lg font-extrabold text-[#3D291F]"
+                  id="officer-picker-heading"
+                >
+                  Member Dues Ledgers
+                </h2>
+              </div>
+              <p className="text-xs text-[#54433A]">
+                Open any member&apos;s dedicated dues ledger page to record a
+                payment, upload or attach a receipt, write off old months, or
+                review corrections.
+              </p>
+            </div>
+
+            <form
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              onSubmit={handleOpenMemberLedger}
+            >
+              <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2.5">
+                <label
+                  className="text-xs font-bold text-[#3D291F] shrink-0"
+                  htmlFor="officer-member-select"
+                >
+                  Select Member:
+                </label>
+                <select
+                  className="w-full sm:max-w-md rounded-lg border border-[#E5DDD3] bg-[#FAF6F0] px-3 py-2 text-xs text-[#3D291F] font-semibold focus:border-[#174C37] focus:ring-1 focus:ring-[#174C37] outline-hidden cursor-pointer"
+                  id="officer-member-select"
+                  name="member_id"
+                  onChange={(e) => setSelectedLedgerMemberId(e.target.value)}
+                  value={selectedLedgerMemberId}
+                >
+                  {members.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.full_name} (@{option.username}) · {option.status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#174C37] text-white text-xs font-bold hover:bg-[#103D2B] transition-colors shadow-2xs cursor-pointer min-h-[44px] sm:min-h-[38px]"
+                type="submit"
+              >
+                View Member
+              </button>
+            </form>
+
+            {memberListError && (
+              <p
+                className="text-xs text-[#BA3C2A] mt-2 font-medium"
+                role="alert"
+              >
+                Could not load the full member list. Only confirmed members are
+                shown.
+              </p>
+            )}
+          </section>
+
           {/* Officer Approvals Queue */}
           {viewerId && (
             <div className="scroll-target" id="dues-approvals">
@@ -620,19 +654,6 @@ export function DuesPageView({
               />
             </div>
           )}
-
-          {/* Officer Treasury Controls (Record Payment, Write-off) */}
-          <div className="scroll-target" id="dues-controls">
-            <OfficerDuesControlsCard
-              availableMonths={availableMonths}
-              canRecord={canRecord}
-              canWriteOff={canWriteOff}
-              memberId={targetMemberId}
-              memberName={member.full_name}
-              pastUnpaidMonths={pastUnpaidMonths}
-              today={today}
-            />
-          </div>
 
           {/* Pre-Launch Dues Reconciliation Workspace (Feb-Sep 2026) */}
           <div className="scroll-target" id="dues-reconciliation">
@@ -657,7 +678,9 @@ export function DuesPageView({
               actorNames={actorNames}
               auditEntries={combinedAudit}
               auditPage={auditPage}
+              baseHref="/dues"
               pageSize={pageSize}
+              tabParam="officer"
               targetMemberId={targetMemberId}
               totalAuditCount={totalAuditCount}
             />

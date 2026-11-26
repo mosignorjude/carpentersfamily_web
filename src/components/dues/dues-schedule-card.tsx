@@ -23,7 +23,8 @@ interface DuesScheduleCardProps {
   duesRows: DuesScheduleRow[];
   currentMonth: string;
   memberName: string;
-  onOpenPayDuesModal: () => void;
+  onOpenPayDuesModal?: () => void;
+  showPayActions?: boolean;
 }
 
 function formatMonth(month: string) {
@@ -48,6 +49,7 @@ export function DuesScheduleCard({
   currentMonth,
   memberName: _memberName,
   onOpenPayDuesModal,
+  showPayActions = true,
 }: DuesScheduleCardProps) {
   const [filter, setFilter] = useState<"all" | "unpaid" | "paid">("all");
 
@@ -180,15 +182,17 @@ export function DuesScheduleCard({
             </button>
           </div>
 
-          <button
-            id="pay-dues-modal-trigger"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#D6A23A] text-[#3D291F] hover:bg-[#c9952f] text-xs font-extrabold shadow-2xs transition-colors cursor-pointer min-h-[36px]"
-            onClick={onOpenPayDuesModal}
-            type="button"
-          >
-            <CreditCard className="w-3.5 h-3.5 text-[#3D291F]" />
-            <span>Pay Dues</span>
-          </button>
+          {showPayActions && onOpenPayDuesModal && (
+            <button
+              id="pay-dues-modal-trigger"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#D6A23A] text-[#3D291F] hover:bg-[#c9952f] text-xs font-extrabold shadow-2xs transition-colors cursor-pointer min-h-[36px]"
+              onClick={onOpenPayDuesModal}
+              type="button"
+            >
+              <CreditCard className="w-3.5 h-3.5 text-[#3D291F]" />
+              <span>Pay Dues</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -232,16 +236,19 @@ export function DuesScheduleCard({
                         : "—"}
                     </span>
 
-                    {!isPaid && !isWrittenOff && (
-                      <button
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#FAF6F0] text-[#3D291F] hover:bg-[#E5DDD3] border border-[#E5DDD3] text-[11px] font-bold transition-colors cursor-pointer min-h-[34px]"
-                        onClick={onOpenPayDuesModal}
-                        type="button"
-                      >
-                        <CreditCard className="w-3 h-3 text-[#174C37]" />
-                        <span>Pay</span>
-                      </button>
-                    )}
+                    {!isPaid &&
+                      !isWrittenOff &&
+                      showPayActions &&
+                      onOpenPayDuesModal && (
+                        <button
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#FAF6F0] text-[#3D291F] hover:bg-[#E5DDD3] border border-[#E5DDD3] text-[11px] font-bold transition-colors cursor-pointer min-h-[34px]"
+                          onClick={onOpenPayDuesModal}
+                          type="button"
+                        >
+                          <CreditCard className="w-3 h-3 text-[#174C37]" />
+                          <span>Pay</span>
+                        </button>
+                      )}
                   </div>
                 </div>
               );
@@ -301,7 +308,7 @@ export function DuesScheduleCard({
                           <span className="text-xs font-semibold text-[#7A685D] inline-flex items-center gap-1">
                             <span>Written off</span>
                           </span>
-                        ) : (
+                        ) : showPayActions && onOpenPayDuesModal ? (
                           <button
                             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#FAF6F0] text-[#3D291F] hover:bg-[#E5DDD3] border border-[#E5DDD3] text-xs font-bold transition-colors cursor-pointer"
                             onClick={onOpenPayDuesModal}
@@ -310,6 +317,10 @@ export function DuesScheduleCard({
                             <CreditCard className="w-3 h-3 text-[#174C37]" />
                             <span>Pay Now</span>
                           </button>
+                        ) : (
+                          <span className="text-xs text-[#7A685D] font-medium">
+                            {row.is_overdue ? "Overdue" : "Unpaid"}
+                          </span>
                         )}
                       </td>
                     </tr>

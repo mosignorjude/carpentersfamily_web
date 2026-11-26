@@ -28,6 +28,8 @@ interface DuesAuditHistoryCardProps {
   auditPage: number;
   totalAuditCount: number;
   pageSize: number;
+  baseHref?: string;
+  tabParam?: string;
 }
 
 function formatDate(date: string) {
@@ -46,22 +48,23 @@ function formatTime(date: string) {
   }).format(value);
 }
 
-function historyPageHref(memberId: string, page: number) {
+function historyPageHref(baseHref: string, tabParam: string, page: number) {
   const params = new URLSearchParams({
-    member_id: memberId,
     audit_page: String(page),
-    tab: "officer",
+    tab: tabParam,
   });
-  return `/dues?${params.toString()}`;
+  return `${baseHref}?${params.toString()}`;
 }
 
 export function DuesAuditHistoryCard({
   auditEntries,
   actorNames,
-  targetMemberId,
+  targetMemberId: _targetMemberId,
   auditPage,
   totalAuditCount,
   pageSize,
+  baseHref = "/dues",
+  tabParam = "officer",
 }: DuesAuditHistoryCardProps) {
   const totalPages = Math.ceil(totalAuditCount / pageSize);
 
@@ -209,7 +212,7 @@ export function DuesAuditHistoryCard({
               {auditPage > 0 ? (
                 <Link
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-white text-[#174C37] hover:bg-[#FAF6F0] transition-colors"
-                  href={historyPageHref(targetMemberId, auditPage - 1)}
+                  href={historyPageHref(baseHref, tabParam, auditPage - 1)}
                 >
                   <ChevronLeft className="w-4 h-4" />
                   <span>Newer events</span>
@@ -227,7 +230,7 @@ export function DuesAuditHistoryCard({
               {(auditPage + 1) * pageSize < totalAuditCount ? (
                 <Link
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#E5DDD3] bg-white text-[#174C37] hover:bg-[#FAF6F0] transition-colors"
-                  href={historyPageHref(targetMemberId, auditPage + 1)}
+                  href={historyPageHref(baseHref, tabParam, auditPage + 1)}
                 >
                   <span>Older events</span>
                   <ChevronRight className="w-4 h-4" />

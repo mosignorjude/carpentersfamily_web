@@ -69,6 +69,7 @@ import {
   validateClubPaymentSettingsInput,
 } from "@/lib/pre-launch-reconciliation.mjs";
 import { runReceiptEntry } from "@/lib/receipt-entry.mjs";
+import { sanitizeReturnUrl } from "@/lib/receipt-redirect";
 import { getR2StorageAdapter } from "@/lib/receipt-storage";
 import { rpcErrorNotice } from "@/lib/rpc-error-notice";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -532,6 +533,26 @@ function duesNoticeUrl(notice: string, memberId?: string) {
   return `/dues?${params.toString()}`;
 }
 
+function duesReturnUrl(
+  notice: string,
+  returnTo?: string | null,
+  memberId?: string,
+) {
+  const safePath = returnTo ? sanitizeReturnUrl(returnTo, "/dues") : "";
+  const isDuesTarget =
+    safePath === "/dues" ||
+    safePath.startsWith("/dues?") ||
+    safePath.startsWith("/dues/members/");
+  const fallback =
+    memberId && uuidPattern.test(memberId)
+      ? `/dues/members/${memberId}`
+      : "/dues";
+  const target = isDuesTarget ? safePath : fallback;
+  const url = new URL(target, "https://internal.invalid");
+  url.searchParams.set("notice", notice);
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
 async function getActiveDuesActor() {
   const supabase = await clientOrRedirect("/portal?notice=configuration");
   const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -562,10 +583,12 @@ async function getActiveDuesActor() {
 
 export async function recordDuesPaymentAction(formData: FormData) {
   const memberId = formString(formData, "member_id", 36);
+  const returnTo = optionalFormString(formData, "return_to", 256) ?? null;
   const amount = parseDuesAmount(formData);
   const paymentDate = parsePaymentDate(formData);
   const months = parseDuesMonths(formData, "covered_month", "prepay_months");
-  const rawMethod = formString(formData, "payment_method", 24) || "cash";
+  const rawMethod =
+    formString(formData, "payment_method", 24) || "bank_transfer";
   const paymentMethod = ["bank_transfer", "cash"].includes(rawMethod)
     ? rawMethod
     : null;
@@ -580,12 +603,12 @@ export async function recordDuesPaymentAction(formData: FormData) {
     !months ||
     !paymentMethod
   ) {
-    redirect(duesNoticeUrl("invalid-request", memberId ?? undefined));
+    redirect(duesReturnUrl("invalid-request", returnTo, memberId ?? undefined));
   }
 
   const actor = await getActiveDuesActor();
   if (!canManageDues(actor.roles)) {
-    redirect(duesNoticeUrl("denied", memberId));
+    redirect(duesReturnUrl("denied", returnTo, memberId));
   }
 
   const paymentId = randomUUID();
@@ -595,6 +618,7 @@ export async function recordDuesPaymentAction(formData: FormData) {
       targetId: paymentId,
       paymentMethod,
       paymentStatus: "paid",
+      allowOptionalCashReceipt: true,
       file,
     },
     {
@@ -623,10 +647,11 @@ export async function recordDuesPaymentAction(formData: FormData) {
 
   if (entryResult.kind === "error") {
     redirect(
-      duesNoticeUrl(
+      duesReturnUrl(
         entryResult.notice === "operation-failed"
           ? rpcErrorNotice(entryResult.error)
           : entryResult.notice,
+        returnTo,
         memberId,
       ),
     );
@@ -643,11 +668,14 @@ export async function recordDuesPaymentAction(formData: FormData) {
   });
 
   revalidatePath("/dues");
-  redirect(duesNoticeUrl("saved", memberId));
+  revalidatePath(`/dues/members/${memberId}`);
+  revalidatePath("/portal");
+  redirect(duesReturnUrl("saved", returnTo, memberId));
 }
 
 export async function writeOffDuesAction(formData: FormData) {
   const memberId = formString(formData, "member_id", 36);
+  const returnTo = optionalFormString(formData, "return_to", 256) ?? null;
   const months = parseDuesMonths(formData, "covered_month");
   const reason = formString(formData, "reason", 500);
   if (
@@ -657,7 +685,7 @@ export async function writeOffDuesAction(formData: FormData) {
     !reason ||
     containsControlCharacters(reason)
   ) {
-    redirect(duesNoticeUrl("invalid-request", memberId ?? undefined));
+    redirect(duesReturnUrl("invalid-request", returnTo, memberId ?? undefined));
   }
 
   const actor = await getActiveDuesActor();
@@ -666,7 +694,7 @@ export async function writeOffDuesAction(formData: FormData) {
     !actor.roles.has("admin") &&
     !actor.roles.has("president")
   ) {
-    redirect(duesNoticeUrl("denied", memberId));
+    redirect(duesReturnUrl("denied", returnTo, memberId));
   }
 
   const { error } = await actor.supabase.rpc("write_off_dues_months", {
@@ -674,15 +702,20 @@ export async function writeOffDuesAction(formData: FormData) {
     p_covered_months: months,
     p_reason: reason,
   });
-  if (error) redirect(duesNoticeUrl(rpcErrorNotice(error), memberId));
+  if (error) {
+    redirect(duesReturnUrl(rpcErrorNotice(error), returnTo, memberId));
+  }
 
   revalidatePath("/dues");
-  redirect(duesNoticeUrl("saved", memberId));
+  revalidatePath(`/dues/members/${memberId}`);
+  revalidatePath("/portal");
+  redirect(duesReturnUrl("saved", returnTo, memberId));
 }
 
 export async function correctDuesPaymentAction(formData: FormData) {
   const paymentId = formString(formData, "payment_id", 36);
   const memberId = formString(formData, "member_id", 36);
+  const returnTo = optionalFormString(formData, "return_to", 256) ?? null;
   const amount = parseDuesAmount(formData);
   const paymentDate = parsePaymentDate(formData);
   const months = parseDuesMonths(formData, "covered_months");
@@ -698,12 +731,12 @@ export async function correctDuesPaymentAction(formData: FormData) {
     !reason ||
     containsControlCharacters(reason)
   ) {
-    redirect(duesNoticeUrl("invalid-request", memberId ?? undefined));
+    redirect(duesReturnUrl("invalid-request", returnTo, memberId ?? undefined));
   }
 
   const actor = await getActiveDuesActor();
   if (!actor.roles.has("admin") && !actor.roles.has("president")) {
-    redirect(duesNoticeUrl("denied", memberId));
+    redirect(duesReturnUrl("denied", returnTo, memberId));
   }
 
   const { error } = await actor.supabase.rpc("correct_dues_payment", {
@@ -714,10 +747,14 @@ export async function correctDuesPaymentAction(formData: FormData) {
     p_covered_months: months,
     p_reason: reason,
   });
-  if (error) redirect(duesNoticeUrl(rpcErrorNotice(error), memberId));
+  if (error) {
+    redirect(duesReturnUrl(rpcErrorNotice(error), returnTo, memberId));
+  }
 
   revalidatePath("/dues");
-  redirect(duesNoticeUrl("saved", memberId));
+  revalidatePath(`/dues/members/${memberId}`);
+  revalidatePath("/portal");
+  redirect(duesReturnUrl("saved", returnTo, memberId));
 }
 
 export async function setDuesRateAction(formData: FormData) {
@@ -789,6 +826,7 @@ export async function submitDuesPaymentRequestAction(formData: FormData) {
       targetId: requestId,
       paymentMethod,
       paymentStatus: "paid",
+      allowOptionalCashReceipt: true,
       file,
     },
     {
@@ -838,6 +876,7 @@ export async function submitDuesPaymentRequestAction(formData: FormData) {
   });
 
   revalidatePath("/dues");
+  revalidatePath("/portal");
   redirect(duesNoticeUrl("dues-request-submitted"));
 }
 
@@ -875,10 +914,12 @@ export async function approveDuesPaymentRequestAction(formData: FormData) {
       coveredMonths: requestRow.covered_months ?? [],
       paymentMethod: requestRow.payment_method,
     });
+    revalidatePath(`/dues/members/${requestRow.member_id}`);
   }
 
   revalidatePath("/dues");
-  redirect(duesNoticeUrl("dues-request-approved"));
+  revalidatePath("/portal");
+  redirect("/dues?tab=officer&notice=dues-request-approved");
 }
 
 export async function rejectDuesPaymentRequestAction(formData: FormData) {
@@ -924,10 +965,12 @@ export async function rejectDuesPaymentRequestAction(formData: FormData) {
       paymentMethod: requestRow.payment_method,
       reason,
     });
+    revalidatePath(`/dues/members/${requestRow.member_id}`);
   }
 
   revalidatePath("/dues");
-  redirect(duesNoticeUrl("dues-request-rejected"));
+  revalidatePath("/portal");
+  redirect("/dues?tab=officer&notice=dues-request-rejected");
 }
 
 export async function updateClubPaymentSettingsAction(

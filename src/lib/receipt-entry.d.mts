@@ -16,6 +16,7 @@ export interface ReceiptEntryInput {
   paymentStatus?: string;
   hasReceipt?: boolean;
   allowLegacyMethod?: boolean;
+  allowOptionalCashReceipt?: boolean;
   file?: File | null;
 }
 

@@ -243,6 +243,30 @@ export const SYSTEM_NOTICES: Record<string, SystemNoticeDefinition> = {
     message:
       "Select at least one valid month between January and the current period.",
   },
+  "dues-amount-mismatch": {
+    code: "dues-amount-mismatch",
+    type: "error",
+    variant: "error",
+    title: "Incorrect Dues Amount",
+    message:
+      "Payment amount must exactly equal the configured rate total for the selected months.",
+  },
+  "dues-month-outside-period": {
+    code: "dues-month-outside-period",
+    type: "error",
+    variant: "error",
+    title: "Invalid Dues Month",
+    message:
+      "One or more selected months fall outside this member's dues eligibility period.",
+  },
+  "dues-member-exempt": {
+    code: "dues-member-exempt",
+    type: "error",
+    variant: "error",
+    title: "Member Exempt From Dues",
+    message:
+      "Club Admins are exempt from statutory dues while holding the Admin role.",
+  },
 
   // Secretariat Attendance & Minutes
   "minutes-saved": {

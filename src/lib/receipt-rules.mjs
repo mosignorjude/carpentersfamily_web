@@ -14,9 +14,18 @@ export function receiptExtensionFor(contentType) {
 }
 
 export function receiptRequirement(paymentMethod, paymentStatus, options = {}) {
-  const { hasReceipt = false, allowLegacyMethod = false } = options;
+  const {
+    hasReceipt = false,
+    allowLegacyMethod = false,
+    allowOptionalCashReceipt = false,
+  } = options;
   if (paymentMethod !== "bank_transfer") {
-    if (paymentMethod === "cash") return "forbidden";
+    if (paymentMethod === "cash") {
+      if (allowOptionalCashReceipt && paymentStatus === "paid") {
+        return hasReceipt ? "forbidden" : "optional";
+      }
+      return "forbidden";
+    }
     return allowLegacyMethod ? "forbidden" : "unsupported";
   }
   if (paymentStatus !== "paid") return "forbidden";

@@ -162,7 +162,9 @@ async function getMemberDuesReceipts(supabase, memberId, currentYear) {
   const paymentResult = await safeQuery(
     supabase
       .from("dues_payments")
-      .select("id,member_id,amount_ngn,payment_date,recorded_at,corrected_at")
+      .select(
+        "id,member_id,amount_ngn,payment_date,payment_method,request_id,recorded_at,corrected_at",
+      )
       .eq("member_id", memberId)
       .in("id", paymentIds),
   );
@@ -170,7 +172,9 @@ async function getMemberDuesReceipts(supabase, memberId, currentYear) {
     return { unavailable: true, byMonth: new Map() };
   }
 
-  const payments = new Map();
+  const validPayments = [];
+  const validPaymentIds = [];
+  const validRequestIds = [];
   for (const row of paymentResult.data) {
     const amount = Number(row?.amount_ngn);
     if (
@@ -187,13 +191,95 @@ async function getMemberDuesReceipts(supabase, memberId, currentYear) {
     ) {
       continue;
     }
+    validPayments.push({ row, amount });
+    validPaymentIds.push(row.id);
+    if (
+      typeof row.request_id === "string" &&
+      UUID_PATTERN.test(row.request_id)
+    ) {
+      validRequestIds.push(row.request_id);
+    }
+  }
 
+  const directReceiptsByPayment = new Map();
+  const requestReceiptsByRequest = new Map();
+  if (validPaymentIds.length > 0) {
+    const directRes = await safeQuery(
+      supabase
+        .from("finance_receipts")
+        .select(
+          "id,dues_payment_id,dues_request_id,original_filename,content_type,size_bytes",
+        )
+        .in("dues_payment_id", validPaymentIds),
+    );
+    if (!directRes.error && Array.isArray(directRes.data)) {
+      for (const r of directRes.data) {
+        if (
+          r &&
+          typeof r.id === "string" &&
+          UUID_PATTERN.test(r.id) &&
+          typeof r.dues_payment_id === "string" &&
+          typeof r.original_filename === "string" &&
+          typeof r.content_type === "string"
+        ) {
+          directReceiptsByPayment.set(r.dues_payment_id, {
+            id: r.id,
+            filename: r.original_filename,
+            contentType: r.content_type,
+            sizeBytes: Number(r.size_bytes) || undefined,
+          });
+        }
+      }
+    }
+  }
+  if (validRequestIds.length > 0) {
+    const uniqueReqIds = [...new Set(validRequestIds)];
+    const reqRes = await safeQuery(
+      supabase
+        .from("finance_receipts")
+        .select(
+          "id,dues_payment_id,dues_request_id,original_filename,content_type,size_bytes",
+        )
+        .in("dues_request_id", uniqueReqIds),
+    );
+    if (!reqRes.error && Array.isArray(reqRes.data)) {
+      for (const r of reqRes.data) {
+        if (
+          r &&
+          typeof r.id === "string" &&
+          UUID_PATTERN.test(r.id) &&
+          typeof r.dues_request_id === "string" &&
+          typeof r.original_filename === "string" &&
+          typeof r.content_type === "string"
+        ) {
+          requestReceiptsByRequest.set(r.dues_request_id, {
+            id: r.id,
+            filename: r.original_filename,
+            contentType: r.content_type,
+            sizeBytes: Number(r.size_bytes) || undefined,
+          });
+        }
+      }
+    }
+  }
+
+  const payments = new Map();
+  for (const { row, amount } of validPayments) {
+    const fileReceipt =
+      directReceiptsByPayment.get(row.id) ??
+      (typeof row.request_id === "string"
+        ? (requestReceiptsByRequest.get(row.request_id) ?? null)
+        : null);
     payments.set(row.id, {
       paymentId: row.id,
       amountNgn: amount,
       paymentDate: row.payment_date,
       recordedAt: row.recorded_at,
       correctedAt: row.corrected_at,
+      ...(typeof row.payment_method === "string"
+        ? { paymentMethod: row.payment_method }
+        : {}),
+      ...(fileReceipt ? { fileReceipt } : {}),
     });
   }
 

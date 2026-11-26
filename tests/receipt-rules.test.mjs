@@ -15,11 +15,22 @@ describe("receipt requirement", () => {
     assert.equal(receiptRequirement("bank_transfer", "paid"), "required");
   });
 
-  it("forbids a receipt for cash and for unpaid bank transfers", () => {
+  it("forbids a receipt for cash by default and for unpaid bank transfers", () => {
     for (const status of ["pending", "unpaid", "deposit"]) {
       assert.equal(receiptRequirement("bank_transfer", status), "forbidden");
     }
     assert.equal(receiptRequirement("cash", "paid"), "forbidden");
+  });
+
+  it("allows an optional receipt for paid cash when explicitly enabled (dues)", () => {
+    assert.equal(
+      receiptRequirement("cash", "paid", { allowOptionalCashReceipt: true }),
+      "optional",
+    );
+    assert.equal(
+      receiptRequirement("cash", "pending", { allowOptionalCashReceipt: true }),
+      "forbidden",
+    );
   });
 
   it("treats a bank transfer that already has a receipt as satisfied", () => {

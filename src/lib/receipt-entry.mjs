@@ -9,6 +9,7 @@ export async function runReceiptEntry(input, deps, commit) {
     {
       hasReceipt: input.hasReceipt,
       allowLegacyMethod: input.allowLegacyMethod,
+      allowOptionalCashReceipt: input.allowOptionalCashReceipt,
     },
   );
 
@@ -17,7 +18,11 @@ export async function runReceiptEntry(input, deps, commit) {
   }
 
   let prepared = null;
-  if (requirement === "required") {
+  const shouldUpload =
+    requirement === "required" ||
+    (requirement === "optional" && Boolean(input.file));
+
+  if (shouldUpload) {
     if (!input.file) return { kind: "error", notice: "receipt-required" };
     if (!storage) {
       return { kind: "error", notice: "receipt-storage-unavailable" };
@@ -47,7 +52,7 @@ export async function runReceiptEntry(input, deps, commit) {
     } catch {
       return { kind: "error", notice: "receipt-upload-failed" };
     }
-  } else if (input.file) {
+  } else if (input.file && requirement === "forbidden") {
     return { kind: "error", notice: "receipt-not-allowed" };
   }
 

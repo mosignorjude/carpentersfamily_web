@@ -17,21 +17,29 @@ import {
 interface OfficerDuesControlsCardProps {
   canRecord: boolean;
   canWriteOff: boolean;
+  canRecordForTarget?: boolean;
+  recordBlockedReason?: string | null;
   memberId: string;
   memberName: string;
   availableMonths: DuesMonthOption[];
   pastUnpaidMonths: DuesMonthOption[];
   today: string;
+  monthlyRateNgn?: number;
+  returnTo?: string;
 }
 
 export function OfficerDuesControlsCard({
   canRecord,
   canWriteOff,
+  canRecordForTarget = true,
+  recordBlockedReason,
   memberId,
   memberName,
   availableMonths,
   pastUnpaidMonths,
   today,
+  monthlyRateNgn = 5000,
+  returnTo,
 }: OfficerDuesControlsCardProps) {
   const [activeTab, setActiveTab] = useState<"record" | "writeoff">("record");
 
@@ -96,23 +104,35 @@ export function OfficerDuesControlsCard({
 
       {/* Tab Panels */}
       <div className="p-4 sm:p-6 space-y-4 pt-0">
-        {activeTab === "record" && canRecord && (
-          <div className="space-y-3">
-            <div className="flex items-start gap-2.5 bg-[#FAF6F0] p-3 rounded-xl border border-[#E5DDD3] text-xs text-[#54433A]">
-              <CheckCircle2 className="w-4 h-4 text-[#174C37] shrink-0 mt-0.5" />
-              <p className="leading-relaxed">
-                Recording a payment marks the selected months as paid and saves
-                a receipt.
+        {activeTab === "record" &&
+          canRecord &&
+          (!canRecordForTarget && recordBlockedReason ? (
+            <div className="flex items-start gap-2.5 bg-[#FFF9F8] p-3.5 rounded-xl border border-[#F5C2C2] text-xs text-[#BA3C2A]">
+              <AlertCircle className="w-4 h-4 text-[#BA3C2A] shrink-0 mt-0.5" />
+              <p className="leading-relaxed font-medium">
+                {recordBlockedReason}
               </p>
             </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-start gap-2.5 bg-[#FAF6F0] p-3 rounded-xl border border-[#E5DDD3] text-xs text-[#54433A]">
+                <CheckCircle2 className="w-4 h-4 text-[#174C37] shrink-0 mt-0.5" />
+                <p className="leading-relaxed">
+                  Recording a payment marks the selected months as paid and
+                  makes any uploaded receipt available in the member&apos;s dues
+                  ledger.
+                </p>
+              </div>
 
-            <DuesPaymentForm
-              availableMonths={availableMonths}
-              memberId={memberId}
-              today={today}
-            />
-          </div>
-        )}
+              <DuesPaymentForm
+                availableMonths={availableMonths}
+                memberId={memberId}
+                monthlyRateNgn={monthlyRateNgn}
+                returnTo={returnTo}
+                today={today}
+              />
+            </div>
+          ))}
 
         {activeTab === "writeoff" && canWriteOff && (
           <div className="space-y-3">
@@ -128,6 +148,7 @@ export function OfficerDuesControlsCard({
               memberId={memberId}
               memberName={memberName}
               pastUnpaidMonths={pastUnpaidMonths}
+              returnTo={returnTo}
             />
           </div>
         )}

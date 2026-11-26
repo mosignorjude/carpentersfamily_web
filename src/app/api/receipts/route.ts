@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 import { validateFinanceReceiptUpload } from "@/lib/finance-receipt-validation";
 import {
@@ -7,6 +8,7 @@ import {
 } from "@/lib/receipt-redirect";
 import { buildReceiptObjectKey } from "@/lib/receipt-rules.mjs";
 import { getR2StorageAdapter } from "@/lib/receipt-storage";
+import { rpcErrorNotice } from "@/lib/rpc-error-notice";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
@@ -28,7 +30,7 @@ export async function POST(request: NextRequest) {
     !scope ||
     !targetId ||
     !file ||
-    !["club", "event", "event_ticket"].includes(scope)
+    !["club", "event", "event_ticket", "dues"].includes(scope)
   ) {
     return NextResponse.redirect(
       buildReturnRedirectUrl(returnUrl, request.url, "invalid-request"),
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest) {
 
   const receiptId = randomUUID();
   const objectKey = buildReceiptObjectKey({
-    scope: scope as "club" | "event" | "event_ticket",
+    scope: scope as "club" | "event" | "event_ticket" | "dues",
     targetId,
     receiptId,
     contentType: validated.contentType,
@@ -88,8 +90,16 @@ export async function POST(request: NextRequest) {
   if (rpcError) {
     await storage.deleteObject(objectKey).catch(() => undefined);
     return NextResponse.redirect(
-      buildReturnRedirectUrl(returnUrl, request.url, "operation-failed"),
+      buildReturnRedirectUrl(returnUrl, request.url, rpcErrorNotice(rpcError)),
     );
+  }
+
+  if (scope === "dues") {
+    revalidatePath("/dues");
+    revalidatePath("/portal");
+    if (returnUrl.startsWith("/dues/members/")) {
+      revalidatePath(returnUrl.split("?")[0]);
+    }
   }
 
   return NextResponse.redirect(

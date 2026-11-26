@@ -145,4 +145,48 @@ describe("receipt entry orchestration", () => {
     assert.equal(result.kind, "ok");
     assert.equal(calls.puts.length, 0);
   });
+
+  it("supports optional cash dues receipts both with and without an uploaded file", async () => {
+    const withFile = fakeStorage();
+    const resWithFile = await runReceiptEntry(
+      {
+        scope: "dues",
+        targetId,
+        paymentMethod: "cash",
+        paymentStatus: "paid",
+        allowOptionalCashReceipt: true,
+        file: pdfFile(),
+      },
+      deps(withFile.storage),
+      async (receipt) => {
+        assert.ok(receipt);
+        assert.equal(
+          receipt.objectKey,
+          `receipts/dues/${targetId}/${receiptId}.pdf`,
+        );
+        return { kind: "ok", id: targetId, deduplicated: false };
+      },
+    );
+    assert.equal(resWithFile.kind, "ok");
+    assert.equal(withFile.calls.puts.length, 1);
+
+    const withoutFile = fakeStorage();
+    const resWithoutFile = await runReceiptEntry(
+      {
+        scope: "dues",
+        targetId,
+        paymentMethod: "cash",
+        paymentStatus: "paid",
+        allowOptionalCashReceipt: true,
+        file: null,
+      },
+      deps(withoutFile.storage),
+      async (receipt) => {
+        assert.equal(receipt, null);
+        return { kind: "ok", id: targetId, deduplicated: false };
+      },
+    );
+    assert.equal(resWithoutFile.kind, "ok");
+    assert.equal(withoutFile.calls.puts.length, 0);
+  });
 });

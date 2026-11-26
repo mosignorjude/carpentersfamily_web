@@ -470,5 +470,97 @@ select is(
 );
 reset role;
 
+-- Pre-launch member month eligibility, self-recording guard, admin exemption, optional cash receipt, and attach_finance_receipt('dues', ...)
+update public.dues_membership_periods
+set starts_month = date '2026-10-01'
+where member_id = '00000000-0000-0000-0000-000000000204';
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000203', true);
+
+select throws_ok(
+  $$select public.record_dues_payment(
+      '00000000-0000-0000-0000-000000000203', 5000,
+      (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
+      array[date '2026-09-01']
+    )$$,
+  '42501',
+  'Officers cannot record their own dues payments.',
+  'officers cannot record their own dues payments directly'
+);
+
+select throws_ok(
+  $$select public.record_dues_payment(
+      '00000000-0000-0000-0000-000000000201', 5000,
+      (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
+      array[date '2026-09-01']
+    )$$,
+  '23514',
+  'Admins are exempt from statutory dues obligations.',
+  'club administrators cannot have statutory dues payments recorded for them'
+);
+
+select set_config('test.prelaunch_cash_payment_id', gen_random_uuid()::text, true);
+select lives_ok(
+  $$select public.record_dues_payment(
+      '00000000-0000-0000-0000-000000000204', 5000,
+      (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
+      array[date '2026-09-01'],
+      'cash',
+      current_setting('test.prelaunch_cash_payment_id')::uuid
+    )$$,
+  'executive can record a pre-launch 2026-09 cash dues payment without a receipt'
+);
+
+select set_config('test.attached_dues_receipt_id', gen_random_uuid()::text, true);
+select lives_ok(
+  $$select public.attach_finance_receipt(
+      'dues',
+      current_setting('test.prelaunch_cash_payment_id')::uuid,
+      current_setting('test.attached_dues_receipt_id')::uuid,
+      'receipts/dues/' || current_setting('test.prelaunch_cash_payment_id') || '/' || current_setting('test.attached_dues_receipt_id') || '.pdf',
+      'cash-voucher.pdf',
+      'application/pdf',
+      128,
+      repeat('a', 64)
+    )$$,
+  'officer can attach a receipt to an existing recorded dues payment'
+);
+
+select set_config('test.prelaunch_optional_cash_pmt_id', gen_random_uuid()::text, true);
+select set_config('test.prelaunch_optional_cash_receipt_id', gen_random_uuid()::text, true);
+select lives_ok(
+  $$select public.record_dues_payment(
+      '00000000-0000-0000-0000-000000000204', 5000,
+      (pg_catalog.clock_timestamp() at time zone 'Africa/Lagos')::date,
+      array[date '2026-08-01'],
+      'cash',
+      current_setting('test.prelaunch_optional_cash_pmt_id')::uuid,
+      current_setting('test.prelaunch_optional_cash_receipt_id')::uuid,
+      'receipts/dues/' || current_setting('test.prelaunch_optional_cash_pmt_id') || '/' || current_setting('test.prelaunch_optional_cash_receipt_id') || '.png',
+      'pos-slip.png',
+      'image/png',
+      256,
+      repeat('b', 64)
+    )$$,
+  'officer can attach an optional receipt while recording a cash pre-launch dues payment'
+);
+
+reset role;
+
+-- Member 0204 can read their officer-uploaded receipts through RLS
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000204', true);
+select is(
+  (select count(*) from public.finance_receipts
+   where dues_payment_id in (
+     current_setting('test.prelaunch_cash_payment_id')::uuid,
+     current_setting('test.prelaunch_optional_cash_pmt_id')::uuid
+   )),
+  2::bigint,
+  'paying member can read officer-recorded dues receipts via finance_receipts RLS'
+);
+reset role;
+
 select * from finish();
 rollback;
